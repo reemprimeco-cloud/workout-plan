@@ -12,6 +12,7 @@ import { ActiveSession } from '../components/ActiveSession';
 import { SessionHistory } from '../components/SessionHistory';
 import { StatsPanel } from '../components/StatsPanel';
 import { WorkoutGuide } from '../components/WorkoutGuide';
+import UserGuide from '../components/UserGuide';
 import ProfilePanel from '../components/ProfilePanel';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -22,7 +23,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/ac92d03d-28a4-4634-83f6-c2b0ec05fc4a_833a088c.jpg';
 
-type Tab = 'home' | 'history' | 'stats' | 'guide' | 'profile';
+type Tab = 'home' | 'history' | 'stats' | 'guide' | 'user-guide' | 'profile';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -83,6 +84,7 @@ export default function Home() {
     { id: 'history', icon: '📋', label: t('navHistory') },
     { id: 'stats', icon: '📊', label: t('navStats') },
     { id: 'guide', icon: '📖', label: t('navGuide') },
+    { id: 'user-guide', icon: '📘', label: isRTL ? 'الدليل' : 'Help' },
     { id: 'profile', icon: '⚙️', label: t('navProfile') },
   ];
 
@@ -197,6 +199,7 @@ export default function Home() {
         {activeTab === 'history' && <SessionHistory sessions={data.sessions} onDelete={tracker.deleteSession} />}
         {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} />}
         {activeTab === 'guide' && <WorkoutGuide />}
+        {activeTab === 'user-guide' && <UserGuide />}
         {activeTab === 'profile' && <ProfilePanel />}
       </main>
 
