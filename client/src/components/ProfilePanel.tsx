@@ -130,6 +130,9 @@ export function ProfilePanel() {
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ ...profile });
+  // Inline current weight editing
+  const [editingWeight, setEditingWeight] = useState(false);
+  const [inlineWeight, setInlineWeight] = useState(profile.currentWeight.toString());
 
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
   const bmiCat = getBMICategory(plan.bmi, lang);
@@ -181,16 +184,51 @@ export function ProfilePanel() {
           </div>
         </div>
         <div className="grid grid-cols-3 divide-x divide-gray-100">
-          {[
-            { label: lang === 'ar' ? 'الوزن الحالي' : 'Current', value: `${profile.currentWeight} kg` },
-            { label: lang === 'ar' ? 'الهدف' : 'Target', value: `${profile.targetWeight} kg` },
-            { label: 'BMI', value: plan.bmi.toString() },
-          ].map((s, i) => (
-            <div key={i} className="p-4 text-center">
-              <div className="text-xl font-black text-gray-800">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-            </div>
-          ))}
+          {/* Current Weight - inline editable */}
+          <div className="p-4 text-center cursor-pointer group" onClick={() => { setInlineWeight(profile.currentWeight.toString()); setEditingWeight(true); }}>
+            {editingWeight ? (
+              <form onSubmit={e => {
+                e.preventDefault();
+                const w = parseFloat(inlineWeight);
+                if (w >= 30 && w <= 250) {
+                  updateProfile({ ...profile, currentWeight: w });
+                }
+                setEditingWeight(false);
+              }}>
+                <input
+                  type="number" step="0.1" min="30" max="250"
+                  value={inlineWeight}
+                  onChange={e => setInlineWeight(e.target.value)}
+                  onBlur={() => {
+                    const w = parseFloat(inlineWeight);
+                    if (w >= 30 && w <= 250) updateProfile({ ...profile, currentWeight: w });
+                    setEditingWeight(false);
+                  }}
+                  autoFocus
+                  className="w-full text-center text-lg font-black text-[#E05A00] border-b-2 border-[#E05A00] outline-none bg-transparent"
+                />
+                <div className="text-xs text-[#E05A00] mt-0.5">{lang === 'ar' ? '✓ حفظ' : '✓ Save'}</div>
+              </form>
+            ) : (
+              <>
+                <div className="text-xl font-black text-gray-800 group-hover:text-[#E05A00] transition-colors">
+                  {profile.currentWeight} kg
+                  <span className="text-xs text-gray-400 block font-normal group-hover:text-[#E05A00]">✏️</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">{lang === 'ar' ? 'الوزن الحالي' : 'Current'}</div>
+              </>
+            )}
+          </div>
+          {/* Target Weight */}
+          <div className="p-4 text-center">
+            <div className="text-xl font-black text-gray-800">{profile.targetWeight} kg</div>
+            <div className="text-xs text-gray-500 mt-0.5">{lang === 'ar' ? 'الهدف' : 'Target'}</div>
+          </div>
+          {/* BMI */}
+          <div className="p-4 text-center">
+            <div className="text-xl font-black text-gray-800">{plan.bmi}</div>
+            <div className="text-xs text-gray-500 mt-0.5">BMI</div>
+          </div>
         </div>
       </div>
 
@@ -234,11 +272,6 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      {/* App Info - compact footer */}
-
-      {/* Weight Log Section */}
-      <WeightLogSection />
-
       {/* Reset Button */}
       <div className="pb-2">
         <button onClick={() => setShowReset(true)}
@@ -268,6 +301,34 @@ export function ProfilePanel() {
             <div className="p-5">
               <h3 className="text-lg font-black text-gray-800 mb-4">✏️ {t('editProfile')}</h3>
               <div className="space-y-4">
+                {/* ── Current Weight - Highlighted at top ── */}
+                <div className="bg-orange-50 border-2 border-[#E05A00] rounded-2xl p-4">
+                  <label className="text-sm font-black text-[#E05A00] block mb-2">⚖️ {lang === 'ar' ? 'الوزن الحالي' : 'Current Weight'}</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number" step="0.1" min="30" max="250"
+                      value={form.currentWeight || ''}
+                      onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      placeholder={lang === 'ar' ? 'مثال: 72.6' : 'e.g. 72.6'}
+                      className="flex-1 border-2 border-orange-300 rounded-xl px-4 py-3 text-gray-800 text-lg font-bold focus:border-[#E05A00] outline-none bg-white"
+                      autoFocus
+                    />
+                    <span className="text-lg font-bold text-[#E05A00]">kg</span>
+                  </div>
+                  {form.currentWeight > 0 && form.currentWeight < 30 && (
+                    <p className="text-xs text-red-500 mt-1">{lang === 'ar' ? 'الوزن يجب أن يكون أكثر من 30 كجم' : 'Weight must be over 30 kg'}</p>
+                  )}
+                  {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
+                    const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
+                    const previewCat = getBMICategory(previewBMI, lang);
+                    return (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-gray-500">BMI:</span>
+                        <span className="text-sm font-black" style={{ color: previewCat.color }}>{previewBMI} — {previewCat.label}</span>
+                      </div>
+                    );
+                  })()}
+                </div>
                 <div>
                   <label className="text-sm font-semibold text-gray-600 block mb-1">{t('name')}</label>
                   <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
@@ -286,40 +347,20 @@ export function ProfilePanel() {
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={100} max={250} placeholder="e.g. 165" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-600 block mb-1">
-                      {t('currentWeightLabel')} <span className="text-xs text-gray-400">(كجم)</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number" step="0.1" min="30" max="250"
-                        value={form.currentWeight || ''}
-                        onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
-                        placeholder={lang === 'ar' ? 'مثال: 72.6' : 'e.g. 72.6'}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
-                        style={{ borderColor: form.currentWeight > 0 && form.currentWeight < 30 ? '#EF4444' : undefined }}
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
-                    </div>
-                    {form.currentWeight > 0 && form.currentWeight < 30 && (
-                      <p className="text-xs text-red-500 mt-1">{lang === 'ar' ? 'الوزن يجب أن يكون أكثر من 30 كجم' : 'Weight must be over 30 kg'}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-600 block mb-1">
-                      {t('targetWeightLabel')} <span className="text-xs text-gray-400">(كجم)</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number" step="0.1" min="30" max="250"
-                        value={form.targetWeight || ''}
-                        onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
-                        placeholder={lang === 'ar' ? 'مثال: 65' : 'e.g. 65'}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
-                    </div>
+                {/* Target Weight */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 block mb-1">
+                    🎯 {t('targetWeightLabel')} <span className="text-xs text-gray-400">(kg)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number" step="0.1" min="30" max="250"
+                      value={form.targetWeight || ''}
+                      onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      placeholder={lang === 'ar' ? 'مثال: 65' : 'e.g. 65'}
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
                   </div>
                 </div>
                 <div>
