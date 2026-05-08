@@ -81,29 +81,26 @@ export interface AppData {
   weightLog: { date: string; weight: number }[];
 }
 
-// ── Default Data ───────────────────────────────────────────
+// ── Default Data ─────────────────────────────────────────────────────────────
 const DEFAULT_PROFILE: UserProfile = {
-  name: 'بطلتي',
-  currentWeight: 72.6,
-  targetWeight: 65,
-  startWeight: 72.6,
-  age: 36,
-  bmi: 26.7,
-  height: 165,
+  name: '',
+  currentWeight: 0,
+  targetWeight: 0,
+  startWeight: 0,
+  age: 0,
+  bmi: 0,
+  height: 0,
   gender: 'female',
   startDate: new Date().toISOString().split('T')[0],
 };
-
 const DEFAULT_DATA: AppData = {
   profile: DEFAULT_PROFILE,
   sessions: [],
   customExercises: [],
   customCardio: [],
-  weightLog: [{ date: new Date().toISOString().split('T')[0], weight: 72.6 }],
+  weightLog: [],
 };
-
 const STORAGE_KEY = 'gym_tracker_v3';
-
 // ── Helper ─────────────────────────────────────────────────
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

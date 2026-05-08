@@ -233,36 +233,28 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      {/* App Info */}
-      <div className="bg-white rounded-2xl shadow-md p-5">
-        <h3 className="font-bold text-gray-800 mb-3">ℹ️ {t('appInfo')}</h3>
-        <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex justify-between">
-            <span>{t('startDate')}</span>
-            <span className="font-semibold text-gray-800">
-              {new Date(profile.startDate).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>{lang === 'ar' ? 'حفظ البيانات' : 'Data Storage'}</span>
-            <span className="font-semibold text-green-600">✅ {t('autoSave')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>{lang === 'ar' ? 'البيانات' : 'Data'}</span>
-            <span className="font-semibold text-blue-600">🔒 {t('dataLocal')}</span>
-          </div>
-        </div>
-      </div>
+      {/* App Info - compact footer */}
 
       {/* Weight Log Section */}
       <WeightLogSection />
 
       {/* Reset Button */}
-      <div className="pb-4">
+      <div className="pb-2">
         <button onClick={() => setShowReset(true)}
           className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 font-semibold text-sm hover:bg-red-50 transition-all">
           🗑️ {t('resetData')}
         </button>
+      </div>
+
+      {/* App Info Footer */}
+      <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
+        <p className="text-xs text-gray-400 leading-relaxed">
+          {lang === 'ar'
+            ? `تاريخ البداية: ${new Date(profile.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} • البيانات محفوظة محلياً على جهازك 🔒`
+            : `Started: ${new Date(profile.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} • Data saved locally on your device 🔒`
+          }
+        </p>
+        <p className="text-xs text-gray-300 mt-1">Gym Tracker v1.0 • Auto-save enabled ✅</p>
       </div>
 
       {/* Edit Modal */}
