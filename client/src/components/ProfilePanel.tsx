@@ -135,12 +135,16 @@ export function ProfilePanel() {
   const bmiPercent = Math.min(100, Math.max(0, ((plan.bmi - 15) / (40 - 15)) * 100));
 
   const handleSave = () => {
+    const cw = Number(form.currentWeight);
+    const tw = Number(form.targetWeight);
+    if (!cw || cw < 30 || cw > 250) return;
+    if (!tw || tw < 30 || tw > 250) return;
     updateProfile({
       name: form.name,
       age: Number(form.age) || 36,
       height: Number(form.height) || 165,
-      currentWeight: Number(form.currentWeight) || 72.6,
-      targetWeight: Number(form.targetWeight) || 65,
+      currentWeight: cw,
+      targetWeight: tw,
       startWeight: Number(form.startWeight) || profile.startWeight,
       gender: form.gender,
     });
@@ -288,14 +292,38 @@ export function ProfilePanel() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-sm font-semibold text-gray-600 block mb-1">{t('currentWeightLabel')}</label>
-                    <input type="number" step="0.1" value={form.currentWeight} onChange={e => setForm({ ...form, currentWeight: Number(e.target.value) })}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" />
+                    <label className="text-sm font-semibold text-gray-600 block mb-1">
+                      {t('currentWeightLabel')} <span className="text-xs text-gray-400">(كجم)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number" step="0.1" min="30" max="250"
+                        value={form.currentWeight || ''}
+                        onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                        placeholder={lang === 'ar' ? 'مثال: 72.6' : 'e.g. 72.6'}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
+                        style={{ borderColor: form.currentWeight > 0 && form.currentWeight < 30 ? '#EF4444' : undefined }}
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
+                    </div>
+                    {form.currentWeight > 0 && form.currentWeight < 30 && (
+                      <p className="text-xs text-red-500 mt-1">{lang === 'ar' ? 'الوزن يجب أن يكون أكثر من 30 كجم' : 'Weight must be over 30 kg'}</p>
+                    )}
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-600 block mb-1">{t('targetWeightLabel')}</label>
-                    <input type="number" step="0.1" value={form.targetWeight} onChange={e => setForm({ ...form, targetWeight: Number(e.target.value) })}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" />
+                    <label className="text-sm font-semibold text-gray-600 block mb-1">
+                      {t('targetWeightLabel')} <span className="text-xs text-gray-400">(كجم)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number" step="0.1" min="30" max="250"
+                        value={form.targetWeight || ''}
+                        onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                        placeholder={lang === 'ar' ? 'مثال: 65' : 'e.g. 65'}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
+                    </div>
                   </div>
                 </div>
                 <div>
