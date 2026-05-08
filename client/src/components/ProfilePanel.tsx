@@ -1,6 +1,7 @@
 // ProfilePanel - Smart editable profile with BMI, personalized plan, language switcher
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -260,9 +261,9 @@ export function ProfilePanel() {
         </p>
       </div>
 
-      {/* Edit Modal */}
-      {editing && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4">
+      {/* Edit Modal - rendered via Portal to escape stacking context */}
+      {editing && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center p-4" style={{ zIndex: 9999 }}>
           <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-5">
               <h3 className="text-lg font-black text-gray-800 mb-4">✏️ {t('editProfile')}</h3>
@@ -359,11 +360,11 @@ export function ProfilePanel() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
-      {/* Reset Confirm Modal */}
-      {showReset && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      {/* Reset Confirm Modal - rendered via Portal */}
+      {showReset && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
           <div className="bg-white rounded-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-black text-red-600 mb-2">⚠️ {t('resetData')}</h3>
             <p className="text-gray-600 text-sm mb-6">{t('resetWarning')}</p>
@@ -375,7 +376,7 @@ export function ProfilePanel() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </div>
   );
 }

@@ -166,7 +166,7 @@ export default function Home() {
         )}
 
         {activeTab === 'history' && <SessionHistory sessions={data.sessions} onDelete={tracker.deleteSession} />}
-        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} profile={data.profile} onLogWeight={tracker.logWeight} />}
+        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} />}
         {activeTab === 'guide' && <WorkoutGuide />}
         {activeTab === 'profile' && <ProfilePanel />}
       </main>
