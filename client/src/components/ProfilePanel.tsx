@@ -255,6 +255,9 @@ export function ProfilePanel() {
           }
         </p>
         <p className="text-xs text-gray-300 mt-1">Gym Tracker v1.0 • Auto-save enabled ✅</p>
+        <p className="text-xs mt-2" style={{ color: '#C8C8D0', letterSpacing: '0.03em' }}>
+          Made by <span style={{ fontWeight: 700, color: '#B0B0C0' }}>Primeco</span>  © {new Date().getFullYear()} All rights reserved
+        </p>
       </div>
 
       {/* Edit Modal */}
@@ -274,12 +277,12 @@ export function ProfilePanel() {
                   <div>
                     <label className="text-sm font-semibold text-gray-600 block mb-1">{t('age')}</label>
                     <input type="number" value={form.age} onChange={e => setForm({ ...form, age: Number(e.target.value) })}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={15} max={80} />
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={10} max={100} placeholder="e.g. 36" />
                   </div>
                   <div>
                     <label className="text-sm font-semibold text-gray-600 block mb-1">{t('height')}</label>
                     <input type="number" value={form.height} onChange={e => setForm({ ...form, height: Number(e.target.value) })}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={140} max={210} />
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={100} max={250} placeholder="e.g. 165" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -321,7 +324,7 @@ export function ProfilePanel() {
                 <div>
                   <label className="text-sm font-semibold text-gray-600 block mb-1">{t('startWeightLabel')}</label>
                   <input type="number" step="0.1" value={form.startWeight} onChange={e => setForm({ ...form, startWeight: Number(e.target.value) })}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" />
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={30} max={300} placeholder="e.g. 72.6" />
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-gray-600 block mb-2">{t('gender')}</label>

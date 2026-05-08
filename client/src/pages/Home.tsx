@@ -201,6 +201,19 @@ export default function Home() {
         ))}
       </nav>
 
+      {/* ── Primeco Signature ── */}
+      <div style={{
+        position: 'fixed', bottom: 62, left: 0, right: 0,
+        textAlign: 'center', pointerEvents: 'none', zIndex: 99,
+      }}>
+        <span style={{
+          fontSize: 9, color: 'rgba(138,138,170,0.55)',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          letterSpacing: '0.06em', fontWeight: 500,
+        }}>
+          Made by <strong style={{ fontWeight: 700 }}>Primeco</strong> © {new Date().getFullYear()}
+        </span>
+      </div>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }

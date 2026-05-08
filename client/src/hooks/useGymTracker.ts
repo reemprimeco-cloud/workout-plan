@@ -424,8 +424,10 @@ export function useGymTracker() {
     updateProfile,
     logWeight,
     resetAll: () => {
+      // Remove from storage immediately, then reset state and reload
       localStorage.removeItem(STORAGE_KEY);
-      window.location.reload();
+      setData({ ...DEFAULT_DATA, profile: { ...DEFAULT_PROFILE, startDate: new Date().toISOString().split('T')[0] } });
+      setTimeout(() => window.location.reload(), 100);
     },
     profile: data.profile,
     allExercises: [...masterExercises, ...data.customExercises],
