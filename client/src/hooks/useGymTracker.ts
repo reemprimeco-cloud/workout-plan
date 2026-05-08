@@ -10,6 +10,7 @@ import { masterExercises, cardioTemplates, sessionTypes } from '../data/exercise
 export interface ExerciseLog {
   exerciseId: string;
   nameAr: string;
+  nameEn?: string;
   sets: number;
   reps: string;
   weight: string;
@@ -150,6 +151,7 @@ export function useGymTracker() {
         return {
           exerciseId: ex.id,
           nameAr: ex.nameAr,
+          nameEn: ex.nameEn,
           sets: ex.defaultSets,
           reps: ex.defaultReps,
           weight: ex.defaultWeight,
@@ -254,19 +256,46 @@ export function useGymTracker() {
       ),
     }));
   }, []);
-
-  // ── Remove exercise from active session ───────────────
+  // ── Remove exercise from active session (with undo support) ───────
+  const [lastRemovedExercise, setLastRemovedExercise] = useState<{ sessionId: string; exercise: ExerciseLog; idx: number } | null>(null);
   const removeExercise = useCallback((sessionId: string, exerciseIdx: number) => {
+    setData(prev => {
+      const session = prev.sessions.find(s => s.id === sessionId);
+      if (session) {
+        const removed = session.exercises[exerciseIdx];
+        if (removed) setLastRemovedExercise({ sessionId, exercise: removed, idx: exerciseIdx });
+      }
+      return {
+        ...prev,
+        sessions: prev.sessions.map(s => {
+          if (s.id !== sessionId) return s;
+          const exercises = s.exercises.filter((_, i) => i !== exerciseIdx);
+          return { ...s, exercises };
+        }),
+      };
+    });
+  }, []);
+  const undoRemoveExercise = useCallback(() => {
+    if (!lastRemovedExercise) return;
+    const { sessionId, exercise, idx } = lastRemovedExercise;
     setData(prev => ({
       ...prev,
       sessions: prev.sessions.map(s => {
         if (s.id !== sessionId) return s;
-        const exercises = s.exercises.filter((_, i) => i !== exerciseIdx);
+        const exercises = [...s.exercises];
+        exercises.splice(idx, 0, exercise);
         return { ...s, exercises };
       }),
     }));
+    setLastRemovedExercise(null);
+  }, [lastRemovedExercise]);
+  // ── Cancel session (discard without saving) ─────────────
+  const cancelSession = useCallback((sessionId: string) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.filter(s => s.id !== sessionId),
+    }));
   }, []);
-
   // ── Update cardio ──────────────────────────────────────
   const updateCardio = useCallback((sessionId: string, updates: Partial<CardioLog>) => {
     setData(prev => ({
@@ -386,6 +415,9 @@ export function useGymTracker() {
     toggleExercise,
     addExerciseToSession,
     removeExercise,
+    undoRemoveExercise,
+    lastRemovedExercise,
+    cancelSession,
     updateCardio,
     updateAqua,
     updateSauna,

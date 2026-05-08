@@ -52,6 +52,76 @@ function calcPlan(age: number, weight: number, targetWeight: number, height: num
   return { bmi, weeklyLoss, weeks, dailyCals, planName, planNameEn, planDesc, planDescEn, sessionsPerWeek };
 }
 
+// ── Weight Log Sub-component ─────────────────────────────────────────────
+function WeightLogSection() {
+  const { data, logWeight } = useGymTracker();
+  const { lang } = useLanguage();
+  const [newWeight, setNewWeight] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  const handleLog = () => {
+    const w = parseFloat(newWeight);
+    if (!w || w < 30 || w > 250) return;
+    logWeight(w);
+    setNewWeight('');
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const sorted = [...data.weightLog].sort((a, b) => a.date.localeCompare(b.date));
+  const last5 = sorted.slice(-5).reverse();
+
+  return (
+    <div className="bg-white rounded-2xl shadow-md p-5">
+      <h3 className="font-bold text-gray-800 mb-3">⚖️ {lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
+      {/* Input */}
+      <div className="flex gap-2 mb-4">
+        <input
+          type="number" step="0.1" min="30" max="250"
+          value={newWeight}
+          onChange={e => setNewWeight(e.target.value)}
+          placeholder={lang === 'ar' ? 'وزنك اليوم (كجم)' : "Today's weight (kg)"}
+          className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none text-sm"
+        />
+        <button
+          onClick={handleLog}
+          className="px-4 py-2.5 rounded-xl font-bold text-sm text-white transition-all"
+          style={{ background: saved ? '#10B981' : '#E05A00' }}
+        >
+          {saved ? '✅' : (lang === 'ar' ? 'سجّل' : 'Log')}
+        </button>
+      </div>
+      {/* Last 5 entries */}
+      {last5.length > 0 && (
+        <div className="space-y-2">
+          {last5.map((entry, i) => {
+            const prev = sorted[sorted.length - last5.length + (last5.length - 1 - i) - 1];
+            const diff = prev ? entry.weight - prev.weight : 0;
+            return (
+              <div key={entry.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <span className="text-sm text-gray-500">
+                  {new Date(entry.date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US', { month: 'short', day: 'numeric' })}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-800">{entry.weight} kg</span>
+                  {i < last5.length - 1 && diff !== 0 && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{
+                      background: diff < 0 ? '#D1FAE5' : '#FEE2E2',
+                      color: diff < 0 ? '#065F46' : '#991B1B',
+                    }}>
+                      {diff > 0 ? '+' : ''}{diff.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
@@ -139,10 +209,10 @@ export function ProfilePanel() {
       </div>
 
       {/* Personalized Plan */}
-      <div className="bg-gradient-to-br from-[#1A7A4A] to-[#0F5C35] rounded-2xl shadow-md p-5 text-white">
-        <h3 className="font-bold mb-1 text-green-100 text-sm">{t('recommendedPlan')}</h3>
-        <h4 className="text-lg font-black mb-2">{lang === 'ar' ? plan.planName : plan.planNameEn}</h4>
-        <p className="text-green-100 text-sm mb-4">{lang === 'ar' ? plan.planDesc : plan.planDescEn}</p>
+      <div className="rounded-2xl shadow-md p-5" style={{ background: 'linear-gradient(135deg, #F0FAF5, #E4F5EC)', border: '2px solid #B8DFC9' }}>
+        <h3 className="font-bold mb-1 text-sm" style={{ color: '#2D7A50' }}>{t('recommendedPlan')}</h3>
+        <h4 className="text-lg font-black mb-2" style={{ color: '#1A5C3A' }}>{lang === 'ar' ? plan.planName : plan.planNameEn}</h4>
+        <p className="text-sm mb-4" style={{ color: '#3D7A5A' }}>{lang === 'ar' ? plan.planDesc : plan.planDescEn}</p>
         <div className="grid grid-cols-2 gap-3">
           {[
             { icon: '📅', label: t('planDuration'), value: plan.weeks > 0 ? `${plan.weeks} ${t('weeks')}` : (lang === 'ar' ? 'في الوزن المثالي' : 'At ideal weight') },
@@ -150,10 +220,10 @@ export function ProfilePanel() {
             { icon: '🔥', label: t('dailyCalories'), value: `${plan.dailyCals} ${t('calories')}` },
             { icon: '🏋️', label: lang === 'ar' ? 'جلسات أسبوعياً' : 'Sessions/week', value: `${plan.sessionsPerWeek} ${lang === 'ar' ? 'جلسات' : 'sessions'}` },
           ].map((item, i) => (
-            <div key={i} className="bg-white/15 rounded-xl p-3">
+            <div key={i} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #C5E5D3' }}>
               <div className="text-lg mb-1">{item.icon}</div>
-              <div className="text-xs text-green-200">{item.label}</div>
-              <div className="font-bold text-sm">{item.value}</div>
+              <div className="text-xs" style={{ color: '#4A8A6A' }}>{item.label}</div>
+              <div className="font-bold text-sm" style={{ color: '#1A5C3A' }}>{item.value}</div>
             </div>
           ))}
         </div>
@@ -179,6 +249,9 @@ export function ProfilePanel() {
           </div>
         </div>
       </div>
+
+      {/* Weight Log Section */}
+      <WeightLogSection />
 
       {/* Reset Button */}
       <div className="pb-4">

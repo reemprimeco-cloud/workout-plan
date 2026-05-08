@@ -48,6 +48,16 @@ export function ActiveSession({ session, tracker }: Props) {
     });
   };
 
+  const hasStartedWorkout = session.exercises.some(e => e.completed) || session.notes.trim().length > 0;
+  const handleCancelSession = () => {
+    if (hasStartedWorkout) {
+      if (!window.confirm('تم البدء بالتمرين. هل تريدين حفظ الجلسة قبل الخروج؟')) return;
+      handleCheckOut();
+    } else {
+      tracker.cancelSession(session.id);
+    }
+  };
+
   return (
     <div style={{ animation: 'slideUp 0.3s ease' }}>
       {/* Session Header */}
@@ -57,8 +67,20 @@ export function ActiveSession({ session, tracker }: Props) {
         color: 'white',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontSize: 28, marginBottom: 4 }}>{typeDef.icon}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <button
+                onClick={handleCancelSession}
+                style={{
+                  background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,
+                  color: 'white', padding: '4px 10px', fontSize: 13, cursor: 'pointer',
+                  fontFamily: 'Cairo, sans-serif', fontWeight: 700,
+                }}
+              >
+                ← {hasStartedWorkout ? 'حفظ وخروج' : 'إلغاء'}
+              </button>
+              <div style={{ fontSize: 24 }}>{typeDef.icon}</div>
+            </div>
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>{typeDef.nameAr}</h2>
             <p style={{ margin: '4px 0 0', opacity: 0.85, fontSize: 12 }}>
               ⏰ بدأتِ: {session.checkInTime} • مضى: {formatElapsed(elapsed)}
@@ -151,6 +173,22 @@ export function ActiveSession({ session, tracker }: Props) {
               />
             );
           })}
+          {/* Undo Remove Button */}
+          {tracker.lastRemovedExercise && tracker.lastRemovedExercise.sessionId === session.id && (
+            <button
+              onClick={tracker.undoRemoveExercise}
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 12,
+                border: '2px solid #F59E0B', background: '#FFFBEB',
+                color: '#92400E', fontFamily: 'Cairo, sans-serif',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                marginTop: 6,
+              }}
+            >
+              ↩ تراجع - استعادة التمرين المحذوف ({tracker.lastRemovedExercise.exercise.nameAr})
+            </button>
+          )}
         </div>
       )}
 
@@ -183,7 +221,7 @@ export function ActiveSession({ session, tracker }: Props) {
               color={typeDef.color}
               onAdd={ex => {
                 tracker.addExerciseToSession(session.id, {
-                  exerciseId: ex.id, nameAr: ex.nameAr,
+                  exerciseId: ex.id, nameAr: ex.nameAr, nameEn: ex.nameEn,
                   sets: ex.defaultSets, reps: ex.defaultReps,
                   weight: ex.defaultWeight, restSeconds: ex.restSeconds,
                   completed: false, notes: '',
@@ -300,6 +338,11 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
           }}>
             {exercise.nameAr}
           </div>
+          {exercise.nameEn && (
+            <div style={{ fontSize: 10, color: '#A0A0C0', marginTop: 1, fontStyle: 'italic' }}>
+              {exercise.nameEn}
+            </div>
+          )}
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
             {exercise.sets} جولات × {exercise.reps} • {exercise.weight}
           </div>
