@@ -1,0 +1,395 @@
+// ============================================================
+// useGymTracker - Core state management for the gym tracker app
+// All data persisted to localStorage, fully editable & expandable
+// ============================================================
+import { useState, useEffect, useCallback } from 'react';
+import type { SessionType, ExerciseTemplate, CardioTemplate } from '../data/exercises';
+import { masterExercises, cardioTemplates, sessionTypes } from '../data/exercises';
+
+// ── Types ──────────────────────────────────────────────────
+export interface ExerciseLog {
+  exerciseId: string;
+  nameAr: string;
+  sets: number;
+  reps: string;
+  weight: string;
+  restSeconds: number;
+  completed: boolean;
+  notes: string;
+}
+
+export interface CardioLog {
+  cardioId: string;
+  nameAr: string;
+  duration: number;
+  speed: string;
+  incline: string;
+  distanceKm: string;
+  caloriesBurned: string;
+  completed: boolean;
+}
+
+export interface AquaLog {
+  duration: number; // minutes
+  intensity: 'خفيف' | 'متوسط' | 'مكثف';
+  notes: string;
+  completed: boolean;
+}
+
+export interface SaunaLog {
+  totalMinutes: number;
+  rounds: number;
+  notes: string;
+  completed: boolean;
+}
+
+export interface GymSession {
+  id: string;
+  date: string;           // ISO date "2025-05-08"
+  checkInTime: string;    // "09:35"
+  checkOutTime?: string;
+  sessionType: SessionType;
+  exercises: ExerciseLog[];
+  cardio?: CardioLog;
+  aqua?: AquaLog;
+  sauna?: SaunaLog;
+  mood: '😴' | '😐' | '😊' | '💪' | '🔥';
+  energyLevel: 1 | 2 | 3 | 4 | 5;
+  notes: string;
+  bodyWeight?: number;
+  isActive: boolean;
+}
+
+export interface UserProfile {
+  name: string;
+  currentWeight: number;
+  targetWeight: number;
+  startWeight: number;
+  age: number;
+  bmi: number;
+  startDate: string;
+}
+
+export interface AppData {
+  profile: UserProfile;
+  sessions: GymSession[];
+  customExercises: ExerciseTemplate[];
+  customCardio: CardioTemplate[];
+  weightLog: { date: string; weight: number }[];
+}
+
+// ── Default Data ───────────────────────────────────────────
+const DEFAULT_PROFILE: UserProfile = {
+  name: 'بطلتي',
+  currentWeight: 72.6,
+  targetWeight: 65,
+  startWeight: 72.6,
+  age: 36,
+  bmi: 26.7,
+  startDate: new Date().toISOString().split('T')[0],
+};
+
+const DEFAULT_DATA: AppData = {
+  profile: DEFAULT_PROFILE,
+  sessions: [],
+  customExercises: [],
+  customCardio: [],
+  weightLog: [{ date: new Date().toISOString().split('T')[0], weight: 72.6 }],
+};
+
+const STORAGE_KEY = 'gym_tracker_v3';
+
+// ── Helper ─────────────────────────────────────────────────
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatDate(date: Date) {
+  return date.toISOString().split('T')[0];
+}
+
+// ── Hook ───────────────────────────────────────────────────
+export function useGymTracker() {
+  const [data, setData] = useState<AppData>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as AppData;
+        return { ...DEFAULT_DATA, ...parsed };
+      }
+    } catch {}
+    return DEFAULT_DATA;
+  });
+
+  // Persist on every change
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }, [data]);
+
+  // ── Active session ─────────────────────────────────────
+  const activeSession = data.sessions.find(s => s.isActive) ?? null;
+
+  // ── Start a new session ────────────────────────────────
+  const startSession = useCallback((type: SessionType) => {
+    const now = new Date();
+    const typeDef = sessionTypes[type];
+
+    // Build default exercises from template
+    const exercises: ExerciseLog[] = (typeDef.defaultExercises ?? [])
+      .map(id => {
+        const ex = [...masterExercises, ...data.customExercises].find(e => e.id === id);
+        if (!ex) return null;
+        return {
+          exerciseId: ex.id,
+          nameAr: ex.nameAr,
+          sets: ex.defaultSets,
+          reps: ex.defaultReps,
+          weight: ex.defaultWeight,
+          restSeconds: ex.restSeconds,
+          completed: false,
+          notes: '',
+        } as ExerciseLog;
+      })
+      .filter(Boolean) as ExerciseLog[];
+
+    // Default cardio
+    let cardio: CardioLog | undefined;
+    if (typeDef.defaultCardio) {
+      const c = [...cardioTemplates, ...data.customCardio].find(c => c.id === typeDef.defaultCardio);
+      if (c) {
+        cardio = {
+          cardioId: c.id,
+          nameAr: c.nameAr,
+          duration: c.defaultDuration,
+          speed: c.defaultSpeed,
+          incline: c.defaultIncline,
+          distanceKm: '',
+          caloriesBurned: '',
+          completed: false,
+        };
+      }
+    }
+
+    // Aqua / Sauna defaults
+    let aqua: AquaLog | undefined;
+    let sauna: SaunaLog | undefined;
+    if (type === 'aqua') aqua = { duration: 45, intensity: 'متوسط', notes: '', completed: false };
+    if (type === 'sauna') sauna = { totalMinutes: 25, rounds: 2, notes: '', completed: false };
+
+    const session: GymSession = {
+      id: generateId(),
+      date: formatDate(now),
+      checkInTime: formatTime(now),
+      sessionType: type,
+      exercises,
+      cardio,
+      aqua,
+      sauna,
+      mood: '😊',
+      energyLevel: 3,
+      notes: '',
+      isActive: true,
+    };
+
+    setData(prev => ({
+      ...prev,
+      sessions: [session, ...prev.sessions.map(s => ({ ...s, isActive: false }))],
+    }));
+    return session.id;
+  }, [data.customExercises, data.customCardio]);
+
+  // ── Check out ──────────────────────────────────────────
+  const checkOut = useCallback((sessionId: string, updates?: Partial<GymSession>) => {
+    const now = new Date();
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId
+          ? { ...s, ...updates, checkOutTime: formatTime(now), isActive: false }
+          : s
+      ),
+    }));
+  }, []);
+
+  // ── Update exercise in active session ──────────────────
+  const updateExercise = useCallback((sessionId: string, exerciseIdx: number, updates: Partial<ExerciseLog>) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s => {
+        if (s.id !== sessionId) return s;
+        const exercises = [...s.exercises];
+        exercises[exerciseIdx] = { ...exercises[exerciseIdx], ...updates };
+        return { ...s, exercises };
+      }),
+    }));
+  }, []);
+
+  // ── Toggle exercise completed ──────────────────────────
+  const toggleExercise = useCallback((sessionId: string, exerciseIdx: number) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s => {
+        if (s.id !== sessionId) return s;
+        const exercises = [...s.exercises];
+        exercises[exerciseIdx] = { ...exercises[exerciseIdx], completed: !exercises[exerciseIdx].completed };
+        return { ...s, exercises };
+      }),
+    }));
+  }, []);
+
+  // ── Add exercise to active session ────────────────────
+  const addExerciseToSession = useCallback((sessionId: string, exercise: ExerciseLog) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, exercises: [...s.exercises, exercise] } : s
+      ),
+    }));
+  }, []);
+
+  // ── Remove exercise from active session ───────────────
+  const removeExercise = useCallback((sessionId: string, exerciseIdx: number) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s => {
+        if (s.id !== sessionId) return s;
+        const exercises = s.exercises.filter((_, i) => i !== exerciseIdx);
+        return { ...s, exercises };
+      }),
+    }));
+  }, []);
+
+  // ── Update cardio ──────────────────────────────────────
+  const updateCardio = useCallback((sessionId: string, updates: Partial<CardioLog>) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, cardio: s.cardio ? { ...s.cardio, ...updates } : undefined } : s
+      ),
+    }));
+  }, []);
+
+  // ── Update aqua / sauna ────────────────────────────────
+  const updateAqua = useCallback((sessionId: string, updates: Partial<AquaLog>) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, aqua: s.aqua ? { ...s.aqua, ...updates } : undefined } : s
+      ),
+    }));
+  }, []);
+
+  const updateSauna = useCallback((sessionId: string, updates: Partial<SaunaLog>) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, sauna: s.sauna ? { ...s.sauna, ...updates } : undefined } : s
+      ),
+    }));
+  }, []);
+
+  // ── Update session meta (mood, notes, weight) ─────────
+  const updateSessionMeta = useCallback((sessionId: string, updates: Partial<GymSession>) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, ...updates } : s
+      ),
+    }));
+  }, []);
+
+  // ── Delete session ─────────────────────────────────────
+  const deleteSession = useCallback((sessionId: string) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.filter(s => s.id !== sessionId),
+    }));
+  }, []);
+
+  // ── Add custom exercise to library ────────────────────
+  const addCustomExercise = useCallback((exercise: ExerciseTemplate) => {
+    setData(prev => ({
+      ...prev,
+      customExercises: [...prev.customExercises, exercise],
+    }));
+  }, []);
+
+  // ── Update profile ─────────────────────────────────────
+  const updateProfile = useCallback((updates: Partial<UserProfile>) => {
+    setData(prev => ({ ...prev, profile: { ...prev.profile, ...updates } }));
+  }, []);
+
+  // ── Log weight ─────────────────────────────────────────
+  const logWeight = useCallback((weight: number) => {
+    const today = new Date().toISOString().split('T')[0];
+    setData(prev => {
+      const log = [...prev.weightLog];
+      const idx = log.findIndex(l => l.date === today);
+      if (idx >= 0) log[idx] = { date: today, weight };
+      else log.push({ date: today, weight });
+      return { ...prev, weightLog: log, profile: { ...prev.profile, currentWeight: weight } };
+    });
+  }, []);
+
+  // ── Statistics ─────────────────────────────────────────
+  const stats = {
+    totalSessions: data.sessions.filter(s => !s.isActive).length,
+    thisWeek: data.sessions.filter(s => {
+      const d = new Date(s.date);
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return d >= weekAgo && !s.isActive;
+    }).length,
+    thisMonth: data.sessions.filter(s => {
+      const d = new Date(s.date);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && !s.isActive;
+    }).length,
+    weightLost: Math.max(0, data.profile.startWeight - data.profile.currentWeight),
+    progressPercent: Math.min(100, Math.round(
+      ((data.profile.startWeight - data.profile.currentWeight) /
+        (data.profile.startWeight - data.profile.targetWeight)) * 100
+    )),
+    sessionsByType: Object.keys(sessionTypes).reduce((acc, type) => {
+      acc[type as SessionType] = data.sessions.filter(s => s.sessionType === type && !s.isActive).length;
+      return acc;
+    }, {} as Record<SessionType, number>),
+    streak: (() => {
+      const completed = data.sessions.filter(s => !s.isActive).sort((a, b) => b.date.localeCompare(a.date));
+      if (!completed.length) return 0;
+      let streak = 0;
+      let current = new Date();
+      for (const s of completed) {
+        const d = new Date(s.date);
+        const diff = Math.floor((current.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+        if (diff <= 1) { streak++; current = d; } else break;
+      }
+      return streak;
+    })(),
+  };
+
+  return {
+    data,
+    activeSession,
+    stats,
+    startSession,
+    checkOut,
+    updateExercise,
+    toggleExercise,
+    addExerciseToSession,
+    removeExercise,
+    updateCardio,
+    updateAqua,
+    updateSauna,
+    updateSessionMeta,
+    deleteSession,
+    addCustomExercise,
+    updateProfile,
+    logWeight,
+    allExercises: [...masterExercises, ...data.customExercises],
+  };
+}
