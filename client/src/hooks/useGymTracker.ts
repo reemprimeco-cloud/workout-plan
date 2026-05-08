@@ -67,6 +67,8 @@ export interface UserProfile {
   startWeight: number;
   age: number;
   bmi: number;
+  height: number;
+  gender: 'female' | 'male';
   startDate: string;
 }
 
@@ -86,6 +88,8 @@ const DEFAULT_PROFILE: UserProfile = {
   startWeight: 72.6,
   age: 36,
   bmi: 26.7,
+  height: 165,
+  gender: 'female',
   startDate: new Date().toISOString().split('T')[0],
 };
 
@@ -390,6 +394,11 @@ export function useGymTracker() {
     addCustomExercise,
     updateProfile,
     logWeight,
+    resetAll: () => {
+      localStorage.removeItem(STORAGE_KEY);
+      window.location.reload();
+    },
+    profile: data.profile,
     allExercises: [...masterExercises, ...data.customExercises],
   };
 }

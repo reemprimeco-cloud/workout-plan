@@ -1,0 +1,348 @@
+// LanguageContext - Full Arabic/English translation system
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+
+export type Lang = 'ar' | 'en';
+
+export const translations = {
+  ar: {
+    // App
+    appName: 'متتبع النادي',
+    appSubtitle: 'نظام تتبع التمارين الذكي',
+    goal: 'هدف',
+    kg: 'كجم',
+    // Nav
+    navHome: 'الرئيسية',
+    navHistory: 'السجل',
+    navStats: 'الإحصائيات',
+    navGuide: 'الجدول',
+    navProfile: 'الملف',
+    // Home
+    greetingMorning: 'صباح الخير',
+    greetingAfternoon: 'مساء الخير',
+    greetingEvening: 'مساء النور',
+    streak: 'يوم متتالي',
+    activeSession: 'جلسة نشطة',
+    thisWeek: 'هذا الأسبوع',
+    thisMonth: 'هذا الشهر',
+    total: 'المجموع',
+    session: 'جلسة',
+    sessions: 'جلسات',
+    weightProgress: 'تقدم الوزن',
+    startWeight: 'البداية',
+    progressPct: 'التقدم',
+    lostKg: 'خسرتِ',
+    chooseWorkout: 'اختاري نوع تمرين اليوم',
+    autoTime: 'سيتم تسجيل الوقت تلقائياً عند الضغط',
+    startNow: 'ابدئي الآن ▶',
+    continueSession: 'متابعة ◀',
+    // Session
+    activeNow: 'جلسة نشطة الآن',
+    started: 'بدأتِ',
+    elapsed: 'مضى',
+    completed: 'مكتمل',
+    exercisesCompleted: 'تمرين مكتمل',
+    showTimer: 'إظهار مؤقت الراحة',
+    hideTimer: 'إخفاء المؤقت',
+    addExercise: '+ إضافة تمرين',
+    sessionNotes: 'ملاحظات الجلسة',
+    mood: 'المزاج',
+    energy: 'الطاقة',
+    notesPlaceholder: 'ملاحظات، إصابات، تحسينات...',
+    endSession: '✅ إنهاء الجلسة وحفظ التقدم',
+    saving: '⏳ جاري الحفظ...',
+    sets: 'جولات',
+    reps: 'التكرارات',
+    weight: 'الوزن',
+    rest: 'راحة (ث)',
+    note: 'ملاحظة',
+    notePlaceholder: 'أي ملاحظة...',
+    remove: 'حذف',
+    searchExercise: '🔍 ابحثي عن تمرين...',
+    noResults: 'لا توجد نتائج',
+    markComplete: 'تحديد كمكتملة',
+    markDone: '✅ مكتملة',
+    // Aqua
+    aquaTitle: 'كلاس الأكوا',
+    aquaSubtitle: 'تمارين مائية لحرق الدهون',
+    duration: 'المدة (دقيقة)',
+    intensity: 'الشدة',
+    intensityLight: 'خفيف',
+    intensityMedium: 'متوسط',
+    intensityHigh: 'مكثف',
+    aquaExercises: 'تمارين الكلاس:',
+    // Sauna
+    saunaTitle: 'جلسة السونا',
+    saunaSubtitle: 'تعافٍ وحرق سعرات وإزالة سموم',
+    totalMinutes: 'إجمالي الدقائق',
+    rounds: 'عدد الجولات',
+    saunaProtocol: 'بروتوكول السونا:',
+    // History
+    historyTitle: 'سجل الجلسات',
+    noHistory: 'لا توجد جلسات بعد',
+    noHistoryDesc: 'ابدئي أول جلسة من الصفحة الرئيسية وسيظهر سجلها هنا',
+    exercises: 'التمارين:',
+    deleteSession: '🗑 حذف الجلسة',
+    confirmDelete: 'تأكيد الحذف',
+    cancel: 'إلغاء',
+    // Stats
+    statsTitle: 'الإحصائيات',
+    totalSessions: 'إجمالي الجلسات',
+    streakDays: 'أيام متتالية',
+    weightTracking: 'تتبع الوزن',
+    currentWeight: 'الوزن الحالي',
+    targetWeight: 'الهدف',
+    lostWeight: 'المفقود',
+    remaining: 'المتبقي',
+    progressGoal: 'التقدم نحو الهدف',
+    logWeightPlaceholder: 'سجّلي وزنك اليوم...',
+    logWeight: 'تسجيل',
+    weightLog: 'سجل الوزن',
+    sessionsByType: 'توزيع الجلسات',
+    noStats: 'ابدئي جلساتك لترى الإحصائيات هنا',
+    // Guide
+    guideTitle: 'الجدول الإرشادي',
+    guidePlan: 'الخطة',
+    guideExercises: 'التمارين',
+    guideAqua: 'الأكوا',
+    guideSauna: 'السونا',
+    guideNutrition: 'التغذية',
+    weeklyPlan: 'خطة التمرين الأسبوعية',
+    weeklyPlanDesc: '5 أيام تدريب + يوم أكوا + يوم سونا + يوم راحة. الجدول مرن - سجّلي حضورك متى أردتِ.',
+    planTips: 'نصائح للجدول',
+    watchVideo: '▶ شاهدي الشرح',
+    // Profile
+    profileTitle: 'الملف الشخصي',
+    editProfile: 'تعديل الملف الشخصي',
+    edit: 'تعديل',
+    save: 'حفظ',
+    name: 'الاسم',
+    age: 'العمر',
+    height: 'الطول (سم)',
+    currentWeightLabel: 'الوزن الحالي (كجم)',
+    targetWeightLabel: 'الوزن المستهدف (كجم)',
+    startWeightLabel: 'وزن البداية (كجم)',
+    gender: 'الجنس',
+    genderFemale: 'أنثى',
+    genderMale: 'ذكر',
+    bmiLabel: 'مؤشر كتلة الجسم (BMI)',
+    bmiCategory: 'فئة BMI',
+    bmiUnderweight: 'نقص وزن',
+    bmiNormal: 'طبيعي',
+    bmiOverweight: 'زيادة وزن',
+    bmiObese: 'سمنة',
+    recommendedPlan: 'البرنامج الموصى به',
+    weeklyLoss: 'خسارة أسبوعية متوقعة',
+    planDuration: 'المدة المتوقعة',
+    weeks: 'أسبوع',
+    dailyCalories: 'السعرات اليومية الموصى بها',
+    calories: 'سعرة',
+    appInfo: 'معلومات التطبيق',
+    autoSave: 'تلقائي في المتصفح',
+    dataLocal: 'محفوظة على جهازك',
+    alwaysUpdatable: 'قابل للتطوير دائماً',
+    startDate: 'تاريخ البداية',
+    resetData: 'إعادة تعيين البيانات',
+    resetWarning: 'سيتم حذف جميع الجلسات والسجلات بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.',
+    resetConfirm: 'نعم، احذف كل شيء',
+    language: 'اللغة',
+    // Days
+    sunday: 'الأحد',
+    monday: 'الاثنين',
+    tuesday: 'الثلاثاء',
+    wednesday: 'الأربعاء',
+    thursday: 'الخميس',
+    friday: 'الجمعة',
+    saturday: 'السبت',
+  },
+  en: {
+    // App
+    appName: 'Gym Tracker',
+    appSubtitle: 'Smart Workout Tracking System',
+    goal: 'Goal',
+    kg: 'kg',
+    // Nav
+    navHome: 'Home',
+    navHistory: 'History',
+    navStats: 'Stats',
+    navGuide: 'Guide',
+    navProfile: 'Profile',
+    // Home
+    greetingMorning: 'Good Morning',
+    greetingAfternoon: 'Good Afternoon',
+    greetingEvening: 'Good Evening',
+    streak: 'day streak',
+    activeSession: 'Active Session',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    total: 'Total',
+    session: 'session',
+    sessions: 'sessions',
+    weightProgress: 'Weight Progress',
+    startWeight: 'Start',
+    progressPct: 'Progress',
+    lostKg: 'Lost',
+    chooseWorkout: 'Choose Today\'s Workout',
+    autoTime: 'Time will be recorded automatically when you tap',
+    startNow: 'Start Now ▶',
+    continueSession: 'Continue ◀',
+    // Session
+    activeNow: 'Active Session',
+    started: 'Started',
+    elapsed: 'Elapsed',
+    completed: 'Complete',
+    exercisesCompleted: 'exercises done',
+    showTimer: 'Show Rest Timer',
+    hideTimer: 'Hide Timer',
+    addExercise: '+ Add Exercise',
+    sessionNotes: 'Session Notes',
+    mood: 'Mood',
+    energy: 'Energy',
+    notesPlaceholder: 'Notes, injuries, improvements...',
+    endSession: '✅ End Session & Save Progress',
+    saving: '⏳ Saving...',
+    sets: 'Sets',
+    reps: 'Reps',
+    weight: 'Weight',
+    rest: 'Rest (s)',
+    note: 'Note',
+    notePlaceholder: 'Any note...',
+    remove: 'Remove',
+    searchExercise: '🔍 Search exercises...',
+    noResults: 'No results found',
+    markComplete: 'Mark as Complete',
+    markDone: '✅ Done',
+    // Aqua
+    aquaTitle: 'Aqua Class',
+    aquaSubtitle: 'Water exercises for fat burning',
+    duration: 'Duration (min)',
+    intensity: 'Intensity',
+    intensityLight: 'Light',
+    intensityMedium: 'Medium',
+    intensityHigh: 'Intense',
+    aquaExercises: 'Class Exercises:',
+    // Sauna
+    saunaTitle: 'Sauna Session',
+    saunaSubtitle: 'Recovery, calorie burn & detox',
+    totalMinutes: 'Total Minutes',
+    rounds: 'Rounds',
+    saunaProtocol: 'Sauna Protocol:',
+    // History
+    historyTitle: 'Session History',
+    noHistory: 'No sessions yet',
+    noHistoryDesc: 'Start your first session from the home page and it will appear here',
+    exercises: 'Exercises:',
+    deleteSession: '🗑 Delete Session',
+    confirmDelete: 'Confirm Delete',
+    cancel: 'Cancel',
+    // Stats
+    statsTitle: 'Statistics',
+    totalSessions: 'Total Sessions',
+    streakDays: 'Day Streak',
+    weightTracking: 'Weight Tracking',
+    currentWeight: 'Current Weight',
+    targetWeight: 'Target',
+    lostWeight: 'Lost',
+    remaining: 'Remaining',
+    progressGoal: 'Progress to Goal',
+    logWeightPlaceholder: 'Log today\'s weight...',
+    logWeight: 'Log',
+    weightLog: 'Weight Log',
+    sessionsByType: 'Sessions by Type',
+    noStats: 'Start your sessions to see statistics here',
+    // Guide
+    guideTitle: 'Workout Guide',
+    guidePlan: 'Plan',
+    guideExercises: 'Exercises',
+    guideAqua: 'Aqua',
+    guideSauna: 'Sauna',
+    guideNutrition: 'Nutrition',
+    weeklyPlan: 'Weekly Workout Plan',
+    weeklyPlanDesc: '5 training days + aqua day + sauna day + rest day. Flexible schedule - log your attendance anytime.',
+    planTips: 'Schedule Tips',
+    watchVideo: '▶ Watch Tutorial',
+    // Profile
+    profileTitle: 'Profile',
+    editProfile: 'Edit Profile',
+    edit: 'Edit',
+    save: 'Save',
+    name: 'Name',
+    age: 'Age',
+    height: 'Height (cm)',
+    currentWeightLabel: 'Current Weight (kg)',
+    targetWeightLabel: 'Target Weight (kg)',
+    startWeightLabel: 'Starting Weight (kg)',
+    gender: 'Gender',
+    genderFemale: 'Female',
+    genderMale: 'Male',
+    bmiLabel: 'Body Mass Index (BMI)',
+    bmiCategory: 'BMI Category',
+    bmiUnderweight: 'Underweight',
+    bmiNormal: 'Normal',
+    bmiOverweight: 'Overweight',
+    bmiObese: 'Obese',
+    recommendedPlan: 'Recommended Plan',
+    weeklyLoss: 'Expected Weekly Loss',
+    planDuration: 'Expected Duration',
+    weeks: 'weeks',
+    dailyCalories: 'Recommended Daily Calories',
+    calories: 'cal',
+    appInfo: 'App Information',
+    autoSave: 'Auto-saved in browser',
+    dataLocal: 'Stored on your device',
+    alwaysUpdatable: 'Always upgradeable',
+    startDate: 'Start Date',
+    resetData: 'Reset Data',
+    resetWarning: 'All sessions and records will be permanently deleted. This action cannot be undone.',
+    resetConfirm: 'Yes, delete everything',
+    language: 'Language',
+    // Days
+    sunday: 'Sunday',
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+  },
+} as const;
+
+export type TranslationKey = keyof typeof translations.ar;
+
+interface LanguageContextType {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: TranslationKey) => string;
+  isRTL: boolean;
+}
+
+const LanguageContext = createContext<LanguageContextType>({
+  lang: 'ar',
+  setLang: () => {},
+  t: (key) => key,
+  isRTL: true,
+});
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>(() => {
+    return (localStorage.getItem('gym_lang') as Lang) || 'ar';
+  });
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem('gym_lang', l);
+  };
+
+  const t = (key: TranslationKey): string => {
+    return (translations[lang] as Record<string, string>)[key] ?? (translations.ar as Record<string, string>)[key] ?? key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang, t, isRTL: lang === 'ar' }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  return useContext(LanguageContext);
+}

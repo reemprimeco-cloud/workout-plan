@@ -187,11 +187,28 @@ export function WorkoutGuide() {
                       </div>
                       <div style={{
                         background: '#FFF0E8', borderRadius: 10, padding: '10px 12px',
-                        borderRight: '3px solid #E05A00',
+                        borderRight: '3px solid #E05A00', marginBottom: 10,
                       }}>
                         <span style={{ fontSize: 11, color: '#E05A00', fontWeight: 700 }}>💡 نصيحة: </span>
                         <span style={{ fontSize: 11, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>{ex.tip}</span>
                       </div>
+                      {ex.youtubeUrl && (
+                        <a
+                          href={ex.youtubeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            background: '#FF0000', color: 'white',
+                            borderRadius: 10, padding: '10px 14px',
+                            textDecoration: 'none', fontWeight: 700, fontSize: 13,
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <span style={{ fontSize: 18 }}>▶</span>
+                          شاهدي شرح التمرين الصحيح على يوتيوب
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 // ============================================================
 // Home Page - Dashboard + Check-in
-// Design: Energetic Sports RTL, Warm Orange #E05A00 + Deep Navy #1A1A2E
+// Design: Energetic Sports RTL/LTR, Warm Orange #E05A00 + Deep Navy #1A1A2E
+// Supports full Arabic/English translation via LanguageContext
 // ============================================================
 import { useState } from 'react';
 import { useGymTracker } from '../hooks/useGymTracker';
@@ -10,12 +11,14 @@ import { ActiveSession } from '../components/ActiveSession';
 import { SessionHistory } from '../components/SessionHistory';
 import { StatsPanel } from '../components/StatsPanel';
 import { WorkoutGuide } from '../components/WorkoutGuide';
-import { ProfilePanel } from '../components/ProfilePanel';
+import ProfilePanel from '../components/ProfilePanel';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type Tab = 'home' | 'history' | 'stats' | 'guide' | 'profile';
 
 export default function Home() {
   const tracker = useGymTracker();
+  const { lang, t, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [startingSession, setStartingSession] = useState(false);
 
@@ -28,19 +31,18 @@ export default function Home() {
   };
 
   const tabs: { id: Tab; icon: string; label: string }[] = [
-    { id: 'home', icon: '🏠', label: 'الرئيسية' },
-    { id: 'history', icon: '📋', label: 'السجل' },
-    { id: 'stats', icon: '📊', label: 'الإحصائيات' },
-    { id: 'guide', icon: '📖', label: 'الجدول' },
-    { id: 'profile', icon: '⚙️', label: 'الملف' },
+    { id: 'home', icon: '🏠', label: t('navHome') },
+    { id: 'history', icon: '📋', label: t('navHistory') },
+    { id: 'stats', icon: '📊', label: t('navStats') },
+    { id: 'guide', icon: '📖', label: t('navGuide') },
+    { id: 'profile', icon: '⚙️', label: t('navProfile') },
   ];
 
   return (
-    <div style={{
+    <div dir={isRTL ? 'rtl' : 'ltr'} style={{
       minHeight: '100vh',
       background: '#F7F8FC',
-      fontFamily: 'Cairo, Tajawal, sans-serif',
-      direction: 'rtl',
+      fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
     }}>
       {/* ── Top Header ── */}
       <header style={{
@@ -63,10 +65,10 @@ export default function Home() {
           }}>💪</div>
           <div>
             <h1 style={{ margin: 0, color: 'white', fontSize: 18, fontWeight: 900, lineHeight: 1 }}>
-              متتبع النادي
+              {t('appName')}
             </h1>
             <p style={{ margin: 0, color: '#A0A0C0', fontSize: 11 }}>
-              {data.profile.name} • هدف {data.profile.targetWeight} كجم
+              {data.profile.name} • {t('goal')} {data.profile.targetWeight} {t('kg')}
             </p>
           </div>
         </div>
@@ -77,14 +79,14 @@ export default function Home() {
               color: 'white', fontSize: 12, fontWeight: 700,
               animation: 'pulse 2s infinite',
             }}>
-              🔴 جلسة نشطة
+              🔴 {t('activeSession')}
             </div>
           )}
           <div style={{
             background: '#2D2D4E', borderRadius: 10, padding: '6px 12px',
             color: '#A0A0C0', fontSize: 12,
           }}>
-            🔥 {stats.streak} يوم متتالي
+            🔥 {stats.streak} {t('streak')}
           </div>
         </div>
       </header>
@@ -102,10 +104,10 @@ export default function Home() {
           }}>
             <div>
               <div style={{ color: 'white', fontWeight: 900, fontSize: 15 }}>
-                {sessionTypes[activeSession.sessionType].icon} جلسة نشطة الآن
+                {sessionTypes[activeSession.sessionType].icon} {t('activeSession')}
               </div>
               <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 2 }}>
-                {sessionTypes[activeSession.sessionType].nameAr} • بدأت {activeSession.checkInTime}
+                {lang === 'ar' ? sessionTypes[activeSession.sessionType].nameAr : (sessionTypes[activeSession.sessionType] as any).nameEn || sessionTypes[activeSession.sessionType].nameAr} • {activeSession.checkInTime}
               </div>
             </div>
             <button
@@ -113,10 +115,10 @@ export default function Home() {
               style={{
                 background: 'white', color: '#E05A00', border: 'none',
                 borderRadius: 10, padding: '8px 16px', fontWeight: 700,
-                fontSize: 13, cursor: 'pointer', fontFamily: 'Cairo, sans-serif',
+                fontSize: 13, cursor: 'pointer',
               }}
             >
-              متابعة ◀
+              {isRTL ? 'متابعة ◀' : '▶ Continue'}
             </button>
           </div>
         )}
@@ -135,7 +137,7 @@ export default function Home() {
         {activeTab === 'history' && <SessionHistory sessions={data.sessions} onDelete={tracker.deleteSession} />}
         {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} profile={data.profile} onLogWeight={tracker.logWeight} />}
         {activeTab === 'guide' && <WorkoutGuide />}
-        {activeTab === 'profile' && <ProfilePanel profile={data.profile} onUpdate={tracker.updateProfile} />}
+        {activeTab === 'profile' && <ProfilePanel />}
       </main>
 
       {/* ── Bottom Navigation ── */}
@@ -161,7 +163,7 @@ export default function Home() {
           >
             <span style={{ fontSize: 20, lineHeight: 1 }}>{tab.icon}</span>
             <span style={{
-              fontSize: 10, fontFamily: 'Cairo, sans-serif', fontWeight: 700,
+              fontSize: 10, fontWeight: 700,
               color: activeTab === tab.id ? '#E05A00' : '#8A8AAA',
             }}>{tab.label}</span>
           </button>
@@ -169,7 +171,7 @@ export default function Home() {
       </nav>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
         @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
         * { box-sizing: border-box; }
@@ -187,11 +189,15 @@ function CheckInPanel({ onStart, stats, profile }: {
   stats: ReturnType<typeof useGymTracker>['stats'];
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
 }) {
+  const { lang, t, isRTL } = useLanguage();
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? 'صباح الخير' : hour < 17 ? 'مساء الخير' : 'مساء النور';
-  const dayName = now.toLocaleDateString('ar-SA', { weekday: 'long' });
-  const dateStr = now.toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
+  const greeting = hour < 12 ? t('greetingMorning') : hour < 17 ? t('greetingAfternoon') : t('greetingEvening');
+
+  // Gregorian date display
+  const locale = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US';
+  const dayName = now.toLocaleDateString(locale, { weekday: 'long' });
+  const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest'];
 
@@ -212,9 +218,9 @@ function CheckInPanel({ onStart, stats, profile }: {
           <p style={{ margin: 0, color: '#A0A0C0', fontSize: 12 }}>{dayName}، {dateStr}</p>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
-              { label: 'هذا الأسبوع', value: `${stats.thisWeek} جلسة`, icon: '📅' },
-              { label: 'هذا الشهر', value: `${stats.thisMonth} جلسة`, icon: '📆' },
-              { label: 'المجموع', value: `${stats.totalSessions} جلسة`, icon: '🏆' },
+              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
+              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: '📆' },
+              { label: t('total'), value: `${stats.totalSessions} ${t('session')}`, icon: '🏆' },
             ].map(s => (
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 14px',
@@ -233,9 +239,9 @@ function CheckInPanel({ onStart, stats, profile }: {
         boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, color: '#1A1A2E', fontSize: 14 }}>⚖️ تقدم الوزن</span>
+          <span style={{ fontWeight: 700, color: '#1A1A2E', fontSize: 14 }}>⚖️ {t('weightProgress')}</span>
           <span style={{ fontSize: 12, color: '#8A8AAA' }}>
-            {profile.currentWeight} كجم ← {profile.targetWeight} كجم
+            {profile.currentWeight} {t('kg')} ← {profile.targetWeight} {t('kg')}
           </span>
         </div>
         <div style={{ height: 10, background: '#F0F0F0', borderRadius: 5, overflow: 'hidden' }}>
@@ -248,9 +254,9 @@ function CheckInPanel({ onStart, stats, profile }: {
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-          <span style={{ fontSize: 11, color: '#8A8AAA' }}>بداية: {profile.startWeight} كجم</span>
+          <span style={{ fontSize: 11, color: '#8A8AAA' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
           <span style={{ fontSize: 11, color: '#E05A00', fontWeight: 700 }}>
-            {stats.progressPercent}% • خسرتِ {stats.weightLost.toFixed(1)} كجم 🎉
+            {stats.progressPercent}% • {lang === 'ar' ? 'خسرتِ' : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 🎉
           </span>
         </div>
       </div>
@@ -258,10 +264,10 @@ function CheckInPanel({ onStart, stats, profile }: {
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
         <h3 style={{ margin: 0, color: '#1A1A2E', fontSize: 17, fontWeight: 900 }}>
-          🏋️‍♀️ اختاري نوع تمرين اليوم
+          🏋️‍♀️ {t('chooseWorkout')}
         </h3>
         <p style={{ margin: '4px 0 0', color: '#8A8AAA', fontSize: 12 }}>
-          سيتم تسجيل الوقت تلقائياً عند الضغط
+          {t('autoTime')}
         </p>
       </div>
 
@@ -269,6 +275,8 @@ function CheckInPanel({ onStart, stats, profile }: {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {sessionOrder.map(type => {
           const def = sessionTypes[type];
+          const nameDisplay = lang === 'ar' ? def.nameAr : ((def as any).nameEn || def.nameAr);
+          const descDisplay = lang === 'ar' ? def.description : ((def as any).descriptionEn || def.description);
           return (
             <button
               key={type}
@@ -279,10 +287,9 @@ function CheckInPanel({ onStart, stats, profile }: {
                 borderRadius: 16,
                 padding: '14px 12px',
                 cursor: 'pointer',
-                textAlign: 'right',
+                textAlign: isRTL ? 'right' : 'left',
                 transition: 'all 0.2s',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                fontFamily: 'Cairo, sans-serif',
               }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
@@ -297,17 +304,17 @@ function CheckInPanel({ onStart, stats, profile }: {
             >
               <div style={{ fontSize: 28, marginBottom: 6 }}>{def.icon}</div>
               <div style={{ fontWeight: 900, color: def.color, fontSize: 13, lineHeight: 1.3 }}>
-                {def.nameAr.split(' - ')[0]}
+                {nameDisplay.split(' - ')[0]}
               </div>
               <div style={{ fontSize: 10, color: '#8A8AAA', marginTop: 4, lineHeight: 1.4 }}>
-                {def.description}
+                {descDisplay}
               </div>
               <div style={{
                 marginTop: 8, display: 'inline-block',
                 background: def.bgColor, color: def.color,
                 borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700,
               }}>
-                ابدئي الآن ▶
+                {isRTL ? 'ابدئي الآن ▶' : '▶ Start Now'}
               </div>
             </button>
           );

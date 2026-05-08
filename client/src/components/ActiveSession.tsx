@@ -134,19 +134,23 @@ export function ActiveSession({ session, tracker }: Props) {
           <h3 style={{ margin: '0 0 10px', color: '#1A1A2E', fontSize: 15, fontWeight: 900 }}>
             🏋️‍♀️ التمارين ({session.exercises.length})
           </h3>
-          {session.exercises.map((ex, idx) => (
-            <ExerciseCard
-              key={idx}
-              exercise={ex}
-              idx={idx}
-              color={typeDef.color}
-              isEditing={editingIdx === idx}
-              onToggle={() => tracker.toggleExercise(session.id, idx)}
-              onEdit={() => setEditingIdx(editingIdx === idx ? null : idx)}
-              onUpdate={u => tracker.updateExercise(session.id, idx, u)}
-              onRemove={() => tracker.removeExercise(session.id, idx)}
-            />
-          ))}
+          {session.exercises.map((ex, idx) => {
+            const exData = masterExercises.find(e => e.id === ex.exerciseId);
+            return (
+              <ExerciseCard
+                key={idx}
+                exercise={ex}
+                idx={idx}
+                color={typeDef.color}
+                isEditing={editingIdx === idx}
+                youtubeUrl={exData?.youtubeUrl}
+                onToggle={() => tracker.toggleExercise(session.id, idx)}
+                onEdit={() => setEditingIdx(editingIdx === idx ? null : idx)}
+                onUpdate={u => tracker.updateExercise(session.id, idx, u)}
+                onRemove={() => tracker.removeExercise(session.id, idx)}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -256,9 +260,10 @@ export function ActiveSession({ session, tracker }: Props) {
 }
 
 // ── Exercise Card ──────────────────────────────────────────
-function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpdate, onRemove }: {
+function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpdate, onRemove, youtubeUrl }: {
   exercise: import('../hooks/useGymTracker').ExerciseLog;
   idx: number; color: string; isEditing: boolean;
+  youtubeUrl?: string;
   onToggle: () => void; onEdit: () => void;
   onUpdate: (u: Partial<import('../hooks/useGymTracker').ExerciseLog>) => void;
   onRemove: () => void;
@@ -302,6 +307,18 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 4 }}>
+          {youtubeUrl && (
+            <a href={youtubeUrl} target="_blank" rel="noopener noreferrer"
+              title="شاهدي شرح التمرين"
+              style={{
+                padding: '4px 8px', borderRadius: 8,
+                border: '1px solid #FFD0D0', background: '#FFF0F0',
+                color: '#FF0000', fontSize: 12, textDecoration: 'none',
+                display: 'flex', alignItems: 'center', fontWeight: 700,
+              }}>
+              ▶
+            </a>
+          )}
           <button onClick={onEdit} style={{
             padding: '4px 8px', borderRadius: 8,
             border: `1px solid ${isEditing ? color : '#E2E8F0'}`,
