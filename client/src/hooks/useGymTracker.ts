@@ -347,13 +347,26 @@ export function useGymTracker() {
       customExercises: [...prev.customExercises, exercise],
     }));
   }, []);
-
-  // ── Update profile ─────────────────────────────────────
+  // ── Update profile ─────────────────────────────────────────────────────
   const updateProfile = useCallback((updates: Partial<UserProfile>) => {
-    setData(prev => ({ ...prev, profile: { ...prev.profile, ...updates } }));
+    setData(prev => {
+      const newProfile = { ...prev.profile, ...updates };
+      // If currentWeight changed, also update weightLog for today AND update startWeight if not set
+      if (updates.currentWeight !== undefined && updates.currentWeight !== prev.profile.currentWeight && updates.currentWeight >= 30) {
+        const today = new Date().toISOString().split('T')[0];
+        const log = [...prev.weightLog];
+        const idx = log.findIndex(l => l.date === today);
+        if (idx >= 0) log[idx] = { date: today, weight: updates.currentWeight };
+        else log.push({ date: today, weight: updates.currentWeight });
+        // Also set startWeight if it was 0 (first time)
+        if (prev.profile.startWeight === 0) newProfile.startWeight = updates.currentWeight;
+        return { ...prev, profile: newProfile, weightLog: log };
+      }
+      return { ...prev, profile: newProfile };
+    });
   }, []);
 
-  // ── Log weight ─────────────────────────────────────────
+  // ── Log weight ─────────────────────────────────────────────────────
   const logWeight = useCallback((weight: number) => {
     const today = new Date().toISOString().split('T')[0];
     setData(prev => {
