@@ -383,7 +383,25 @@ export const cardioTemplates: CardioTemplate[] = [
     showCalories: true, showDistance: true,
     image: IMG.rower, tip: 'التجديف يعمل على 86% من عضلات الجسم — مثالي للإحماء الشامل.',
     tipEn: 'Rowing engages 86% of body muscles — ideal for full-body warm-up.',
-    sessionTypes: ['lower_body', 'upper_arms', 'chest_shoulders', 'full_body', 'core_cardio'],
+    sessionTypes: ['active_rest', 'lower_body', 'upper_arms', 'chest_shoulders', 'full_body', 'core_cardio'],
+  },
+  {
+    id: 'precor_bike', nameAr: 'دراجة Precor (Precor Bike)', nameEn: 'Precor Bike', machine: 'Precor Bike',
+    defaultDuration: 20, defaultSpeed: '80', defaultIncline: '8',
+    speedLabel: 'السرعة (RPM)', inclineLabel: 'مستوى المقاومة',
+    showCalories: true, showDistance: false,
+    image: IMG.elliptical, tip: 'الدراجة الثابتة تحرق دهون الفخذين والأرداف بدون ضغط على الركبتين.',
+    tipEn: 'Stationary bike burns thigh and glute fat without knee stress.',
+    sessionTypes: ['active_rest', 'lower_body', 'core_cardio'],
+  },
+  {
+    id: 'climbmill', nameAr: 'جهاز الدرج (Climbmill)', nameEn: 'Climbmill / StairMaster', machine: 'Climbmill',
+    defaultDuration: 20, defaultSpeed: '60', defaultIncline: '0',
+    speedLabel: 'السرعة (خطوة/دقيقة)', inclineLabel: 'المستوى',
+    showCalories: true, showDistance: false,
+    image: IMG.glutes, tip: 'جهاز الدرج يستهدف الأرداف والفخذين بشكل مكثف — من أفضل أجهزة حرق الدهون.',
+    tipEn: 'Climbmill intensely targets glutes and thighs — one of the best fat-burning machines.',
+    sessionTypes: ['active_rest', 'lower_body', 'full_body'],
   },
 ];
 

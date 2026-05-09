@@ -308,11 +308,17 @@ function CheckInPanel({ onStart, stats, profile }: {
   const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest'];
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
-  // Rower card state (inside كارديو section)
-  const [rowerData, setRowerData] = useState({ time: '', rate: '', distance: '', pace: '', calories: '' });
-  const [rowerSaved, setRowerSaved] = useState(false);
-  const rower = cardioTemplates.find(c => c.id === 'rower');
-  const treadmill = cardioTemplates.find(c => c.id === 'treadmill');
+  // Cardio machines state — 4 machines
+  type CardioFields = { speed: string; incline: string; time: string; distance: string; calories: string };
+  const emptyFields = (): CardioFields => ({ speed: '', incline: '', time: '', distance: '', calories: '' });
+  const [cardioData, setCardioData] = useState<Record<string, CardioFields>>({
+    treadmill: emptyFields(),
+    rower: emptyFields(),
+    precor_bike: emptyFields(),
+    climbmill: emptyFields(),
+  });
+  const [cardioSaved, setCardioSaved] = useState<Record<string, boolean>>({});
+  const cardioMachines = cardioTemplates.filter(c => ['treadmill', 'rower', 'precor_bike', 'climbmill'].includes(c.id));
   const gender = (profile.gender as 'male' | 'female') || 'female';
   const exercisesByCategory = getExercisesByCategory(gender);
 
@@ -453,7 +459,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                 </div>
               </button>
 
-              {/* Cardio Section: Treadmill + Rower (only for active_rest / كارديو) */}
+              {/* Cardio Section: 4 machines (only for active_rest) */}
               {isExpanded && type === 'active_rest' && (
                 <div style={{
                   borderTop: `1px solid ${SKY_LIGHT}55`,
@@ -461,115 +467,146 @@ function CheckInPanel({ onStart, stats, profile }: {
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
                   <div style={{ marginBottom: 10, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
-                    {lang === 'ar' ? '🏃 أجهزة الكارديو — أدخل بياناتك بعد التمرين:' : '🏃 Cardio Machines — Enter your data after workout:'}
+                    {lang === 'ar' ? '🏃 أجهزة الكارديو — سجّل بياناتك بعد التمرين:' : '🏃 Cardio Machines — Log your data after each workout:'}
                   </div>
 
-                  {/* ── Treadmill ── */}
-                  {treadmill && (
-                    <div style={{
-                      background: '#F8FBFF',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      border: `1.5px solid ${SKY_LIGHT}`,
-                      marginBottom: 12,
-                    }}>
-                      <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
-                        <img src={treadmill.image} alt="Treadmill"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        <div style={{
-                          position: 'absolute', bottom: 0, left: 0, right: 0,
-                          background: 'linear-gradient(transparent, rgba(27,46,94,0.80))',
-                          padding: '14px 12px 8px',
-                          color: 'white', fontWeight: 700, fontSize: 13,
-                        }}>
-                          🏃 {lang === 'ar' ? 'جهاز المشي (Treadmill)' : 'Treadmill'}
-                        </div>
-                      </div>
-                      <div style={{ padding: '10px 12px 8px' }}>
-                        <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 8, fontWeight: 600 }}>
-                          {lang === 'ar' ? '💡 ' + treadmill.tip : '💡 ' + (treadmill.tipEn || treadmill.tip)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {cardioMachines.map(machine => {
+                    const mid = machine.id;
+                    const mData = cardioData[mid] || { speed: '', incline: '', time: '', distance: '', calories: '' };
+                    const isSaved = !!cardioSaved[mid];
 
-                  {/* ── Rower ── */}
-                  {rower && (
-                    <div style={{
-                      background: '#F8FBFF',
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      border: `1.5px solid ${SKY_LIGHT}`,
-                      marginBottom: 4,
-                    }}>
-                      <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
-                        <img src={rower.image} alt="Rowing Machine"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        <div style={{
-                          position: 'absolute', bottom: 0, left: 0, right: 0,
-                          background: 'linear-gradient(transparent, rgba(27,46,94,0.80))',
-                          padding: '14px 12px 8px',
-                          color: 'white', fontWeight: 700, fontSize: 13,
-                        }}>
-                          🚣 {lang === 'ar' ? 'جهاز التجديف (Rower)' : 'Rowing Machine'}
+                    // Define fields per machine
+                    const machineIcons: Record<string, string> = {
+                      treadmill: '🏃',
+                      rower: '🚣',
+                      precor_bike: '🚴',
+                      climbmill: '🏔️',
+                    };
+                    const icon = machineIcons[mid] || '💪';
+
+                    // Fields config per machine
+                    type FieldDef = { key: keyof typeof mData; labelAr: string; labelEn: string; placeholder: string; fullRow?: boolean };
+                    const fieldsMap: Record<string, FieldDef[]> = {
+                      treadmill: [
+                        { key: 'speed', labelAr: '⚡ السرعة (km/h)', labelEn: '⚡ Speed (km/h)', placeholder: 'e.g. 5.5' },
+                        { key: 'incline', labelAr: '📈 الانحدار (%)', labelEn: '📈 Incline (%)', placeholder: 'e.g. 3' },
+                        { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
+                        { key: 'distance', labelAr: '📏 المسافة (km)', labelEn: '📏 Distance (km)', placeholder: 'e.g. 1.8' },
+                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 150', fullRow: true },
+                      ],
+                      rower: [
+                        { key: 'speed', labelAr: '🚣 الإيقاع (SPM)', labelEn: '🚣 Rate (SPM)', placeholder: 'e.g. 24' },
+                        { key: 'incline', labelAr: '🔧 المقاومة (Level)', labelEn: '🔧 Resistance', placeholder: 'e.g. 5' },
+                        { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 15' },
+                        { key: 'distance', labelAr: '📏 المسافة (m)', labelEn: '📏 Distance (m)', placeholder: 'e.g. 3100' },
+                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 120', fullRow: true },
+                      ],
+                      precor_bike: [
+                        { key: 'speed', labelAr: '🚴 السرعة (RPM)', labelEn: '🚴 Speed (RPM)', placeholder: 'e.g. 80' },
+                        { key: 'incline', labelAr: '🔧 المقاومة (Level)', labelEn: '🔧 Resistance', placeholder: 'e.g. 8' },
+                        { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
+                        { key: 'distance', labelAr: '📏 المسافة (km)', labelEn: '📏 Distance (km)', placeholder: 'e.g. 5.0' },
+                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 180', fullRow: true },
+                      ],
+                      climbmill: [
+                        { key: 'speed', labelAr: '🏔️ السرعة (خطوة/د)', labelEn: '🏔️ Steps/min', placeholder: 'e.g. 60' },
+                        { key: 'incline', labelAr: '🔧 المستوى', labelEn: '🔧 Level', placeholder: 'e.g. 8' },
+                        { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
+                        { key: 'distance', labelAr: '📏 الطوابق', labelEn: '📏 Floors', placeholder: 'e.g. 40' },
+                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 200', fullRow: true },
+                      ],
+                    };
+                    const fields = fieldsMap[mid] || [];
+
+                    return (
+                      <div key={mid} style={{
+                        background: '#F8FBFF',
+                        borderRadius: 14,
+                        overflow: 'hidden',
+                        border: `1.5px solid ${SKY_LIGHT}`,
+                        marginBottom: 14,
+                      }}>
+                        {/* Machine image + title */}
+                        <div style={{ position: 'relative', height: 130, overflow: 'hidden' }}>
+                          <img src={machine.image} alt={machine.nameEn}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            background: 'linear-gradient(transparent, rgba(27,46,94,0.85))',
+                            padding: '16px 12px 10px',
+                            color: 'white', fontWeight: 700, fontSize: 14,
+                          }}>
+                            {icon} {lang === 'ar' ? machine.nameAr : machine.nameEn}
+                          </div>
+                        </div>
+
+                        {/* Tip */}
+                        <div style={{ padding: '8px 12px 4px' }}>
+                          <div style={{ color: '#7A9BB5', fontSize: 10, fontWeight: 600 }}>
+                            💡 {lang === 'ar' ? machine.tip : (machine.tipEn || machine.tip)}
+                          </div>
+                        </div>
+
+                        {/* Input fields */}
+                        <div style={{ padding: '8px 12px 12px' }}>
+                          <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 8, fontWeight: 600 }}>
+                            {lang === 'ar' ? '📊 سجّل بياناتك بعد التمرين:' : '📊 Log your data after workout:'}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            {fields.map(field => (
+                              <div key={field.key} style={{ gridColumn: field.fullRow ? '1 / -1' : 'auto' }}>
+                                <div style={{ fontSize: 10, color: NAVY, fontWeight: 700, marginBottom: 4 }}>
+                                  {lang === 'ar' ? field.labelAr : field.labelEn}
+                                </div>
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  placeholder={field.placeholder}
+                                  value={mData[field.key]}
+                                  onChange={e => setCardioData(prev => ({
+                                    ...prev,
+                                    [mid]: { ...prev[mid], [field.key]: e.target.value },
+                                  }))}
+                                  style={{
+                                    width: '100%', boxSizing: 'border-box',
+                                    border: `1.5px solid ${SKY_LIGHT}`,
+                                    borderRadius: 10, padding: '9px 10px',
+                                    fontSize: 14, fontWeight: 700, color: NAVY,
+                                    background: 'white', outline: 'none',
+                                    fontFamily: 'monospace',
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Save button */}
+                          <button
+                            onClick={() => {
+                              const key = `cardio_${mid}_${new Date().toISOString().split('T')[0]}`;
+                              localStorage.setItem(key, JSON.stringify({ ...mData, machine: mid, date: new Date().toISOString() }));
+                              setCardioSaved(prev => ({ ...prev, [mid]: true }));
+                              setTimeout(() => setCardioSaved(prev => ({ ...prev, [mid]: false })), 3000);
+                            }}
+                            style={{
+                              width: '100%', marginTop: 10,
+                              background: isSaved
+                                ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                                : `linear-gradient(135deg, ${NAVY}, #2a4a8a)`,
+                              color: 'white', border: 'none', borderRadius: 10,
+                              padding: '10px 12px', fontSize: 13, fontWeight: 700,
+                              cursor: 'pointer', transition: 'background 0.3s',
+                              fontFamily: 'Cairo, sans-serif',
+                            }}
+                          >
+                            {isSaved
+                              ? (lang === 'ar' ? '✅ تم الحفظ!' : '✅ Saved!')
+                              : (lang === 'ar' ? `💾 حفظ بيانات ${machine.nameAr.split(' ')[0]}` : `💾 Save ${machine.nameEn} Data`)}
+                          </button>
                         </div>
                       </div>
-                      <div style={{ padding: '10px 12px 12px' }}>
-                        <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 10, fontWeight: 600 }}>
-                          {lang === 'ar' ? '📊 أدخل البيانات من شاشة الجهاز بعد التمرين:' : '📊 Enter data from device screen after workout:'}
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                          {[
-                            { key: 'time', label: '⏱ TIME (min)', placeholder: 'e.g. 15' },
-                            { key: 'rate', label: '🚣 RATE (SPM)', placeholder: 'e.g. 24' },
-                            { key: 'distance', label: '📏 DISTANCE (m)', placeholder: 'e.g. 3100' },
-                            { key: 'pace', label: '⚡ PACE (/500m)', placeholder: 'e.g. 2:30' },
-                            { key: 'calories', label: '🔥 CALORIES', placeholder: 'e.g. 120' },
-                          ].map(field => (
-                            <div key={field.key} style={{ gridColumn: field.key === 'calories' ? '1 / -1' : 'auto' }}>
-                              <div style={{ fontSize: 10, color: NAVY, fontWeight: 700, marginBottom: 4 }}>{field.label}</div>
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                placeholder={field.placeholder}
-                                value={rowerData[field.key as keyof typeof rowerData]}
-                                onChange={e => setRowerData(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                style={{
-                                  width: '100%', boxSizing: 'border-box',
-                                  border: `1.5px solid ${SKY_LIGHT}`,
-                                  borderRadius: 10, padding: '8px 10px',
-                                  fontSize: 14, fontWeight: 700, color: NAVY,
-                                  background: 'white', outline: 'none',
-                                  fontFamily: 'monospace',
-                                }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        <button
-                          onClick={() => {
-                            const key = `rower_log_${new Date().toISOString().split('T')[0]}`;
-                            localStorage.setItem(key, JSON.stringify({ ...rowerData, date: new Date().toISOString() }));
-                            setRowerSaved(true);
-                            setTimeout(() => setRowerSaved(false), 3000);
-                          }}
-                          style={{
-                            width: '100%', marginTop: 10,
-                            background: rowerSaved
-                              ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                              : `linear-gradient(135deg, ${NAVY}, #2a4a8a)`,
-                            color: 'white', border: 'none', borderRadius: 10,
-                            padding: '10px 12px', fontSize: 13, fontWeight: 700,
-                            cursor: 'pointer', transition: 'background 0.3s',
-                          }}
-                        >
-                          {rowerSaved
-                            ? (lang === 'ar' ? '✅ تم الحفظ!' : '✅ Saved!')
-                            : (lang === 'ar' ? '💾 حفظ بيانات التجديف' : '💾 Save Rowing Data')}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               )}
 
