@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useGymTracker } from '../hooks/useGymTracker';
 import { sessionTypes } from '../data/exercises';
 import type { SessionType } from '../data/exercises';
+import { getProgramByGender, getExercisesByCategory } from '../lib/exerciseData';
 import { ActiveSession } from '../components/ActiveSession';
 import { SessionHistory } from '../components/SessionHistory';
 import { StatsPanel } from '../components/StatsPanel';
@@ -281,6 +282,17 @@ export default function Home() {
 }
 
 // ── Check-In Panel ─────────────────────────────────────────
+// Maps sessionType → exercise categories from exerciseData
+const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
+  chest_shoulders: ['Chest', 'Shoulders'],
+  upper_arms: ['Arms', 'Back'],
+  lower_body: ['Legs'],
+  core_cardio: ['Core'],
+  full_body: ['Chest', 'Back', 'Legs', 'Core'],
+};
+// Glutes are special — map to lower_body for women
+const GLUTES_SESSION: SessionType = 'lower_body';
+
 function CheckInPanel({ onStart, stats, profile }: {
   onStart: (type: SessionType) => void;
   stats: ReturnType<typeof useGymTracker>['stats'];
@@ -290,13 +302,14 @@ function CheckInPanel({ onStart, stats, profile }: {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? t('greetingMorning') : hour < 17 ? t('greetingAfternoon') : t('greetingEvening');
-
   // Gregorian date display
   const locale = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US';
   const dayName = now.toLocaleDateString(locale, { weekday: 'long' });
   const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest'];
+  const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
+  const gender = (profile.gender as 'male' | 'female') || 'female';
+  const exercisesByCategory = getExercisesByCategory(gender);
 
   return (
     <div style={{ animation: 'slideUp 0.4s ease' }}>
@@ -379,46 +392,155 @@ function CheckInPanel({ onStart, stats, profile }: {
           const def = sessionTypes[type];
           const nameDisplay = lang === 'ar' ? def.nameAr : ((def as any).nameEn || def.nameAr);
           const descDisplay = lang === 'ar' ? def.description : ((def as any).descriptionEn || def.description);
+          const isExpanded = expandedSession === type;
+          // Get exercises for this session type
+          const catKeys = SESSION_CATEGORY_MAP[type] || [];
+          // For lower_body, also include Glutes for women
+          const allCatKeys = type === 'lower_body' && gender === 'female'
+            ? [...catKeys, 'Glutes']
+            : catKeys;
+          const sessionExercises = allCatKeys.flatMap(cat => exercisesByCategory[cat] || []);
+
           return (
-            <button
+            <div
               key={type}
-              onClick={() => onStart(type)}
               style={{
                 background: 'white',
-                border: `2px solid ${SKY_LIGHT}`,
+                border: `2px solid ${isExpanded ? SKY : SKY_LIGHT}`,
                 borderRadius: 16,
-                padding: '14px 12px',
-                cursor: 'pointer',
-                textAlign: isRTL ? 'right' : 'left',
+                overflow: 'hidden',
+                boxShadow: isExpanded ? `0 8px 20px ${NAVY}22` : '0 2px 8px rgba(27,46,94,0.06)',
                 transition: 'all 0.2s',
-                boxShadow: '0 2px 8px rgba(27,46,94,0.06)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 8px 20px ${NAVY}22`;
-                (e.currentTarget as HTMLButtonElement).style.borderColor = SKY;
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(27,46,94,0.06)';
-                (e.currentTarget as HTMLButtonElement).style.borderColor = SKY_LIGHT;
+                gridColumn: isExpanded ? '1 / -1' : 'auto',
               }}
             >
-              <div style={{ fontSize: 28, marginBottom: 6 }}>{def.icon}</div>
-              <div style={{ fontWeight: 900, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
-                {nameDisplay.split(' - ')[0]}
+              {/* Card Header */}
+              <button
+                onClick={() => setExpandedSession(isExpanded ? null : type)}
+                style={{
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  padding: '14px 12px',
+                  cursor: 'pointer',
+                  textAlign: isRTL ? 'right' : 'left',
+                  direction: isRTL ? 'rtl' : 'ltr',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 28, marginBottom: 6 }}>{def.icon}</div>
+                    <div style={{ fontWeight: 900, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
+                      {nameDisplay.split(' - ')[0]}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#7A9BB5', marginTop: 4, lineHeight: 1.4 }}>
+                      {descDisplay}
+                    </div>
+                    {sessionExercises.length > 0 && (
+                      <div style={{ fontSize: 10, color: SKY, marginTop: 4, fontWeight: 600 }}>
+                        {sessionExercises.length} {lang === 'ar' ? 'تمرين' : 'exercises'}
+                      </div>
+                    )}
+                  </div>
+                  {sessionExercises.length > 0 && (
+                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? '▲' : '▼'}</span>
+                  )}
+                </div>
+              </button>
+
+              {/* Exercise List (expanded) */}
+              {isExpanded && sessionExercises.length > 0 && (
+                <div style={{
+                  borderTop: `1px solid ${SKY_LIGHT}55`,
+                  padding: '10px 12px',
+                  maxHeight: 320,
+                  overflowY: 'auto',
+                  direction: isRTL ? 'rtl' : 'ltr',
+                }}>
+                  <div style={{ marginBottom: 8, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
+                    {lang === 'ar' ? '📋 تمارين هذا القسم:' : '📋 Exercises in this section:'}
+                  </div>
+                  {sessionExercises.map((ex, idx) => (
+                    <div key={ex.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '8px 0',
+                      borderBottom: idx < sessionExercises.length - 1 ? `1px solid ${SKY_LIGHT}33` : 'none',
+                    }}>
+                      {/* Index */}
+                      <div style={{
+                        minWidth: 24, height: 24,
+                        background: `${NAVY}15`,
+                        borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 11, fontWeight: 700, color: NAVY, flexShrink: 0,
+                      }}>{idx + 1}</div>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: NAVY, fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>
+                          {lang === 'ar' ? ex.nameAr : ex.name}
+                        </div>
+                        <div style={{ color: '#7A9BB5', fontSize: 10, marginTop: 2 }}>
+                          {ex.sets} {lang === 'ar' ? 'جولات' : 'sets'} × {ex.reps} {lang === 'ar' ? 'تكرار' : 'reps'}
+                          &nbsp;·&nbsp;⏱ {lang === 'ar' ? ex.restAr : `${ex.rest}s`}
+                        </div>
+                      </div>
+                      {/* YouTube */}
+                      <a
+                        href={ex.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          background: '#ff0000',
+                          color: 'white',
+                          borderRadius: 6,
+                          padding: '4px 8px',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}
+                      >
+                        <svg width="12" height="9" viewBox="0 0 20 14" fill="white">
+                          <path d="M19.6 2.2C19.4 1.4 18.8.8 18 .6 16.4.2 10 .2 10 .2S3.6.2 2 .6C1.2.8.6 1.4.4 2.2 0 3.8 0 7 0 7s0 3.2.4 4.8c.2.8.8 1.4 1.6 1.6C3.6 13.8 10 13.8 10 13.8s6.4 0 8-.4c.8-.2 1.4-.8 1.6-1.6C20 10.2 20 7 20 7s0-3.2-.4-4.8zM8 10V4l5.3 3L8 10z"/>
+                        </svg>
+                        {lang === 'ar' ? 'شرح' : 'Watch'}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Start Button */}
+              <div style={{ padding: '0 12px 12px' }}>
+                <button
+                  onClick={() => onStart(type)}
+                  style={{
+                    width: '100%',
+                    background: `linear-gradient(135deg, ${NAVY}, #2a4a8a)`,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '9px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>▶</span>
+                  <span>{isRTL ? (gender === 'female' ? 'ابدئي الآن' : 'ابدأ الآن') : 'Start Now'}</span>
+                </button>
               </div>
-              <div style={{ fontSize: 10, color: '#7A9BB5', marginTop: 4, lineHeight: 1.4 }}>
-                {descDisplay}
-              </div>
-              <div style={{
-                marginTop: 8, display: 'inline-block',
-                background: `${SKY}22`, color: NAVY,
-                borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 700,
-              }}>
-                {isRTL ? 'ابدئي الآن ▶' : '▶ Start Now'}
-              </div>
-            </button>
+            </div>
           );
         })}
       </div>
