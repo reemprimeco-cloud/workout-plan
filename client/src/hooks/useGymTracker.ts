@@ -27,6 +27,7 @@ export interface CardioLog {
   incline: string;
   distanceKm: string;
   caloriesBurned: string;
+  pace?: string;
   completed: boolean;
 }
 

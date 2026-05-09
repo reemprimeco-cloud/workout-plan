@@ -478,90 +478,176 @@ function CardioCard({ cardio, color, onUpdate }: {
           padding: '14px', borderTop: '1px solid #F0F0F0',
           background: '#FAFAFA',
         }}>
-          {/* Quick Stats Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-            {/* Duration */}
-            <div>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>⏱ المدة (دقيقة)</label>
-              <input
-                type="number"
-                value={String(cardio.duration)}
-                onChange={e => onUpdate({ duration: Number(e.target.value) })}
-                style={{
-                  width: '100%', padding: '8px 10px', borderRadius: 8,
-                  border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
-                  fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
-                  textAlign: 'center',
-                }}
-              />
+          {/* Rower-specific fields matching machine display: TIME, RATE, DISTANCE, PACE, CALORIES */}
+          {isRower ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {/* TIME - Elapsed */}
+              <div>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>⏱ TIME (دقيقة)</label>
+                <input
+                  type="number"
+                  value={String(cardio.duration)}
+                  onChange={e => onUpdate({ duration: Number(e.target.value) })}
+                  placeholder="0"
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                    textAlign: 'center',
+                  }}
+                />
+              </div>
+              {/* RATE - Strokes/min */}
+              <div>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>🚣 RATE (Strokes/min)</label>
+                <input
+                  type="text"
+                  value={cardio.speed}
+                  onChange={e => onUpdate({ speed: e.target.value })}
+                  placeholder="0"
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                    textAlign: 'center',
+                  }}
+                />
+              </div>
+              {/* DISTANCE - Meters */}
+              <div>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>📏 DISTANCE (Meters)</label>
+                <input
+                  type="text"
+                  value={cardio.distanceKm}
+                  onChange={e => onUpdate({ distanceKm: e.target.value })}
+                  placeholder="0"
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                    textAlign: 'center',
+                  }}
+                />
+              </div>
+              {/* PACE - /500 Meters */}
+              <div>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>⚡ PACE (/500m)</label>
+                <input
+                  type="text"
+                  value={cardio.pace ?? ''}
+                  onChange={e => onUpdate({ pace: e.target.value })}
+                  placeholder="0:00"
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                    textAlign: 'center',
+                  }}
+                />
+              </div>
+              {/* CALORIES - full width */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>🔥 CALORIES</label>
+                <input
+                  type="text"
+                  value={cardio.caloriesBurned}
+                  onChange={e => onUpdate({ caloriesBurned: e.target.value })}
+                  placeholder="0"
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                    textAlign: 'center',
+                  }}
+                />
+              </div>
             </div>
-            {/* Speed */}
-            <div>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
-                🚀 {isRower ? 'سرعة الجذب (SPM)' : isTreadmill ? 'السرعة (كم/ساعة)' : 'المقاومة (Level)'}
-              </label>
-              <input
-                type="text"
-                value={cardio.speed}
-                onChange={e => onUpdate({ speed: e.target.value })}
-                style={{
-                  width: '100%', padding: '8px 10px', borderRadius: 8,
-                  border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
-                  fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
-                  textAlign: 'center',
-                }}
-              />
-            </div>
-            {/* Incline */}
-            <div>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
-                📐 {isRower ? 'مستوى المقاومة' : isTreadmill ? 'الانحدار (%)' : 'الانحدار (Level)'}
-              </label>
-              <input
-                type="text"
-                value={cardio.incline}
-                onChange={e => onUpdate({ incline: e.target.value })}
-                style={{
-                  width: '100%', padding: '8px 10px', borderRadius: 8,
-                  border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
-                  fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
-                  textAlign: 'center',
-                }}
-              />
-            </div>
-            {/* Calories */}
-            <div>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>🔥 الكالوريز المحروقة</label>
-              <input
-                type="text"
-                value={cardio.caloriesBurned}
-                onChange={e => onUpdate({ caloriesBurned: e.target.value })}
-                style={{
-                  width: '100%', padding: '8px 10px', borderRadius: 8,
-                  border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
-                  fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
-                  textAlign: 'center',
-                }}
-              />
-            </div>
-          </div>
-          {/* Distance - full width */}
-          <div>
-            <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
-              📏 {isRower ? 'المسافة (متر)' : 'المسافة (كم)'}
-            </label>
-            <input
-              type="text"
-              value={cardio.distanceKm}
-              onChange={e => onUpdate({ distanceKm: e.target.value })}
-              style={{
-                width: '100%', padding: '8px 10px', borderRadius: 8,
-                border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
-                fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
-                textAlign: 'center',
-              }}
-            />
-          </div>
+          ) : (
+            <>
+              {/* Non-Rower fields */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                {/* Duration */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>⏱ المدة (دقيقة)</label>
+                  <input
+                    type="number"
+                    value={String(cardio.duration)}
+                    onChange={e => onUpdate({ duration: Number(e.target.value) })}
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                      textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Speed */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
+                    🚀 {isTreadmill ? 'السرعة (كم/ساعة)' : 'المقاومة (Level)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={cardio.speed}
+                    onChange={e => onUpdate({ speed: e.target.value })}
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                      textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Incline */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
+                    📐 {isTreadmill ? 'الانحدار (%)' : 'الانحدار (Level)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={cardio.incline}
+                    onChange={e => onUpdate({ incline: e.target.value })}
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                      textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Calories */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>🔥 الكالوريز</label>
+                  <input
+                    type="text"
+                    value={cardio.caloriesBurned}
+                    onChange={e => onUpdate({ caloriesBurned: e.target.value })}
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                      textAlign: 'center',
+                    }}
+                  />
+                </div>
+              </div>
+              {/* Distance - full width */}
+              <div>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>📏 المسافة (كم)</label>
+                <input
+                  type="text"
+                  value={cardio.distanceKm}
+                  onChange={e => onUpdate({ distanceKm: e.target.value })}
+                  style={{
+                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
+                    textAlign: 'center',
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
