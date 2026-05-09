@@ -459,10 +459,22 @@ function CardioCard({ cardio, color, onUpdate }: {
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{icon} {cardio.nameAr}</div>
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
-            ⏱ {cardio.duration} دقيقة
-            {cardio.speed && ` • 🚀 ${cardio.speed}`}
-            {cardio.incline && ` • 📐 ${cardio.incline}`}
-            {cardio.caloriesBurned && ` • 🔥 ${cardio.caloriesBurned} كال`}
+            {isRower ? (
+              <>
+                ⏱ {cardio.duration} دقيقة
+                {cardio.speed && ` • 🚣 ${cardio.speed} SPM`}
+                {cardio.distanceKm && ` • 📏 ${cardio.distanceKm}m`}
+                {cardio.pace && ` • ⚡ ${cardio.pace}/500m`}
+                {cardio.caloriesBurned && ` • 🔥 ${cardio.caloriesBurned} cal`}
+              </>
+            ) : (
+              <>
+                ⏱ {cardio.duration} دقيقة
+                {cardio.speed && ` • 🚀 ${cardio.speed}`}
+                {cardio.incline && ` • 📐 ${cardio.incline}`}
+                {cardio.caloriesBurned && ` • 🔥 ${cardio.caloriesBurned} كال`}
+              </>
+            )}
           </div>
         </div>
         <button onClick={() => setExpanded(!expanded)} style={{
