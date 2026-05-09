@@ -335,6 +335,16 @@ export const upperBodyExercises = [
     youtubeUrl: 'https://www.youtube.com/watch?v=ZB1SwBRVLCc',
     category: 'core', sessionTypes: ['core_cardio'],
   },
+  // ── CARDIO MACHINES ──
+  {
+    id: 'rowing_machine', nameAr: 'جهاز التجديف (Rower)', nameEn: 'Rowing Machine',
+    muscleGroup: 'الجسم كله — ظهر، أكتاف، ذراعين، أرداف', defaultSets: 1, defaultReps: '15 دقيقة', defaultWeight: '—',
+    restSeconds: 0, image: IMG.rower,
+    tip: 'التجديف يعمل على 86% من عضلات الجسم — مثالي للإحماء الشامل. ابدئي بـ 10–15 دقيقة بإيقاع منتظم.',
+    tipEn: 'Rowing engages 86% of body muscles — ideal for full warm-up. Start with 10–15 min at steady pace.',
+    youtubeUrl: 'https://www.youtube.com/watch?v=H0r_9EBTmgk',
+    category: 'cardio', sessionTypes: ['active_rest', 'core_cardio', 'full_body', 'lower_body', 'upper_arms', 'chest_shoulders'],
+  },
 ];
 
 // ===== CARDIO TEMPLATES =====
