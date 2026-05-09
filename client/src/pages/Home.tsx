@@ -194,11 +194,7 @@ export default function Home() {
             {activeSession ? (
               <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} />
             ) : (
-              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} onSaveRower={(rowerData) => {
-                // Save rower data as a note in localStorage for display in history
-                const key = `rower_log_${new Date().toISOString().split('T')[0]}`;
-                localStorage.setItem(key, JSON.stringify({ ...rowerData, date: new Date().toISOString() }));
-              }} />
+              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
             )}
           </>
         )}
@@ -297,11 +293,10 @@ const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
 // Glutes are special — map to lower_body for women
 const GLUTES_SESSION: SessionType = 'lower_body';
 
-function CheckInPanel({ onStart, stats, profile, onSaveRower }: {
+function CheckInPanel({ onStart, stats, profile }: {
   onStart: (type: SessionType) => void;
   stats: ReturnType<typeof useGymTracker>['stats'];
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
-  onSaveRower?: (data: { time: string; rate: string; distance: string; pace: string; calories: string }) => void;
 }) {
   const { lang, t, isRTL } = useLanguage();
   const now = new Date();
@@ -313,10 +308,11 @@ function CheckInPanel({ onStart, stats, profile, onSaveRower }: {
   const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest'];
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
-  // Rower standalone card state
+  // Rower card state (inside كارديو section)
   const [rowerData, setRowerData] = useState({ time: '', rate: '', distance: '', pace: '', calories: '' });
   const [rowerSaved, setRowerSaved] = useState(false);
   const rower = cardioTemplates.find(c => c.id === 'rower');
+  const treadmill = cardioTemplates.find(c => c.id === 'treadmill');
   const gender = (profile.gender as 'male' | 'female') || 'female';
   const exercisesByCategory = getExercisesByCategory(gender);
 
@@ -395,95 +391,6 @@ function CheckInPanel({ onStart, stats, profile, onSaveRower }: {
         </p>
       </div>
 
-      {/* ── Rower Standalone Card ── */}
-      {rower && (
-        <div style={{ marginBottom: 16 }}>
-          <h3 style={{ margin: '0 0 10px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-            🚣 {lang === 'ar' ? 'تمرين التجديف (Rower)' : 'Rowing Machine'}
-          </h3>
-          <div style={{
-            background: 'white',
-            borderRadius: 16,
-            overflow: 'hidden',
-            boxShadow: '0 2px 12px rgba(27,46,94,0.10)',
-            border: `2px solid ${SKY_LIGHT}`,
-          }}>
-            {/* Image */}
-            <div style={{ position: 'relative', height: 160, overflow: 'hidden' }}>
-              <img src={rower.image} alt="Rowing Machine"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0,
-                background: 'linear-gradient(transparent, rgba(27,46,94,0.85))',
-                padding: '20px 14px 10px',
-                color: 'white', fontWeight: 700, fontSize: 14,
-              }}>Rowing Machine</div>
-            </div>
-            {/* Fields matching device screen */}
-            <div style={{ padding: '14px 14px 6px', direction: isRTL ? 'rtl' : 'ltr' }}>
-              <div style={{ color: '#7A9BB5', fontSize: 11, marginBottom: 10, fontWeight: 600 }}>
-                {lang === 'ar' ? '📊 أدخل البيانات من شاشة الجهاز بعد التمرين:' : '📊 Enter data from device screen after workout:'}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {[
-                  { key: 'time', label: lang === 'ar' ? '⏱ TIME (دقيقة)' : '⏱ TIME (min)', placeholder: 'e.g. 15' },
-                  { key: 'rate', label: lang === 'ar' ? '🚣 RATE (Strokes/min)' : '🚣 RATE (SPM)', placeholder: 'e.g. 24' },
-                  { key: 'distance', label: lang === 'ar' ? '📏 DISTANCE (Meters)' : '📏 DISTANCE (m)', placeholder: 'e.g. 3100' },
-                  { key: 'pace', label: lang === 'ar' ? '⚡ PACE (/500m)' : '⚡ PACE (/500m)', placeholder: 'e.g. 2:30' },
-                  { key: 'calories', label: lang === 'ar' ? '🔥 CALORIES' : '🔥 CALORIES', placeholder: 'e.g. 120' },
-                ].map(field => (
-                  <div key={field.key} style={{ gridColumn: field.key === 'calories' ? '1 / -1' : 'auto' }}>
-                    <div style={{ fontSize: 10, color: NAVY, fontWeight: 700, marginBottom: 4 }}>{field.label}</div>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      placeholder={field.placeholder}
-                      value={rowerData[field.key as keyof typeof rowerData]}
-                      onChange={e => setRowerData(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      style={{
-                        width: '100%', boxSizing: 'border-box',
-                        border: `1.5px solid ${SKY_LIGHT}`,
-                        borderRadius: 10, padding: '9px 12px',
-                        fontSize: 15, fontWeight: 700, color: NAVY,
-                        background: '#F8FBFF', outline: 'none',
-                        fontFamily: 'monospace',
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-              {/* Tip */}
-              <div style={{
-                background: `${SKY}18`, borderRadius: 10, padding: '8px 12px',
-                marginTop: 10, fontSize: 11, color: NAVY, lineHeight: 1.5,
-              }}>
-                💡 {lang === 'ar' ? rower.tip : (rower.tipEn || rower.tip)}
-              </div>
-              {/* Save Button */}
-              <button
-                onClick={() => {
-                  if (onSaveRower) onSaveRower(rowerData);
-                  setRowerSaved(true);
-                  setTimeout(() => setRowerSaved(false), 3000);
-                }}
-                style={{
-                  width: '100%', marginTop: 10, marginBottom: 4,
-                  background: rowerSaved
-                    ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                    : `linear-gradient(135deg, ${NAVY}, #2a4a8a)`,
-                  color: 'white', border: 'none', borderRadius: 10,
-                  padding: '10px 12px', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', transition: 'background 0.3s',
-                }}
-              >
-                {rowerSaved
-                  ? (lang === 'ar' ? '✅ تم الحفظ!' : '✅ Saved!')
-                  : (lang === 'ar' ? '💾 حفظ بيانات التجديف' : '💾 Save Rowing Data')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Session Type Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {sessionOrder.map(type => {
@@ -546,8 +453,128 @@ function CheckInPanel({ onStart, stats, profile, onSaveRower }: {
                 </div>
               </button>
 
-              {/* Exercise List (expanded) */}
-              {isExpanded && sessionExercises.length > 0 && (
+              {/* Cardio Section: Treadmill + Rower (only for active_rest / كارديو) */}
+              {isExpanded && type === 'active_rest' && (
+                <div style={{
+                  borderTop: `1px solid ${SKY_LIGHT}55`,
+                  padding: '12px',
+                  direction: isRTL ? 'rtl' : 'ltr',
+                }}>
+                  <div style={{ marginBottom: 10, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
+                    {lang === 'ar' ? '🏃 أجهزة الكارديو — أدخل بياناتك بعد التمرين:' : '🏃 Cardio Machines — Enter your data after workout:'}
+                  </div>
+
+                  {/* ── Treadmill ── */}
+                  {treadmill && (
+                    <div style={{
+                      background: '#F8FBFF',
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      border: `1.5px solid ${SKY_LIGHT}`,
+                      marginBottom: 12,
+                    }}>
+                      <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
+                        <img src={treadmill.image} alt="Treadmill"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(transparent, rgba(27,46,94,0.80))',
+                          padding: '14px 12px 8px',
+                          color: 'white', fontWeight: 700, fontSize: 13,
+                        }}>
+                          🏃 {lang === 'ar' ? 'جهاز المشي (Treadmill)' : 'Treadmill'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '10px 12px 8px' }}>
+                        <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 8, fontWeight: 600 }}>
+                          {lang === 'ar' ? '💡 ' + treadmill.tip : '💡 ' + (treadmill.tipEn || treadmill.tip)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Rower ── */}
+                  {rower && (
+                    <div style={{
+                      background: '#F8FBFF',
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      border: `1.5px solid ${SKY_LIGHT}`,
+                      marginBottom: 4,
+                    }}>
+                      <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
+                        <img src={rower.image} alt="Rowing Machine"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(transparent, rgba(27,46,94,0.80))',
+                          padding: '14px 12px 8px',
+                          color: 'white', fontWeight: 700, fontSize: 13,
+                        }}>
+                          🚣 {lang === 'ar' ? 'جهاز التجديف (Rower)' : 'Rowing Machine'}
+                        </div>
+                      </div>
+                      <div style={{ padding: '10px 12px 12px' }}>
+                        <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 10, fontWeight: 600 }}>
+                          {lang === 'ar' ? '📊 أدخل البيانات من شاشة الجهاز بعد التمرين:' : '📊 Enter data from device screen after workout:'}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          {[
+                            { key: 'time', label: '⏱ TIME (min)', placeholder: 'e.g. 15' },
+                            { key: 'rate', label: '🚣 RATE (SPM)', placeholder: 'e.g. 24' },
+                            { key: 'distance', label: '📏 DISTANCE (m)', placeholder: 'e.g. 3100' },
+                            { key: 'pace', label: '⚡ PACE (/500m)', placeholder: 'e.g. 2:30' },
+                            { key: 'calories', label: '🔥 CALORIES', placeholder: 'e.g. 120' },
+                          ].map(field => (
+                            <div key={field.key} style={{ gridColumn: field.key === 'calories' ? '1 / -1' : 'auto' }}>
+                              <div style={{ fontSize: 10, color: NAVY, fontWeight: 700, marginBottom: 4 }}>{field.label}</div>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                placeholder={field.placeholder}
+                                value={rowerData[field.key as keyof typeof rowerData]}
+                                onChange={e => setRowerData(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                style={{
+                                  width: '100%', boxSizing: 'border-box',
+                                  border: `1.5px solid ${SKY_LIGHT}`,
+                                  borderRadius: 10, padding: '8px 10px',
+                                  fontSize: 14, fontWeight: 700, color: NAVY,
+                                  background: 'white', outline: 'none',
+                                  fontFamily: 'monospace',
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const key = `rower_log_${new Date().toISOString().split('T')[0]}`;
+                            localStorage.setItem(key, JSON.stringify({ ...rowerData, date: new Date().toISOString() }));
+                            setRowerSaved(true);
+                            setTimeout(() => setRowerSaved(false), 3000);
+                          }}
+                          style={{
+                            width: '100%', marginTop: 10,
+                            background: rowerSaved
+                              ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                              : `linear-gradient(135deg, ${NAVY}, #2a4a8a)`,
+                            color: 'white', border: 'none', borderRadius: 10,
+                            padding: '10px 12px', fontSize: 13, fontWeight: 700,
+                            cursor: 'pointer', transition: 'background 0.3s',
+                          }}
+                        >
+                          {rowerSaved
+                            ? (lang === 'ar' ? '✅ تم الحفظ!' : '✅ Saved!')
+                            : (lang === 'ar' ? '💾 حفظ بيانات التجديف' : '💾 Save Rowing Data')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Exercise List (expanded) — for non-cardio sections */}
+              {isExpanded && type !== 'active_rest' && sessionExercises.length > 0 && (
                 <div style={{
                   borderTop: `1px solid ${SKY_LIGHT}55`,
                   padding: '10px 12px',
