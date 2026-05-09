@@ -305,7 +305,7 @@ const month1week1: WeekPlan = {
     {
       dayNum: 4,
       dayName: 'الأربعاء',
-      focus: 'راحة نشطة - مشي خفيف',
+      focus: 'تمارين الكارديو',
       focusIcon: '🚶‍♀️',
       type: 'active-rest',
       warmUp: [],
@@ -752,7 +752,7 @@ const month1week3: WeekPlan = {
     {
       dayNum: 4,
       dayName: 'الأربعاء',
-      focus: 'راحة نشطة',
+      focus: 'تمارين الكارديو',
       focusIcon: '🚶‍♀️',
       type: 'active-rest',
       warmUp: [],

@@ -437,9 +437,9 @@ export const sessionTypes: Record<SessionType, {
     defaultCardio: undefined,
   },
   active_rest: {
-    nameAr: 'راحة نشطة - مشي خفيف',
-    icon: '🚶‍♀️', color: '#1A7A4A', bgColor: '#E8F5EE',
-    description: 'مشي خفيف أو يوجا للتعافي',
+    nameAr: "تمارين الكارديو",
+    icon: '🏃', color: '#1B2E5E', bgColor: '#EEF4FF',
+    description: 'تمارين الكارديو والإحماء',
     defaultExercises: [],
     defaultCardio: 'treadmill',
   },

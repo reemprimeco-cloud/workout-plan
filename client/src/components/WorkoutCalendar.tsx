@@ -8,7 +8,7 @@ const DAY_NAMES = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خم
 
 const TYPE_STYLES: Record<string, { bg: string; color: string; label: string; icon: string }> = {
   training: { bg: '#FFF0E8', color: '#E05A00', label: 'تدريب', icon: '🏋️‍♀️' },
-  'active-rest': { bg: '#E8F5EE', color: '#1A7A4A', label: 'راحة نشطة', icon: '🚶‍♀️' },
+  'active-rest': { bg: '#EEF4FF', color: '#1B2E5E', label: 'تمارين الكارديو', icon: '🏃' },
   rest: { bg: '#F4F6F8', color: '#8A8AAA', label: 'راحة', icon: '😴' },
 };
 
