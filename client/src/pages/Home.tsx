@@ -192,7 +192,7 @@ export default function Home() {
         {activeTab === 'home' && (
           <>
             {activeSession ? (
-              <ActiveSession session={activeSession} tracker={tracker} />
+              <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} />
             ) : (
               <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
             )}

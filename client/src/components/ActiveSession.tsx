@@ -3,14 +3,16 @@ import { useState, useEffect } from 'react';
 import type { GymSession } from '../hooks/useGymTracker';
 import type { useGymTracker } from '../hooks/useGymTracker';
 import { sessionTypes, masterExercises, aquaExercises, saunaProtocol } from '../data/exercises';
+import { getProgramByGender } from '../lib/exerciseData';
 import { WorkoutTimer } from './WorkoutTimer';
 
 interface Props {
   session: GymSession;
   tracker: ReturnType<typeof useGymTracker>;
+  gender?: 'male' | 'female';
 }
 
-export function ActiveSession({ session, tracker }: Props) {
+export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -219,6 +221,7 @@ export function ActiveSession({ session, tracker }: Props) {
           {showAddExercise && (
             <AddExercisePanel
               color={typeDef.color}
+              gender={gender}
               onAdd={ex => {
                 tracker.addExerciseToSession(session.id, {
                   exerciseId: ex.id, nameAr: ex.nameAr, nameEn: ex.nameEn,
@@ -566,22 +569,75 @@ function CardioCard({ cardio, color, onUpdate }: {
 }
 
 // ── Add Exercise Panel ─────────────────────────────────────
-function AddExercisePanel({ color, onAdd }: {
+function AddExercisePanel({ color, gender, onAdd }: {
   color: string;
+  gender: 'male' | 'female';
   onAdd: (ex: typeof masterExercises[0]) => void;
 }) {
   const [search, setSearch] = useState('');
-  const filtered = masterExercises.filter(e =>
+  const [activeTab, setActiveTab] = useState<'program' | 'all'>('program');
+
+  // Build combined exercise list from exerciseData (gender-specific) + masterExercises
+  const genderProgram = getProgramByGender(gender);
+  const programExercises = genderProgram.exercises.map(ex => ({
+    id: ex.id,
+    nameAr: ex.nameAr,
+    nameEn: ex.name,
+    muscleGroup: ex.categoryAr,
+    defaultSets: parseInt(ex.sets) || 3,
+    defaultReps: ex.reps,
+    defaultWeight: '—',
+    restSeconds: parseInt(ex.rest) || 60,
+    image: ex.imageUrl || '',
+    tip: ex.notesAr || '',
+    tipEn: ex.notes || '',
+    youtubeUrl: ex.youtubeUrl,
+    category: 'weights' as const,
+    sessionTypes: [] as import('../data/exercises').SessionType[],
+  }));
+
+  const allExercises = activeTab === 'program' ? programExercises : [
+    ...programExercises,
+    ...masterExercises,
+  ];
+
+  const filtered = allExercises.filter(e =>
     e.nameAr.includes(search) || e.muscleGroup.includes(search) || e.nameEn.toLowerCase().includes(search.toLowerCase())
   );
+
   return (
     <div style={{
       background: 'white', borderRadius: 14, padding: 14, marginTop: 8,
       boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
     }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        <button
+          onClick={() => setActiveTab('program')}
+          style={{
+            flex: 1, padding: '7px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: activeTab === 'program' ? '#1B2E5E' : '#F0F4FF',
+            color: activeTab === 'program' ? 'white' : '#1B2E5E',
+            fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
+          }}
+        >
+          🏋️ برنامجك
+        </button>
+        <button
+          onClick={() => setActiveTab('all')}
+          style={{
+            flex: 1, padding: '7px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: activeTab === 'all' ? '#1B2E5E' : '#F0F4FF',
+            color: activeTab === 'all' ? 'white' : '#1B2E5E',
+            fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
+          }}
+        >
+          📋 كل التمارين
+        </button>
+      </div>
       <input
         type="text"
-        placeholder="🔍 ابحثي عن تمرين..."
+        placeholder="🔍 ابحث عن تمرين..."
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{
@@ -590,7 +646,7 @@ function AddExercisePanel({ color, onAdd }: {
           fontSize: 13, marginBottom: 10, outline: 'none',
         }}
       />
-      <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+      <div style={{ maxHeight: 280, overflowY: 'auto' }}>
         {filtered.map(ex => (
           <button
             key={ex.id}
@@ -605,11 +661,19 @@ function AddExercisePanel({ color, onAdd }: {
             onMouseEnter={e => (e.currentTarget.style.background = `${color}10`)}
             onMouseLeave={e => (e.currentTarget.style.background = 'white')}
           >
+            {ex.image && (
+              <img src={ex.image} alt={ex.nameAr} style={{
+                width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0,
+              }} />
+            )}
             <div style={{ flex: 1, textAlign: 'right' }}>
               <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{ex.nameAr}</div>
-              <div style={{ fontSize: 11, color: '#8A8AAA' }}>{ex.muscleGroup} • {ex.defaultSets}×{ex.defaultReps} • {ex.defaultWeight}</div>
+              <div style={{ fontSize: 11, color: '#8A8AAA' }}>
+                {ex.muscleGroup} • {ex.defaultSets}×{ex.defaultReps}
+                {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${ex.defaultWeight}` : ''}
+              </div>
             </div>
-            <span style={{ color, fontSize: 18 }}>+</span>
+            <span style={{ color, fontSize: 18, flexShrink: 0 }}>+</span>
           </button>
         ))}
         {filtered.length === 0 && (
