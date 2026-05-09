@@ -462,12 +462,21 @@ function CheckInPanel({ onStart, stats, profile }: {
                   </div>
                   {sessionExercises.map((ex, idx) => (
                     <div key={ex.id} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
                       padding: '8px 0',
                       borderBottom: idx < sessionExercises.length - 1 ? `1px solid ${SKY_LIGHT}33` : 'none',
                     }}>
+                      {/* Machine Image */}
+                      {ex.imageUrl && (
+                        <div style={{ borderRadius: 8, overflow: 'hidden', marginBottom: 6, height: 100 }}>
+                          <img
+                            src={ex.imageUrl}
+                            alt={lang === 'ar' ? ex.nameAr : ex.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       {/* Index */}
                       <div style={{
                         minWidth: 24, height: 24,
@@ -511,6 +520,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                         </svg>
                         {lang === 'ar' ? 'شرح' : 'Watch'}
                       </a>
+                      </div>
                     </div>
                   ))}
                 </div>

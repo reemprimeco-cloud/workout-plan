@@ -297,6 +297,17 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                     direction: isAr ? "rtl" : "ltr",
                   }}
                 >
+                  {/* Machine Image */}
+                  {ex.imageUrl && (
+                    <div style={{ marginTop: 14, marginBottom: 14, borderRadius: 12, overflow: "hidden", background: "#f8fafc" }}>
+                      <img
+                        src={ex.imageUrl}
+                        alt={isAr ? ex.nameAr : ex.name}
+                        style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }}
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
                   {/* Stats Row */}
                   <div
                     style={{
