@@ -14,6 +14,7 @@ import { StatsPanel } from '../components/StatsPanel';
 import { WorkoutGuide } from '../components/WorkoutGuide';
 import UserGuide from '../components/UserGuide';
 import ProfilePanel from '../components/ProfilePanel';
+import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Brand colors
@@ -23,7 +24,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/ac92d03d-28a4-4634-83f6-c2b0ec05fc4a_833a088c.jpg';
 
-type Tab = 'home' | 'history' | 'stats' | 'guide' | 'user-guide' | 'profile';
+type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -84,6 +85,7 @@ export default function Home() {
     { id: 'history', icon: '📋', label: t('navHistory') },
     { id: 'stats', icon: '📊', label: t('navStats') },
     { id: 'guide', icon: '📖', label: t('navGuide') },
+    { id: 'exercises', icon: '🏋️', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'user-guide', icon: '📘', label: isRTL ? 'الدليل' : 'Help' },
     { id: 'profile', icon: '⚙️', label: t('navProfile') },
   ];
@@ -199,6 +201,24 @@ export default function Home() {
         {activeTab === 'history' && <SessionHistory sessions={data.sessions} onDelete={tracker.deleteSession} />}
         {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} />}
         {activeTab === 'guide' && <WorkoutGuide />}
+        {activeTab === 'exercises' && (
+          <div style={{ padding: '16px' }}>
+            <div style={{ marginBottom: 16 }}>
+              <h2 style={{ color: '#1B2E5E', fontWeight: 800, fontSize: 20, margin: 0 }}>
+                {isRTL ? '🏋️ قائمة التمارين' : '🏋️ Exercise Library'}
+              </h2>
+              <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+                {isRTL
+                  ? `برنامج ${data.profile.gender === 'female' ? 'المرأة' : 'الرجل'} — ${data.profile.name || ''}`
+                  : `${data.profile.gender === 'female' ? "Women's" : "Men's"} Program — ${data.profile.name || ''}`}
+              </p>
+            </div>
+            <ExerciseLibrary
+              gender={(data.profile.gender as 'male' | 'female') || 'female'}
+              language={lang as 'ar' | 'en'}
+            />
+          </div>
+        )}
         {activeTab === 'user-guide' && <UserGuide />}
         {activeTab === 'profile' && <ProfilePanel />}
       </main>
