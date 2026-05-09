@@ -33,12 +33,18 @@ export interface ExerciseTemplate {
 export interface CardioTemplate {
   id: string;
   nameAr: string;
+  nameEn: string;
   machine: string;
   defaultDuration: number; // minutes
   defaultSpeed: string;
   defaultIncline: string;
+  speedLabel?: string;
+  inclineLabel?: string;
+  showCalories?: boolean;
+  showDistance?: boolean;
   image: string;
   tip: string;
+  tipEn?: string;
   sessionTypes: SessionType[];
 }
 
@@ -46,6 +52,7 @@ export interface CardioTemplate {
 const IMG = {
   warmup: '/manus-storage/warmup_f8a00b2a.png',
   treadmill: '/manus-storage/treadmill_039009ca.jpg',
+  rower: '/manus-storage/machine-rower_003165e0.jpg',
   elliptical: '/manus-storage/elliptical_25526689.jpg',
   cardio: '/manus-storage/cardio_machines_6b910eda.jpg',
   glutes: '/manus-storage/glutes_5f977189.jpg',
@@ -333,22 +340,40 @@ export const upperBodyExercises = [
 // ===== CARDIO TEMPLATES =====
 export const cardioTemplates: CardioTemplate[] = [
   {
-    id: 'treadmill', nameAr: 'جهاز المشي (Treadmill)', machine: 'Treadmill',
-    defaultDuration: 20, defaultSpeed: '5.5 كم/ساعة', defaultIncline: '3%',
+    id: 'treadmill', nameAr: 'جهاز المشي (Treadmill)', nameEn: 'Treadmill', machine: 'Treadmill',
+    defaultDuration: 20, defaultSpeed: '5.5', defaultIncline: '3',
+    speedLabel: 'السرعة (كم/ساعة)', inclineLabel: 'الانحدار (%)',
+    showCalories: true, showDistance: true,
     image: IMG.treadmill, tip: 'المشي بانحدار يزيد من حرق الدهون في الأرداف والفخذين.',
+    tipEn: 'Walking on incline burns more fat in glutes and thighs.',
     sessionTypes: ['lower_body', 'full_body', 'core_cardio'],
   },
   {
-    id: 'elliptical', nameAr: 'جهاز الأوربتراك (Elliptical)', machine: 'Elliptical',
-    defaultDuration: 20, defaultSpeed: 'مقاومة Level 5', defaultIncline: 'مستوى 3',
+    id: 'elliptical', nameAr: 'جهاز الأوربتراك (Elliptical)', nameEn: 'Elliptical', machine: 'Elliptical',
+    defaultDuration: 20, defaultSpeed: '5', defaultIncline: '3',
+    speedLabel: 'المقاومة (Level)', inclineLabel: 'الانحدار (Level)',
+    showCalories: true, showDistance: false,
     image: IMG.elliptical, tip: 'يعمل على الجسم بالكامل بدون ضغط على المفاصل.',
+    tipEn: 'Works the whole body without joint stress.',
     sessionTypes: ['upper_arms', 'chest_shoulders', 'full_body'],
   },
   {
-    id: 'bike', nameAr: 'الدراجة الثابتة (Stationary Bike)', machine: 'Stationary Bike',
-    defaultDuration: 30, defaultSpeed: 'تبديل: دقيقة Level 8 + دقيقتين Level 4', defaultIncline: 'لا ينطبق',
+    id: 'bike', nameAr: 'الدراجة الثابتة (Stationary Bike)', nameEn: 'Stationary Bike', machine: 'Stationary Bike',
+    defaultDuration: 30, defaultSpeed: '8', defaultIncline: '4',
+    speedLabel: 'المقاومة (Level)', inclineLabel: 'Level متقطع',
+    showCalories: true, showDistance: false,
     image: IMG.cardio, tip: 'الكارديو المتقطع يحرق دهون البطن أسرع بكثير.',
+    tipEn: 'Interval cardio burns belly fat much faster.',
     sessionTypes: ['core_cardio'],
+  },
+  {
+    id: 'rower', nameAr: 'جهاز التجديف (Rower)', nameEn: 'Rowing Machine', machine: 'Rowing Machine',
+    defaultDuration: 15, defaultSpeed: '24', defaultIncline: '5',
+    speedLabel: 'سرعة الجذب (SPM)', inclineLabel: 'مستوى المقاومة',
+    showCalories: true, showDistance: true,
+    image: IMG.rower, tip: 'التجديف يعمل على 86% من عضلات الجسم — مثالي للإحماء الشامل.',
+    tipEn: 'Rowing engages 86% of body muscles — ideal for full-body warm-up.',
+    sessionTypes: ['lower_body', 'upper_arms', 'chest_shoulders', 'full_body', 'core_cardio'],
   },
 ];
 

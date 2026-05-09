@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
+import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
 
 interface ExerciseLibraryProps {
   gender: "male" | "female";
@@ -18,6 +19,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   Core: "🎯",
   Glutes: "🍑",
   Legs: "🦵",
+  Cardio: "🏃",
 };
 
 const REST_COLOR = (seconds: number) => {
@@ -34,6 +36,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const categories = Object.keys(grouped);
 
   const [activeCategory, setActiveCategory] = useState<string>(categories[0] || "");
+  const [showCardioSection, setShowCardioSection] = useState(false);
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
   const [showGoalAlert, setShowGoalAlert] = useState(true);
   const [showTipsAlert, setShowTipsAlert] = useState(false);
@@ -174,16 +177,38 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
           scrollbarWidth: "none",
         }}
       >
+        {/* Cardio Tab */}
+        <button
+          onClick={() => { setShowCardioSection(true); setActiveCategory(''); setExpandedExercise(null); }}
+          style={{
+            flexShrink: 0,
+            background: showCardioSection
+              ? "linear-gradient(135deg, #1B2E5E, #2a4a8a)"
+              : "rgba(27,46,94,0.3)",
+            border: showCardioSection ? "1px solid #7BB8D4" : "1px solid rgba(123,184,212,0.2)",
+            borderRadius: 20,
+            padding: "7px 14px",
+            color: showCardioSection ? "#7BB8D4" : "#64748b",
+            fontSize: 12,
+            fontWeight: showCardioSection ? 700 : 500,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            whiteSpace: "nowrap",
+          }}
+        >
+          🏃 {isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}
+        </button>
         {categories.map((cat) => {
           const ex = grouped[cat][0];
           const label = isAr ? ex.categoryAr : cat;
           const icon = CATEGORY_ICONS[cat] || "🏋️";
-          const isActive = activeCategory === cat;
+          const isActive = !showCardioSection && activeCategory === cat;
           return (
             <button
               key={cat}
               onClick={() => {
                 setActiveCategory(cat);
+                setShowCardioSection(false);
                 setExpandedExercise(null);
               }}
               style={{
@@ -224,8 +249,30 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
         })}
       </div>
 
+      {/* ── Cardio / Warmup Section ── */}
+      {showCardioSection && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{
+            background: "linear-gradient(135deg, #1B2E5E 0%, #0d1a3a 100%)",
+            borderRadius: 14, padding: "14px 16px", marginBottom: 14,
+          }}>
+            <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+              🏃 {isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>
+              {isAr
+                ? "ابدئي دائمًا بـ 5–10 دقائق إحماء قبل التمارين. الكارديو بعد التمرين يزيد من حرق الدهون."
+                : "Always start with 5–10 min warm-up. Post-workout cardio maximizes fat burn."}
+            </div>
+          </div>
+          {cardioTemplates.map((machine: CardioTemplate) => (
+            <CardioMachineCard key={machine.id} machine={machine} isAr={isAr} />
+          ))}
+        </div>
+      )}
+
       {/* ── Exercise Cards ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {!showCardioSection && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {exercises.map((ex: Exercise) => {
           const isExpanded = expandedExercise === ex.id;
           const restSec = parseInt(ex.rest);
@@ -391,6 +438,111 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             </div>
           );
         })}
+      </div>}
+    </div>
+  );
+}
+// ── Cardio Machine Cardd ──────────────────────────────────────────
+function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div style={{
+      background: "white",
+      borderRadius: 14,
+      border: "1.5px solid #E8EAF0",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      marginBottom: 12,
+      overflow: "hidden",
+    }}>
+      {/* Machine Image */}
+      {machine.image && (
+        <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
+          <img
+            src={machine.image}
+            alt={machine.nameEn}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            background: "linear-gradient(transparent, rgba(0,0,0,0.6))",
+            padding: "20px 14px 10px",
+          }}>
+            <div style={{ color: "white", fontWeight: 700, fontSize: 14 }}>
+              {isAr ? machine.nameAr : machine.nameEn}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Info Row */}
+      <div style={{ padding: "12px 14px" }}>
+        {!machine.image && (
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1B2E5E", marginBottom: 8 }}>
+            {isAr ? machine.nameAr : machine.nameEn}
+          </div>
+        )}
+        {/* Default Stats */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+          <span style={{
+            background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
+            padding: "4px 10px", fontSize: 11, fontWeight: 600,
+          }}>⏱ {machine.defaultDuration} {isAr ? "دقيقة" : "min"}</span>
+          <span style={{
+            background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
+            padding: "4px 10px", fontSize: 11, fontWeight: 600,
+          }}>🚀 {machine.speedLabel ? (isAr ? machine.speedLabel : machine.speedLabel) : (isAr ? "السرعة" : "Speed")}: {machine.defaultSpeed}</span>
+          <span style={{
+            background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
+            padding: "4px 10px", fontSize: 11, fontWeight: 600,
+          }}>📐 {machine.inclineLabel ? (isAr ? machine.inclineLabel : machine.inclineLabel) : (isAr ? "الانحدار" : "Incline")}: {machine.defaultIncline}</span>
+          {machine.showCalories && (
+            <span style={{
+              background: "#FFF3E0", color: "#E65100", borderRadius: 8,
+              padding: "4px 10px", fontSize: 11, fontWeight: 600,
+            }}>🔥 {isAr ? "سجّل الكالوريز" : "Log Calories"}</span>
+          )}
+          {machine.showDistance && (
+            <span style={{
+              background: "#E8F5E9", color: "#2E7D32", borderRadius: 8,
+              padding: "4px 10px", fontSize: 11, fontWeight: 600,
+            }}>📏 {isAr ? "سجّل المسافة" : "Log Distance"}</span>
+          )}
+        </div>
+        {/* Tip */}
+        <div style={{
+          background: "linear-gradient(135deg, #EEF4FF, #E8F0FF)",
+          borderRadius: 10, padding: "10px 12px",
+          borderRight: "3px solid #7BB8D4",
+          marginBottom: 8,
+        }}>
+          <div style={{ fontSize: 11, color: "#1B2E5E", fontWeight: 600 }}>
+            💡 {isAr ? machine.tip : (machine.tipEn || machine.tip)}
+          </div>
+        </div>
+        {/* Toggle details */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            width: "100%", padding: "8px", borderRadius: 10,
+            border: `1px solid ${expanded ? "#1B2E5E" : "#E2E8F0"}`,
+            background: expanded ? "#EEF4FF" : "white",
+            color: expanded ? "#1B2E5E" : "#8A8AAA",
+            fontSize: 12, fontWeight: 600, cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          {expanded ? (isAr ? "▲ إخفاء التفاصيل" : "▲ Hide Details") : (isAr ? "▼ عرض التفاصيل" : "▼ Show Details")}
+        </button>
+        {expanded && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 12, color: "#4A4A6A", lineHeight: 1.8 }}>
+              <div><strong>{isAr ? "المدة الافتراضية:" : "Default Duration:"}</strong> {machine.defaultDuration} {isAr ? "دقيقة" : "min"}</div>
+              <div><strong>{machine.speedLabel || (isAr ? "السرعة:" : "Speed:")}:</strong> {machine.defaultSpeed}</div>
+              <div><strong>{machine.inclineLabel || (isAr ? "الانحدار:" : "Incline:")}:</strong> {machine.defaultIncline}</div>
+              {machine.showCalories && <div><strong>{isAr ? "الكالوريز:" : "Calories:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
+              {machine.showDistance && <div><strong>{isAr ? "المسافة:" : "Distance:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
