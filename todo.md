@@ -39,3 +39,4 @@
 ## Future / Pending (not blocking current release)
 - [ ] WooCommerce API integration (re-enable when server security issue resolved — currently returns 401)
 - [ ] Push notifications for workout reminders
+- [x] Add WhatsApp order note on LicenseGate screen (contact 65068000 after purchase to get access code)
