@@ -39,3 +39,31 @@ export const accessCodes = mysqlTable("access_codes", {
 
 export type AccessCode = typeof accessCodes.$inferSelect;
 export type InsertAccessCode = typeof accessCodes.$inferInsert;
+
+// Push subscriptions — Web Push API endpoint + keys per user
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: varchar("auth", { length: 512 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+// Notification settings — per-user reminder preferences
+export const notificationSettings = mysqlTable("notification_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  enabled: boolean("enabled").default(false).notNull(),
+  reminderTime: varchar("reminderTime", { length: 5 }).default("09:00").notNull(), // HH:MM UTC
+  days: varchar("days", { length: 64 }).default("1,2,3,4,5").notNull(), // comma-separated 0=Sun..6=Sat
+  language: varchar("language", { length: 8 }).default("ar").notNull(), // ar | en
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
+export type InsertNotificationSettings = typeof notificationSettings.$inferInsert;

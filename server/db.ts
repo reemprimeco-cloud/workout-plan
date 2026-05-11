@@ -1,6 +1,10 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, accessCodes, InsertAccessCode } from "../drizzle/schema";
+import {
+  InsertUser, users, accessCodes, InsertAccessCode,
+  pushSubscriptions, InsertPushSubscription,
+  notificationSettings, InsertNotificationSettings,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -131,4 +135,72 @@ export async function deleteAccessCode(id: number) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
   await db.delete(accessCodes).where(eq(accessCodes.id, id));
+}
+
+// ── Push Subscriptions ─────────────────────────────────────────────────────
+
+export async function upsertPushSubscription(data: InsertPushSubscription) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  // Delete any existing subscription for this user before inserting new one
+  await db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, data.userId));
+  await db.insert(pushSubscriptions).values(data);
+}
+
+export async function deletePushSubscription(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+}
+
+export async function getPushSubscriptionByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(pushSubscriptions)
+    .where(eq(pushSubscriptions.userId, userId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function getAllActiveSubscriptions() {
+  const db = await getDb();
+  if (!db) return [];
+  // Join with notification_settings to get only users with notifications enabled
+  const settings = await db.select().from(notificationSettings)
+    .where(eq(notificationSettings.enabled, true));
+  if (settings.length === 0) return [];
+  const userIds = settings.map(s => s.userId);
+  const subs = await db.select().from(pushSubscriptions);
+  return subs.filter(s => userIds.includes(s.userId));
+}
+
+// ── Notification Settings ──────────────────────────────────────────────────
+
+export async function getNotificationSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(notificationSettings)
+    .where(eq(notificationSettings.userId, userId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function upsertNotificationSettings(data: InsertNotificationSettings) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(notificationSettings).values(data).onDuplicateKeyUpdate({
+    set: {
+      enabled: data.enabled,
+      reminderTime: data.reminderTime,
+      days: data.days,
+      language: data.language,
+      scheduleCronTaskUid: data.scheduleCronTaskUid,
+    },
+  });
+}
+
+export async function updateNotificationTaskUid(userId: number, taskUid: string | null) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.update(notificationSettings)
+    .set({ scheduleCronTaskUid: taskUid })
+    .where(eq(notificationSettings.userId, userId));
 }

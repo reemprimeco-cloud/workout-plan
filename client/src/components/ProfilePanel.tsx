@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
+import NotificationSettings from './NotificationSettings';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
@@ -272,6 +273,8 @@ export function ProfilePanel() {
         </div>
       </div>
 
+      {/* Notification Settings */}
+      <NotificationSettings />
       {/* Change License Button */}
       <div className="pb-2">
         <button

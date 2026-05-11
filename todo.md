@@ -38,9 +38,28 @@
 
 ## Future / Pending (not blocking current release)
 - [ ] WooCommerce API integration (re-enable when server security issue resolved — currently returns 401)
-- [ ] Push notifications for workout reminders
+- [x] Push notifications for workout reminders
 - [x] Add WhatsApp order note on LicenseGate screen (contact 65068000 after purchase to get access code)
 - [x] Fix home page exercise sections: each section must show its own specific exercises (not all showing Elliptical)
 - [x] Translate Guide tab (WorkoutGuide component) to English — currently all hardcoded Arabic
 - [x] Rename 'Guide' tab to 'Schedule' in bottom navigation
 - [x] Translate Arabic day badge labels in weekly plan to English (الجزء السفلي → Lower Body, etc.)
+
+## Push Notifications
+- [x] Install web-push npm package on server
+- [x] Generate VAPID keys and store as env secrets
+- [x] DB schema: push_subscriptions table (userId, endpoint, p256dh, auth, createdAt)
+- [x] DB schema: notification_settings table (userId, enabled, reminderTime HH:MM, days JSON, taskUid)
+- [x] pnpm db:push migrations applied
+- [x] server/db.ts: push subscription helpers (upsertSubscription, deleteSubscription, getSubscriptionsByUser)
+- [x] server/db.ts: notification settings helpers (getNotificationSettings, upsertNotificationSettings)
+- [x] server/routers/notifications.ts: tRPC router (subscribe, unsubscribe, getSettings, updateSettings)
+- [x] server/routers/notifications.ts: sendWorkoutReminder procedure (admin/cron only)
+- [x] /api/scheduled/workoutReminder Express handler
+- [x] Mount scheduled handler in server/_core/index.ts
+- [x] client/public/sw.js: Service Worker for push event handling
+- [x] NotificationSettings component: toggle enable, pick reminder time, pick days of week
+- [x] Integrate NotificationSettings into ProfilePanel
+- [x] Heartbeat cron: per-user cron created/updated when settings saved
+- [x] Bilingual notification content (Arabic + English based on user's language pref)
+- [x] Save checkpoint and deploy before activating crons

@@ -10,4 +10,6 @@ export const ENV = {
   wooStoreUrl: process.env.WOO_STORE_URL ?? "",
   wooConsumerKey: process.env.WOO_CONSUMER_KEY ?? "",
   wooConsumerSecret: process.env.WOO_CONSUMER_SECRET ?? "",
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY ?? "",
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? "",
 };

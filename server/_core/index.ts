@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { workoutReminderHandler } from "../handlers/workoutReminder";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,6 +37,9 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
+  app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
+
   // tRPC API
   app.use(
     "/api/trpc",
