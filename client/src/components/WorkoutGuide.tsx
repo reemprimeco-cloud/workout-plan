@@ -33,6 +33,19 @@ const muscleGroupEn: Record<string, string> = {
   'الجسم كله — ظهر، أكتاف، ذراعين، أرداف': 'Full Body',
 };
 
+// English names for session types (sessionTypes only has nameAr)
+const sessionTypeNameEn: Record<string, string> = {
+  lower_body:      'Lower Body',
+  upper_arms:      'Upper Body',
+  core_cardio:     'Core & Cardio',
+  chest_shoulders: 'Chest & Shoulders',
+  full_body:       'Full Body',
+  aqua:            'Aqua Class',
+  sauna:           'Sauna',
+  active_rest:     'Cardio',
+};
+
+
 export function WorkoutGuide() {
   const { lang, isRTL } = useLanguage();
   const ar = lang === 'ar';
@@ -204,7 +217,7 @@ export function WorkoutGuide() {
                 }}>
                   {ar
                     ? def.nameAr.split(' - ')[0].split(' ').slice(0, 2).join(' ')
-                    : ((def as any).nameEn || def.nameAr).split(' - ')[0].split(' ').slice(0, 2).join(' ')}
+                    : (sessionTypeNameEn[item.type] || def.nameAr.split(' - ')[0])}
                 </div>
               </div>
             );
@@ -247,7 +260,7 @@ export function WorkoutGuide() {
                 }}>
                   {def.icon} {ar
                     ? def.nameAr.split(' - ')[0].split(' ').slice(0, 2).join(' ')
-                    : ((def as any).nameEn || def.nameAr).split(' - ')[0].split(' ').slice(0, 2).join(' ')}
+                    : (sessionTypeNameEn[type] || def.nameAr.split(' - ')[0])}
                 </button>
               );
             })}

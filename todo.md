@@ -42,3 +42,5 @@
 - [x] Add WhatsApp order note on LicenseGate screen (contact 65068000 after purchase to get access code)
 - [x] Fix home page exercise sections: each section must show its own specific exercises (not all showing Elliptical)
 - [x] Translate Guide tab (WorkoutGuide component) to English — currently all hardcoded Arabic
+- [x] Rename 'Guide' tab to 'Schedule' in bottom navigation
+- [x] Translate Arabic day badge labels in weekly plan to English (الجزء السفلي → Lower Body, etc.)

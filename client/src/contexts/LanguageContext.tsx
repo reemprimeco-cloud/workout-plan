@@ -164,7 +164,7 @@ export const translations = {
     navHome: 'Home',
     navHistory: 'History',
     navStats: 'Stats',
-    navGuide: 'Guide',
+    navGuide: 'Schedule',
     navProfile: 'Profile',
     // Home
     greetingMorning: 'Good Morning',
