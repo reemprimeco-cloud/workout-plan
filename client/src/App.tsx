@@ -6,9 +6,10 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import Home from "./pages/Home";
-
+import { LicenseGate } from "./components/LicenseGate";
 
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
@@ -34,7 +35,9 @@ function App() {
         <LanguageProvider>
           <TooltipProvider>
             <Toaster />
-            <Router />
+            <LicenseGate>
+              <Router />
+            </LicenseGate>
           </TooltipProvider>
         </LanguageProvider>
       </ThemeProvider>

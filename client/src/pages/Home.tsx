@@ -17,6 +17,7 @@ import UserGuide from '../components/UserGuide';
 import ProfilePanel from '../components/ProfilePanel';
 import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../_core/hooks/useAuth';
 
 // Brand colors
 const NAVY = '#1B2E5E';
