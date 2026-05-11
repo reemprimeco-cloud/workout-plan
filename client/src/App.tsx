@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import Home from "./pages/Home";
+import AdminPanel from "./pages/AdminPanel";
 import { LicenseGate } from "./components/LicenseGate";
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -35,9 +37,11 @@ function App() {
         <LanguageProvider>
           <TooltipProvider>
             <Toaster />
-            <LicenseGate>
-              <Router />
-            </LicenseGate>
+            {/* Admin panel bypasses LicenseGate — it has its own auth check */}
+            {window.location.pathname === '/admin'
+              ? <Router />
+              : <LicenseGate><Router /></LicenseGate>
+            }
           </TooltipProvider>
         </LanguageProvider>
       </ThemeProvider>

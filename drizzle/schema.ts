@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,17 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Access codes table — manual license keys for Prime Fit
+export const accessCodes = mysqlTable("access_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 128 }).notNull().unique(),
+  customerName: varchar("customerName", { length: 255 }),
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  note: text("note"),
+  isActive: boolean("isActive").default(true).notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AccessCode = typeof accessCodes.$inferSelect;
+export type InsertAccessCode = typeof accessCodes.$inferInsert;

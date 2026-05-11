@@ -3,7 +3,7 @@
 // Wraps the entire app. Users must enter a valid order key
 // purchased from primeprint.com.kw to access Prime Fit.
 //
-// Supports auto-verification via URL: ?key=wc_order_XXXXXXXX
+// Supports auto-verification via URL: ?key=PRIME-XXXX-XXXX
 // ============================================================
 import { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
@@ -187,7 +187,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             هذا التطبيق مخصص للمشتركين فقط
           </p>
           <p style={{ margin: '6px 0 0', color: '#7A9BB5', fontSize: 12, lineHeight: 1.6 }}>
-            أدخل مفتاح الترخيص الموجود في إيميل تأكيد طلبك
+            أدخل كود الوصول الذي أرسلناه لك بعد الشراء
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
           </label>
           <input
             type="text"
-            placeholder="wc_order_xxxxxxxxxxxxxxxx"
+            placeholder="PRIME-XXXX-XXXX"
             value={licenseKey}
             onChange={e => { setLicenseKey(e.target.value); setError(''); }}
             onKeyDown={e => e.key === 'Enter' && handleVerify()}

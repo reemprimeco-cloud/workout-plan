@@ -272,6 +272,21 @@ export function ProfilePanel() {
         </div>
       </div>
 
+      {/* Change License Button */}
+      <div className="pb-2">
+        <button
+          onClick={() => {
+            if (window.confirm(lang === 'ar' ? 'هل تريد تغيير مفتاح الترخيص؟ سيتم تسجيل خروجك من البرنامج.' : 'Change license key? You will be logged out of the app.')) {
+              localStorage.removeItem('primefit_license');
+              window.location.reload();
+            }
+          }}
+          className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
+          style={{ borderColor: '#7BB8D4', color: '#1B2E5E', background: 'rgba(123,184,212,0.08)' }}
+        >
+          🔑 {lang === 'ar' ? 'تغيير مفتاح الترخيص' : 'Change License Key'}
+        </button>
+      </div>
       {/* Reset Button */}
       <div className="pb-2">
         <button onClick={() => setShowReset(true)}

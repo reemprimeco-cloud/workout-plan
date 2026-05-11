@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, accessCodes, InsertAccessCode } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,46 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ── Access Codes ───────────────────────────────────────────────────────────
+
+export async function verifyAccessCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(accessCodes)
+    .where(eq(accessCodes.code, code.trim()))
+    .limit(1);
+  if (result.length === 0) return null;
+  const row = result[0];
+  if (!row.isActive) return null;
+  // Mark as used if first time
+  if (!row.usedAt) {
+    await db.update(accessCodes)
+      .set({ usedAt: new Date() })
+      .where(eq(accessCodes.id, row.id));
+  }
+  return row;
+}
+
+export async function listAccessCodes() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(accessCodes).orderBy(accessCodes.createdAt);
+}
+
+export async function createAccessCode(data: InsertAccessCode) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(accessCodes).values(data);
+}
+
+export async function toggleAccessCode(id: number, isActive: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.update(accessCodes).set({ isActive }).where(eq(accessCodes.id, id));
+}
+
+export async function deleteAccessCode(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.delete(accessCodes).where(eq(accessCodes.id, id));
+}
