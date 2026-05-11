@@ -1,7 +1,7 @@
 {
   "name": "Prime Fit — Workout Tracker",
   "short_name": "Prime Fit",
-  "description": "برنامج تمارين 8 أسابيع مع تتبع الوزن والإحصائيات — by Prime Printing Co.",
+  "description": "برنامج تمارين 8 أسابيع مع تتبع الوزن والإحصائيات",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1B2E5E",
@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/manus-storage/logo192_cf9ccb65.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/manus-storage/icon-512_c54bd8aa.png",
+      "src": "/manus-storage/logo512_95cc3580.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

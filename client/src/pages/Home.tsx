@@ -24,7 +24,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/ac92d03d-28a4-4634-83f6-c2b0ec05fc4a_833a088c.jpg';
+const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 
 type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile';
 
@@ -60,8 +60,8 @@ export default function Home() {
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <img
               src={LOGO_URL}
-              alt="Prime Printing Co."
-              style={{ height: 52, objectFit: 'contain', marginBottom: 12 }}
+              alt="Prime Fit"
+              style={{ width: 100, height: 100, objectFit: 'contain', marginBottom: 12, borderRadius: 16 }}
             />
             <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: 0 }}>
               Welcome to Prime Fit
@@ -112,19 +112,12 @@ export default function Home() {
       }}>
         {/* Left: Logo + App Name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Prime Printing Co. Logo (small) */}
-          <div style={{
-            background: 'white',
-            borderRadius: 10,
-            padding: '4px 8px',
-            display: 'flex',
-            alignItems: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          }}>
+          {/* Prime Fit Logo (small) */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src={LOGO_URL}
-              alt="Prime Printing Co."
-              style={{ height: 32, width: 'auto', objectFit: 'contain', display: 'block' }}
+              alt="Prime Fit"
+              style={{ height: 40, width: 40, objectFit: 'contain', display: 'block', borderRadius: 8 }}
             />
           </div>
           <div>

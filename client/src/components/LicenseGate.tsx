@@ -12,7 +12,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/ac92d03d-28a4-4634-83f6-c2b0ec05fc4a_833a088c.jpg';
+const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 const STORAGE_KEY = 'primefit_license';
 const PRODUCT_URL = 'https://primeprint.com.kw/product/prime-fit-%d8%a8%d8%b1%d9%86%d8%a7%d9%85%d8%ac-%d8%a7%d9%84%d8%aa%d8%af%d8%b1%d9%8a%d8%a8-%d8%a7%d9%84%d8%b4%d8%a7%d9%85%d9%84-8-%d8%a3%d8%b3%d8%a7%d8%a8%d9%8a%d8%b9/';
 
@@ -151,18 +151,11 @@ export function LicenseGate({ children }: LicenseGateProps) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{
-            display: 'inline-flex',
-            background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-            borderRadius: 16,
-            padding: '10px 16px',
-            marginBottom: 16,
-            boxShadow: `0 6px 20px ${NAVY}44`,
-          }}>
+          <div style={{ marginBottom: 16 }}>
             <img
               src={LOGO_URL}
               alt="Prime Fit"
-              style={{ height: 44, objectFit: 'contain' }}
+              style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 20 }}
             />
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: NAVY, margin: '0 0 6px' }}>

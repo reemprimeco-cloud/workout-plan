@@ -36,6 +36,6 @@
 - [x] Admin panel bypasses LicenseGate (has its own auth check)
 - [x] 11 vitest tests passing (license system + auth logout)
 
-## Future / Pending
+## Future / Pending (not blocking current release)
 - [ ] WooCommerce API integration (re-enable when server security issue resolved — currently returns 401)
 - [ ] Push notifications for workout reminders
