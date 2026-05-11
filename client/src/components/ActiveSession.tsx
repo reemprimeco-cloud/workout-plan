@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import type { GymSession } from '../hooks/useGymTracker';
 import type { useGymTracker } from '../hooks/useGymTracker';
-import { sessionTypes, masterExercises, aquaExercises, saunaProtocol } from '../data/exercises';
+import { sessionTypes, masterExercises, upperBodyExercises, cardioTemplates, aquaExercises, saunaProtocol } from '../data/exercises';
 import { getProgramByGender } from '../lib/exerciseData';
 import { WorkoutTimer } from './WorkoutTimer';
 
@@ -675,7 +675,7 @@ function AddExercisePanel({ color, gender, onAdd }: {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'program' | 'all'>('program');
 
-  // Build combined exercise list from exerciseData (gender-specific) + masterExercises
+  // Build combined exercise list from exerciseData (gender-specific) + masterExercises + upperBodyExercises + cardio
   const genderProgram = getProgramByGender(gender);
   const programExercises = genderProgram.exercises.map(ex => ({
     id: ex.id,
@@ -694,10 +694,44 @@ function AddExercisePanel({ color, gender, onAdd }: {
     sessionTypes: [] as import('../data/exercises').SessionType[],
   }));
 
-  const allExercises = activeTab === 'program' ? programExercises : [
-    ...programExercises,
-    ...masterExercises,
-  ];
+  // Convert cardio machines to exercise-like entries for the list
+  const cardioAsExercises = cardioTemplates.map(c => ({
+    id: c.id,
+    nameAr: c.nameAr,
+    nameEn: c.nameEn,
+    muscleGroup: 'كارديو',
+    defaultSets: 1,
+    defaultReps: `${c.defaultDuration} دقيقة`,
+    defaultWeight: '—',
+    restSeconds: 0,
+    image: c.image,
+    tip: c.tip,
+    tipEn: c.tipEn || c.tip,
+    youtubeUrl: '',
+    category: 'cardio' as const,
+    sessionTypes: c.sessionTypes,
+  }));
+
+  // Deduplicate by id: programExercises first, then masterExercises, upperBodyExercises, cardio
+  const seen = new Set<string>();
+  const mergeUnique = (lists: typeof programExercises[]) => {
+    const result: typeof programExercises[number][] = [];
+    for (const list of lists) {
+      for (const ex of list) {
+        if (!seen.has(ex.id)) { seen.add(ex.id); result.push(ex); }
+      }
+    }
+    return result;
+  };
+
+  const allExercisesUnified = mergeUnique([
+    programExercises,
+    masterExercises as typeof programExercises[number][],
+    upperBodyExercises as typeof programExercises[number][],
+    (cardioAsExercises as unknown) as typeof programExercises[number][],
+  ]);
+
+  const allExercises = activeTab === 'program' ? programExercises : allExercisesUnified;
 
   const filtered = allExercises.filter(e =>
     e.nameAr.includes(search) || e.muscleGroup.includes(search) || e.nameEn.toLowerCase().includes(search.toLowerCase())
