@@ -2,6 +2,8 @@
 // LicenseGate — WooCommerce License Key Paywall
 // Wraps the entire app. Users must enter a valid order key
 // purchased from primeprint.com.kw to access Prime Fit.
+//
+// Supports auto-verification via URL: ?key=wc_order_XXXXXXXX
 // ============================================================
 import { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
@@ -12,6 +14,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/ac92d03d-28a4-4634-83f6-c2b0ec05fc4a_833a088c.jpg';
 const STORAGE_KEY = 'primefit_license';
+const PRODUCT_URL = 'https://primeprint.com.kw/product/prime-fit-%d8%a8%d8%b1%d9%86%d8%a7%d9%85%d8%ac-%d8%a7%d9%84%d8%aa%d8%af%d8%b1%d9%8a%d8%a8-%d8%a7%d9%84%d8%b4%d8%a7%d9%85%d9%84-8-%d8%a3%d8%b3%d8%a7%d8%a8%d9%8a%d8%b9/';
 
 interface StoredLicense {
   key: string;
@@ -27,27 +30,73 @@ interface LicenseGateProps {
 export function LicenseGate({ children }: LicenseGateProps) {
   const [licenseKey, setLicenseKey] = useState('');
   const [isVerified, setIsVerified] = useState(false);
-  const [storedLicense, setStoredLicense] = useState<StoredLicense | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [autoVerifying, setAutoVerifying] = useState(false);
 
   const verifyMutation = trpc.license.verify.useMutation();
 
-  // On mount, check if a valid license is already stored locally
-  useEffect(() => {
+  const doVerify = async (key: string): Promise<boolean> => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed: StoredLicense = JSON.parse(stored);
-        if (parsed.key && parsed.verifiedAt) {
-          setStoredLicense(parsed);
-          setIsVerified(true);
-        }
+      const result = await verifyMutation.mutateAsync({ licenseKey: key.trim() });
+      if (result.success) {
+        const license: StoredLicense = {
+          key: key.trim(),
+          customerName: result.customerName || '',
+          customerEmail: result.customerEmail || '',
+          verifiedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(license));
+        setIsVerified(true);
+        // Clean the key from the URL without reloading
+        const url = new URL(window.location.href);
+        url.searchParams.delete('key');
+        window.history.replaceState({}, '', url.toString());
+        return true;
+      } else {
+        setError(result.message || 'مفتاح الترخيص غير صالح');
+        return false;
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'حدث خطأ. يرجى المحاولة مرة أخرى.';
+      setError(message);
+      return false;
     }
-    setLoading(false);
+  };
+
+  // On mount: check stored license OR auto-verify from URL ?key=
+  useEffect(() => {
+    const init = async () => {
+      // 1. Check if already verified locally
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed: StoredLicense = JSON.parse(stored);
+          if (parsed.key && parsed.verifiedAt) {
+            setIsVerified(true);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      // 2. Check URL for ?key= param (auto-verify from email link)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlKey = urlParams.get('key');
+      if (urlKey) {
+        setAutoVerifying(true);
+        setLicenseKey(urlKey);
+        await doVerify(urlKey);
+        setAutoVerifying(false);
+      }
+
+      setLoading(false);
+    };
+
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleVerify = async () => {
@@ -56,46 +105,22 @@ export function LicenseGate({ children }: LicenseGateProps) {
       return;
     }
     setError('');
-
-    try {
-      const result = await verifyMutation.mutateAsync({ licenseKey: licenseKey.trim() });
-
-      if (result.success) {
-        const license: StoredLicense = {
-          key: licenseKey.trim(),
-          customerName: result.customerName || '',
-          customerEmail: result.customerEmail || '',
-          verifiedAt: new Date().toISOString(),
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(license));
-        setStoredLicense(license);
-        setIsVerified(true);
-      } else {
-        setError(result.message || 'مفتاح الترخيص غير صالح');
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'حدث خطأ. يرجى المحاولة مرة أخرى.';
-      setError(message);
-    }
+    await doVerify(licenseKey);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsVerified(false);
-    setStoredLicense(null);
-    setLicenseKey('');
-    setError('');
-  };
-
-  // Loading state
-  if (loading) {
+  // Loading / auto-verifying state
+  if (loading || autoVerifying) {
     return (
       <div style={{
         minHeight: '100vh',
         background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 16,
       }}>
-        <div style={{ color: SKY_LIGHT, fontSize: 16 }}>جاري التحقق...</div>
+        <div style={{ fontSize: 40 }}>⏳</div>
+        <div style={{ color: SKY_LIGHT, fontSize: 16, fontFamily: 'Cairo, sans-serif' }}>
+          {autoVerifying ? 'جاري تفعيل برنامجك...' : 'جاري التحقق...'}
+        </div>
       </div>
     );
   }
@@ -162,7 +187,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             هذا التطبيق مخصص للمشتركين فقط
           </p>
           <p style={{ margin: '6px 0 0', color: '#7A9BB5', fontSize: 12, lineHeight: 1.6 }}>
-            أدخل مفتاح الترخيص الخاص بك للوصول إلى البرنامج
+            أدخل مفتاح الترخيص الموجود في إيميل تأكيد طلبك
           </p>
         </div>
 
@@ -228,7 +253,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
 
         {/* Purchase link */}
         <div style={{
-          marginTop: 24,
+          marginTop: 20,
           padding: '14px',
           background: '#F8FBFF',
           borderRadius: 12,
@@ -239,7 +264,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             لا تملك مفتاح ترخيص؟
           </p>
           <a
-            href="https://primeprint.com.kw"
+            href={PRODUCT_URL}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -248,13 +273,13 @@ export function LicenseGate({ children }: LicenseGateProps) {
               color: 'white',
               textDecoration: 'none',
               borderRadius: 10,
-              padding: '8px 20px',
+              padding: '10px 20px',
               fontSize: 13,
               fontWeight: 700,
               fontFamily: 'Cairo, sans-serif',
             }}
           >
-            🛒 اشترِ الآن من primeprint.com.kw
+            🛒 اشترِ Prime Fit الآن
           </a>
         </div>
 
