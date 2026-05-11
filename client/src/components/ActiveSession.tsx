@@ -381,23 +381,149 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
       </div>
 
       {/* Edit Panel */}
-      {isEditing && (
-        <div style={{
-          padding: '12px 14px', borderTop: '1px solid #F0F0F0',
-          background: '#FAFAFA', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
-        }}>
-          {[
-            { label: 'الجولات', field: 'sets' as const, type: 'number', value: String(exercise.sets) },
-            { label: 'التكرارات', field: 'reps' as const, type: 'text', value: exercise.reps },
-            { label: 'الوزن', field: 'weight' as const, type: 'text', value: exercise.weight },
-            { label: 'راحة (ث)', field: 'restSeconds' as const, type: 'number', value: String(exercise.restSeconds) },
-          ].map(f => (
-            <div key={f.field}>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{f.label}</label>
+      {isEditing && (() => {
+        // Cardio machines get the same Speed/Duration/Incline/Calories/Distance form as Treadmill
+        const CARDIO_MACHINE_IDS = ['treadmill', 'rower', 'precor_bike', 'climbmill', 'rowing_machine'];
+        const isCardioMachine = CARDIO_MACHINE_IDS.includes(exercise.exerciseId);
+        const isRowerMachine = exercise.exerciseId === 'rower' || exercise.exerciseId === 'rowing_machine';
+        const isBike = exercise.exerciseId === 'precor_bike';
+        const isClimbmill = exercise.exerciseId === 'climbmill';
+
+        if (isCardioMachine) {
+          // Parse stored values from reps/weight/notes fields
+          const speedVal = exercise.weight !== '—' ? exercise.weight : '';
+          const inclineVal = exercise.notes.match(/incline:([\.\d]+)/)?.[1] ?? '';
+          const calVal = exercise.notes.match(/cal:([\.\d]+)/)?.[1] ?? '';
+          const distVal = exercise.notes.match(/dist:([\.\d]+)/)?.[1] ?? '';
+
+          const speedLabel = isRowerMachine ? '🚣 الإيقاع (SPM)' : isBike ? '🚴 السرعة (RPM)' : isClimbmill ? '🏔️ خطوة/د' : '🚀 السرعة (كم/ساعة)';
+          const inclineLabel = isRowerMachine ? '🔧 المقاومة (Level)' : isBike ? '🔧 المقاومة (Level)' : isClimbmill ? '🔧 المستوى' : '📈 الانحدار (%)';
+          const distLabel = isRowerMachine ? '📏 المسافة (m)' : isClimbmill ? '📏 الطوابق' : '📏 المسافة (كم)';
+
+          const saveNotes = (inc: string, cal: string, dist: string) => {
+            const parts = [];
+            if (inc) parts.push(`incline:${inc}`);
+            if (cal) parts.push(`cal:${cal}`);
+            if (dist) parts.push(`dist:${dist}`);
+            onUpdate({ notes: parts.join('|') });
+          };
+
+          return (
+            <div style={{ padding: '12px 14px', borderTop: '1px solid #F0F0F0', background: '#FAFAFA' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {/* Duration */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>⏱ المدة (دقيقة)</label>
+                  <input
+                    type="number"
+                    value={exercise.sets === 1 && exercise.reps.includes('دقيقة') ? exercise.reps.replace(/[^\d]/g, '') : exercise.sets}
+                    onChange={e => onUpdate({ reps: `${e.target.value} دقيقة` })}
+                    placeholder="20"
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Speed */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{speedLabel}</label>
+                  <input
+                    type="text"
+                    value={speedVal}
+                    onChange={e => onUpdate({ weight: e.target.value })}
+                    placeholder="5.5"
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Incline */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{inclineLabel}</label>
+                  <input
+                    type="text"
+                    value={inclineVal}
+                    onChange={e => saveNotes(e.target.value, calVal, distVal)}
+                    placeholder="3"
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Calories */}
+                <div>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>🔥 الكالوريز</label>
+                  <input
+                    type="text"
+                    value={calVal}
+                    onChange={e => saveNotes(inclineVal, e.target.value, distVal)}
+                    placeholder="150"
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
+                    }}
+                  />
+                </div>
+                {/* Distance - full row */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{distLabel}</label>
+                  <input
+                    type="text"
+                    value={distVal}
+                    onChange={e => saveNotes(inclineVal, calVal, e.target.value)}
+                    placeholder="1.8"
+                    style={{
+                      width: '100%', padding: '8px 10px', borderRadius: 8,
+                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // Default: weights/core form
+        return (
+          <div style={{
+            padding: '12px 14px', borderTop: '1px solid #F0F0F0',
+            background: '#FAFAFA', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
+          }}>
+            {[
+              { label: 'الجولات', field: 'sets' as const, type: 'number', value: String(exercise.sets) },
+              { label: 'التكرارات', field: 'reps' as const, type: 'text', value: exercise.reps },
+              { label: 'الوزن', field: 'weight' as const, type: 'text', value: exercise.weight },
+              { label: 'راحة (ث)', field: 'restSeconds' as const, type: 'number', value: String(exercise.restSeconds) },
+            ].map(f => (
+              <div key={f.field}>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{f.label}</label>
+                <input
+                  type={f.type}
+                  value={f.value}
+                  onChange={e => onUpdate({ [f.field]: f.type === 'number' ? Number(e.target.value) : e.target.value })}
+                  style={{
+                    width: '100%', padding: '6px 10px', borderRadius: 8,
+                    border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+                    fontSize: 13, outline: 'none', background: 'white',
+                  }}
+                />
+              </div>
+            ))}
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>ملاحظة</label>
               <input
-                type={f.type}
-                value={f.value}
-                onChange={e => onUpdate({ [f.field]: f.type === 'number' ? Number(e.target.value) : e.target.value })}
+                type="text"
+                value={exercise.notes}
+                onChange={e => onUpdate({ notes: e.target.value })}
+                placeholder="أي ملاحظة..."
                 style={{
                   width: '100%', padding: '6px 10px', borderRadius: 8,
                   border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
@@ -405,23 +531,9 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                 }}
               />
             </div>
-          ))}
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>ملاحظة</label>
-            <input
-              type="text"
-              value={exercise.notes}
-              onChange={e => onUpdate({ notes: e.target.value })}
-              placeholder="أي ملاحظة..."
-              style={{
-                width: '100%', padding: '6px 10px', borderRadius: 8,
-                border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
-                fontSize: 13, outline: 'none', background: 'white',
-              }}
-            />
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
