@@ -280,11 +280,12 @@ export default function Home() {
 const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
   chest_shoulders: ['Chest', 'Shoulders'],
   upper_arms: ['Arms', 'Back'],
-  lower_body: ['Legs'],
+  lower_body: ['Legs', 'Glutes'],
   core_cardio: ['Core'],
-  full_body: ['Chest', 'Back', 'Legs', 'Core'],
+  full_body: ['Chest', 'Shoulders', 'Back', 'Arms', 'Legs', 'Core', 'Glutes'],
+  active_rest: [], // Cardio only — handled by the cardio machines section
 };
-// Glutes are special — map to lower_body for women
+// Glutes included in lower_body for all genders
 const GLUTES_SESSION: SessionType = 'lower_body';
 
 function CheckInPanel({ onStart, stats, profile }: {
@@ -398,13 +399,9 @@ function CheckInPanel({ onStart, stats, profile }: {
           const nameDisplay = lang === 'ar' ? def.nameAr : ((def as any).nameEn || def.nameAr);
           const descDisplay = lang === 'ar' ? def.description : ((def as any).descriptionEn || def.description);
           const isExpanded = expandedSession === type;
-          // Get exercises for this session type
+          // Get exercises for this session type from exerciseData categories
           const catKeys = SESSION_CATEGORY_MAP[type] || [];
-          // For lower_body, also include Glutes for women
-          const allCatKeys = type === 'lower_body' && gender === 'female'
-            ? [...catKeys, 'Glutes']
-            : catKeys;
-          const sessionExercises = allCatKeys.flatMap(cat => exercisesByCategory[cat] || []);
+          const sessionExercises = catKeys.flatMap(cat => exercisesByCategory[cat] || []);
 
           return (
             <div
