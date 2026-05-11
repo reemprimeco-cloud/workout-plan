@@ -63,3 +63,8 @@
 - [x] Heartbeat cron: per-user cron created/updated when settings saved
 - [x] Bilingual notification content (Arabic + English based on user's language pref)
 - [x] Save checkpoint and deploy before activating crons
+
+## Exercise Title Translation
+- [x] Translate exercise titles in ActiveSession (exercise list during workout) to English when lang=en
+- [x] Translate exercise titles in CheckInPanel (session preview expanded list) to English when lang=en
+- [x] Translate exercise titles in ExerciseLibrary component to English when lang=en

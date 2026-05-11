@@ -5,6 +5,7 @@ import type { useGymTracker } from '../hooks/useGymTracker';
 import { sessionTypes, masterExercises, upperBodyExercises, cardioTemplates, aquaExercises, saunaProtocol } from '../data/exercises';
 import { getProgramByGender } from '../lib/exerciseData';
 import { WorkoutTimer } from './WorkoutTimer';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   session: GymSession;
@@ -18,6 +19,8 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
   const [showTimer, setShowTimer] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
 
   const typeDef = sessionTypes[session.sessionType];
 
@@ -79,13 +82,13 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
                   fontFamily: 'Cairo, sans-serif', fontWeight: 700,
                 }}
               >
-                ← {hasStartedWorkout ? 'حفظ وخروج' : 'إلغاء'}
+                ← {hasStartedWorkout ? (isAr ? 'حفظ وخروج' : 'Save & Exit') : (isAr ? 'إلغاء' : 'Cancel')}
               </button>
               <div style={{ fontSize: 24 }}>{typeDef.icon}</div>
             </div>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>{typeDef.nameAr}</h2>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>{isAr ? typeDef.nameAr : typeDef.nameEn}</h2>
             <p style={{ margin: '4px 0 0', opacity: 0.85, fontSize: 12 }}>
-              ⏰ بدأتِ: {session.checkInTime} • مضى: {formatElapsed(elapsed)}
+              ⏰ {isAr ? 'بدأتِ' : 'Started'}: {session.checkInTime} • {isAr ? 'مضى' : 'Elapsed'}: {formatElapsed(elapsed)}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -97,7 +100,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
             }}>
               {progressPct}%
             </div>
-            <div style={{ fontSize: 10, marginTop: 4, opacity: 0.85 }}>مكتمل</div>
+            <div style={{ fontSize: 10, marginTop: 4, opacity: 0.85 }}>{isAr ? 'مكتمل' : 'Done'}</div>
           </div>
         </div>
 
@@ -112,7 +115,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
               }} />
             </div>
             <div style={{ fontSize: 11, marginTop: 4, opacity: 0.85 }}>
-              {completedCount} / {totalCount} تمرين مكتمل
+              {completedCount} / {totalCount} {isAr ? 'تمرين مكتمل' : 'exercises done'}
             </div>
           </div>
         )}
@@ -140,6 +143,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
       {session.sessionType === 'aqua' && session.aqua && (
         <AquaSessionPanel
           aqua={session.aqua}
+          isAr={isAr}
           onUpdate={u => tracker.updateAqua(session.id, u)}
         />
       )}
@@ -168,6 +172,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
                 color={typeDef.color}
                 isEditing={editingIdx === idx}
                 youtubeUrl={exData?.youtubeUrl}
+                isAr={isAr}
                 onToggle={() => tracker.toggleExercise(session.id, idx)}
                 onEdit={() => setEditingIdx(editingIdx === idx ? null : idx)}
                 onUpdate={u => tracker.updateExercise(session.id, idx, u)}
@@ -188,7 +193,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
                 marginTop: 6,
               }}
             >
-              ↩ تراجع - استعادة التمرين المحذوف ({tracker.lastRemovedExercise.exercise.nameAr})
+              ↩ {isAr ? 'تراجع - استعادة التمرين المحذوف' : 'Undo — Restore deleted exercise'} ({isAr ? tracker.lastRemovedExercise.exercise.nameAr : (tracker.lastRemovedExercise.exercise.nameEn || tracker.lastRemovedExercise.exercise.nameAr)})
             </button>
           )}
         </div>
@@ -199,6 +204,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
         <CardioCard
           cardio={session.cardio}
           color={typeDef.color}
+          isAr={isAr}
           onUpdate={u => tracker.updateCardio(session.id, u)}
         />
       )}
@@ -222,6 +228,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
             <AddExercisePanel
               color={typeDef.color}
               gender={gender}
+              isAr={isAr}
               onAdd={ex => {
                 tracker.addExerciseToSession(session.id, {
                   exerciseId: ex.id, nameAr: ex.nameAr, nameEn: ex.nameEn,
@@ -301,10 +308,11 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
 }
 
 // ── Exercise Card ──────────────────────────────────────────
-function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpdate, onRemove, youtubeUrl }: {
+function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpdate, onRemove, youtubeUrl, isAr }: {
   exercise: import('../hooks/useGymTracker').ExerciseLog;
   idx: number; color: string; isEditing: boolean;
   youtubeUrl?: string;
+  isAr?: boolean;
   onToggle: () => void; onEdit: () => void;
   onUpdate: (u: Partial<import('../hooks/useGymTracker').ExerciseLog>) => void;
   onRemove: () => void;
@@ -339,13 +347,8 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
             textDecoration: exercise.completed ? 'line-through' : 'none',
             opacity: exercise.completed ? 0.6 : 1,
           }}>
-            {exercise.nameAr}
+            {isAr ? exercise.nameAr : (exercise.nameEn || exercise.nameAr)}
           </div>
-          {exercise.nameEn && (
-            <div style={{ fontSize: 10, color: '#A0A0C0', marginTop: 1, fontStyle: 'italic' }}>
-              {exercise.nameEn}
-            </div>
-          )}
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
             {exercise.sets} جولات × {exercise.reps} • {exercise.weight}
           </div>
@@ -539,9 +542,10 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
 }
 
 // ── Cardio Card ────────────────────────────────────────────
-function CardioCard({ cardio, color, onUpdate }: {
+function CardioCard({ cardio, color, onUpdate, isAr }: {
   cardio: import('../hooks/useGymTracker').CardioLog;
   color: string;
+  isAr?: boolean;
   onUpdate: (u: Partial<import('../hooks/useGymTracker').CardioLog>) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -569,7 +573,7 @@ function CardioCard({ cardio, color, onUpdate }: {
           {cardio.completed ? '✓' : ''}
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{icon} {cardio.nameAr}</div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{icon} {isAr ? cardio.nameAr : (cardio.nameEn || cardio.nameAr)}</div>
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
             {isRower ? (
               <>
@@ -779,9 +783,10 @@ function CardioCard({ cardio, color, onUpdate }: {
 }
 
 // ── Add Exercise Panel ─────────────────────────────────────
-function AddExercisePanel({ color, gender, onAdd }: {
+function AddExercisePanel({ color, gender, onAdd, isAr }: {
   color: string;
   gender: 'male' | 'female';
+  isAr?: boolean;
   onAdd: (ex: typeof masterExercises[0]) => void;
 }) {
   const [search, setSearch] = useState('');
@@ -906,12 +911,12 @@ function AddExercisePanel({ color, gender, onAdd }: {
             onMouseLeave={e => (e.currentTarget.style.background = 'white')}
           >
             {ex.image && (
-              <img src={ex.image} alt={ex.nameAr} style={{
+              <img src={ex.image} alt={isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)} style={{
                 width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0,
               }} />
             )}
             <div style={{ flex: 1, textAlign: 'right' }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{ex.nameAr}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
               <div style={{ fontSize: 11, color: '#8A8AAA' }}>
                 {ex.muscleGroup} • {ex.defaultSets}×{ex.defaultReps}
                 {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${ex.defaultWeight}` : ''}
@@ -931,8 +936,9 @@ function AddExercisePanel({ color, gender, onAdd }: {
 }
 
 // ── Aqua Session Panel ─────────────────────────────────────
-function AquaSessionPanel({ aqua, onUpdate }: {
+function AquaSessionPanel({ aqua, onUpdate, isAr }: {
   aqua: import('../hooks/useGymTracker').AquaLog;
+  isAr?: boolean;
   onUpdate: (u: Partial<import('../hooks/useGymTracker').AquaLog>) => void;
 }) {
   return (
@@ -969,7 +975,7 @@ function AquaSessionPanel({ aqua, onUpdate }: {
           background: 'white', borderRadius: 10, padding: '10px 12px', marginBottom: 6,
           border: '1px solid #B2EBF2',
         }}>
-          <div style={{ fontWeight: 700, fontSize: 12, color: '#0891B2' }}>{ex.nameAr}</div>
+          <div style={{ fontWeight: 700, fontSize: 12, color: '#0891B2' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>{ex.duration} • {ex.tip}</div>
         </div>
       ))}

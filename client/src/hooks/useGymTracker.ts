@@ -22,6 +22,7 @@ export interface ExerciseLog {
 export interface CardioLog {
   cardioId: string;
   nameAr: string;
+  nameEn?: string;
   duration: number;
   speed: string;
   incline: string;
@@ -168,6 +169,7 @@ export function useGymTracker() {
         cardio = {
           cardioId: c.id,
           nameAr: c.nameAr,
+          nameEn: c.nameEn,
           duration: c.defaultDuration,
           speed: c.defaultSpeed,
           incline: c.defaultIncline,

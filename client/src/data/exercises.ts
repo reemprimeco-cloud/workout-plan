@@ -408,6 +408,7 @@ export const cardioTemplates: CardioTemplate[] = [
 // ===== SESSION TYPE DEFINITIONS =====
 export const sessionTypes: Record<SessionType, {
   nameAr: string;
+  nameEn: string;
   icon: string;
   color: string;
   bgColor: string;
@@ -417,6 +418,7 @@ export const sessionTypes: Record<SessionType, {
 }> = {
   lower_body: {
     nameAr: 'الجزء السفلي - الأرداف والفخذين',
+    nameEn: 'Lower Body — Glutes & Thighs',
     icon: '🦵', color: '#E05A00', bgColor: '#FFF0E8',
     description: 'تركيز على الأرداف والفخذين وحرق دهون الأرداف',
     defaultExercises: ['squat_db', 'lunge_db', 'hip_thrust', 'rdl', 'leg_press', 'donkey_kicks', 'calf_raises'],
@@ -424,6 +426,7 @@ export const sessionTypes: Record<SessionType, {
   },
   upper_arms: {
     nameAr: 'الجزء العلوي - الذراعان والظهر',
+    nameEn: 'Upper Body — Arms & Back',
     icon: '💪', color: '#7C3AED', bgColor: '#F0E8FF',
     description: 'تركيز على الذراعين والظهر وحرق دهون اليدين',
     defaultExercises: ['bicep_curl', 'tricep_ext', 'lat_pulldown', 'db_row', 'hammer_curl', 'tricep_pushdown'],
@@ -431,6 +434,7 @@ export const sessionTypes: Record<SessionType, {
   },
   core_cardio: {
     nameAr: 'البطن والكور + كارديو مكثف',
+    nameEn: 'Core & Cardio',
     icon: '🔥', color: '#DC2626', bgColor: '#FFE8E8',
     description: 'تركيز على حرق دهون البطن وتقوية عضلات الكور',
     defaultExercises: ['plank', 'crunches', 'bicycle_crunches', 'leg_raises', 'russian_twist', 'mountain_climbers'],
@@ -438,6 +442,7 @@ export const sessionTypes: Record<SessionType, {
   },
   chest_shoulders: {
     nameAr: 'الصدر والأكتاف',
+    nameEn: 'Chest & Shoulders',
     icon: '🏅', color: '#2563EB', bgColor: '#E8F0FF',
     description: 'تقوية الصدر والأكتاف وتحسين القوام',
     defaultExercises: ['chest_press', 'shoulder_press', 'lateral_raise', 'chest_fly', 'tricep_kickback', 'side_plank'],
@@ -445,6 +450,7 @@ export const sessionTypes: Record<SessionType, {
   },
   full_body: {
     nameAr: 'الجسم الكامل',
+    nameEn: 'Full Body',
     icon: '⚡', color: '#059669', bgColor: '#E8F5EE',
     description: 'تمارين مركبة تعمل على الجسم كاملاً',
     defaultExercises: ['squat_db', 'chest_press', 'lat_pulldown', 'hip_thrust', 'plank', 'bicep_curl', 'tricep_ext'],
@@ -452,6 +458,7 @@ export const sessionTypes: Record<SessionType, {
   },
   aqua: {
     nameAr: 'كلاس الأكوا (Aqua Aerobics)',
+    nameEn: 'Aqua Aerobics Class',
     icon: '🏊‍♀️', color: '#0891B2', bgColor: '#E0F7FA',
     description: 'تمارين مائية لحرق الدهون بدون ضغط على المفاصل',
     defaultExercises: [],
@@ -459,6 +466,7 @@ export const sessionTypes: Record<SessionType, {
   },
   sauna: {
     nameAr: 'جلسة السونا',
+    nameEn: 'Sauna Session',
     icon: '🧖‍♀️', color: '#B45309', bgColor: '#FEF3C7',
     description: 'جلسة سونا للتعافي وحرق السعرات وإزالة السموم',
     defaultExercises: [],
@@ -466,6 +474,7 @@ export const sessionTypes: Record<SessionType, {
   },
   active_rest: {
     nameAr: "تمارين الكارديو",
+    nameEn: 'Cardio',
     icon: '🏃', color: '#1B2E5E', bgColor: '#EEF4FF',
     description: 'تمارين الكارديو والإحماء',
     defaultExercises: [],
@@ -475,14 +484,14 @@ export const sessionTypes: Record<SessionType, {
 
 // ===== AQUA CLASS EXERCISES =====
 export const aquaExercises = [
-  { nameAr: 'المشي في الماء', duration: '5 دقائق', tip: 'ابدئي بالمشي للإحماء' },
-  { nameAr: 'القفز في الماء (Aqua Jumping Jacks)', duration: '3 × دقيقة', tip: 'افتحي ذراعيك وساقيك معاً' },
-  { nameAr: 'ركل الماء للأمام (Flutter Kicks)', duration: '3 × دقيقة', tip: 'أمسكي حافة المسبح وركلي بسرعة' },
-  { nameAr: 'تمرين الدمبل المائي (Water Dumbbell Curls)', duration: '3 × 15 تكرار', tip: 'استخدمي الدمبل المائي لمقاومة الماء' },
-  { nameAr: 'الركض في الماء (Aqua Jogging)', duration: '5 دقائق', tip: 'الماء يقاوم حركتك ويزيد من حرق السعرات' },
-  { nameAr: 'تمرين الأرداف في الماء (Aqua Squats)', duration: '3 × 15 تكرار', tip: 'السكوات في الماء أقل ضغطاً على الركبتين' },
-  { nameAr: 'تمرين الجانبين (Side Kicks)', duration: '3 × 12 لكل جهة', tip: 'ارفعي ساقك للجانب ضد مقاومة الماء' },
-  { nameAr: 'التمدد والإطالة المائية', duration: '5 دقائق', tip: 'الماء يساعد على مرونة أفضل' },
+  { nameAr: 'المشي في الماء', nameEn: 'Water Walking', duration: '5 دقائق', tip: 'ابدئي بالمشي للإحماء' },
+  { nameAr: 'القفز في الماء (Aqua Jumping Jacks)', nameEn: 'Aqua Jumping Jacks', duration: '3 × دقيقة', tip: 'افتحي ذراعيك وساقيك معاً' },
+  { nameAr: 'ركل الماء للأمام (Flutter Kicks)', nameEn: 'Flutter Kicks', duration: '3 × دقيقة', tip: 'أمسكي حافة المسبح وركلي بسرعة' },
+  { nameAr: 'تمرين الدمبل المائي (Water Dumbbell Curls)', nameEn: 'Water Dumbbell Curls', duration: '3 × 15 تكرار', tip: 'استخدمي الدمبل المائي لمقاومة الماء' },
+  { nameAr: 'الركض في الماء (Aqua Jogging)', nameEn: 'Aqua Jogging', duration: '5 دقائق', tip: 'الماء يقاوم حركتك ويزيد من حرق السعرات' },
+  { nameAr: 'تمرين الأرداف في الماء (Aqua Squats)', nameEn: 'Aqua Squats', duration: '3 × 15 تكرار', tip: 'السكوات في الماء أقل ضغطاً على الركبتين' },
+  { nameAr: 'تمرين الجانبين (Side Kicks)', nameEn: 'Side Kicks', duration: '3 × 12 لكل جهة', tip: 'ارفعي ساقك للجانب ضد مقاومة الماء' },
+  { nameAr: 'التمدد والإطالة المائية', nameEn: 'Aqua Stretching', duration: '5 دقائق', tip: 'الماء يساعد على مرونة أفضل' },
 ];
 
 // ===== SAUNA PROTOCOL =====
