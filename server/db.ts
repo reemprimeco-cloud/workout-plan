@@ -1,9 +1,13 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users, accessCodes, InsertAccessCode,
   pushSubscriptions, InsertPushSubscription,
   notificationSettings, InsertNotificationSettings,
+  coachChatHistory, InsertCoachChatMessage,
+  coachCheckins, InsertCoachCheckin,
+  coachInsights, InsertCoachInsight,
+  coachMemory, InsertCoachMemory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -203,4 +207,94 @@ export async function updateNotificationTaskUid(userId: number, taskUid: string 
   await db.update(notificationSettings)
     .set({ scheduleCronTaskUid: taskUid })
     .where(eq(notificationSettings.userId, userId));
+}
+
+// ── Coach Chat History ────────────────────────────────────────────────────────────────────
+
+export async function getChatHistory(userId: number, limit = 40) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(coachChatHistory)
+    .where(eq(coachChatHistory.userId, userId))
+    .orderBy(desc(coachChatHistory.createdAt))
+    .limit(limit);
+  return rows.reverse();
+}
+
+export async function saveChatMessage(data: InsertCoachChatMessage) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(coachChatHistory).values(data);
+}
+
+export async function clearChatHistory(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.delete(coachChatHistory).where(eq(coachChatHistory.userId, userId));
+}
+
+// ── Coach Check-ins ────────────────────────────────────────────────────────────────────
+
+export async function getTodayCheckin(userId: number, date: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(coachCheckins)
+    .where(eq(coachCheckins.userId, userId))
+    .limit(30);
+  return result.find(r => r.date === date) ?? null;
+}
+
+export async function saveCheckin(data: InsertCoachCheckin) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(coachCheckins).values(data);
+}
+
+export async function getRecentCheckins(userId: number, limit = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(coachCheckins)
+    .where(eq(coachCheckins.userId, userId))
+    .orderBy(desc(coachCheckins.createdAt))
+    .limit(limit);
+}
+
+// ── Coach Insights ────────────────────────────────────────────────────────────────────
+
+export async function getInsights(userId: number, limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(coachInsights)
+    .where(eq(coachInsights.userId, userId))
+    .orderBy(desc(coachInsights.createdAt))
+    .limit(limit);
+}
+
+export async function saveInsight(data: InsertCoachInsight) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(coachInsights).values(data);
+}
+
+// ── Coach Memory ────────────────────────────────────────────────────────────────────
+
+export async function getCoachMemory(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(coachMemory)
+    .where(eq(coachMemory.userId, userId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function upsertCoachMemory(data: InsertCoachMemory) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(coachMemory).values(data).onDuplicateKeyUpdate({
+    set: {
+      goalWeight: data.goalWeight,
+      currentWeight: data.currentWeight,
+      preferredLanguage: data.preferredLanguage,
+      notes: data.notes,
+    },
+  });
 }

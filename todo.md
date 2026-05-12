@@ -68,3 +68,22 @@
 - [x] Translate exercise titles in ActiveSession (exercise list during workout) to English when lang=en
 - [x] Translate exercise titles in CheckInPanel (session preview expanded list) to English when lang=en
 - [x] Translate exercise titles in ExerciseLibrary component to English when lang=en
+
+## My Coach (AI Personal Trainer)
+- [ ] DB schema: coach_chat_history table (id, userId, role, content, createdAt)
+- [ ] DB schema: coach_checkins table (id, userId, feeling, energy, sleep, date, aiResponse, createdAt)
+- [ ] DB schema: coach_insights table (id, userId, type, content, createdAt)
+- [ ] DB schema: coach_memory table (id, userId, key, value, updatedAt) — one row per user
+- [ ] pnpm db:push migrations applied
+- [ ] server/db.ts: coach helpers (getChatHistory, saveChatMessage, saveCheckin, getCheckins, saveInsight, getInsights, getCoachMemory, upsertCoachMemory)
+- [ ] server/routers/coach.ts: tRPC router (chat, getHistory, checkin, getCheckins, getInsights, getMemory, generateInsights)
+- [ ] Register coach router in server/routers.ts
+- [ ] client/src/pages/MyCoach.tsx: full page with dashboard, check-in card, chat interface, insights
+- [ ] Dashboard stats: streak, weekly completion %, weight change, AI consistency score
+- [ ] Daily check-in card: feel/energy/sleep questions with AI response
+- [ ] Chat interface: message list, input, quick-action buttons, typing animation
+- [ ] AI insights section: auto-generated coaching feedback cards
+- [ ] Bilingual UI: Arabic RTL + English support
+- [ ] Add "My Coach" tab to bottom navigation in Home.tsx
+- [ ] Register /coach route in App.tsx (or render inline in Home.tsx tab system)
+- [ ] Write vitest tests for coach router procedures
