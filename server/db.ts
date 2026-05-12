@@ -298,3 +298,269 @@ export async function upsertCoachMemory(data: InsertCoachMemory) {
     },
   });
 }
+
+// ── Community ─────────────────────────────────────────────────────────────────
+
+import {
+  communityPosts, InsertCommunityPost,
+  communityReactions, InsertCommunityReaction,
+  communityComments, InsertCommunityComment,
+  communityStories,
+  communityChallenges,
+  challengeParticipants, InsertChallengeParticipant,
+  communityXpLog, InsertCommunityXpLog,
+} from "../drizzle/schema";
+import { and, sql, sum, gte, lte } from "drizzle-orm";
+
+// ── Posts ──────────────────────────────────────────────────────────────────────
+
+export async function getCommunityFeed(limit = 20, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(communityPosts)
+    .where(eq(communityPosts.visibility, "public"))
+    .orderBy(desc(communityPosts.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function getTrendingPosts(limit = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(communityPosts)
+    .where(and(eq(communityPosts.visibility, "public"), eq(communityPosts.isTrending, true)))
+    .orderBy(desc(communityPosts.likesCount))
+    .limit(limit);
+}
+
+export async function createCommunityPost(data: InsertCommunityPost) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.insert(communityPosts).values(data);
+  // Return the newly inserted row
+  const rows = await db.select().from(communityPosts)
+    .where(eq(communityPosts.userId, data.userId))
+    .orderBy(desc(communityPosts.createdAt)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getPostById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(communityPosts).where(eq(communityPosts.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function incrementPostLikes(postId: number, delta: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(communityPosts)
+    .set({ likesCount: sql`${communityPosts.likesCount} + ${delta}` })
+    .where(eq(communityPosts.id, postId));
+}
+
+export async function incrementPostComments(postId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(communityPosts)
+    .set({ commentsCount: sql`${communityPosts.commentsCount} + 1` })
+    .where(eq(communityPosts.id, postId));
+}
+
+// ── Reactions ──────────────────────────────────────────────────────────────────
+
+export async function getReaction(postId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(communityReactions)
+    .where(and(eq(communityReactions.postId, postId), eq(communityReactions.userId, userId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function addReaction(data: InsertCommunityReaction) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.insert(communityReactions).values(data);
+}
+
+export async function removeReaction(postId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(communityReactions)
+    .where(and(eq(communityReactions.postId, postId), eq(communityReactions.userId, userId)));
+}
+
+export async function getReactionsByPost(postId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(communityReactions).where(eq(communityReactions.postId, postId));
+}
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+export async function getCommentsByPost(postId: number, limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(communityComments)
+    .where(eq(communityComments.postId, postId))
+    .orderBy(communityComments.createdAt)
+    .limit(limit);
+}
+
+export async function addComment(data: InsertCommunityComment) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.insert(communityComments).values(data);
+}
+
+// ── Stories ──────────────────────────────────────────────────────────────────
+
+export async function getActiveStories() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  return db.select().from(communityStories)
+    .where(gte(communityStories.expiresAt, now))
+    .orderBy(desc(communityStories.createdAt))
+    .limit(30);
+}
+
+export async function createStory(data: typeof communityStories.$inferInsert) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.insert(communityStories).values(data);
+}
+
+// ── Challenges ──────────────────────────────────────────────────────────────────
+
+export async function getActiveChallenges() {
+  const db = await getDb();
+  if (!db) return [];
+  const today = new Date().toISOString().slice(0, 10);
+  return db.select().from(communityChallenges)
+    .where(and(
+      eq(communityChallenges.isActive, true),
+      lte(communityChallenges.startDate, today),
+      gte(communityChallenges.endDate, today),
+    ))
+    .orderBy(desc(communityChallenges.createdAt));
+}
+
+export async function joinChallenge(data: InsertChallengeParticipant) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  // Check if already joined
+  const existing = await db.select().from(challengeParticipants)
+    .where(and(
+      eq(challengeParticipants.challengeId, data.challengeId),
+      eq(challengeParticipants.userId, data.userId),
+    )).limit(1);
+  if (existing.length > 0) return existing[0];
+  await db.insert(challengeParticipants).values(data);
+  // Increment participants count
+  await db.update(communityChallenges)
+    .set({ participantsCount: sql`${communityChallenges.participantsCount} + 1` })
+    .where(eq(communityChallenges.id, data.challengeId));
+  return data;
+}
+
+export async function getUserChallenges(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(challengeParticipants)
+    .where(eq(challengeParticipants.userId, userId));
+}
+
+export async function seedDefaultChallenges() {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await db.select().from(communityChallenges).limit(1);
+  if (existing.length > 0) return; // already seeded
+  const today = new Date().toISOString().slice(0, 10);
+  const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  await db.insert(communityChallenges).values([
+    {
+      title: "7-Day Consistency Challenge",
+      titleAr: "تحدي الاتساق 7 أيام",
+      description: "Complete 7 workouts in 7 days to earn 200 XP",
+      descriptionAr: "أكمل 7 تمارين في 7 أيام واحصل على 200 نقطة",
+      type: "sessions",
+      targetValue: 7,
+      xpReward: 200,
+      startDate: today,
+      endDate,
+      isActive: true,
+      participantsCount: 0,
+    },
+    {
+      title: "14-Day Fat Burn Challenge",
+      titleAr: "تحدي حرق الدهون 14 يوم",
+      description: "Complete 14 cardio sessions in 14 days",
+      descriptionAr: "أكمل 14 جلسة كارديو في 14 يوماً",
+      type: "cardio",
+      targetValue: 14,
+      xpReward: 350,
+      startDate: today,
+      endDate,
+      isActive: true,
+      participantsCount: 0,
+    },
+    {
+      title: "Core Strength Challenge",
+      titleAr: "تحدي قوة الجذع",
+      description: "Complete 10 core & cardio sessions this month",
+      descriptionAr: "أكمل 10 جلسات جذع وكارديو هذا الشهر",
+      type: "sessions",
+      targetValue: 10,
+      xpReward: 250,
+      startDate: today,
+      endDate,
+      isActive: true,
+      participantsCount: 0,
+    },
+  ]);
+}
+
+// ── XP & Levels ──────────────────────────────────────────────────────────────────
+
+export async function addXp(data: InsertCommunityXpLog) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(communityXpLog).values(data);
+}
+
+export async function getUserTotalXp(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ total: sum(communityXpLog.points) })
+    .from(communityXpLog)
+    .where(eq(communityXpLog.userId, userId));
+  return Number(result[0]?.total ?? 0);
+}
+
+export async function getWeeklyLeaderboard(limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const rows = await db.select({
+    userId: communityXpLog.userId,
+    weeklyXp: sum(communityXpLog.points),
+  })
+    .from(communityXpLog)
+    .where(gte(communityXpLog.createdAt, weekAgo))
+    .groupBy(communityXpLog.userId)
+    .orderBy(desc(sum(communityXpLog.points)))
+    .limit(limit);
+  return rows.map(r => ({ userId: r.userId, weeklyXp: Number(r.weeklyXp ?? 0) }));
+}
+
+export async function getUserWeeklyXp(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const result = await db.select({ total: sum(communityXpLog.points) })
+    .from(communityXpLog)
+    .where(and(eq(communityXpLog.userId, userId), gte(communityXpLog.createdAt, weekAgo)));
+  return Number(result[0]?.total ?? 0);
+}

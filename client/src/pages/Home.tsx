@@ -19,6 +19,7 @@ import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../_core/hooks/useAuth';
 import MyCoach from './MyCoach';
+import Community from './Community';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -27,7 +28,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 
-type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile' | 'coach';
+type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile' | 'coach' | 'community';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -91,6 +92,7 @@ export default function Home() {
     { id: 'exercises', icon: '🏋️', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'user-guide', icon: '📘', label: isRTL ? 'الدليل' : 'Help' },
     { id: 'coach', icon: '🤖', label: isRTL ? 'مدربي' : 'Coach' },
+    { id: 'community', icon: '🌐', label: isRTL ? 'المجتمع' : 'Community' },
     { id: 'profile', icon: '⚙️', label: t('navProfile') },
   ];
 
@@ -219,6 +221,15 @@ export default function Home() {
         {activeTab === 'user-guide' && <UserGuide />}
         {activeTab === 'profile' && <ProfilePanel />}
         {activeTab === 'coach' && <MyCoach />}
+        {activeTab === 'community' && (
+          <Community
+            streak={stats.streak}
+            weeklyCompletion={stats.progressPercent}
+            currentWeight={data.profile.currentWeight}
+            targetWeight={data.profile.targetWeight}
+            name={data.profile.name}
+          />
+        )}
       </main>
 
       {/* ── Bottom Navigation ── */}

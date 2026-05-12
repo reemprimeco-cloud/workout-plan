@@ -123,3 +123,110 @@ export const coachMemory = mysqlTable("coach_memory", {
 
 export type CoachMemory = typeof coachMemory.$inferSelect;
 export type InsertCoachMemory = typeof coachMemory.$inferInsert;
+
+// ── Community ─────────────────────────────────────────────────────────────────
+
+// Community posts — text, image, achievement, auto-generated
+export const communityPosts = mysqlTable("community_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["text", "image", "achievement", "transformation", "auto"]).default("text").notNull(),
+  content: text("content").notNull(),
+  contentEn: text("contentEn"),
+  imageUrl: text("imageUrl"),
+  imageKey: text("imageKey"),
+  visibility: mysqlEnum("visibility", ["public", "friends", "private"]).default("public").notNull(),
+  xpAwarded: int("xpAwarded").default(0).notNull(),
+  likesCount: int("likesCount").default(0).notNull(),
+  commentsCount: int("commentsCount").default(0).notNull(),
+  isTrending: boolean("isTrending").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityPost = typeof communityPosts.$inferSelect;
+export type InsertCommunityPost = typeof communityPosts.$inferInsert;
+
+// Post reactions — like, cheer, fire
+export const communityReactions = mysqlTable("community_reactions", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["like", "cheer", "fire"]).default("like").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityReaction = typeof communityReactions.$inferSelect;
+export type InsertCommunityReaction = typeof communityReactions.$inferInsert;
+
+// Post comments
+export const communityComments = mysqlTable("community_comments", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull(),
+  userId: int("userId").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityComment = typeof communityComments.$inferSelect;
+export type InsertCommunityComment = typeof communityComments.$inferInsert;
+
+// Stories — 24h streak/achievement stories
+export const communityStories = mysqlTable("community_stories", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["streak", "achievement", "workout", "progress"]).default("workout").notNull(),
+  content: text("content").notNull(),
+  contentEn: text("contentEn"),
+  imageUrl: text("imageUrl"),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityStory = typeof communityStories.$inferSelect;
+export type InsertCommunityStory = typeof communityStories.$inferInsert;
+
+// Challenges
+export const communityChallenges = mysqlTable("community_challenges", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  titleAr: varchar("titleAr", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  descriptionAr: text("descriptionAr").notNull(),
+  type: mysqlEnum("type", ["streak", "sessions", "cardio", "weight", "custom"]).default("sessions").notNull(),
+  targetValue: int("targetValue").default(7).notNull(),
+  xpReward: int("xpReward").default(100).notNull(),
+  startDate: varchar("startDate", { length: 10 }).notNull(), // YYYY-MM-DD
+  endDate: varchar("endDate", { length: 10 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  participantsCount: int("participantsCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityChallenge = typeof communityChallenges.$inferSelect;
+export type InsertCommunityChallenge = typeof communityChallenges.$inferInsert;
+
+// Challenge participants
+export const challengeParticipants = mysqlTable("challenge_participants", {
+  id: int("id").autoincrement().primaryKey(),
+  challengeId: int("challengeId").notNull(),
+  userId: int("userId").notNull(),
+  progress: int("progress").default(0).notNull(),
+  completedAt: timestamp("completedAt"),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+});
+
+export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
+export type InsertChallengeParticipant = typeof challengeParticipants.$inferInsert;
+
+// XP log — tracks all XP-earning events
+export const communityXpLog = mysqlTable("community_xp_log", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  event: varchar("event", { length: 64 }).notNull(), // 'post','workout','streak','like','comment','challenge'
+  points: int("points").notNull(),
+  refId: int("refId"), // optional reference to related record
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommunityXpLog = typeof communityXpLog.$inferSelect;
+export type InsertCommunityXpLog = typeof communityXpLog.$inferInsert;
