@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
+import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
@@ -118,6 +119,32 @@ function WeightLogSection() {
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Help Section Sub-component ──────────────────────────────────────────────
+function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
+        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        <span className="font-bold text-gray-800 text-sm">
+          📘 {lang === 'ar' ? 'دليل الاستخدام' : 'Help & User Guide'}
+        </span>
+        <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div className="border-t border-gray-100">
+          <UserGuide />
         </div>
       )}
     </div>
@@ -330,6 +357,9 @@ export function ProfilePanel() {
           🗑️ {t('resetData')}
         </button>
       </div>
+
+      {/* Help Section */}
+      <HelpSection lang={lang} />
 
       {/* App Info Footer */}
       <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
