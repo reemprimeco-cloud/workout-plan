@@ -120,7 +120,7 @@ export const coachRouter = router({
       const recentInsights = insights.map(i => i.content);
 
       const systemPrompt = buildSystemPrompt(input.lang, {
-        name: input.context?.name ?? memory?.notes ? JSON.parse(memory!.notes ?? "{}").name : undefined,
+        name: input.context?.name ?? (memory?.notes ? JSON.parse(memory.notes).name : undefined),
         currentWeight: input.context?.currentWeight ?? memory?.currentWeight ?? undefined,
         targetWeight: input.context?.targetWeight ?? memory?.goalWeight ?? undefined,
         streak: input.context?.streak,
