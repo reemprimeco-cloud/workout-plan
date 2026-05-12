@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useGymTracker } from '../hooks/useGymTracker';
 import { sessionTypes, cardioTemplates } from '../data/exercises';
 import type { SessionType } from '../data/exercises';
-import { getProgramByGender, getExercisesByCategory } from '../lib/exerciseData';
+import { getExercisesByCategoryAll } from '../lib/exerciseData';
 import { ActiveSession } from '../components/ActiveSession';
 import { SessionHistory } from '../components/SessionHistory';
 import { StatsPanel } from '../components/StatsPanel';
@@ -290,6 +290,12 @@ const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
   core_cardio: ['Core'],
   full_body: ['Chest', 'Shoulders', 'Back', 'Arms', 'Legs', 'Core', 'Glutes'],
   active_rest: [], // Cardio only — handled by the cardio machines section
+  warm_up: ['Warm-Up'],
+  stretching: ['Stretching'],
+  home_workouts: ['Home Workouts'],
+  pilates: ['Pilates'],
+  mobility: ['Mobility'],
+  quick_workouts: ['Quick Workouts'],
 };
 // Glutes included in lower_body for all genders
 const GLUTES_SESSION: SessionType = 'lower_body';
@@ -339,7 +345,7 @@ function CheckInPanel({ onStart, stats, profile }: {
   const [cardioSaved, setCardioSaved] = useState<Record<string, boolean>>({});
   const cardioMachines = cardioTemplates.filter(c => ['treadmill', 'rower', 'precor_bike', 'climbmill'].includes(c.id));
   const gender = (profile.gender as 'male' | 'female') || 'female';
-  const exercisesByCategory = getExercisesByCategory(gender);
+  const exercisesByCategory = getExercisesByCategoryAll(gender);
 
   return (
     <div style={{ animation: 'slideUp 0.4s ease' }}>
