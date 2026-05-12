@@ -120,3 +120,19 @@
 
 ## Community FAB
 - [x] Add floating action button (FAB) for new post in Community feed tab
+
+## New Workout Category Cards
+- [ ] Add 6 new session types to exercises.ts (warm_up, stretching, home_workouts, pilates, mobility, quick_workouts)
+- [ ] Add exercise data for each new category (Arabic + English names)
+- [ ] Add new cards to CheckInPanel grid using exact same card style
+- [ ] Wire new session types into ActiveSession for exercise list, timer, progress tracking
+- [ ] Bilingual support: Arabic + English for all new content
+
+## Icon & Layout Update
+- [x] Generate navy blue outline SVG icons for all 14 workout category cards
+- [x] Generate navy blue outline SVG icons for all 8 bottom nav tabs
+- [x] Upload all icons to manus-storage
+- [x] Replace emoji icons in workout cards (exercises.ts sessionTypes) with SVG images
+- [x] Replace bottom nav tab emoji icons in Home.tsx with SVG images
+- [x] Fix app layout to perfectly fit mobile screen (no horizontal overflow, proper viewport)
+- [x] Ensure sticky header + scrollable content + fixed bottom nav with no overlap

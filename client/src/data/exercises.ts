@@ -11,7 +11,13 @@ export type SessionType =
   | 'chest_shoulders'
   | 'aqua'
   | 'sauna'
-  | 'active_rest';
+  | 'active_rest'
+  | 'warm_up'
+  | 'stretching'
+  | 'home_workouts'
+  | 'pilates'
+  | 'mobility'
+  | 'quick_workouts';
 
 export interface ExerciseTemplate {
   id: string;
@@ -413,6 +419,7 @@ export const sessionTypes: Record<SessionType, {
   color: string;
   bgColor: string;
   description: string;
+  descriptionEn?: string;
   defaultExercises: string[];
   defaultCardio?: string;
 }> = {
@@ -479,6 +486,60 @@ export const sessionTypes: Record<SessionType, {
     description: 'تمارين الكارديو والإحماء',
     defaultExercises: [],
     defaultCardio: 'treadmill',
+  },
+  warm_up: {
+    nameAr: 'الإحماء الديناميكي',
+    nameEn: 'Warm-Up',
+    icon: '🔥', color: '#EA580C', bgColor: '#FFF7ED',
+    description: 'تمارين إحماء ديناميكية قبل التمرين',
+    descriptionEn: 'Dynamic warm-up exercises before workouts',
+    defaultExercises: ['warmup_neck_rolls', 'warmup_arm_circles', 'warmup_hip_circles', 'warmup_leg_swings', 'warmup_jumping_jacks', 'warmup_high_knees'],
+    defaultCardio: undefined,
+  },
+  stretching: {
+    nameAr: 'الإطالة والتعافي',
+    nameEn: 'Stretching & Recovery',
+    icon: '🧘', color: '#0D9488', bgColor: '#F0FDFA',
+    description: 'تمارين إطالة وتعافي بعد التمرين',
+    descriptionEn: 'Post-workout stretching and recovery sessions',
+    defaultExercises: ['stretch_quad', 'stretch_hamstring', 'stretch_hip_flexor', 'stretch_chest', 'stretch_shoulder', 'stretch_child_pose'],
+    defaultCardio: undefined,
+  },
+  home_workouts: {
+    nameAr: 'تمارين المنزل',
+    nameEn: 'Home Workouts',
+    icon: '🏠', color: '#7C3AED', bgColor: '#F5F3FF',
+    description: 'تمارين بدون معدات يمكن أداؤها في المنزل',
+    descriptionEn: 'No-equipment workouts you can do at home',
+    defaultExercises: ['home_pushup', 'home_squat', 'home_lunge', 'home_glute_bridge', 'home_plank', 'home_mountain_climbers'],
+    defaultCardio: undefined,
+  },
+  pilates: {
+    nameAr: 'البيلاتس',
+    nameEn: 'Pilates',
+    icon: '🤸', color: '#DB2777', bgColor: '#FDF2F8',
+    description: 'تمارين البيلاتس للمرونة وقوة الكور',
+    descriptionEn: 'Pilates exercises for flexibility and core strength',
+    defaultExercises: ['pilates_hundred', 'pilates_roll_up', 'pilates_single_leg_stretch', 'pilates_double_leg_stretch', 'pilates_spine_stretch', 'pilates_swan'],
+    defaultCardio: undefined,
+  },
+  mobility: {
+    nameAr: 'الحركة والمرونة',
+    nameEn: 'Mobility & Flexibility',
+    icon: '🦵', color: '#2563EB', bgColor: '#EFF6FF',
+    description: 'روتين الحركة وتحسين المرونة',
+    descriptionEn: 'Mobility routines and flexibility improvement',
+    defaultExercises: ['mob_thoracic_rotation', 'mob_hip_90_90', 'mob_ankle_circles', 'mob_cat_cow', 'mob_world_greatest', 'mob_pigeon_pose'],
+    defaultCardio: undefined,
+  },
+  quick_workouts: {
+    nameAr: 'تمارين سريعة',
+    nameEn: 'Quick Workouts',
+    icon: '⚡', color: '#CA8A04', bgColor: '#FEFCE8',
+    description: 'جلسات تمرين سريعة من 5 إلى 10 دقائق',
+    descriptionEn: 'Fast 5-10 minute workout sessions',
+    defaultExercises: ['quick_burpees', 'quick_jumping_jacks', 'quick_high_knees', 'quick_squat_jumps', 'quick_pushup', 'quick_plank'],
+    defaultCardio: undefined,
   },
 };
 
