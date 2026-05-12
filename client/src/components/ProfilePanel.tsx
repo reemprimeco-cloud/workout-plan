@@ -134,6 +134,9 @@ export function ProfilePanel() {
   // Inline current weight editing
   const [editingWeight, setEditingWeight] = useState(false);
   const [inlineWeight, setInlineWeight] = useState(profile.currentWeight.toString());
+  // Inline target weight editing
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [inlineTarget, setInlineTarget] = useState(profile.targetWeight.toString());
 
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
   const bmiCat = getBMICategory(plan.bmi, lang);
@@ -220,10 +223,40 @@ export function ProfilePanel() {
               </>
             )}
           </div>
-          {/* Target Weight */}
-          <div className="p-4 text-center">
-            <div className="text-xl font-black text-gray-800">{profile.targetWeight} kg</div>
-            <div className="text-xs text-gray-500 mt-0.5">{lang === 'ar' ? 'الهدف' : 'Target'}</div>
+          {/* Target Weight - inline editable */}
+          <div className="p-4 text-center cursor-pointer group" onClick={() => { setInlineTarget(profile.targetWeight.toString()); setEditingTarget(true); }}>
+            {editingTarget ? (
+              <form onSubmit={e => {
+                e.preventDefault();
+                const w = parseFloat(inlineTarget);
+                if (w >= 30 && w <= 250) {
+                  updateProfile({ ...profile, targetWeight: w });
+                }
+                setEditingTarget(false);
+              }}>
+                <input
+                  type="number" step="0.1" min="30" max="250"
+                  value={inlineTarget}
+                  onChange={e => setInlineTarget(e.target.value)}
+                  onBlur={() => {
+                    const w = parseFloat(inlineTarget);
+                    if (w >= 30 && w <= 250) updateProfile({ ...profile, targetWeight: w });
+                    setEditingTarget(false);
+                  }}
+                  autoFocus
+                  className="w-full text-center text-lg font-black text-[#E05A00] border-b-2 border-[#E05A00] outline-none bg-transparent"
+                />
+                <div className="text-xs text-[#E05A00] mt-0.5">{lang === 'ar' ? '✓ حفظ' : '✓ Save'}</div>
+              </form>
+            ) : (
+              <>
+                <div className="text-xl font-black text-gray-800 group-hover:text-[#E05A00] transition-colors">
+                  {profile.targetWeight} kg
+                  <span className="text-xs text-gray-400 block font-normal group-hover:text-[#E05A00]">✏️</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">{lang === 'ar' ? 'الهدف' : 'Target'}</div>
+              </>
+            )}
           </div>
           {/* BMI */}
           <div className="p-4 text-center">
