@@ -28,7 +28,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 
-type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile' | 'coach' | 'community';
+type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -90,7 +90,6 @@ export default function Home() {
     { id: 'stats', icon: '📊', label: t('navStats') },
     { id: 'guide', icon: '📖', label: t('navGuide') },
     { id: 'exercises', icon: '🏋️', label: isRTL ? 'التمارين' : 'Exercises' },
-    { id: 'user-guide', icon: '📘', label: isRTL ? 'الدليل' : 'Help' },
     { id: 'coach', icon: '🤖', label: isRTL ? 'مدربي' : 'Coach' },
     { id: 'community', icon: '🌐', label: isRTL ? 'المجتمع' : 'Community' },
     { id: 'profile', icon: '⚙️', label: t('navProfile') },
@@ -218,7 +217,6 @@ export default function Home() {
             />
           </div>
         )}
-        {activeTab === 'user-guide' && <UserGuide />}
         {activeTab === 'profile' && <ProfilePanel />}
         {activeTab === 'coach' && <MyCoach />}
         {activeTab === 'community' && (

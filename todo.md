@@ -89,27 +89,31 @@
 - [x] Write vitest tests for coach router procedures (21 tests)
 
 ## Community Tab
-- [ ] DB: community_posts table (id, userId, type, content, imageUrl, visibility, xpAwarded, createdAt)
-- [ ] DB: community_post_reactions table (id, postId, userId, type: like/cheer/fire, createdAt)
-- [ ] DB: community_comments table (id, postId, userId, content, createdAt)
-- [ ] DB: community_stories table (id, userId, type, content, imageUrl, expiresAt, createdAt)
-- [ ] DB: community_challenges table (id, title, titleAr, description, descriptionAr, type, targetValue, startDate, endDate, xpReward, createdAt)
-- [ ] DB: community_challenge_participants table (id, challengeId, userId, progress, completedAt, joinedAt)
-- [ ] DB: community_xp_log table (id, userId, event, points, refId, createdAt)
-- [ ] pnpm db:push migrations applied
-- [ ] server/db.ts: community DB helpers
-- [ ] server/routers/community.ts: tRPC router (getFeed, createPost, reactToPost, getComments, addComment, getStories, getLeaderboard, getChallenges, joinChallenge, getMyXP, getAIInsights, autoGeneratePost)
-- [ ] Register community router in server/routers.ts
-- [ ] client/src/pages/Community.tsx: full page with stories bar, AI insight card, post feed, leaderboard, challenges, XP panel
-- [ ] Stories bar: circular avatars with active streak indicators
-- [ ] AI Insight card: personalized motivational card pinned at top of feed
-- [ ] Post feed: Instagram-style cards with reactions (like/cheer/fire), comments, trending badge
-- [ ] Post creation: text + image upload with visibility selector
-- [ ] Weekly leaderboard: top 10 with XP, level badge, rank movement arrows
-- [ ] Challenges section: active challenges with join button and progress bar
-- [ ] XP & Level panel: user level, total XP, badges earned
-- [ ] Auto-generated achievement posts (streak milestones, level-ups)
-- [ ] Dark neon UI: navy + cyan/orange, smooth CSS animations, mobile-first
-- [ ] Bilingual: Arabic RTL + English support throughout
-- [ ] Add Community tab to bottom navigation in Home.tsx
-- [ ] Write vitest tests for community router
+- [x] DB: community_posts table (id, userId, type, content, imageUrl, visibility, xpAwarded, createdAt)
+- [x] DB: community_post_reactions table (id, postId, userId, type: like/cheer/fire, createdAt)
+- [x] DB: community_comments table (id, postId, userId, content, createdAt)
+- [x] DB: community_stories table (id, userId, type, content, imageUrl, expiresAt, createdAt)
+- [x] DB: community_challenges table (id, title, titleAr, description, descriptionAr, type, targetValue, startDate, endDate, xpReward, createdAt)
+- [x] DB: community_challenge_participants table (id, challengeId, userId, progress, completedAt, joinedAt)
+- [x] DB: community_xp_log table (id, userId, event, points, refId, createdAt)
+- [x] pnpm db:push migrations applied
+- [x] server/db.ts: community DB helpers
+- [x] server/routers/community.ts: tRPC router (getFeed, createPost, reactToPost, getComments, addComment, getStories, getLeaderboard, getChallenges, joinChallenge, getMyXP, getAIInsights, autoGeneratePost)
+- [x] Register community router in server/routers.ts
+- [x] client/src/pages/Community.tsx: full page with stories bar, AI insight card, post feed, leaderboard, challenges, XP panel
+- [x] Stories bar: circular avatars with active streak indicators
+- [x] AI Insight card: personalized motivational card pinned at top of feed
+- [x] Post feed: Instagram-style cards with reactions (like/cheer/fire), comments, trending badge
+- [x] Post creation: text + image upload with visibility selector
+- [x] Weekly leaderboard: top 10 with XP, level badge, rank movement arrows
+- [x] Challenges section: active challenges with join button and progress bar
+- [x] XP & Level panel: user level, total XP, badges earned
+- [x] Auto-generated achievement posts (streak milestones, level-ups)
+- [x] Dark neon UI: navy + cyan/orange, smooth CSS animations, mobile-first
+- [x] Bilingual: Arabic RTL + English support throughout
+- [x] Add Community tab to bottom navigation in Home.tsx
+- [x] Write vitest tests for community router (27 tests)
+
+## UI Restructuring
+- [x] Move Help tab content into Profile page as a collapsible section
+- [x] Remove Help tab from bottom navigation bar
