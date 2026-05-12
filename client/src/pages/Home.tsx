@@ -86,20 +86,23 @@ export default function Home() {
     setTimeout(() => setStartingSession(false), 300);
   };
 
-  const tabs: { id: Tab; icon: string; label: string }[] = [
-    { id: 'home', icon: '🏠', label: t('navHome') },
-    { id: 'history', icon: '📋', label: t('navHistory') },
-    { id: 'stats', icon: '📊', label: t('navStats') },
-    { id: 'guide', icon: '📖', label: t('navGuide') },
-    { id: 'exercises', icon: '🏋️', label: isRTL ? 'التمارين' : 'Exercises' },
-    { id: 'coach', icon: '🤖', label: isRTL ? 'مدربي' : 'Coach' },
-    { id: 'community', icon: '🌐', label: isRTL ? 'المجتمع' : 'Community' },
-    { id: 'profile', icon: '⚙️', label: t('navProfile') },
+  const tabs: { id: Tab; iconUrl: string; label: string }[] = [
+    { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
+    { id: 'history', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: t('navHistory') },
+    { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
+    { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: t('navGuide') },
+    { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
+    { id: 'coach', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp', label: isRTL ? 'مدربي' : 'Coach' },
+    { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
+    { id: 'profile', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_profile-4Skb4HPfvUiSWNBfKW6iLX.webp', label: t('navProfile') },
   ];
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} style={{
-      minHeight: '100vh',
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
       background: '#F0F4F8',
       fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
     }}>
@@ -156,7 +159,7 @@ export default function Home() {
       </header>
 
       {/* ── Content ── */}
-      <main style={{ padding: '16px', maxWidth: 800, margin: '0 auto', paddingBottom: 90 }}>
+      <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
 
         {/* Active Session Banner */}
         {activeSession && (
@@ -235,12 +238,12 @@ export default function Home() {
 
       {/* ── Bottom Navigation ── */}
       <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
         background: 'white',
         borderTop: `2px solid ${SKY_LIGHT}`,
         display: 'flex',
         boxShadow: '0 -4px 20px rgba(27,46,94,0.10)',
-        zIndex: 100,
+        flexShrink: 0,
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}>
         {tabs.map(tab => (
           <button
@@ -254,7 +257,7 @@ export default function Home() {
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
             }}
           >
-            <span style={{ fontSize: 20, lineHeight: 1 }}>{tab.icon}</span>
+            <img src={tab.iconUrl} alt={tab.label} style={{ width: 22, height: 22, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
             <span style={{
               fontSize: 10, fontWeight: 700,
               color: activeTab === tab.id ? NAVY : '#7A9BB5',
@@ -263,25 +266,13 @@ export default function Home() {
         ))}
       </nav>
 
-      {/* ── Prime Printing Co. Signature ── */}
-      <div style={{
-        position: 'fixed', bottom: 62, left: 0, right: 0,
-        textAlign: 'center', pointerEvents: 'none', zIndex: 99,
-      }}>
-        <span style={{
-          fontSize: 9, color: 'rgba(123,184,212,0.6)',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          letterSpacing: '0.06em', fontWeight: 500,
-        }}>
-          Made by <strong style={{ fontWeight: 700 }}>Prime Printing Co.</strong> © {new Date().getFullYear()}
-        </span>
-      </div>
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
         @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
-        * { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body, #root { height: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #E8EFF7; }
         ::-webkit-scrollbar-thumb { background: ${SKY}; border-radius: 4px; }
@@ -316,7 +307,25 @@ function CheckInPanel({ onStart, stats, profile }: {
   const locale = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US';
   const dayName = now.toLocaleDateString(locale, { weekday: 'long' });
   const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest'];
+  const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
+
+  // Icon URLs for each session type
+  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+    lower_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_lower_body-MuCkSzyesxhQdyW2sjXWAq.webp',
+    upper_arms: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_upper_body-d4Fkcsb5PVaBtsoBf7kR6u.webp',
+    core_cardio: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_core_cardio-2XKA22my7CHNgVpQZBhzVC.webp',
+    chest_shoulders: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_chest_shoulders-7n7FKiPHKydZoJhE4L2Y2a.webp',
+    full_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_full_body-DTurmyGnhh2FK22ddoLwZJ.webp',
+    aqua: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_aqua-CTdfNbHhgUmSuEDYAYZErP.webp',
+    sauna: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_sauna-euKmrDgyW3kcnrExDVuZEj.webp',
+    active_rest: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_cardio-JgDT6bvc8LxDoDkZC3MFmL.webp',
+    warm_up: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_warm_up-QRSEACQjVrSnzzkfpSfCPF.webp',
+    stretching: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_stretching-F4ZvDFQRX2KXtbCduArTqe.webp',
+    home_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_home_workouts-8TAShRf99uAcBdK8sVxufW.webp',
+    pilates: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_pilates-hfeJyx2Mk2XJHngo6SaSmM.webp',
+    mobility: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_mobility-M3ZmtXZ8badZAeB5P6DYgH.webp',
+    quick_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_quick_workouts-WYyiQ3V9SSSK3mS8Ett7pm.webp',
+  };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
   type CardioFields = { speed: string; incline: string; time: string; distance: string; calories: string };
@@ -446,7 +455,13 @@ function CheckInPanel({ onStart, stats, profile }: {
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 28, marginBottom: 6 }}>{def.icon}</div>
+                    <div style={{ marginBottom: 6 }}>
+                      {SESSION_ICON_URLS[type] ? (
+                        <img src={SESSION_ICON_URLS[type]} alt={nameDisplay} style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }} />
+                      ) : (
+                        <span style={{ fontSize: 28 }}>{def.icon}</span>
+                      )}
+                    </div>
                     <div style={{ fontWeight: 900, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
                       {nameDisplay.split(' - ')[0]}
                     </div>
