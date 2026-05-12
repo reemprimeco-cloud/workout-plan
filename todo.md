@@ -119,4 +119,4 @@
 - [x] Remove Help tab from bottom navigation bar
 
 ## Community FAB
-- [ ] Add floating action button (FAB) for new post in Community feed tab
+- [x] Add floating action button (FAB) for new post in Community feed tab
