@@ -2,6 +2,17 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
+// Mock sdk so tests don't need real JWT/cookie infrastructure
+vi.mock("./_core/sdk", () => ({
+  sdk: {
+    createSessionToken: vi.fn().mockResolvedValue("mock-session-token"),
+    authenticateRequest: vi.fn(),
+  },
+}));
+vi.mock("./_core/cookies", () => ({
+  getSessionCookieOptions: vi.fn().mockReturnValue({ httpOnly: true, secure: false }),
+}));
+
 // Mock the DB helpers so tests don't need a real database
 vi.mock("./db", () => ({
   verifyAccessCode: vi.fn(),
@@ -22,7 +33,7 @@ function createPublicCtx(): TrpcContext {
   return {
     user: null,
     req: { protocol: "https", headers: {} } as TrpcContext["req"],
-    res: {} as TrpcContext["res"],
+    res: { cookie: vi.fn() } as unknown as TrpcContext["res"],
   };
 }
 

@@ -7,7 +7,11 @@ import {
   createAccessCode,
   toggleAccessCode,
   deleteAccessCode,
+  upsertUser,
 } from "../db";
+import { sdk } from "../_core/sdk";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { getSessionCookieOptions } from "../_core/cookies";
 
 export const licenseRouter = router({
   verify: publicProcedure
@@ -16,7 +20,7 @@ export const licenseRouter = router({
         licenseKey: z.string().min(1, "License key is required"),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const row = await verifyAccessCode(input.licenseKey.trim());
       if (!row) {
         return {
@@ -24,6 +28,25 @@ export const licenseRouter = router({
           message: "كود الوصول غير صحيح أو غير مفعّل. يرجى التحقق من الكود والمحاولة مجدداً.",
         };
       }
+
+      // Create / update a users row so protectedProcedures work for license users
+      const openId = `license:${row.code}`;
+      await upsertUser({
+        openId,
+        name: row.customerName ?? null,
+        email: row.customerEmail ?? null,
+        loginMethod: "license",
+        lastSignedIn: new Date(),
+      });
+
+      // Issue a session cookie (same flow as OAuth callback)
+      const sessionToken = await sdk.createSessionToken(openId, {
+        name: row.customerName || "",
+        expiresInMs: ONE_YEAR_MS,
+      });
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
       return {
         success: true,
         customerName: row.customerName ?? undefined,

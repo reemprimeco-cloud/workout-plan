@@ -18,6 +18,7 @@ import ProfilePanel from '../components/ProfilePanel';
 import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../_core/hooks/useAuth';
+import { trpc } from '../lib/trpc';
 import MyCoach from './MyCoach';
 import Community from './Community';
 
@@ -36,6 +37,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [startingSession, setStartingSession] = useState(false);
   const { activeSession, startSession, stats, data } = tracker;
+  const { data: currentUser } = trpc.auth.me.useQuery();
 
   // Show profile setup if new user (no name or weight set)
   const isNewUser = !data.profile.name || data.profile.currentWeight === 0;
@@ -221,6 +223,7 @@ export default function Home() {
         {activeTab === 'coach' && <MyCoach />}
         {activeTab === 'community' && (
           <Community
+            userId={currentUser?.id}
             streak={stats.streak}
             weeklyCompletion={stats.progressPercent}
             currentWeight={data.profile.currentWeight}
