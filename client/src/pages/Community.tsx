@@ -366,86 +366,144 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
     reader.readAsDataURL(file);
   };
 
+  const isRTL = lang === "ar";
   return (
     <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200,
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200,
       display: "flex", alignItems: "flex-end", justifyContent: "center",
+      backdropFilter: "blur(4px)",
     }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{
-        background: CARD_BG, borderRadius: "20px 20px 0 0", padding: "20px 16px 32px",
+      <div dir={isRTL ? "rtl" : "ltr"} style={{
+        background: "#18181B", borderRadius: "24px 24px 0 0",
         width: "100%", maxWidth: 600,
-        animation: "slideUp 0.25s ease",
+        animation: "slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+        boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
+        overflow: "hidden",
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <span style={{ color: TEXT_MAIN, fontWeight: 800, fontSize: 16 }}>{t("newPost", lang)}</span>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: TEXT_SUB, fontSize: 20, cursor: "pointer" }}>✕</button>
+        {/* ── Header ── */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 16px 10px",
+          borderBottom: `1px solid #2A2A2E`,
+        }}>
+          <button onClick={onClose} style={{
+            background: "none", border: "none", color: TEXT_SUB,
+            fontSize: 15, fontWeight: 600, cursor: "pointer", padding: "4px 8px",
+          }}>
+            {isRTL ? "إلغاء" : "Cancel"}
+          </button>
+          <span style={{ color: TEXT_MAIN, fontWeight: 800, fontSize: 15 }}>
+            {t("newPost", lang)}
+          </span>
+          <button
+            onClick={() => {
+              if (!content.trim()) return;
+              createPost.mutate({ type: postType, content, imageBase64: imageBase64 ?? undefined, imageMime: imageMime ?? undefined, visibility });
+            }}
+            disabled={!content.trim() || createPost.isPending}
+            style={{
+              background: content.trim() ? `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})` : "#2A2A2E",
+              border: "none", borderRadius: 20,
+              color: content.trim() ? NAVY : TEXT_SUB,
+              fontWeight: 800, fontSize: 14, cursor: content.trim() ? "pointer" : "not-allowed",
+              padding: "6px 18px", transition: "all 0.2s",
+            }}>
+            {createPost.isPending ? "..." : t("share", lang)}
+          </button>
         </div>
 
-        {/* Type selector */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        {/* ── Composer body ── */}
+        <div style={{ padding: "16px 16px 0" }}>
+          {/* Avatar + textarea row */}
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
+            <Avatar name={"U"} size={40} />
+            <textarea
+              autoFocus
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder={t("postPlaceholder", lang)}
+              rows={4}
+              style={{
+                flex: 1, background: "transparent", border: "none",
+                color: TEXT_MAIN, fontSize: 16, lineHeight: 1.6,
+                resize: "none", outline: "none",
+                direction: isRTL ? "rtl" : "ltr",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
+
+          {/* Image preview */}
+          {imageBase64 && (
+            <div style={{ position: "relative", marginBottom: 12, borderRadius: 12, overflow: "hidden" }}>
+              <img
+                src={`data:${imageMime};base64,${imageBase64}`}
+                alt="preview"
+                style={{ width: "100%", maxHeight: 240, objectFit: "cover", display: "block" }}
+              />
+              <button
+                onClick={() => { setImageBase64(null); setImageMime(null); setPostType("text"); }}
+                style={{
+                  position: "absolute", top: 8, right: 8,
+                  background: "rgba(0,0,0,0.6)", border: "none", borderRadius: "50%",
+                  width: 28, height: 28, color: "white", cursor: "pointer", fontSize: 14,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >✕</button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Type pills ── */}
+        <div style={{ display: "flex", gap: 8, padding: "8px 16px", overflowX: "auto" }}>
           {(["text", "image", "achievement"] as const).map(tp => (
-            <button key={tp} onClick={() => setPostType(tp)} style={{
-              flex: 1, padding: "6px 0", borderRadius: 8, border: `1px solid ${postType === tp ? CYAN : CARD_BG2}`,
+            <button key={tp} onClick={() => {
+              setPostType(tp);
+              if (tp === "image") fileRef.current?.click();
+            }} style={{
+              flexShrink: 0, padding: "5px 14px", borderRadius: 20,
+              border: `1.5px solid ${postType === tp ? CYAN : "#2A2A2E"}`,
               background: postType === tp ? `${CYAN}22` : "transparent",
               color: postType === tp ? CYAN : TEXT_SUB, fontSize: 12, cursor: "pointer",
+              fontWeight: postType === tp ? 700 : 400,
+              transition: "all 0.15s",
             }}>
               {tp === "text" ? `💬 ${t("text", lang)}` : tp === "image" ? `📸 ${t("image", lang)}` : `🏆 ${t("achievement", lang)}`}
             </button>
           ))}
-        </div>
-
-        <textarea
-          value={content}
-          onChange={e => setContent(e.target.value)}
-          placeholder={t("postPlaceholder", lang)}
-          rows={3}
-          style={{
-            width: "100%", background: CARD_BG2, border: `1px solid ${CARD_BG2}`,
-            borderRadius: 10, padding: "10px 12px", color: TEXT_MAIN, fontSize: 14,
-            resize: "none", outline: "none", boxSizing: "border-box",
-            direction: lang === "ar" ? "rtl" : "ltr",
-          }}
-        />
-
-        {postType === "image" && (
-          <div style={{ marginTop: 8 }}>
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
-            <button onClick={() => fileRef.current?.click()} style={{
-              width: "100%", padding: "10px", background: CARD_BG2, border: `1px dashed ${CYAN}66`,
-              borderRadius: 10, color: CYAN, cursor: "pointer", fontSize: 13,
-            }}>
-              {imageBase64 ? `✅ ${lang === "ar" ? "تم اختيار الصورة" : "Image selected"}` : `📷 ${lang === "ar" ? "اختر صورة" : "Choose image"}`}
-            </button>
-          </div>
-        )}
-
-        {/* Visibility */}
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          {/* Visibility pill */}
           {(["public", "friends", "private"] as const).map(v => (
             <button key={v} onClick={() => setVisibility(v)} style={{
-              flex: 1, padding: "5px 0", borderRadius: 8, border: `1px solid ${visibility === v ? ORANGE : CARD_BG2}`,
+              flexShrink: 0, padding: "5px 14px", borderRadius: 20,
+              border: `1.5px solid ${visibility === v ? ORANGE : "#2A2A2E"}`,
               background: visibility === v ? `${ORANGE}22` : "transparent",
-              color: visibility === v ? ORANGE : TEXT_SUB, fontSize: 11, cursor: "pointer",
+              color: visibility === v ? ORANGE : TEXT_SUB, fontSize: 12, cursor: "pointer",
+              fontWeight: visibility === v ? 700 : 400,
+              transition: "all 0.15s",
             }}>
               {v === "public" ? `🌍 ${t("public", lang)}` : v === "friends" ? `👥 ${t("friendsOnly", lang)}` : `🔒 ${t("private", lang)}`}
             </button>
           ))}
         </div>
 
-        <button
-          onClick={() => {
-            if (!content.trim()) return;
-            createPost.mutate({ type: postType, content, imageBase64: imageBase64 ?? undefined, imageMime: imageMime ?? undefined, visibility });
-          }}
-          disabled={!content.trim() || createPost.isPending}
-          style={{
-            marginTop: 14, width: "100%", padding: "12px", borderRadius: 12,
-            background: content.trim() ? `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})` : CARD_BG2,
-            border: "none", color: content.trim() ? NAVY : TEXT_SUB,
-            fontWeight: 800, fontSize: 15, cursor: content.trim() ? "pointer" : "not-allowed",
-          }}>
-          {createPost.isPending ? "..." : t("share", lang)}
-        </button>
+        {/* ── Bottom toolbar ── */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 16,
+          padding: "10px 16px 28px",
+          borderTop: `1px solid #2A2A2E`,
+        }}>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
+          <button onClick={() => fileRef.current?.click()} style={{
+            background: "none", border: "none", cursor: "pointer", fontSize: 22, padding: 4,
+          }} title={lang === "ar" ? "أضف صورة" : "Add photo"}>📷</button>
+          <button onClick={() => setPostType("achievement")} style={{
+            background: "none", border: "none", cursor: "pointer", fontSize: 22, padding: 4,
+          }} title={lang === "ar" ? "إنجاز" : "Achievement"}>🏆</button>
+          <span style={{ flex: 1 }} />
+          <span style={{ color: content.length > 200 ? ORANGE : TEXT_SUB, fontSize: 12 }}>
+            {content.length}/500
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -640,15 +698,54 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
           currentWeight={currentWeight} targetWeight={targetWeight} name={name} />
       )}
 
-      {/* New post button */}
+      {/* Instagram-style composer bar */}
       {currentUserId && (
         <button onClick={() => setShowNewPost(true)} style={{
-          width: "100%", background: CARD_BG, border: `1px solid ${CARD_BG2}`,
-          borderRadius: 12, padding: "12px 16px", marginBottom: 12,
+          width: "100%", background: CARD_BG, border: `1px solid #2A2A2E`,
+          borderRadius: 12, padding: "10px 14px", marginBottom: 12,
           display: "flex", alignItems: "center", gap: 10, cursor: "pointer",
         }}>
           <Avatar name={name ?? "U"} size={36} />
-          <span style={{ color: TEXT_SUB, fontSize: 14 }}>{t("postPlaceholder", lang)}</span>
+          <span style={{
+            flex: 1, background: CARD_BG2, borderRadius: 20,
+            padding: "8px 14px", color: TEXT_SUB, fontSize: 14,
+            textAlign: lang === "ar" ? "right" : "left",
+          }}>
+            {t("postPlaceholder", lang)}
+          </span>
+          <span style={{ fontSize: 20, color: CYAN }}>📷</span>
+        </button>
+      )}
+
+      {/* Floating Action Button */}
+      {currentUserId && (
+        <button
+          onClick={() => setShowNewPost(true)}
+          aria-label={lang === "ar" ? "منشور جديد" : "New Post"}
+          style={{
+            position: "fixed",
+            bottom: 80,
+            right: lang === "ar" ? "auto" : 20,
+            left: lang === "ar" ? 20 : "auto",
+            width: 56, height: 56, borderRadius: "50%",
+            background: `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})`,
+            border: "none",
+            boxShadow: `0 4px 20px ${CYAN}55, 0 0 0 4px ${CYAN}22`,
+            cursor: "pointer", zIndex: 150,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26, color: NAVY, fontWeight: 900,
+            transition: "transform 0.15s ease, box-shadow 0.15s ease",
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.1)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 6px 28px ${CYAN}88, 0 0 0 6px ${CYAN}33`;
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 4px 20px ${CYAN}55, 0 0 0 4px ${CYAN}22`;
+          }}
+        >
+          ✏️
         </button>
       )}
 

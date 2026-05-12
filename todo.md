@@ -117,3 +117,6 @@
 ## UI Restructuring
 - [x] Move Help tab content into Profile page as a collapsible section
 - [x] Remove Help tab from bottom navigation bar
+
+## Community FAB
+- [ ] Add floating action button (FAB) for new post in Community feed tab
