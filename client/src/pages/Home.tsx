@@ -18,6 +18,7 @@ import ProfilePanel from '../components/ProfilePanel';
 import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../_core/hooks/useAuth';
+import MyCoach from './MyCoach';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -26,7 +27,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 
-type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile';
+type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'user-guide' | 'profile' | 'coach';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -89,6 +90,7 @@ export default function Home() {
     { id: 'guide', icon: '📖', label: t('navGuide') },
     { id: 'exercises', icon: '🏋️', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'user-guide', icon: '📘', label: isRTL ? 'الدليل' : 'Help' },
+    { id: 'coach', icon: '🤖', label: isRTL ? 'مدربي' : 'Coach' },
     { id: 'profile', icon: '⚙️', label: t('navProfile') },
   ];
 
@@ -216,6 +218,7 @@ export default function Home() {
         )}
         {activeTab === 'user-guide' && <UserGuide />}
         {activeTab === 'profile' && <ProfilePanel />}
+        {activeTab === 'coach' && <MyCoach />}
       </main>
 
       {/* ── Bottom Navigation ── */}
