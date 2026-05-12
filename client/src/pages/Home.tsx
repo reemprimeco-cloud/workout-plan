@@ -257,7 +257,7 @@ export default function Home() {
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
             }}
           >
-            <img src={tab.iconUrl} alt={tab.label} style={{ width: 22, height: 22, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
+            <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
             <span style={{
               fontSize: 10, fontWeight: 700,
               color: activeTab === tab.id ? NAVY : '#7A9BB5',
