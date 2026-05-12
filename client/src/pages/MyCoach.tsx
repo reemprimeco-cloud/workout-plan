@@ -313,8 +313,9 @@ export default function MyCoach() {
   const insightsQuery  = trpc.coach.getInsights.useQuery({ limit: 8 }, { enabled: isAuthenticated });
   const utils          = trpc.useUtils();
 
-  const chatMutation       = trpc.coach.chat.useMutation();
-  const genInsightsMutation = trpc.coach.generateInsights.useMutation();
+  const chatMutation          = trpc.coach.chat.useMutation();
+  const genInsightsMutation   = trpc.coach.generateInsights.useMutation();
+  const clearHistoryMutation  = trpc.coach.clearHistory.useMutation();
 
   // Load history into local state on mount
   useEffect(() => {
@@ -612,9 +613,9 @@ export default function MyCoach() {
             {/* Clear chat */}
             {messages.length > 0 && (
               <button
-                onClick={() => {
+                onClick={async () => {
                   setMessages([]);
-                  trpc.coach.clearHistory.useMutation;
+                  try { await clearHistoryMutation.mutateAsync(); } catch { /* ignore */ }
                 }}
                 style={{
                   marginTop: 8, background: 'none', border: 'none',
