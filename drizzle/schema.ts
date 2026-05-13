@@ -35,6 +35,7 @@ export const accessCodes = mysqlTable("access_codes", {
   isActive: boolean("isActive").default(true).notNull(),
   usedAt: timestamp("usedAt"),
   orderId: int("orderId").unique(),   // WooCommerce order ID — prevents duplicate codes
+  expiresAt: timestamp("expiresAt"),   // null = never expires
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

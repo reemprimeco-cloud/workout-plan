@@ -87,6 +87,34 @@ export const adminRouter = router({
     return listBroadcasts();
   }),
 
+  sendToOne: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        subject: z.string().min(1).max(512),
+        body: z.string().min(1),
+        type: z.enum(["update", "news", "offer", "reminder", "other"]).default("other"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx.user.role);
+      const ok = await sendBroadcastEmail({
+        to: input.email,
+        customerName: null,
+        subject: input.subject,
+        body: input.body,
+      });
+      if (!ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to send email" });
+      await createBroadcast({
+        subject: `[To: ${input.email}] ${input.subject}`,
+        body: input.body,
+        type: input.type,
+        recipientCount: 1,
+        sentBy: ctx.user.name ?? ctx.user.openId,
+      });
+      return { success: true };
+    }),
+
   sendBroadcast: protectedProcedure
     .input(
       z.object({

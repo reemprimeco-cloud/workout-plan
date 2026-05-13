@@ -151,3 +151,11 @@
 - [x] Add broadcast notification system: compose subject/body, send to all licensed customers via email
 - [x] Add broadcast history: list of past broadcasts with date, subject, recipient count
 - [x] Add admin stats: total licenses, active licenses, total broadcasts sent
+
+## Broadcast & License Enhancements
+- [x] Broadcast: add "Send to specific customer" option (target one email address)
+- [x] License keys: add expiresAt column to access_codes table
+- [x] License keys: show expiry date in admin license table
+- [x] License keys: add expiry date picker in create code form
+- [x] License keys: auto-deactivate expired keys on verification attempt
+- [ ] License keys: WooPoller marks expired keys as inactive automatically

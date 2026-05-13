@@ -51,6 +51,7 @@ export const licenseRouter = router({
         success: true,
         customerName: row.customerName ?? undefined,
         customerEmail: row.customerEmail ?? undefined,
+        expiresAt: row.expiresAt ?? undefined,
         message: "تم التحقق من الكود بنجاح!",
       };
     }),
@@ -69,6 +70,7 @@ export const licenseRouter = router({
         customerName: z.string().optional(),
         customerEmail: z.string().email().optional().or(z.literal("")),
         note: z.string().optional(),
+        expiresAt: z.string().optional(), // ISO date string, e.g. "2027-01-01"
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -81,6 +83,7 @@ export const licenseRouter = router({
         customerEmail: input.customerEmail || null,
         note: input.note || null,
         isActive: true,
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
       });
       return { success: true };
     }),
