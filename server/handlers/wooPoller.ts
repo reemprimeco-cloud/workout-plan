@@ -9,7 +9,7 @@
  */
 
 import { ENV } from "../_core/env";
-import { createAccessCode, getAccessCodeByOrderId } from "../db";
+import { createAccessCode, getAccessCodeByOrderId, listAccessCodes, toggleAccessCode } from "../db";
 import { sendLicenseEmail } from "../_core/email";
 import crypto from "crypto";
 
@@ -119,6 +119,24 @@ async function processOrder(order: any): Promise<void> {
   console.log(`[WooPoller] ✅ Order #${orderId} → ${licenseKey} | email: ${emailSent} | ${customerEmail}`);
 }
 
+async function deactivateExpiredKeys(): Promise<void> {
+  try {
+    const all = await listAccessCodes();
+    const now = new Date();
+    let count = 0;
+    for (const key of all) {
+      if (key.isActive && key.expiresAt && new Date(key.expiresAt) < now) {
+        await toggleAccessCode(key.id, false);
+        count++;
+        console.log(`[WooPoller] ⏰ Expired key deactivated: ${key.code} (expired ${key.expiresAt})`);
+      }
+    }
+    if (count > 0) console.log(`[WooPoller] Deactivated ${count} expired license key(s)`);
+  } catch (err: any) {
+    console.error("[WooPoller] Error deactivating expired keys:", err.message);
+  }
+}
+
 async function pollOrders(): Promise<void> {
   try {
     console.log("[WooPoller] Checking for undelivered paid orders...");
@@ -132,6 +150,9 @@ async function pollOrders(): Promise<void> {
         console.error(`[WooPoller] Error processing order #${order.id}:`, err.message);
       }
     }
+
+    // Also sweep for expired keys on every poll
+    await deactivateExpiredKeys();
   } catch (err: any) {
     console.error("[WooPoller] Poll failed:", err.message);
   }

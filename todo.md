@@ -158,4 +158,4 @@
 - [x] License keys: show expiry date in admin license table
 - [x] License keys: add expiry date picker in create code form
 - [x] License keys: auto-deactivate expired keys on verification attempt
-- [ ] License keys: WooPoller marks expired keys as inactive automatically
+- [x] License keys: WooPoller marks expired keys as inactive automatically
