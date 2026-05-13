@@ -351,7 +351,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight }:
               <div key={type} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span style={{ fontSize: 12, color: '#3D5A80' }}>
-                    {def.icon} {def.nameAr.split(' - ')[0]}
+                    {def.icon} {isAr ? def.nameAr.split(' - ')[0] : def.nameEn}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>
                     {count} {isAr ? 'جلسة' : 'sessions'}

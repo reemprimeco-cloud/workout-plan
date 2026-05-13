@@ -26,7 +26,8 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
 
   // Elapsed time counter
   useEffect(() => {
-    const start = new Date(`${session.date}T${session.checkInTime}`).getTime();
+    const startMs = new Date(`${session.date}T${session.checkInTime}`).getTime();
+    const start = isNaN(startMs) ? Date.now() : startMs;
     const update = () => setElapsed(Math.floor((Date.now() - start) / 1000));
     update();
     const interval = setInterval(update, 30000);
@@ -36,8 +37,8 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
   const formatElapsed = (s: number) => {
     const m = Math.floor(s / 60);
     const h = Math.floor(m / 60);
-    if (h > 0) return `${h}س ${m % 60}د`;
-    return `${m} دقيقة`;
+    if (h > 0) return isAr ? `${h}س ${m % 60}د` : `${h}h ${m % 60}m`;
+    return isAr ? `${m} دقيقة` : `${m} min`;
   };
 
   const completedCount = session.exercises.filter(e => e.completed).length;
@@ -56,7 +57,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
   const hasStartedWorkout = session.exercises.some(e => e.completed) || session.notes.trim().length > 0;
   const handleCancelSession = () => {
     if (hasStartedWorkout) {
-      if (!window.confirm('تم البدء بالتمرين. هل تريدين حفظ الجلسة قبل الخروج؟')) return;
+      if (!window.confirm(isAr ? 'تم البدء بالتمرين. هل تريدين حفظ الجلسة قبل الخروج؟' : 'Workout started. Save session before leaving?')) return;
       handleCheckOut();
     } else {
       tracker.cancelSession(session.id);
@@ -134,7 +135,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
             cursor: 'pointer', transition: 'all 0.2s',
           }}
         >
-          ⏱ {showTimer ? 'إخفاء المؤقت' : 'إظهار مؤقت الراحة'}
+          ⏱ {showTimer ? (isAr ? 'إخفاء المؤقت' : 'Hide Timer') : (isAr ? 'إظهار مؤقت الراحة' : 'Show Rest Timer')}
         </button>
         {showTimer && <div style={{ marginTop: 10 }}><WorkoutTimer defaultSeconds={60} /></div>}
       </div>
@@ -160,7 +161,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
       {session.exercises.length > 0 && (
         <div style={{ marginBottom: 14 }}>
           <h3 style={{ margin: '0 0 10px', color: '#1A1A2E', fontSize: 15, fontWeight: 900 }}>
-            🏋️‍♀️ التمارين ({session.exercises.length})
+            🏷️‍♀️ {isAr ? 'التمارين' : 'Exercises'} ({session.exercises.length})
           </h3>
           {session.exercises.map((ex, idx) => {
             const exData = masterExercises.find(e => e.id === ex.exerciseId);
@@ -222,7 +223,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
               cursor: 'pointer',
             }}
           >
-            + إضافة تمرين
+            + {isAr ? 'إضافة تمرين' : 'Add Exercise'}
           </button>
           {showAddExercise && (
             <AddExercisePanel
@@ -249,10 +250,10 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}>
         <h4 style={{ margin: '0 0 12px', color: '#1A1A2E', fontSize: 14, fontWeight: 700 }}>
-          📝 ملاحظات الجلسة
+          📝 {isAr ? 'ملاحظات الجلسة' : 'Session Notes'}
         </h4>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>المزاج:</span>
+          <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>{isAr ? 'المزاج' : 'Mood'}:</span>
           {(['😴', '😐', '😊', '💪', '🔥'] as const).map(m => (
             <button key={m} onClick={() => tracker.updateSessionMeta(session.id, { mood: m })}
               style={{
@@ -263,7 +264,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>الطاقة:</span>
+          <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>{isAr ? 'الطاقة' : 'Energy'}:</span>
           {([1, 2, 3, 4, 5] as const).map(n => (
             <button key={n} onClick={() => tracker.updateSessionMeta(session.id, { energyLevel: n })}
               style={{
@@ -278,7 +279,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
         <textarea
           value={session.notes}
           onChange={e => tracker.updateSessionMeta(session.id, { notes: e.target.value })}
-          placeholder="ملاحظات، إصابات، تحسينات..."
+          placeholder={isAr ? 'ملاحظات، إصابات، تحسينات...' : 'Notes, injuries, improvements...'}
           rows={2}
           style={{
             width: '100%', padding: '10px 12px', borderRadius: 10,
@@ -301,7 +302,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
           boxShadow: '0 6px 20px rgba(26,122,74,0.4)',
         }}
       >
-        {checkingOut ? '⏳ جاري الحفظ...' : '✅ إنهاء الجلسة وحفظ التقدم'}
+        {checkingOut ? (isAr ? '⏳ جاري الحفظ...' : '⏳ Saving...') : (isAr ? '✅ إنهاء الجلسة وحفظ التقدم' : '✅ Finish & Save Progress')}
       </button>
     </div>
   );
@@ -350,7 +351,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
             {isAr ? exercise.nameAr : (exercise.nameEn || exercise.nameAr)}
           </div>
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
-            {exercise.sets} جولات × {exercise.reps} • {exercise.weight}
+            {exercise.sets} {isAr ? 'جولات' : 'sets'} × {exercise.reps} • {exercise.weight}
           </div>
         </div>
 
@@ -358,7 +359,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
         <div style={{ display: 'flex', gap: 4 }}>
           {youtubeUrl && (
             <a href={youtubeUrl} target="_blank" rel="noopener noreferrer"
-              title="شاهدي شرح التمرين"
+              title={isAr ? 'شاهدي شرح التمرين' : 'Watch exercise tutorial'}
               style={{
                 padding: '4px 8px', borderRadius: 8,
                 border: '1px solid #FFD0D0', background: '#FFF0F0',

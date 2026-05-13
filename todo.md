@@ -136,3 +136,11 @@
 - [x] Replace bottom nav tab emoji icons in Home.tsx with SVG images
 - [x] Fix app layout to perfectly fit mobile screen (no horizontal overflow, proper viewport)
 - [x] Ensure sticky header + scrollable content + fixed bottom nav with no overlap
+
+## English Translation Fixes
+- [x] Fix sessionTypes: add nameEn to all session types in exercises.ts
+- [x] Fix workout card descriptions: show English descriptionEn when in English mode
+- [x] Fix ActiveSession.tsx: translate all Arabic UI labels to English when lang=en
+- [x] Fix SessionHistory.tsx: show English session names when in English mode
+- [x] Fix StatsPanel.tsx: show English session names in Sessions by Type chart
+- [x] Fix NaN duration bug in session history and active session
