@@ -54,10 +54,6 @@ async function startServer() {
     });
     socket.on("disconnect", () => {});
   });
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
   // ── WooCommerce webhook — must be mounted BEFORE json middleware ──────────
   // Needs raw body access for HMAC signature verification
   app.post(
@@ -71,6 +67,10 @@ async function startServer() {
     },
     wooCommerceWebhookHandler,
   );
+
+  // Configure body parser with larger size limit for file uploads
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
