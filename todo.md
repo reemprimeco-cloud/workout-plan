@@ -159,3 +159,33 @@
 - [x] License keys: add expiry date picker in create code form
 - [x] License keys: auto-deactivate expired keys on verification attempt
 - [x] License keys: WooPoller marks expired keys as inactive automatically
+
+## MyFatoorah Subscription Integration
+- [ ] DB schema: subscriptions table (user_id, plan, status, period, starts_at, expires_at, invoice_id)
+- [ ] DB schema: billing_history table (user_id, plan, period, amount, currency, status, invoice_id, payment_ref)
+- [ ] Run db:push migration
+- [ ] Set MYFATOORAH_API_KEY, MYFATOORAH_WEBHOOK_SECRET, MYFATOORAH_API_URL secrets
+- [ ] server/_core/myfatoorah.ts: createInvoice, getPaymentStatus helpers
+- [ ] server/handlers/myfatoorahWebhook.ts: verify secret, activate subscription on Paid
+- [ ] server/routers/subscription.ts: getPlans, getStatus, createCheckout, getBillingHistory
+- [ ] Register MyFatoorah webhook route in server/_core/index.ts
+- [ ] client/src/contexts/SubscriptionContext.tsx: plan/feature access provider
+- [ ] client/src/components/PremiumGate.tsx: block premium features for free users
+- [ ] client/src/pages/Pricing.tsx: bilingual plan cards with MyFatoorah checkout
+- [ ] Register /pricing route in App.tsx
+- [ ] Add Pricing link to main nav/login screen
+
+## MyFatoorah Subscription Integration
+- [ ] DB schema: subscriptions table (user_id, plan, status, period, starts_at, expires_at, invoice_id)
+- [ ] DB schema: billing_history table (user_id, plan, period, amount, currency, status, invoice_id, payment_ref)
+- [ ] Run db:push migration
+- [ ] Set MYFATOORAH_API_KEY, MYFATOORAH_WEBHOOK_SECRET, MYFATOORAH_API_URL secrets
+- [ ] server/_core/myfatoorah.ts: createInvoice, getPaymentStatus helpers
+- [ ] server/handlers/myfatoorahWebhook.ts: verify secret, activate subscription on Paid
+- [ ] server/routers/subscription.ts: getPlans, getStatus, createCheckout, getBillingHistory
+- [ ] Register MyFatoorah webhook route in server/_core/index.ts
+- [ ] client/src/contexts/SubscriptionContext.tsx: plan/feature access provider
+- [ ] client/src/components/PremiumGate.tsx: block premium features for free users
+- [ ] client/src/pages/Pricing.tsx: bilingual plan cards with MyFatoorah checkout
+- [ ] Register /pricing route in App.tsx
+- [ ] Add Pricing link to main nav/login screen
