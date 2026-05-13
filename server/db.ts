@@ -9,6 +9,8 @@ import {
   coachInsights, InsertCoachInsight,
   coachMemory, InsertCoachMemory,
   socialNotifications, InsertSocialNotification,
+  adminProfile, InsertAdminProfile,
+  broadcastNotifications, InsertBroadcastNotification,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -608,4 +610,54 @@ export async function getUnreadNotificationCount(userId: number): Promise<number
     .from(socialNotifications)
     .where(eq(socialNotifications.userId, userId));
   return rows.filter(r => !r.isRead).length;
+}
+
+// ── Admin Profile helpers ─────────────────────────────────────────────────────
+export async function getAdminProfile() {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(adminProfile).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function upsertAdminProfile(data: Partial<InsertAdminProfile>) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getAdminProfile();
+  if (existing) {
+    await db.update(adminProfile).set({ ...data }).where(eq(adminProfile.id, existing.id));
+  } else {
+    await db.insert(adminProfile).values({ name: null, phone: null, email: null, photoUrl: null, ...data });
+  }
+}
+
+// ── Broadcast Notification helpers ───────────────────────────────────────────
+export async function createBroadcast(data: InsertBroadcastNotification) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(broadcastNotifications).values(data);
+}
+
+export async function listBroadcasts(limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(broadcastNotifications).orderBy(desc(broadcastNotifications.createdAt)).limit(limit);
+}
+
+export async function getAllLicensedCustomerEmails(): Promise<{ email: string; name: string | null }[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    email: accessCodes.customerEmail,
+    name: accessCodes.customerName,
+  }).from(accessCodes)
+    .where(eq(accessCodes.isActive, true));
+  // Deduplicate by email, filter nulls
+  const seen = new Set<string>();
+  return rows.filter(r => {
+    if (!r.email) return false;
+    if (seen.has(r.email)) return false;
+    seen.add(r.email);
+    return true;
+  }) as { email: string; name: string | null }[];
 }

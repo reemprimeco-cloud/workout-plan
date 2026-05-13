@@ -247,3 +247,30 @@ export const communityXpLog = mysqlTable("community_xp_log", {
 
 export type CommunityXpLog = typeof communityXpLog.$inferSelect;
 export type InsertCommunityXpLog = typeof communityXpLog.$inferInsert;
+
+// Admin profile — stores admin contact info and profile image
+export const adminProfile = mysqlTable("admin_profile", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }),
+  phone: varchar("phone", { length: 64 }),
+  email: varchar("email", { length: 320 }),
+  photoUrl: text("photoUrl"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AdminProfile = typeof adminProfile.$inferSelect;
+export type InsertAdminProfile = typeof adminProfile.$inferInsert;
+
+// Broadcast notifications — emails sent to all licensed customers
+export const broadcastNotifications = mysqlTable("broadcast_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  subject: varchar("subject", { length: 512 }).notNull(),
+  body: text("body").notNull(),
+  type: mysqlEnum("type", ["update", "news", "offer", "reminder", "other"]).default("news").notNull(),
+  recipientCount: int("recipientCount").default(0).notNull(),
+  sentBy: varchar("sentBy", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BroadcastNotification = typeof broadcastNotifications.$inferSelect;
+export type InsertBroadcastNotification = typeof broadcastNotifications.$inferInsert;

@@ -142,3 +142,12 @@
 - [x] Fix SessionHistory.tsx: show English session names when in English mode
 - [x] Fix StatsPanel.tsx: show English session names in Sessions by Type chart
 - [x] Fix NaN duration bug in session history and active session
+
+## Admin Panel Enhancements
+- [x] Add language switcher (Arabic/English) to admin panel header
+- [x] Add admin profile page: name, phone, email, profile image upload
+- [x] Add DB tables: admin_profile, broadcast_notifications
+- [x] Add server procedures: admin.getProfile, admin.updateProfile, admin.uploadPhoto
+- [x] Add broadcast notification system: compose subject/body, send to all licensed customers via email
+- [x] Add broadcast history: list of past broadcasts with date, subject, recipient count
+- [x] Add admin stats: total licenses, active licenses, total broadcasts sent
