@@ -47,6 +47,10 @@ const T: Record<string, Record<Lang, string>> = {
   customerName: { ar: '👤 اسم العميل', en: '👤 Customer Name' },
   customerEmail: { ar: '📧 البريد الإلكتروني', en: '📧 Email' },
   note: { ar: '📝 ملاحظة', en: '📝 Note' },
+  expiryDate: { ar: '📅 تاريخ الانتهاء', en: '📅 Expiry Date' },
+  neverExpires: { ar: 'لا ينتهي', en: 'Never expires' },
+  colExpiry: { ar: 'ينتهي في', en: 'Expires' },
+  expired: { ar: '⏰ منتهي', en: '⏰ Expired' },
   optional: { ar: 'اختياري', en: 'Optional' },
   createBtn: { ar: '✅ إنشاء الكود', en: '✅ Create Code' },
   creating: { ar: '⏳ جاري الإنشاء...', en: '⏳ Creating...' },
@@ -74,6 +78,9 @@ const T: Record<string, Record<Lang, string>> = {
   broadcastBody: { ar: '✍️ نص الرسالة', en: '✍️ Message Body' },
   broadcastType: { ar: '🏷️ نوع الإشعار', en: '🏷️ Notification Type' },
   broadcastSend: { ar: '📤 إرسال للجميع', en: '📤 Send to All' },
+  broadcastSendOne: { ar: '📤 إرسال لعميل محدد', en: '📤 Send to One Customer' },
+  broadcastSendOneBtn: { ar: '📤 إرسال', en: '📤 Send' },
+  broadcastTargetEmail: { ar: '📧 البريد الإلكتروني للعميل', en: '📧 Customer Email' },
   broadcastSending: { ar: '⏳ جاري الإرسال...', en: '⏳ Sending...' },
   broadcastHistory: { ar: '📜 سجل الإشعارات', en: '📜 Broadcast History' },
   noHistory: { ar: 'لا توجد إشعارات مُرسلة بعد.', en: 'No broadcasts sent yet.' },
@@ -108,6 +115,7 @@ export default function AdminPanel() {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [note, setNote] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
   const [formError, setFormError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -116,6 +124,8 @@ export default function AdminPanel() {
   const [bBody, setBBody] = useState('');
   const [bType, setBType] = useState<'update' | 'news' | 'offer' | 'reminder' | 'other'>('news');
   const [bResult, setBResult] = useState('');
+  const [bMode, setBMode] = useState<'all' | 'one'>('all');
+  const [bTargetEmail, setBTargetEmail] = useState('');
 
   // Profile state
   const [pName, setPName] = useState('');
@@ -158,6 +168,17 @@ export default function AdminPanel() {
   });
   const toggleMutation = trpc.license.toggle.useMutation({ onSuccess: () => { utils.license.list.invalidate(); utils.admin.getStats.invalidate(); } });
   const deleteMutation = trpc.license.delete.useMutation({ onSuccess: () => { utils.license.list.invalidate(); utils.admin.getStats.invalidate(); } });
+  const sendToOneMutation = trpc.admin.sendToOne.useMutation({
+    onSuccess: () => {
+      utils.admin.listBroadcasts.invalidate();
+      utils.admin.getStats.invalidate();
+      setBResult(`✅ ${lang === 'ar' ? 'تم الإرسال بنجاح!' : 'Sent successfully!'}`);
+      setBSubject(''); setBBody(''); setBTargetEmail('');
+      setTimeout(() => setBResult(''), 5000);
+    },
+    onError: (err) => setBResult(`❌ ${err.message}`),
+  });
+
   const broadcastMutation = trpc.admin.sendBroadcast.useMutation({
     onSuccess: (data) => {
       utils.admin.listBroadcasts.invalidate();
@@ -372,9 +393,16 @@ export default function AdminPanel() {
                   <label style={labelStyle}>{t('customerEmail', lang)}</label>
                   <input type="email" placeholder={t('optional', lang)} value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} style={{ ...inputStyle, direction: 'ltr' }} />
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
+                <div>
                   <label style={labelStyle}>{t('note', lang)}</label>
                   <input type="text" placeholder={t('optional', lang)} value={note} onChange={e => setNote(e.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('expiryDate', lang)}</label>
+                  <input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
+                    style={{ ...inputStyle, direction: 'ltr' }}
+                    min={new Date().toISOString().split('T')[0]} />
+                  <p style={{ margin: '4px 0 0', fontSize: 11, color: '#94A3B8' }}>{t('neverExpires', lang)}</p>
                 </div>
               </div>
               {formError && <p style={{ color: '#EF4444', fontSize: 12, margin: '0 0 12px', fontWeight: 600 }}>⚠️ {formError}</p>}
@@ -383,7 +411,7 @@ export default function AdminPanel() {
                 onClick={() => {
                   if (!code.trim() || code.trim().length < 4) { setFormError(lang === 'ar' ? 'الكود يجب أن يكون 4 أحرف على الأقل' : 'Code must be at least 4 characters'); return; }
                   setFormError('');
-                  createMutation.mutate({ code: code.trim(), customerName: customerName.trim() || undefined, customerEmail: customerEmail.trim() || undefined, note: note.trim() || undefined });
+                  createMutation.mutate({ code: code.trim(), customerName: customerName.trim() || undefined, customerEmail: customerEmail.trim() || undefined, note: note.trim() || undefined, expiresAt: expiresAt || undefined });
                 }}
                 disabled={createMutation.isPending}
                 style={{ background: createMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, color: 'white', border: 'none', borderRadius: 12, padding: '12px 28px', fontSize: 14, fontWeight: 900, cursor: createMutation.isPending ? 'not-allowed' : 'pointer' }}>
@@ -412,7 +440,7 @@ export default function AdminPanel() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: '#F0F4F8' }}>
-                        {[t('colCode', lang), t('colCustomer', lang), t('colEmail', lang), t('colNote', lang), t('colStatus', lang), t('colUsed', lang), t('colCreated', lang), t('colActions', lang)].map(h => (
+                        {[t('colCode', lang), t('colCustomer', lang), t('colEmail', lang), t('colNote', lang), t('colStatus', lang), t('colExpiry', lang), t('colUsed', lang), t('colCreated', lang), t('colActions', lang)].map(h => (
                           <th key={h} style={{ padding: '10px 12px', textAlign: isRTL ? 'right' : 'left', color: NAVY, fontWeight: 700, fontSize: 12, borderBottom: `2px solid ${SKY_LIGHT}`, whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
@@ -428,6 +456,13 @@ export default function AdminPanel() {
                             <span style={{ background: c.isActive ? '#DCFCE7' : '#FEE2E2', color: c.isActive ? '#16A34A' : '#DC2626', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
                               {c.isActive ? t('active', lang) : t('inactive', lang)}
                             </span>
+                          </td>
+                          <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                            {(c as any).expiresAt ? (
+                              <span style={{ color: new Date((c as any).expiresAt) < new Date() ? '#DC2626' : '#0369A1', fontSize: 11, fontWeight: 700 }}>
+                                {new Date((c as any).expiresAt) < new Date() ? t('expired', lang) : new Date((c as any).expiresAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB')}
+                              </span>
+                            ) : <span style={{ color: '#94A3B8', fontSize: 11 }}>{t('neverExpires', lang)}</span>}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
                             {c.usedAt ? new Date(c.usedAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB') : '—'}
@@ -462,7 +497,32 @@ export default function AdminPanel() {
           <>
             <div style={cardStyle}>
               <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('broadcastTitle', lang)}</h2>
+
+              {/* Mode toggle */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                {(['all', 'one'] as const).map(mode => (
+                  <button key={mode} onClick={() => { setBMode(mode); setBResult(''); }}
+                    style={{
+                      flex: 1, padding: '10px', border: `2px solid ${bMode === mode ? NAVY : SKY_LIGHT}`,
+                      borderRadius: 10, background: bMode === mode ? NAVY : 'white',
+                      color: bMode === mode ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                      fontFamily: 'Cairo, sans-serif',
+                    }}>
+                    {mode === 'all' ? t('broadcastSend', lang) : t('broadcastSendOne', lang)}
+                  </button>
+                ))}
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* Target email (only for one mode) */}
+                {bMode === 'one' && (
+                  <div>
+                    <label style={labelStyle}>{t('broadcastTargetEmail', lang)}</label>
+                    <input type="email" value={bTargetEmail} onChange={e => setBTargetEmail(e.target.value)}
+                      placeholder="customer@example.com"
+                      style={{ ...inputStyle, direction: 'ltr' }} />
+                  </div>
+                )}
                 <div>
                   <label style={labelStyle}>{t('broadcastType', lang)}</label>
                   <select value={bType} onChange={e => setBType(e.target.value as any)}
@@ -490,12 +550,17 @@ export default function AdminPanel() {
                 <button
                   onClick={() => {
                     if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
-                    if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
-                    broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                    if (bMode === 'one') {
+                      if (!bTargetEmail.trim() || !bTargetEmail.includes('@')) { setBResult(lang === 'ar' ? '❌ يرجى إدخال بريد إلكتروني صحيح' : '❌ Please enter a valid email'); return; }
+                      sendToOneMutation.mutate({ email: bTargetEmail.trim(), subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                    } else {
+                      if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
+                      broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                    }
                   }}
-                  disabled={broadcastMutation.isPending}
-                  style={{ background: broadcastMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '13px 28px', fontSize: 14, fontWeight: 900, cursor: broadcastMutation.isPending ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
-                  {broadcastMutation.isPending ? t('broadcastSending', lang) : t('broadcastSend', lang)}
+                  disabled={broadcastMutation.isPending || sendToOneMutation.isPending}
+                  style={{ background: (broadcastMutation.isPending || sendToOneMutation.isPending) ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '13px 28px', fontSize: 14, fontWeight: 900, cursor: (broadcastMutation.isPending || sendToOneMutation.isPending) ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
+                  {(broadcastMutation.isPending || sendToOneMutation.isPending) ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
                 </button>
               </div>
             </div>

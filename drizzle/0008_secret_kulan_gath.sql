@@ -1,0 +1,1 @@
+ALTER TABLE `access_codes` ADD `expiresAt` timestamp;

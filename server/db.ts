@@ -111,6 +111,14 @@ export async function verifyAccessCode(code: string) {
   if (result.length === 0) return null;
   const row = result[0];
   if (!row.isActive) return null;
+  // Check expiry before doing anything else
+  if (row.expiresAt && new Date(row.expiresAt) < new Date()) {
+    // Auto-deactivate expired key
+    await db.update(accessCodes)
+      .set({ isActive: false })
+      .where(eq(accessCodes.id, row.id));
+    return null;
+  }
   // Mark as used if first time
   if (!row.usedAt) {
     await db.update(accessCodes)
