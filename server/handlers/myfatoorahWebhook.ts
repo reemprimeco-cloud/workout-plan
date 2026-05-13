@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { getDb } from "../db";
-import { subscriptions, billingHistory } from "../../drizzle/schema";
+import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { verifyWebhookSignature, getPaymentStatus, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 
@@ -63,6 +63,8 @@ export async function handleMyfatoorahWebhook(req: Request, res: Response) {
         .where(eq(subscriptions.userId, userId))
         .limit(1);
 
+      const linkedLicenseKey = existing.length > 0 ? existing[0].licenseKey : null;
+
       if (existing.length > 0) {
         await database
           .update(subscriptions)
@@ -72,6 +74,15 @@ export async function handleMyfatoorahWebhook(req: Request, res: Response) {
         await database.insert(subscriptions).values({
           userId, plan, period, status: "active", startsAt: now, expiresAt, invoiceId,
         });
+      }
+
+      // Re-activate the linked license key if user had a free trial key
+      if (linkedLicenseKey) {
+        await database
+          .update(accessCodes)
+          .set({ isActive: true })
+          .where(eq(accessCodes.code, linkedLicenseKey));
+        console.log(`[MyFatoorah Webhook] Re-activated license key ${linkedLicenseKey} after paid subscription for user ${userId}`);
       }
 
       // Record billing history

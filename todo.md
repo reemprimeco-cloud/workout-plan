@@ -176,3 +176,24 @@
 - [x] client/src/pages/Pricing.tsx: bilingual plan cards with MyFatoorah checkout
 - [x] Register /pricing route in App.tsx
 - [x] Add Pricing link to main nav/login screen
+
+## Feature Batch 7
+- [x] Admin panel: add Subscriptions tab showing all subscriptions (customer, plan, status, expiry, invoice ID)
+- [x] Profile tab: add "My Subscription" section showing current plan, expiry, and Renew button
+- [x] Free trial: user can subscribe using their existing license key (key acts as free trial identity)
+- [x] Free trial: license key auto-expires when free plan period ends (link key expiresAt to subscription expiresAt)
+- [x] Key reuse: after purchasing a paid plan, the same key becomes active again (re-activate on subscription payment)
+- [x] WhatsApp card: make it compact/small in the footer of the main page (LicenseGate)
+- [x] Profile page: add "Contact Us" WhatsApp button
+- [x] Language auto-detect: set app language based on user's device/browser language on first load (Arabic if ar-*, English otherwise)
+
+## Feature Batch 8 — User Profile Image & Editable Name
+- [x] DB schema: add avatarUrl column to users table
+- [x] Run db:push migration
+- [x] server/routers/userProfile.ts: uploadAvatar procedure (base64 → S3), updateDisplayName procedure
+- [x] Register userProfile router in server/routers.ts
+- [x] ProfilePanel: avatar circle with tap-to-upload (file input, base64 encode, call mutation)
+- [x] ProfilePanel: show avatar in profile card header; fallback to initials
+- [x] ProfilePanel: inline name editing directly on the profile card (not just in the modal)
+- [x] Home.tsx header: show user avatar circle next to name
+- [x] Write vitest tests for userProfile router
