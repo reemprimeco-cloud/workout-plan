@@ -36,7 +36,9 @@
 - [x] Admin panel bypasses LicenseGate (has its own auth check)
 - [x] 11 vitest tests passing (license system + auth logout)
 
-## Future / Pending (not blocking current releas- [x] WooCommerce webhook integration — auto-generates license key on order.processing/completed and emails customerPush notifications for workout reminders
+## Future / Pending (not blocking current release)
+- [x] WooCommerce webhook integration — auto-generates license key on order.processing/completed and emails customer
+- [x] Push notifications for workout reminders
 - [x] Add WhatsApp order note on LicenseGate screen (contact 65068000 after purchase to get access code)
 - [x] Fix home page exercise sections: each section must show its own specific exercises (not all showing Elliptical)
 - [x] Translate Guide tab (WorkoutGuide component) to English — currently all hardcoded Arabic
@@ -161,31 +163,16 @@
 - [x] License keys: WooPoller marks expired keys as inactive automatically
 
 ## MyFatoorah Subscription Integration
-- [ ] DB schema: subscriptions table (user_id, plan, status, period, starts_at, expires_at, invoice_id)
-- [ ] DB schema: billing_history table (user_id, plan, period, amount, currency, status, invoice_id, payment_ref)
-- [ ] Run db:push migration
-- [ ] Set MYFATOORAH_API_KEY, MYFATOORAH_WEBHOOK_SECRET, MYFATOORAH_API_URL secrets
-- [ ] server/_core/myfatoorah.ts: createInvoice, getPaymentStatus helpers
-- [ ] server/handlers/myfatoorahWebhook.ts: verify secret, activate subscription on Paid
-- [ ] server/routers/subscription.ts: getPlans, getStatus, createCheckout, getBillingHistory
-- [ ] Register MyFatoorah webhook route in server/_core/index.ts
-- [ ] client/src/contexts/SubscriptionContext.tsx: plan/feature access provider
-- [ ] client/src/components/PremiumGate.tsx: block premium features for free users
-- [ ] client/src/pages/Pricing.tsx: bilingual plan cards with MyFatoorah checkout
-- [ ] Register /pricing route in App.tsx
-- [ ] Add Pricing link to main nav/login screen
-
-## MyFatoorah Subscription Integration
-- [ ] DB schema: subscriptions table (user_id, plan, status, period, starts_at, expires_at, invoice_id)
-- [ ] DB schema: billing_history table (user_id, plan, period, amount, currency, status, invoice_id, payment_ref)
-- [ ] Run db:push migration
-- [ ] Set MYFATOORAH_API_KEY, MYFATOORAH_WEBHOOK_SECRET, MYFATOORAH_API_URL secrets
-- [ ] server/_core/myfatoorah.ts: createInvoice, getPaymentStatus helpers
-- [ ] server/handlers/myfatoorahWebhook.ts: verify secret, activate subscription on Paid
-- [ ] server/routers/subscription.ts: getPlans, getStatus, createCheckout, getBillingHistory
-- [ ] Register MyFatoorah webhook route in server/_core/index.ts
-- [ ] client/src/contexts/SubscriptionContext.tsx: plan/feature access provider
-- [ ] client/src/components/PremiumGate.tsx: block premium features for free users
-- [ ] client/src/pages/Pricing.tsx: bilingual plan cards with MyFatoorah checkout
-- [ ] Register /pricing route in App.tsx
-- [ ] Add Pricing link to main nav/login screen
+- [x] DB schema: subscriptions table (user_id, plan, status, period, starts_at, expires_at, invoice_id)
+- [x] DB schema: billing_history table (user_id, plan, period, amount, currency, status, invoice_id, payment_ref)
+- [x] Run db:push migration
+- [x] Set MYFATOORAH_API_KEY, MYFATOORAH_WEBHOOK_SECRET, MYFATOORAH_API_URL secrets
+- [x] server/_core/myfatoorah.ts: createInvoice, getPaymentStatus helpers
+- [x] server/handlers/myfatoorahWebhook.ts: verify secret, activate subscription on Paid
+- [x] server/routers/subscription.ts: getPlans, getStatus, createCheckout, getBillingHistory
+- [x] Register MyFatoorah webhook route in server/_core/index.ts
+- [x] client/src/contexts/SubscriptionContext.tsx: plan/feature access provider
+- [x] client/src/components/PremiumGate.tsx: block premium features for free users
+- [x] client/src/pages/Pricing.tsx: bilingual plan cards with MyFatoorah checkout
+- [x] Register /pricing route in App.tsx
+- [x] Add Pricing link to main nav/login screen

@@ -257,6 +257,24 @@ export function LicenseGate({ children }: LicenseGateProps) {
             لا تملك مفتاح ترخيص؟
           </p>
           <a
+            href="/pricing"
+            style={{
+              display: 'inline-block',
+              background: `linear-gradient(135deg, ${NAVY}, #0F1E3D)`,
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: 10,
+              padding: '10px 20px',
+              fontSize: 13,
+              fontWeight: 700,
+              fontFamily: 'Cairo, sans-serif',
+              marginBottom: 8,
+            }}
+          >
+            💎 عرض خطط الاشتراك
+          </a>
+          <br />
+          <a
             href={PRODUCT_URL}
             target="_blank"
             rel="noopener noreferrer"
