@@ -197,3 +197,18 @@
 - [x] ProfilePanel: inline name editing directly on the profile card (not just in the modal)
 - [x] Home.tsx header: show user avatar circle next to name
 - [x] Write vitest tests for userProfile router
+
+## Feature Batch 9 — Community & Profile Improvements
+- [x] ProfilePanel: profile completion progress bar (name, weight, height, age, gender, avatar)
+- [x] ProfilePanel: small avatar icon next to name in profile card (already done via circle, refine size)
+- [x] ProfilePanel: in-browser image crop/resize before upload (canvas-based square crop)
+- [x] Community: show poster avatar in post cards (small icon, not clickable/openable)
+- [x] Community: delete own post (owner only)
+- [x] Community: edit own post text (owner only, fix typos)
+- [x] Community: delete own comment
+- [x] Community: edit own comment text
+- [x] Community: @mention feature in comment input (autocomplete from community members)
+- [x] Home.tsx: remove WhatsApp button from footer/nav area
+- [x] Server: add deletePost, editPost, deleteComment, editComment procedures to community router
+- [x] Server: add getMentionSuggestions procedure (search users by name prefix)
+- [x] Write vitest tests for new community procedures

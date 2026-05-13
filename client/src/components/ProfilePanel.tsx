@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
+import type { UserProfile } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -303,6 +304,52 @@ function MySubscriptionCard() {
   );
 }
 
+
+// ── Profile Completion Bar ────────────────────────────────────────────────────
+function ProfileCompletionBar({ profile, hasAvatar, lang }: { profile: UserProfile; hasAvatar: boolean; lang: 'ar' | 'en' }) {
+  const fields = [
+    { key: 'name', done: !!profile.name, label: lang === 'ar' ? 'الاسم' : 'Name' },
+    { key: 'weight', done: profile.currentWeight > 0, label: lang === 'ar' ? 'الوزن' : 'Weight' },
+    { key: 'height', done: profile.height > 0, label: lang === 'ar' ? 'الطول' : 'Height' },
+    { key: 'age', done: profile.age > 0, label: lang === 'ar' ? 'العمر' : 'Age' },
+    { key: 'goal', done: profile.targetWeight > 0, label: lang === 'ar' ? 'الهدف' : 'Goal' },
+    { key: 'avatar', done: hasAvatar, label: lang === 'ar' ? 'الصورة' : 'Photo' },
+  ];
+  const completed = fields.filter(f => f.done).length;
+  const percent = Math.round((completed / fields.length) * 100);
+  if (percent === 100) return null; // Hide when complete
+  return (
+    <div className="bg-white rounded-2xl shadow-md p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-bold text-gray-700">
+          {lang === 'ar' ? '📋 اكتمال الملف الشخصي' : '📋 Profile Completion'}
+        </span>
+        <span className="text-sm font-black" style={{ color: percent >= 80 ? '#16A34A' : percent >= 50 ? '#D97706' : '#DC2626' }}>
+          {percent}%
+        </span>
+      </div>
+      <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+        <div
+          className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+          style={{ width: `${percent}%`, background: percent >= 80 ? '#16A34A' : percent >= 50 ? '#D97706' : '#E05A00' }}
+        />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {fields.map(f => (
+          <span key={f.key} className="text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{
+              background: f.done ? '#16A34A18' : '#F3F4F6',
+              color: f.done ? '#16A34A' : '#9CA3AF',
+              border: `1px solid ${f.done ? '#16A34A40' : '#E5E7EB'}`,
+            }}>
+            {f.done ? '✓' : '○'} {f.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
@@ -345,10 +392,27 @@ export function ProfilePanel() {
     setAvatarUploading(true);
     const reader = new FileReader();
     reader.onload = async (ev) => {
-      const base64 = ev.target?.result as string;
-      setAvatarPreview(base64); // optimistic preview
+      const dataUrl = ev.target?.result as string;
+      // Canvas-based square crop + resize to 256×256
+      const cropAndResize = (): Promise<string> => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const size = Math.min(img.width, img.height);
+          const sx = (img.width - size) / 2;
+          const sy = (img.height - size) / 2;
+          const canvas = document.createElement('canvas');
+          canvas.width = 256;
+          canvas.height = 256;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, 256, 256);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = dataUrl;
+      });
+      const croppedBase64 = await cropAndResize();
+      setAvatarPreview(croppedBase64); // optimistic preview
       try {
-        await uploadAvatarMutation.mutateAsync({ base64, mimeType: file.type });
+        await uploadAvatarMutation.mutateAsync({ base64: croppedBase64, mimeType: 'image/jpeg' });
       } catch (err: any) {
         alert(err.message ?? 'Upload failed');
         setAvatarPreview(profileQuery.data?.avatarUrl ?? null);
@@ -396,6 +460,8 @@ export function ProfilePanel() {
         ))}
       </div>
 
+      {/* Profile Completion Bar */}
+      <ProfileCompletionBar profile={profile} hasAvatar={!!avatarPreview} lang={lang as 'ar' | 'en'} />
       {/* Profile Card */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
         <div className="bg-gradient-to-r from-[#E05A00] to-[#FF8C42] p-5 text-white">

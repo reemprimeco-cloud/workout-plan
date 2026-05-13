@@ -22,8 +22,8 @@ import {
   getUnreadNotificationCount,
 } from "../db";
 import { getDb } from "../db";
-import { users, communityPosts } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { users, communityPosts, communityComments } from "../../drizzle/schema";
+import { eq, like, sql } from "drizzle-orm";
 import { getIO } from "../_core/index";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
 import { sendPushToSubscription } from "./notifications";
@@ -96,12 +96,12 @@ export const communityRouter = router({
       if (!db) return { posts: allPosts, trending };
       const userIds = Array.from(new Set(allPosts.map(p => p.userId)));
       const userRows = userIds.length > 0
-        ? await db.select({ id: users.id, name: users.name }).from(users)
+        ? await db.select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl }).from(users)
         : [];
-      const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
+      const userMap = Object.fromEntries(userRows.map(u => [u.id, { name: u.name ?? "User", avatarUrl: u.avatarUrl ?? null }]));
       return {
-        posts: allPosts.map(p => ({ ...p, userName: userMap[p.userId] ?? "User" })),
-        trending: trending.map(p => ({ ...p, userName: userMap[p.userId] ?? "User" })),
+        posts: allPosts.map(p => ({ ...p, userName: userMap[p.userId]?.name ?? "User", userAvatar: userMap[p.userId]?.avatarUrl ?? null })),
+        trending: trending.map(p => ({ ...p, userName: userMap[p.userId]?.name ?? "User", userAvatar: userMap[p.userId]?.avatarUrl ?? null })),
       };
     }),
 
@@ -250,9 +250,9 @@ export const communityRouter = router({
       const db = await getDb();
       if (!db || comments.length === 0) return comments;
       const userIds = Array.from(new Set(comments.map(c => c.userId)));
-      const userRows = await db.select({ id: users.id, name: users.name }).from(users);
-      const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
-      return comments.map(c => ({ ...c, userName: userMap[c.userId] ?? "User" }));
+      const userRows = await db.select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl }).from(users);
+      const userMap = Object.fromEntries(userRows.map(u => [u.id, { name: u.name ?? "User", avatarUrl: u.avatarUrl ?? null }]));
+      return comments.map(c => ({ ...c, userName: userMap[c.userId]?.name ?? "User", userAvatar: userMap[c.userId]?.avatarUrl ?? null }));
     }),
 
   /** Add a comment */
@@ -472,5 +472,90 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
       });
       await addXp({ userId: ctx.user.id, event: "post", points: XP.achievementPost });
       return post;
+    }),
+
+  /** Delete own post (owner or admin) */
+  deletePost: protectedProcedure
+    .input(z.object({ postId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db.select({ userId: communityPosts.userId })
+        .from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
+      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your post" });
+      }
+      await db.delete(communityPosts).where(eq(communityPosts.id, input.postId));
+      return { success: true };
+    }),
+
+  /** Edit own post text (owner or admin) */
+  editPost: protectedProcedure
+    .input(z.object({ postId: z.number(), content: z.string().min(1).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db.select({ userId: communityPosts.userId })
+        .from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
+      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your post" });
+      }
+      await db.update(communityPosts)
+        .set({ content: input.content })
+        .where(eq(communityPosts.id, input.postId));
+      return { success: true };
+    }),
+
+  /** Delete own comment (owner or admin) */
+  deleteComment: protectedProcedure
+    .input(z.object({ commentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db.select({ userId: communityComments.userId, postId: communityComments.postId })
+        .from(communityComments).where(eq(communityComments.id, input.commentId)).limit(1);
+      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
+      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your comment" });
+      }
+      await db.delete(communityComments).where(eq(communityComments.id, input.commentId));
+      await db.update(communityPosts)
+        .set({ commentsCount: sql`GREATEST(${communityPosts.commentsCount} - 1, 0)` })
+        .where(eq(communityPosts.id, rows[0].postId));
+      return { success: true };
+    }),
+
+  /** Edit own comment text (owner or admin) */
+  editComment: protectedProcedure
+    .input(z.object({ commentId: z.number(), content: z.string().min(1).max(500) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db.select({ userId: communityComments.userId })
+        .from(communityComments).where(eq(communityComments.id, input.commentId)).limit(1);
+      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
+      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your comment" });
+      }
+      await db.update(communityComments)
+        .set({ content: input.content })
+        .where(eq(communityComments.id, input.commentId));
+      return { success: true };
+    }),
+
+  /** Get @mention suggestions — users whose name starts with the query */
+  getMentionSuggestions: protectedProcedure
+    .input(z.object({ query: z.string().min(1).max(50) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+        .from(users)
+        .where(like(users.name, `${input.query}%`))
+        .limit(8);
+      return rows.filter(r => r.name);
     }),
 });
