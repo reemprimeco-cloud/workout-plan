@@ -110,7 +110,18 @@ function initials(name: string): string {
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
-function Avatar({ name, size = 40, color = CYAN }: { name: string; size?: number; color?: string }) {
+function Avatar({ name, size = 40, color = CYAN, photoUrl }: { name: string; size?: number; color?: string; photoUrl?: string | null }) {
+  if (photoUrl) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: "50%",
+        border: `2px solid ${color}`,
+        overflow: "hidden", flexShrink: 0,
+      }}>
+        <img src={photoUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    );
+  }
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
@@ -213,14 +224,27 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
   const [commentText, setCommentText] = useState("");
   const [myReaction, setMyReaction] = useState<string | null>(null);
   const [localLikes, setLocalLikes] = useState<number>(post.likesCount ?? 0);
+  const [editingPost, setEditingPost] = useState(false);
+  const [editPostText, setEditPostText] = useState(post.content ?? "");
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
+  const [showPostMenu, setShowPostMenu] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionCursor, setMentionCursor] = useState(0);
   const utils = trpc.useUtils();
+  const isOwner = currentUserId === post.userId;
 
-  const { data: comments } = trpc.community.getComments.useQuery(
+  const { data: comments, refetch: refetchComments } = trpc.community.getComments.useQuery(
     { postId: post.id }, { enabled: showComments }
   );
   const { data: myReactionData } = trpc.community.getMyReaction.useQuery(
     { postId: post.id }, { enabled: !!currentUserId }
   );
+  const { data: mentionSuggestions } = trpc.community.getMentionSuggestions.useQuery(
+    { query: mentionQuery?.trim() ?? "" },
+    { enabled: !!mentionQuery && mentionQuery.trim().length > 0 }
+  );
+
   useEffect(() => { if (myReactionData) setMyReaction((myReactionData.type as string) ?? null); }, [myReactionData]);
 
   const reactMutation = trpc.community.reactToPost.useMutation({
@@ -231,8 +255,49 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
     onSettled: () => utils.community.getFeed.invalidate(),
   });
   const commentMutation = trpc.community.addComment.useMutation({
-    onSuccess: () => { setCommentText(""); utils.community.getComments.invalidate({ postId: post.id }); },
+    onSuccess: () => { setCommentText(""); setMentionQuery(null); utils.community.getComments.invalidate({ postId: post.id }); },
   });
+  const deletePostMutation = trpc.community.deletePost.useMutation({
+    onSuccess: () => utils.community.getFeed.invalidate(),
+  });
+  const editPostMutation = trpc.community.editPost.useMutation({
+    onSuccess: () => { setEditingPost(false); utils.community.getFeed.invalidate(); },
+  });
+  const deleteCommentMutation = trpc.community.deleteComment.useMutation({
+    onSuccess: () => { utils.community.getComments.invalidate({ postId: post.id }); refetchComments(); },
+  });
+  const editCommentMutation = trpc.community.editComment.useMutation({
+    onSuccess: () => { setEditingCommentId(null); utils.community.getComments.invalidate({ postId: post.id }); },
+  });
+
+  const handleCommentChange = (val: string) => {
+    setCommentText(val);
+    const lastAt = val.lastIndexOf("@");
+    if (lastAt !== -1) {
+      const afterAt = val.slice(lastAt + 1);
+      if (/^[\w\u0600-\u06FF]{0,30}$/.test(afterAt)) {
+        setMentionQuery(afterAt || " ");
+        setMentionCursor(lastAt);
+      } else {
+        setMentionQuery(null);
+      }
+    } else {
+      setMentionQuery(null);
+    }
+  };
+
+  const insertMention = (name: string) => {
+    const before = commentText.slice(0, mentionCursor);
+    const after = commentText.slice(mentionCursor + 1 + (mentionQuery?.trim().length ?? 0));
+    setCommentText(`${before}@${name} ${after}`);
+    setMentionQuery(null);
+  };
+
+  const submitComment = () => {
+    if (commentText.trim()) {
+      commentMutation.mutate({ postId: post.id, content: commentText.trim() });
+    }
+  };
 
   const typeIcon = post.type === "achievement" ? "🏆" : post.type === "transformation" ? "🔄" : post.type === "auto" ? "⭐" : post.type === "image" ? "📸" : "💬";
   const typeLabel = post.type === "achievement" ? t("achievement", lang) : post.type === "transformation" ? t("transformation", lang) : "";
@@ -246,7 +311,7 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
     }}>
       {/* Header */}
       <div style={{ padding: "12px 16px 8px", display: "flex", alignItems: "center", gap: 10 }}>
-        <Avatar name={post.userName ?? "U"} size={40} color={post.isTrending ? ORANGE : CYAN} />
+        <Avatar name={post.userName ?? "U"} size={36} color={post.isTrending ? ORANGE : CYAN} photoUrl={post.userAvatar} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ color: TEXT_MAIN, fontWeight: 700, fontSize: 14 }}>{post.userName ?? "User"}</span>
@@ -263,19 +328,58 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
           </div>
           <span style={{ color: TEXT_SUB, fontSize: 11 }}>{timeAgo(post.createdAt, lang)}</span>
         </div>
+        {isOwner && (
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowPostMenu(v => !v)}
+              style={{ background: "transparent", border: "none", color: TEXT_SUB, fontSize: 20, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}
+            >⋯</button>
+            {showPostMenu && (
+              <div style={{
+                position: "absolute", right: 0, top: 28, background: CARD_BG2,
+                borderRadius: 10, boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                zIndex: 50, minWidth: 130, overflow: "hidden",
+              }}>
+                <button onClick={() => { setEditingPost(true); setEditPostText(post.content); setShowPostMenu(false); }}
+                  style={{ display: "block", width: "100%", padding: "10px 16px", background: "none", border: "none", color: CYAN, fontSize: 13, cursor: "pointer", textAlign: lang === "ar" ? "right" : "left" }}>
+                  ✏️ {lang === "ar" ? "تعديل" : "Edit"}
+                </button>
+                <button onClick={() => { if (window.confirm(lang === "ar" ? "حذف المنشور؟" : "Delete post?")) { deletePostMutation.mutate({ postId: post.id }); setShowPostMenu(false); } }}
+                  style={{ display: "block", width: "100%", padding: "10px 16px", background: "none", border: "none", color: "#EF4444", fontSize: 13, cursor: "pointer", textAlign: lang === "ar" ? "right" : "left" }}>
+                  🗑️ {lang === "ar" ? "حذف" : "Delete"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {/* Content */}
-      <div style={{ padding: "0 16px 12px" }}>
-        <p style={{ color: TEXT_MAIN, fontSize: 14, lineHeight: 1.6, margin: 0 }}>{post.content}</p>
-      </div>
-
-      {/* Image */}
+      {editingPost ? (
+        <div style={{ padding: "0 16px 12px" }}>
+          <textarea
+            value={editPostText}
+            onChange={e => setEditPostText(e.target.value)}
+            rows={3}
+            style={{ width: "100%", background: CARD_BG2, border: `1px solid ${CYAN}`, borderRadius: 8, padding: "8px 10px", color: TEXT_MAIN, fontSize: 14, outline: "none", resize: "vertical" }}
+          />
+          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <button onClick={() => editPostMutation.mutate({ postId: post.id, content: editPostText.trim() })}
+              style={{ background: CYAN, color: NAVY, border: "none", borderRadius: 8, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+              {lang === "ar" ? "حفظ" : "Save"}
+            </button>
+            <button onClick={() => setEditingPost(false)}
+              style={{ background: CARD_BG2, color: TEXT_SUB, border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: "0 16px 12px" }}>
+          <p style={{ color: TEXT_MAIN, fontSize: 14, lineHeight: 1.6, margin: 0 }}>{post.content}</p>
+        </div>
+      )}
       {post.imageUrl && (
         <img src={post.imageUrl} alt="" style={{ width: "100%", maxHeight: 320, objectFit: "cover" }} />
       )}
-
-      {/* Reactions bar */}
       <div style={{ padding: "8px 16px", borderTop: `1px solid ${CARD_BG2}`, display: "flex", gap: 8, alignItems: "center" }}>
         {(["like", "cheer", "fire"] as const).map(rType => {
           const icons = { like: "❤️", cheer: "💪", fire: "🔥" };
@@ -300,36 +404,89 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
           💬 {post.commentsCount ?? 0}
         </button>
       </div>
-
-      {/* Comments */}
       {showComments && (
         <div style={{ padding: "8px 16px 12px", borderTop: `1px solid ${CARD_BG2}` }}>
-          {(comments ?? []).map((c: any) => (
-            <div key={c.id} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-              <Avatar name={c.userName ?? "U"} size={28} color={PURPLE} />
-              <div style={{ background: CARD_BG2, borderRadius: 10, padding: "6px 10px", flex: 1 }}>
-                <span style={{ color: CYAN, fontSize: 11, fontWeight: 700 }}>{c.userName}</span>
-                <p style={{ color: TEXT_MAIN, fontSize: 12, margin: "2px 0 0" }}>{c.content}</p>
+          {(comments ?? []).map((c: any) => {
+            const isCommentOwner = currentUserId === c.userId;
+            return (
+              <div key={c.id} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <Avatar name={c.userName ?? "U"} size={28} color={PURPLE} photoUrl={c.userAvatar} />
+                <div style={{ background: CARD_BG2, borderRadius: 10, padding: "6px 10px", flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ color: CYAN, fontSize: 11, fontWeight: 700 }}>{c.userName}</span>
+                    {isCommentOwner && (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button onClick={() => { setEditingCommentId(c.id); setEditCommentText(c.content); }}
+                          style={{ background: "none", border: "none", color: TEXT_SUB, fontSize: 11, cursor: "pointer", padding: "0 2px" }}>✏️</button>
+                        <button onClick={() => { if (window.confirm(lang === "ar" ? "حذف التعليق؟" : "Delete comment?")) deleteCommentMutation.mutate({ commentId: c.id }); }}
+                          style={{ background: "none", border: "none", color: "#EF4444", fontSize: 11, cursor: "pointer", padding: "0 2px" }}>🗑️</button>
+                      </div>
+                    )}
+                  </div>
+                  {editingCommentId === c.id ? (
+                    <div style={{ marginTop: 4 }}>
+                      <input
+                        value={editCommentText}
+                        onChange={e => setEditCommentText(e.target.value)}
+                        style={{ width: "100%", background: CARD_BG, border: `1px solid ${CYAN}`, borderRadius: 6, padding: "4px 8px", color: TEXT_MAIN, fontSize: 12, outline: "none" }}
+                        onKeyDown={e => { if (e.key === "Enter") editCommentMutation.mutate({ commentId: c.id, content: editCommentText.trim() }); if (e.key === "Escape") setEditingCommentId(null); }}
+                      />
+                      <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                        <button onClick={() => editCommentMutation.mutate({ commentId: c.id, content: editCommentText.trim() })}
+                          style={{ background: CYAN, color: NAVY, border: "none", borderRadius: 6, padding: "3px 10px", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+                          {lang === "ar" ? "حفظ" : "Save"}
+                        </button>
+                        <button onClick={() => setEditingCommentId(null)}
+                          style={{ background: "none", color: TEXT_SUB, border: "none", fontSize: 11, cursor: "pointer" }}>
+                          {lang === "ar" ? "إلغاء" : "Cancel"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p style={{ color: TEXT_MAIN, fontSize: 12, margin: "2px 0 0" }}>{c.content}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {currentUserId && (
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <input
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && commentText.trim()) commentMutation.mutate({ postId: post.id, content: commentText.trim() }); }}
-                placeholder={t("addComment", lang)}
-                style={{
-                  flex: 1, background: CARD_BG2, border: `1px solid ${CARD_BG2}`,
-                  borderRadius: 8, padding: "6px 10px", color: TEXT_MAIN, fontSize: 12,
-                  outline: "none",
-                }}
-              />
-              <button onClick={() => { if (commentText.trim()) commentMutation.mutate({ postId: post.id, content: commentText.trim() }); }}
-                style={{ background: CYAN, color: NAVY, border: "none", borderRadius: 8, padding: "6px 12px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                {t("send", lang)}
-              </button>
+            <div style={{ position: "relative", marginTop: 8 }}>
+              {mentionQuery && (mentionSuggestions ?? []).length > 0 && (
+                <div style={{
+                  position: "absolute", bottom: "100%", left: 0, right: 0,
+                  background: CARD_BG2, borderRadius: 10, boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                  zIndex: 100, maxHeight: 160, overflowY: "auto", marginBottom: 4,
+                }}>
+                  {(mentionSuggestions ?? []).map((u: any) => (
+                    <button key={u.id} onClick={() => insertMention(u.name)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8, width: "100%",
+                        padding: "8px 12px", background: "none", border: "none", cursor: "pointer",
+                        color: TEXT_MAIN, fontSize: 13, textAlign: "left",
+                      }}>
+                      <Avatar name={u.name ?? "U"} size={24} color={CYAN} photoUrl={u.avatarUrl} />
+                      @{u.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={commentText}
+                  onChange={e => handleCommentChange(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
+                  placeholder={`${t("addComment", lang)} (@${lang === "ar" ? "اذكر شخصاً" : "mention"})`}
+                  style={{
+                    flex: 1, background: CARD_BG2, border: `1px solid ${CARD_BG2}`,
+                    borderRadius: 8, padding: "6px 10px", color: TEXT_MAIN, fontSize: 12,
+                    outline: "none",
+                  }}
+                />
+                <button onClick={submitComment}
+                  style={{ background: CYAN, color: NAVY, border: "none", borderRadius: 8, padding: "6px 12px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                  {t("send", lang)}
+                </button>
+              </div>
             </div>
           )}
         </div>
