@@ -68,6 +68,19 @@ async function startServer() {
     wooCommerceWebhookHandler,
   );
 
+  // ── Debug endpoint — confirm webhook is reachable ─────────────────────────
+  // GET /api/webhooks/woocommerce/ping → { ok: true, ... }
+  app.get("/api/webhooks/woocommerce/ping", (_req, res) => {
+    res.json({
+      ok: true,
+      message: "WooCommerce webhook endpoint is alive ✅",
+      smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+      wooSecretConfigured: !!process.env.WOO_WEBHOOK_SECRET,
+      dbConfigured: !!process.env.DATABASE_URL,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
