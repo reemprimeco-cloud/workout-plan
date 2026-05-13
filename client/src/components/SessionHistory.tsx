@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { GymSession } from '../hooks/useGymTracker';
 import { sessionTypes } from '../data/exercises';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   sessions: GymSession[];
@@ -11,6 +12,8 @@ interface Props {
 export function SessionHistory({ sessions, onDelete }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
 
   const completed = sessions.filter(s => !s.isActive).sort((a, b) =>
     b.date.localeCompare(a.date) || b.checkInTime.localeCompare(a.checkInTime)
@@ -18,18 +21,21 @@ export function SessionHistory({ sessions, onDelete }: Props) {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
+    const locale = isAr ? 'ar-SA' : 'en-US';
+    return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
   };
 
   const getDuration = (s: GymSession) => {
     if (!s.checkOutTime) return '—';
     const [ih, im] = s.checkInTime.split(':').map(Number);
     const [oh, om] = s.checkOutTime.split(':').map(Number);
+    if (isNaN(ih) || isNaN(im) || isNaN(oh) || isNaN(om)) return '—';
     const mins = (oh * 60 + om) - (ih * 60 + im);
     if (mins <= 0) return '—';
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return h > 0 ? `${h}س ${m}د` : `${m} دقيقة`;
+    if (isAr) return h > 0 ? `${h}س ${m}د` : `${m} دقيقة`;
+    return h > 0 ? `${h}h ${m}m` : `${m} min`;
   };
 
   if (completed.length === 0) {
@@ -39,9 +45,9 @@ export function SessionHistory({ sessions, onDelete }: Props) {
         textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
       }}>
         <div style={{ fontSize: 60, marginBottom: 12 }}>📋</div>
-        <h3 style={{ color: '#1A1A2E', fontFamily: 'Cairo, sans-serif' }}>لا توجد جلسات بعد</h3>
+        <h3 style={{ color: '#1A1A2E', fontFamily: 'Cairo, sans-serif' }}>{isAr ? 'لا توجد جلسات بعد' : 'No sessions yet'}</h3>
         <p style={{ color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif', fontSize: 14 }}>
-          ابدئي أول جلسة من الصفحة الرئيسية وسيظهر سجلها هنا
+          {isAr ? 'ابدئي أول جلسة من الصفحة الرئيسية وسيظهر سجلها هنا' : 'Start your first session from the home page and it will appear here'}
         </p>
       </div>
     );
@@ -51,7 +57,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
     <div>
       <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ margin: 0, color: '#1A1A2E', fontFamily: 'Cairo, sans-serif', fontSize: 17, fontWeight: 900 }}>
-          📋 سجل الجلسات ({completed.length})
+          📋 {isAr ? 'سجل الجلسات' : 'Session History'} ({completed.length})
         </h3>
       </div>
 
@@ -82,7 +88,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>
-                  {typeDef.nameAr.split(' - ')[0]}
+                  {isAr ? typeDef.nameAr.split(' - ')[0] : typeDef.nameEn}
                 </div>
                 <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
                   {formatDate(session.date)} • {session.checkInTime}
@@ -111,7 +117,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                 {session.exercises.length > 0 && (
                   <div style={{ marginBottom: 12 }}>
                     <h4 style={{ margin: '0 0 8px', fontSize: 13, color: '#1A1A2E', fontFamily: 'Cairo, sans-serif' }}>
-                      التمارين:
+                      {isAr ? 'التمارين' : 'Exercises'}:
                     </h4>
                     {session.exercises.map((ex, i) => (
                       <div key={i} style={{
@@ -127,7 +133,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                           <span style={{
                             fontSize: 12, fontWeight: 700, color: '#1A1A2E',
                             textDecoration: ex.completed ? 'none' : 'none',
-                          }}>{ex.nameAr}</span>
+                          }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</span>
                           <span style={{ fontSize: 11, color: '#8A8AAA', marginRight: 8 }}>
                             {ex.sets}×{ex.reps} • {ex.weight}
                           </span>
@@ -145,12 +151,12 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                     border: '1px solid #F0F0F0',
                   }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#1A1A2E' }}>
-                      🏃‍♀️ {session.cardio.nameAr}
+                      🏊‍♀️ {isAr ? session.cardio.nameAr : (session.cardio.nameEn || session.cardio.nameAr)}
                     </div>
                     <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 3 }}>
-                      {session.cardio.duration} د • {session.cardio.speed}
-                      {session.cardio.distanceKm && ` • ${session.cardio.distanceKm} كم`}
-                      {session.cardio.caloriesBurned && ` • ${session.cardio.caloriesBurned} سعرة`}
+                      {session.cardio.duration} {isAr ? 'د' : 'min'} • {session.cardio.speed}
+                      {session.cardio.distanceKm && ` • ${session.cardio.distanceKm} ${isAr ? 'كم' : 'km'}`}
+                      {session.cardio.caloriesBurned && ` • ${session.cardio.caloriesBurned} ${isAr ? 'سعرة' : 'kcal'}`}
                     </div>
                   </div>
                 )}
@@ -162,7 +168,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                     border: '1px solid #B2EBF2',
                   }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#0891B2' }}>
-                      🏊‍♀️ كلاس الأكوا • {session.aqua.duration} دقيقة • {session.aqua.intensity}
+                      🏊‍♀️ {isAr ? 'كلاس الأكوا' : 'Aqua Aerobics'} • {session.aqua.duration} {isAr ? 'دقيقة' : 'min'} • {session.aqua.intensity}
                     </div>
                   </div>
                 )}
@@ -174,7 +180,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                     border: '1px solid #FDE68A',
                   }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#B45309' }}>
-                      🧖‍♀️ السونا • {session.sauna.totalMinutes} دقيقة • {session.sauna.rounds} جولات
+                      🧖‍♀️ {isAr ? 'السونا' : 'Sauna'} • {session.sauna.totalMinutes} {isAr ? 'دقيقة' : 'min'} • {session.sauna.rounds} {isAr ? 'جولات' : 'rounds'}
                     </div>
                   </div>
                 )}
@@ -200,7 +206,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                         background: '#DC2626', color: 'white', border: 'none',
                         fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer',
                       }}
-                    >تأكيد الحذف</button>
+                    >{isAr ? 'تأكيد الحذف' : 'Confirm Delete'}</button>
                     <button
                       onClick={() => setConfirmDelete(null)}
                       style={{
@@ -208,7 +214,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                         background: 'white', color: '#4A4A6A', border: '1px solid #E2E8F0',
                         fontFamily: 'Cairo, sans-serif', fontSize: 12, cursor: 'pointer',
                       }}
-                    >إلغاء</button>
+                    >{isAr ? 'إلغاء' : 'Cancel'}</button>
                   </div>
                 ) : (
                   <button
@@ -219,7 +225,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                       border: '1px solid #FFE0E0',
                       fontFamily: 'Cairo, sans-serif', fontSize: 12, cursor: 'pointer',
                     }}
-                  >🗑 حذف الجلسة</button>
+                  >🗑 {isAr ? 'حذف الجلسة' : 'Delete Session'}</button>
                 )}
               </div>
             )}
