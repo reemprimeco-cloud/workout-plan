@@ -167,8 +167,11 @@ function MySubscriptionCard() {
   const [keyInput, setKeyInput] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [errMsg, setErrMsg] = useState('');
-
+   const [copied, setCopied] = useState(false);
   const sub = subQuery.data;
+  // Read license key from localStorage as fallback
+  const localKey = (() => { try { const s = localStorage.getItem('primefit_license'); return s ? JSON.parse(s).key : null; } catch { return null; } })();
+  const displayKey = sub?.licenseKey ?? localKey ?? null;
   const isTrialing = sub?.status === 'trialing';
   const isActive = sub?.status === 'active' && sub?.plan !== 'free';
   const isExpired = sub?.status === 'expired';
@@ -229,12 +232,28 @@ function MySubscriptionCard() {
               </span>
             </div>
           )}
-          {sub?.licenseKey && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</span>
-              <span className="font-mono text-xs text-gray-600">{sub.licenseKey}</span>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</span>
+            {displayKey ? (
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-xs text-gray-700 tracking-wide">{displayKey}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(displayKey);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  title={lang === 'ar' ? 'نسخ' : 'Copy'}
+                  className="text-gray-400 hover:text-gray-700 transition-colors"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', fontSize: 13 }}
+                >
+                  {copied ? '✅' : '📋'}
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-gray-400 italic">{lang === 'ar' ? 'لا يوجد مفتاح' : 'No key linked'}</span>
+            )}
+          </div>
           {/* Activate free trial section */}
           {!isActive && !isTrialing && (
             <div className="pt-2 border-t border-gray-100">

@@ -212,3 +212,7 @@
 - [x] Server: add deletePost, editPost, deleteComment, editComment procedures to community router
 - [x] Server: add getMentionSuggestions procedure (search users by name prefix)
 - [x] Write vitest tests for new community procedures
+
+## Feature Batch 10 — License Key in My Subscription Card
+
+- [x] ProfilePanel: show license key row under Status in My Subscription card (always visible, masked with copy button)
