@@ -120,19 +120,16 @@ export async function wooCommerceWebhookHandler(req: Request, res: Response) {
       orderNumber: orderId,
     });
 
-    return res.json({
-      ok: true,
-      orderId,
-      licenseKey,
-      emailSent,
-      customerEmail,
-    });
+    console.log(`[WooWebhook] Email sent: ${emailSent}`);
+
+    return res.json({ ok: true, orderId, licenseKey, emailSent, customerEmail });
 
   } catch (err: unknown) {
     const error = err as Error;
-    console.error("[WooWebhook] Error:", error.message);
+    console.error("[WooWebhook] ❌ Unhandled error:", error.message, error.stack);
     return res.status(500).json({
       error: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString(),
     });
   }
