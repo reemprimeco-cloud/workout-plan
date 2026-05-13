@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
@@ -9,6 +10,11 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
+
+// ── Socket.IO singleton — import this in routers to emit events ───────────────
+let _io: SocketIOServer | null = null;
+export function getIO(): SocketIOServer | null { return _io; }
+export function setIO(io: SocketIOServer) { _io = io; }
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -32,6 +38,21 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // ── Socket.IO setup ──────────────────────────────────────────────────────
+  const io = new SocketIOServer(server, {
+    cors: { origin: "*", methods: ["GET", "POST"] },
+    path: "/socket.io",
+  });
+  setIO(io);
+
+  io.on("connection", (socket) => {
+    // Client sends their userId to join a personal room for direct notifications
+    socket.on("join", (userId: number) => {
+      if (userId) socket.join(`user:${userId}`);
+    });
+    socket.on("disconnect", () => {});
+  });
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

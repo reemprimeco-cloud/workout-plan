@@ -6,6 +6,8 @@
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useSocket } from "../contexts/SocketContext";
+import NotificationBell from "../components/NotificationBell";
 
 // ── Brand colors ──────────────────────────────────────────────────────────────
 const NAVY      = "#0D1B2A";
@@ -684,13 +686,45 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
   currentWeight?: number; targetWeight?: number; name?: string;
 }) {
   const [showNewPost, setShowNewPost] = useState(false);
-  const { data: feedData, isLoading } = trpc.community.getFeed.useQuery({ limit: 20, offset: 0 });
-  const posts = feedData?.posts ?? [];
+  const { data: feedData, isLoading, refetch } = trpc.community.getFeed.useQuery({ limit: 20, offset: 0 });
+  const [livePosts, setLivePosts] = useState<any[]>([]);
+  const { socket } = useSocket();
+
+  // Listen for new posts via socket and prepend them
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (post: any) => {
+      setLivePosts(prev => {
+        if (prev.find(p => p.id === post.id)) return prev;
+        return [post, ...prev];
+      });
+    };
+    socket.on("new_post", handler);
+    return () => { socket.off("new_post", handler); };
+  }, [socket]);
+
+  const allPosts = [
+    ...livePosts.filter(lp => !(feedData?.posts ?? []).find((p: any) => p.id === lp.id)),
+    ...(feedData?.posts ?? []),
+  ];
 
   return (
     <div>
       {/* Stories */}
       <StoriesBar lang={lang} />
+
+      {/* Live indicator */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <span style={{
+          display: "inline-block", width: 8, height: 8, borderRadius: "50%",
+          background: GREEN,
+          boxShadow: `0 0 6px ${GREEN}`,
+          animation: "livePulse 1.5s ease-in-out infinite",
+        }} />
+        <span style={{ color: GREEN, fontSize: 11, fontWeight: 700 }}>
+          {lang === "ar" ? "مباشر" : "LIVE"}
+        </span>
+      </div>
 
       {/* AI Insight */}
       {currentUserId && (
@@ -752,12 +786,12 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
       {/* Posts */}
       {isLoading ? (
         <div style={{ color: TEXT_SUB, textAlign: "center", padding: 32 }}>{t("loading", lang)}</div>
-      ) : posts.length === 0 ? (
+      ) : allPosts.length === 0 ? (
         <div style={{ color: TEXT_SUB, textAlign: "center", padding: 32, fontSize: 14 }}>
           {t("noFeed", lang)}
         </div>
       ) : (
-        posts.map((post: any) => (
+        allPosts.map((post: any) => (
           <PostCard key={post.id} post={post} lang={lang} currentUserId={currentUserId} />
         ))
       )}
@@ -809,10 +843,12 @@ export default function Community({
         padding: "16px 16px 12px",
         borderBottom: `1px solid ${CYAN}22`,
         position: "sticky", top: 0, zIndex: 50,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: TEXT_MAIN }}>
           <span style={{ color: CYAN }}>Prime</span> {t("community", lang)}
         </h2>
+        <NotificationBell lang={lang} />
       </div>
 
       {/* Sub-tabs */}
@@ -857,6 +893,10 @@ export default function Community({
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to   { transform: translateY(0); }
+        }
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.5; transform: scale(1.4); }
         }
       `}</style>
     </div>

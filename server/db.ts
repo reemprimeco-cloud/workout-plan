@@ -8,6 +8,7 @@ import {
   coachCheckins, InsertCoachCheckin,
   coachInsights, InsertCoachInsight,
   coachMemory, InsertCoachMemory,
+  socialNotifications, InsertSocialNotification,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -563,4 +564,39 @@ export async function getUserWeeklyXp(userId: number): Promise<number> {
     .from(communityXpLog)
     .where(and(eq(communityXpLog.userId, userId), gte(communityXpLog.createdAt, weekAgo)));
   return Number(result[0]?.total ?? 0);
+}
+
+// ── Social Notifications ──────────────────────────────────────────────────────
+
+export async function createSocialNotification(data: InsertSocialNotification) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(socialNotifications).values(data);
+}
+
+export async function getSocialNotifications(userId: number, limit = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(socialNotifications)
+    .where(eq(socialNotifications.userId, userId))
+    .orderBy(desc(socialNotifications.createdAt))
+    .limit(limit);
+}
+
+export async function markNotificationsRead(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(socialNotifications)
+    .set({ isRead: true })
+    .where(eq(socialNotifications.userId, userId));
+}
+
+export async function getUnreadNotificationCount(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db.select()
+    .from(socialNotifications)
+    .where(eq(socialNotifications.userId, userId));
+  return rows.filter(r => !r.isRead).length;
 }
