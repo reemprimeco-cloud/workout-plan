@@ -130,6 +130,15 @@ export async function createAccessCode(data: InsertAccessCode) {
   await db.insert(accessCodes).values(data);
 }
 
+export async function getAccessCodeByOrderId(orderId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(accessCodes)
+    .where(eq(accessCodes.orderId, orderId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 export async function toggleAccessCode(id: number, isActive: boolean) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');

@@ -36,9 +36,7 @@
 - [x] Admin panel bypasses LicenseGate (has its own auth check)
 - [x] 11 vitest tests passing (license system + auth logout)
 
-## Future / Pending (not blocking current release)
-- [ ] WooCommerce API integration (re-enable when server security issue resolved — currently returns 401)
-- [x] Push notifications for workout reminders
+## Future / Pending (not blocking current releas- [x] WooCommerce webhook integration — auto-generates license key on order.processing/completed and emails customerPush notifications for workout reminders
 - [x] Add WhatsApp order note on LicenseGate screen (contact 65068000 after purchase to get access code)
 - [x] Fix home page exercise sections: each section must show its own specific exercises (not all showing Elliptical)
 - [x] Translate Guide tab (WorkoutGuide component) to English — currently all hardcoded Arabic
