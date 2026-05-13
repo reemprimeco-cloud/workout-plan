@@ -1,0 +1,2 @@
+ALTER TABLE `notification_settings` ADD `communityNotifs` boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE `notification_settings` ADD `appUpdatesNotifs` boolean DEFAULT true NOT NULL;

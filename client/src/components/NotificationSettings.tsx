@@ -45,6 +45,7 @@ export default function NotificationSettings() {
 
   const { data: settings, refetch } = trpc.notifications.getSettings.useQuery();
   const { data: vapidData } = trpc.notifications.getVapidPublicKey.useQuery();
+  const vapidMissing = vapidData && !vapidData.configured;
 
   const subscribeMutation = trpc.notifications.subscribe.useMutation({
     onSuccess: () => refetch(),
@@ -65,6 +66,10 @@ export default function NotificationSettings() {
       setSuccessMsg(ar ? "✅ تم إرسال إشعار تجريبي!" : "✅ Test notification sent!");
       setTimeout(() => setSuccessMsg(""), 4000);
     },
+  });
+
+  const updatePrefsMutation = trpc.notifications.updatePreferences.useMutation({
+    onSuccess: () => refetch(),
   });
 
   // Local state
@@ -292,6 +297,19 @@ export default function NotificationSettings() {
         </button>
       </div>
 
+      {/* VAPID not configured warning */}
+      {vapidMissing && (
+        <div style={{
+          background: "#FEF3C7", border: "1px solid #F59E0B",
+          borderRadius: 10, padding: "10px 14px",
+          fontSize: 12, color: "#92400E", marginBottom: 12,
+        }}>
+          ⚠️ {ar
+            ? "الإشعارات غير مفعّلة في الخادم. يرجى إضافة VAPID_PUBLIC_KEY و VAPID_PRIVATE_KEY في ملف .env"
+            : "Push notifications not configured on server. Add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to .env"}
+        </div>
+      )}
+
       {/* Permission warning */}
       {permissionState === "denied" && (
         <div
@@ -441,6 +459,114 @@ export default function NotificationSettings() {
           </button>
         </div>
       )}
+
+      {/* ── Notification Preferences (always visible, independent of push) ── */}
+      <div style={{
+        marginTop: 16,
+        paddingTop: 16,
+        borderTop: `1px solid ${SKY_LIGHT}55`,
+      }}>
+        <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 800, color: NAVY }}>
+          {ar ? "🎛️ تفضيلات الإشعارات" : "🎛️ Notification Preferences"}
+        </p>
+
+        {/* Community notifications toggle */}
+        {[
+          {
+            key: "communityNotifs" as const,
+            icon: "👥",
+            labelAr: "إشعارات المجتمع",
+            descAr: "الإعجابات والتعليقات على منشوراتك",
+            labelEn: "Community Notifications",
+            descEn: "Likes and comments on your posts",
+            value: settings?.communityNotifs ?? true,
+          },
+          {
+            key: "appUpdatesNotifs" as const,
+            icon: "🚀",
+            labelAr: "تحديثات التطبيق",
+            descAr: "تمارين جديدة، تحديات، إنجازات",
+            labelEn: "App Updates",
+            descEn: "New exercises, challenges, achievements",
+            value: settings?.appUpdatesNotifs ?? true,
+          },
+        ].map(pref => (
+          <div key={pref.key} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 0",
+            borderBottom: `1px solid ${SKY_LIGHT}33`,
+          }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: NAVY }}>
+                {pref.icon} {ar ? pref.labelAr : pref.labelEn}
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: 11, color: "#7A9BB5" }}>
+                {ar ? pref.descAr : pref.descEn}
+              </p>
+            </div>
+            {/* Toggle */}
+            <button
+              onClick={() => updatePrefsMutation.mutate({ [pref.key]: !pref.value })}
+              disabled={updatePrefsMutation.isPending}
+              style={{
+                width: 48, height: 26, borderRadius: 13, border: "none",
+                background: pref.value
+                  ? `linear-gradient(135deg, ${NAVY}, #2a4a8a)`
+                  : "#D0DFF0",
+                cursor: "pointer", position: "relative",
+                transition: "background 0.3s", flexShrink: 0,
+                marginRight: isRTL ? 0 : 0,
+                marginLeft: isRTL ? 0 : 0,
+              }}
+            >
+              <div style={{
+                position: "absolute", top: 3,
+                left: pref.value ? (isRTL ? 3 : 25) : (isRTL ? 25 : 3),
+                width: 20, height: 20, borderRadius: "50%",
+                background: "white",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+                transition: "left 0.3s",
+              }} />
+            </button>
+          </div>
+        ))}
+
+        {/* Mute all shortcut */}
+        {(settings?.communityNotifs || settings?.appUpdatesNotifs) && (
+          <button
+            onClick={() => updatePrefsMutation.mutate({ communityNotifs: false, appUpdatesNotifs: false })}
+            disabled={updatePrefsMutation.isPending}
+            style={{
+              marginTop: 10, width: "100%",
+              background: "transparent",
+              border: `1.5px solid #F87171`,
+              borderRadius: 10, padding: "8px 14px",
+              fontSize: 12, fontWeight: 700,
+              color: "#EF4444", cursor: "pointer",
+            }}
+          >
+            🔕 {ar ? "كتم جميع الإشعارات" : "Mute All Notifications"}
+          </button>
+        )}
+
+        {/* Unmute all shortcut */}
+        {!settings?.communityNotifs && !settings?.appUpdatesNotifs && (
+          <button
+            onClick={() => updatePrefsMutation.mutate({ communityNotifs: true, appUpdatesNotifs: true })}
+            disabled={updatePrefsMutation.isPending}
+            style={{
+              marginTop: 10, width: "100%",
+              background: "transparent",
+              border: `1.5px solid #34D399`,
+              borderRadius: 10, padding: "8px 14px",
+              fontSize: 12, fontWeight: 700,
+              color: "#059669", cursor: "pointer",
+            }}
+          >
+            🔔 {ar ? "تفعيل جميع الإشعارات" : "Unmute All Notifications"}
+          </button>
+        )}
+      </div>
 
       {/* Status messages */}
       {successMsg && (

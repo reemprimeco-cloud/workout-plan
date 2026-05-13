@@ -52,6 +52,7 @@ export const licenseRouter = router({
         customerName: row.customerName ?? undefined,
         customerEmail: row.customerEmail ?? undefined,
         expiresAt: row.expiresAt ?? undefined,
+        plan: (row.expiresAt ? 'monthly' : 'lifetime') as string,
         message: "تم التحقق من الكود بنجاح!",
       };
     }),

@@ -85,6 +85,13 @@
       "when": 1778712935158,
       "tag": "0011_tan_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1778714905993,
+      "tag": "0012_wide_doomsday",
+      "breakpoints": true
     }
   ]
 }

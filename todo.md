@@ -216,3 +216,8 @@
 ## Feature Batch 10 — License Key in My Subscription Card
 
 - [x] ProfilePanel: show license key row under Status in My Subscription card (always visible, masked with copy button)
+
+## Feature Batch 11 — Uploaded ZIP Patches
+
+- [x] Apply primefit-trial-popup: LicenseGate with trial awareness popup + expiry check
+- [x] Apply primefit-notif-fix: notifications router fix (VAPID check, preferences toggles), server index webhook fix, NotificationSettings UI improvements

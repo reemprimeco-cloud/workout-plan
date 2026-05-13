@@ -11,8 +11,8 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { wooCommerceWebhookHandler } from "../handlers/wooCommerceWebhook";
+import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
 import { startWooPoller } from "../handlers/wooPoller";
-import { handleMyfatoorahWebhook } from "../handlers/myfatoorahWebhook";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -56,35 +56,23 @@ async function startServer() {
     });
     socket.on("disconnect", () => {});
   });
+  app.post("/api/webhooks/myfatoorah", myfatoorahWebhookHandler);
+
   // ── WooCommerce webhook — MUST be before express.json() ─────────────────
   app.post(
     "/api/webhooks/woocommerce",
     express.raw({ type: "application/json" }),
     (req, res, next) => {
-      // Safely capture raw body for HMAC verification
-      const raw = req.body;
-      if (Buffer.isBuffer(raw)) {
-        (req as any).rawBody = raw;
-        try { req.body = JSON.parse(raw.toString()); } catch { req.body = {}; }
-      } else if (typeof raw === 'string') {
-        (req as any).rawBody = Buffer.from(raw);
-        try { req.body = JSON.parse(raw); } catch { req.body = {}; }
-      } else if (raw && typeof raw === 'object') {
-        // Already parsed — reconstruct raw buffer from stringified body
-        const str = JSON.stringify(raw);
-        (req as any).rawBody = Buffer.from(str);
-        req.body = raw;
-      } else {
-        (req as any).rawBody = Buffer.alloc(0);
-        req.body = {};
-      }
+      (req as any).rawBody = req.body as Buffer;
+      try { req.body = JSON.parse((req as any).rawBody.toString()); } catch {}
       next();
     },
     wooCommerceWebhookHandler,
   );
 
-  // ── Debug endpoint — confirm webhook is reachable ─────────────────────────
-  // GET /api/webhooks/woocommerce/ping → { ok: true, ... }
+  // ── Debug endpoint — open in browser to confirm webhook is reachable ─────
+  // GET /api/webhooks/woocommerce/ping → { ok: true, message: "Webhook endpoint is alive" }
+  // Remove this route after confirming everything works in production.
   app.get("/api/webhooks/woocommerce/ping", (_req, res) => {
     res.json({
       ok: true,
@@ -104,12 +92,75 @@ async function startServer() {
   // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
   app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
 
-  // ── MyFatoorah webhook — MUST be before express.json() ─────────────────
-  app.post(
-    "/api/webhooks/myfatoorah",
-    express.raw({ type: "application/json" }),
-    handleMyfatoorahWebhook,
-  );
+  // ── Manual reminder test — POST /api/debug/test-reminder/:userId ─────────
+  // Fires a push to a specific user without needing the cron
+  app.post("/api/debug/test-reminder/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (!userId) return res.status(400).json({ error: "invalid userId" });
+
+      const { getPushSubscriptionByUser, getNotificationSettings } = await import("../db");
+      const { sendPushToSubscription } = await import("../routers/notifications");
+
+      const sub      = await getPushSubscriptionByUser(userId);
+      const settings = await getNotificationSettings(userId);
+
+      if (!sub) return res.status(404).json({ error: "no push subscription for this user — they must enable notifications first" });
+
+      const lang = (settings?.language ?? "ar") as "ar" | "en";
+      const result = await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+        title: lang === "ar" ? "🏋️ تذكير التمرين" : "🏋️ Workout Reminder",
+        body:  lang === "ar" ? "حان وقت تمرينك! لا تتأخري 💪" : "Time for your workout! Don't skip it 💪",
+        icon:  "/icons/icon-192.png",
+        url:   "/",
+      });
+
+      return res.json({ ok: true, result, userId, lang });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+  app.get("/api/debug/notifications", async (_req, res) => {
+    const { getDb } = await import("../db");
+    const { pushSubscriptions, notificationSettings } = await import("../../drizzle/schema");
+
+    const db = await getDb();
+    let subCount = 0;
+    let enabledCount = 0;
+    let sampleSettings: any = null;
+
+    if (db) {
+      const subs = await db.select().from(pushSubscriptions).limit(100);
+      subCount = subs.length;
+      const settings = await db.select().from(notificationSettings).limit(100);
+      enabledCount = settings.filter((s: any) => s.enabled).length;
+      sampleSettings = settings[0] ?? null;
+    }
+
+    res.json({
+      ok: true,
+      checks: {
+        vapidPublicKey:  !!process.env.VAPID_PUBLIC_KEY  ? "✅ set" : "❌ MISSING",
+        vapidPrivateKey: !!process.env.VAPID_PRIVATE_KEY ? "✅ set" : "❌ MISSING",
+        forgeApiUrl:     !!process.env.BUILT_IN_FORGE_API_URL  ? "✅ set" : "❌ MISSING — cron jobs won't fire",
+        forgeApiKey:     !!process.env.BUILT_IN_FORGE_API_KEY  ? "✅ set" : "❌ MISSING — cron jobs won't fire",
+        smtpUser:        !!process.env.SMTP_USER ? "✅ set" : "⚠️ not set",
+      },
+      stats: {
+        pushSubscriptions: subCount,
+        enabledReminders:  enabledCount,
+      },
+      sampleSettings: sampleSettings ? {
+        userId:              sampleSettings.userId,
+        enabled:             sampleSettings.enabled,
+        reminderTime:        sampleSettings.reminderTime,
+        days:                sampleSettings.days,
+        hasCronTaskUid:      !!sampleSettings.scheduleCronTaskUid,
+        scheduleCronTaskUid: sampleSettings.scheduleCronTaskUid ?? "null — cron never created",
+      } : "no settings rows found",
+      timestamp: new Date().toISOString(),
+    });
+  });
 
   // ── WooCommerce order poller — catches any orders missed by webhook ───────
   startWooPoller();
