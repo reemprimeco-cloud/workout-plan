@@ -10,6 +10,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
+import { wooCommerceWebhookHandler } from "../handlers/wooCommerceWebhook";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -56,6 +57,20 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // ── WooCommerce webhook — must be mounted BEFORE json middleware ──────────
+  // Needs raw body access for HMAC signature verification
+  app.post(
+    "/api/webhooks/woocommerce",
+    express.raw({ type: "application/json" }),
+    (req, res, next) => {
+      // Attach raw body for signature check, then parse JSON
+      (req as any).rawBody = req.body as Buffer;
+      try { req.body = JSON.parse((req as any).rawBody.toString()); } catch {}
+      next();
+    },
+    wooCommerceWebhookHandler,
+  );
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough

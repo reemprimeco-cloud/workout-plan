@@ -10,6 +10,12 @@ export const ENV = {
   wooStoreUrl: process.env.WOO_STORE_URL ?? "",
   wooConsumerKey: process.env.WOO_CONSUMER_KEY ?? "",
   wooConsumerSecret: process.env.WOO_CONSUMER_SECRET ?? "",
+  wooWebhookSecret: process.env.WOO_WEBHOOK_SECRET ?? "",   // WooCommerce webhook secret
   vapidPublicKey: process.env.VAPID_PUBLIC_KEY ?? "",
   vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ?? "",
+  smtpHost: process.env.SMTP_HOST ?? "smtp.gmail.com",
+  smtpPort: parseInt(process.env.SMTP_PORT ?? "587"),
+  smtpUser: process.env.SMTP_USER ?? "",
+  smtpPass: process.env.SMTP_PASS ?? "",
+  smtpFrom: process.env.SMTP_FROM ?? "Prime Fit <noreply@primefit.app>",
 };
