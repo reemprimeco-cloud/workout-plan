@@ -18,4 +18,7 @@ export const ENV = {
   smtpUser: process.env.SMTP_USER ?? "",
   smtpPass: process.env.SMTP_PASS ?? "",
   smtpFrom: process.env.SMTP_FROM ?? "Prime Fit <noreply@primefit.app>",
+  myFatoorahApiKey: process.env.MYFATOORAH_API_KEY ?? "",
+  myFatoorahWebhookSecret: process.env.MYFATOORAH_WEBHOOK_SECRET ?? "",
+  myFatoorahApiUrl: process.env.MYFATOORAH_API_URL ?? "https://api.myfatoorah.com",
 };

@@ -12,6 +12,7 @@ import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { wooCommerceWebhookHandler } from "../handlers/wooCommerceWebhook";
 import { startWooPoller } from "../handlers/wooPoller";
+import { handleMyfatoorahWebhook } from "../handlers/myfatoorahWebhook";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -102,6 +103,13 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
   app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
+
+  // ── MyFatoorah webhook — MUST be before express.json() ─────────────────
+  app.post(
+    "/api/webhooks/myfatoorah",
+    express.raw({ type: "application/json" }),
+    handleMyfatoorahWebhook,
+  );
 
   // ── WooCommerce order poller — catches any orders missed by webhook ───────
   startWooPoller();

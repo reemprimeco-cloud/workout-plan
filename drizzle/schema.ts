@@ -275,3 +275,37 @@ export const broadcastNotifications = mysqlTable("broadcast_notifications", {
 
 export type BroadcastNotification = typeof broadcastNotifications.$inferSelect;
 export type InsertBroadcastNotification = typeof broadcastNotifications.$inferInsert;
+
+// ── MyFatoorah Subscriptions ──────────────────────────────────────────────────
+// One row per user — current subscription state
+export const subscriptions = mysqlTable("subscriptions", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      varchar("userId", { length: 255 }).notNull().unique(),
+  plan:        mysqlEnum("plan", ["free", "prime_plus", "prime_pro"]).default("free").notNull(),
+  status:      mysqlEnum("status", ["active", "expired", "cancelled", "trialing", "pending"]).default("active").notNull(),
+  period:      mysqlEnum("period", ["monthly", "yearly"]).default("monthly").notNull(),
+  trialEndsAt: timestamp("trialEndsAt"),
+  startsAt:    timestamp("startsAt").defaultNow().notNull(),
+  expiresAt:   timestamp("expiresAt"),
+  invoiceId:   varchar("invoiceId", { length: 255 }),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:   timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = typeof subscriptions.$inferInsert;
+
+// One row per payment attempt
+export const billingHistory = mysqlTable("billing_history", {
+  id:         int("id").autoincrement().primaryKey(),
+  userId:     varchar("userId", { length: 255 }).notNull(),
+  plan:       mysqlEnum("plan", ["free", "prime_plus", "prime_pro"]).notNull(),
+  period:     mysqlEnum("period", ["monthly", "yearly"]).notNull(),
+  amount:     varchar("amount", { length: 32 }).notNull(),
+  currency:   varchar("currency", { length: 8 }).default("KWD").notNull(),
+  status:     mysqlEnum("status", ["paid", "failed", "refunded", "pending"]).notNull(),
+  invoiceId:  varchar("invoiceId", { length: 255 }).notNull(),
+  paymentRef: varchar("paymentRef", { length: 255 }),
+  createdAt:  timestamp("createdAt").defaultNow().notNull(),
+});
+export type BillingHistory = typeof billingHistory.$inferSelect;
+export type InsertBillingHistory = typeof billingHistory.$inferInsert;
