@@ -16,10 +16,17 @@ import {
   getActiveChallenges, joinChallenge, getUserChallenges, seedDefaultChallenges,
   addXp, getUserTotalXp, getWeeklyLeaderboard, getUserWeeklyXp,
   getUserByOpenId,
+  createSocialNotification,
+  getSocialNotifications,
+  markNotificationsRead,
+  getUnreadNotificationCount,
 } from "../db";
 import { getDb } from "../db";
-import { users } from "../../drizzle/schema";
+import { users, communityPosts } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { getIO } from "../_core/index";
+import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
+import { sendPushToSubscription } from "./notifications";
 
 // ── XP constants ──────────────────────────────────────────────────────────────
 const XP = {
@@ -136,6 +143,19 @@ export const communityRouter = router({
         isTrending: false,
       });
       await addXp({ userId: ctx.user.id, event: "post", points: xpAward });
+
+      // ── Broadcast new post to all connected users ─────────────────────────
+      try {
+        const db = await getDb();
+        const actor = db ? await db.select({ name: users.name })
+          .from(users).where(eq(users.id, ctx.user.id)).limit(1) : [];
+        const io = getIO();
+        io?.emit("new_post", {
+          ...post,
+          userName: actor[0]?.name ?? "User",
+        });
+      } catch (e) { /* non-fatal */ }
+
       return post;
     }),
 
@@ -155,6 +175,56 @@ export const communityRouter = router({
       await addReaction({ postId: input.postId, userId: ctx.user.id, type: input.type });
       await incrementPostLikes(input.postId, 1);
       await addXp({ userId: ctx.user.id, event: "like", points: XP.like, refId: input.postId });
+
+      // ── Real-time: notify post author ─────────────────────────────────────
+      try {
+        const db = await getDb();
+        if (db) {
+          const posts = await db.select({ userId: communityPosts.userId })
+            .from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
+          const postAuthorId = posts[0]?.userId;
+
+          if (postAuthorId && postAuthorId !== ctx.user.id) {
+            const actor = await db.select({ name: users.name })
+              .from(users).where(eq(users.id, ctx.user.id)).limit(1);
+            const actorName = actor[0]?.name ?? "Someone";
+            const icons = { like: "❤️", cheer: "💪", fire: "🔥" };
+            const icon = icons[input.type];
+
+            // Save to DB
+            await createSocialNotification({
+              userId: postAuthorId,
+              actorId: ctx.user.id,
+              type: input.type,
+              postId: input.postId,
+              message: `${icon} ${actorName} تفاعل مع منشورك`,
+              messageEn: `${icon} ${actorName} reacted to your post`,
+            });
+
+            // Emit via socket.io
+            const io = getIO();
+            io?.to(`user:${postAuthorId}`).emit("notification", {
+              type: input.type,
+              message: `${icon} ${actorName} reacted to your post`,
+              postId: input.postId,
+            });
+
+            // Web Push (if subscribed)
+            const sub = await getPushSubscriptionByUser(postAuthorId);
+            const settings = await getNotificationSettings(postAuthorId);
+            if (sub) {
+              const lang = settings?.language ?? "ar";
+              await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+                title: "Prime Fit",
+                body: lang === "ar" ? `${icon} ${actorName} تفاعل مع منشورك` : `${icon} ${actorName} reacted to your post`,
+                icon: "/icons/icon-192.png",
+                url: "/community",
+              });
+            }
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+
       return { reacted: true, type: input.type };
     }),
 
@@ -192,6 +262,51 @@ export const communityRouter = router({
       await addComment({ postId: input.postId, userId: ctx.user.id, content: input.content });
       await incrementPostComments(input.postId);
       await addXp({ userId: ctx.user.id, event: "comment", points: XP.comment, refId: input.postId });
+
+      // ── Real-time: notify post author ─────────────────────────────────────
+      try {
+        const db = await getDb();
+        if (db) {
+          const posts = await db.select({ userId: communityPosts.userId })
+            .from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
+          const postAuthorId = posts[0]?.userId;
+
+          if (postAuthorId && postAuthorId !== ctx.user.id) {
+            const actor = await db.select({ name: users.name })
+              .from(users).where(eq(users.id, ctx.user.id)).limit(1);
+            const actorName = actor[0]?.name ?? "Someone";
+
+            await createSocialNotification({
+              userId: postAuthorId,
+              actorId: ctx.user.id,
+              type: "comment",
+              postId: input.postId,
+              message: `💬 ${actorName} علّق على منشورك`,
+              messageEn: `💬 ${actorName} commented on your post`,
+            });
+
+            const io = getIO();
+            io?.to(`user:${postAuthorId}`).emit("notification", {
+              type: "comment",
+              message: `💬 ${actorName} commented on your post`,
+              postId: input.postId,
+            });
+
+            const sub = await getPushSubscriptionByUser(postAuthorId);
+            const settings = await getNotificationSettings(postAuthorId);
+            if (sub) {
+              const lang = settings?.language ?? "ar";
+              await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+                title: "Prime Fit",
+                body: lang === "ar" ? `💬 ${actorName} علّق على منشورك` : `💬 ${actorName} commented on your post`,
+                icon: "/icons/icon-192.png",
+                url: "/community",
+              });
+            }
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+
       return { success: true };
     }),
 
@@ -308,6 +423,23 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
       );
       return { content, totalXp, weeklyXp, rank: rank > 0 ? rank : null };
     }),
+
+  /** Get my social notifications */
+  getNotifications: protectedProcedure.query(async ({ ctx }) => {
+    return getSocialNotifications(ctx.user.id, 30);
+  }),
+
+  /** Get unread notification count */
+  getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
+    const count = await getUnreadNotificationCount(ctx.user.id);
+    return { count };
+  }),
+
+  /** Mark all notifications as read */
+  markNotificationsRead: protectedProcedure.mutation(async ({ ctx }) => {
+    await markNotificationsRead(ctx.user.id);
+    return { success: true };
+  }),
 
   /** Auto-generate an achievement post (called from client on milestone) */
   autoGeneratePost: protectedProcedure

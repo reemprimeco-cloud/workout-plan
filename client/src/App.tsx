@@ -5,44 +5,44 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { SocketProvider } from "./contexts/SocketContext";
 import Home from "./pages/Home";
 import AdminPanel from "./pages/AdminPanel";
 import { LicenseGate } from "./components/LicenseGate";
+import { trpc } from "@/lib/trpc";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
+function AppWithSocket() {
+  const { data: currentUser } = trpc.auth.me.useQuery();
+  return (
+    <SocketProvider userId={(currentUser as any)?.id}>
+      <TooltipProvider>
+        <Toaster />
+        {window.location.pathname === '/admin'
+          ? <Router />
+          : <LicenseGate><Router /></LicenseGate>
+        }
+      </TooltipProvider>
+    </SocketProvider>
+  );
+}
 
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            {/* Admin panel bypasses LicenseGate — it has its own auth check */}
-            {window.location.pathname === '/admin'
-              ? <Router />
-              : <LicenseGate><Router /></LicenseGate>
-            }
-          </TooltipProvider>
+          <AppWithSocket />
         </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>

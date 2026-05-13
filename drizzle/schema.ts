@@ -218,6 +218,22 @@ export const challengeParticipants = mysqlTable("challenge_participants", {
 export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
 export type InsertChallengeParticipant = typeof challengeParticipants.$inferInsert;
 
+// Social notifications — per-user inbox for likes, comments, etc.
+export const socialNotifications = mysqlTable("social_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),        // recipient
+  actorId: int("actorId").notNull(),       // who triggered it
+  type: mysqlEnum("type", ["like", "cheer", "fire", "comment", "achievement"]).notNull(),
+  postId: int("postId"),                   // related post (if any)
+  message: text("message").notNull(),
+  messageEn: text("messageEn"),
+  isRead: boolean("isRead").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SocialNotification = typeof socialNotifications.$inferSelect;
+export type InsertSocialNotification = typeof socialNotifications.$inferInsert;
+
 // XP log — tracks all XP-earning events
 export const communityXpLog = mysqlTable("community_xp_log", {
   id: int("id").autoincrement().primaryKey(),
