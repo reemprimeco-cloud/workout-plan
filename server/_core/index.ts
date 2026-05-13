@@ -11,6 +11,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { wooCommerceWebhookHandler } from "../handlers/wooCommerceWebhook";
+import { startWooPoller } from "../handlers/wooPoller";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -54,15 +55,28 @@ async function startServer() {
     });
     socket.on("disconnect", () => {});
   });
-  // ── WooCommerce webhook — must be mounted BEFORE json middleware ──────────
-  // Needs raw body access for HMAC signature verification
+  // ── WooCommerce webhook — MUST be before express.json() ─────────────────
   app.post(
     "/api/webhooks/woocommerce",
     express.raw({ type: "application/json" }),
     (req, res, next) => {
-      // Attach raw body for signature check, then parse JSON
-      (req as any).rawBody = req.body as Buffer;
-      try { req.body = JSON.parse((req as any).rawBody.toString()); } catch {}
+      // Safely capture raw body for HMAC verification
+      const raw = req.body;
+      if (Buffer.isBuffer(raw)) {
+        (req as any).rawBody = raw;
+        try { req.body = JSON.parse(raw.toString()); } catch { req.body = {}; }
+      } else if (typeof raw === 'string') {
+        (req as any).rawBody = Buffer.from(raw);
+        try { req.body = JSON.parse(raw); } catch { req.body = {}; }
+      } else if (raw && typeof raw === 'object') {
+        // Already parsed — reconstruct raw buffer from stringified body
+        const str = JSON.stringify(raw);
+        (req as any).rawBody = Buffer.from(str);
+        req.body = raw;
+      } else {
+        (req as any).rawBody = Buffer.alloc(0);
+        req.body = {};
+      }
       next();
     },
     wooCommerceWebhookHandler,
@@ -88,6 +102,9 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
   app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
+
+  // ── WooCommerce order poller — catches any orders missed by webhook ───────
+  startWooPoller();
 
   // tRPC API
   app.use(
