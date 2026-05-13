@@ -161,3 +161,84 @@ export async function sendLicenseEmail({
     return false;
   }
 }
+
+export async function sendBroadcastEmail({
+  to,
+  customerName,
+  subject,
+  body,
+}: {
+  to: string;
+  customerName: string | null;
+  subject: string;
+  body: string;
+}): Promise<boolean> {
+  if (!ENV.smtpUser || !ENV.smtpPass) {
+    console.warn("[Email] SMTP not configured — skipping broadcast email");
+    return false;
+  }
+
+  const firstName = customerName ? customerName.split(" ")[0] : "عزيزي المشترك";
+
+  const html = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#0D1B2A;font-family:'Cairo',Arial,sans-serif;direction:rtl;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0D1B2A;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#111827;border-radius:20px;overflow:hidden;border:1px solid #1F2937;">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1B2E5E,#0D1B2A);padding:28px;text-align:center;">
+              <h1 style="margin:0;font-size:26px;font-weight:900;color:#F9FAFB;">
+                <span style="color:#00E5FF;">Prime</span> Fit
+              </h1>
+              <p style="margin:6px 0 0;color:#9CA3AF;font-size:13px;">رسالة من فريق Prime Fit</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="color:#F9FAFB;font-size:16px;margin:0 0 16px;">مرحباً ${firstName}! 👋</p>
+              <div style="color:#D1D5DB;font-size:14px;line-height:1.8;white-space:pre-wrap;">${body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+              <div style="text-align:center;margin:28px 0 0;">
+                <a href="https://primefit.manus.space" style="background:linear-gradient(135deg,#00E5FF,#00B8CC);color:#0D1B2A;text-decoration:none;font-weight:900;font-size:15px;padding:14px 36px;border-radius:12px;display:inline-block;">
+                  افتح التطبيق 💪
+                </a>
+              </div>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background:#0D1B2A;padding:20px;text-align:center;border-top:1px solid #1F2937;">
+              <p style="color:#4B5563;font-size:11px;margin:0;">للمساعدة: WhatsApp 65068000</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim();
+
+  try {
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: ENV.smtpFrom,
+      to,
+      subject,
+      text: `مرحباً ${firstName},\n\n${body}\n\nفريق Prime Fit`,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error(`[Email] Broadcast failed to ${to}:`, err);
+    return false;
+  }
+}
