@@ -65,6 +65,8 @@ export const notificationSettings = mysqlTable("notification_settings", {
   days: varchar("days", { length: 64 }).default("1,2,3,4,5").notNull(), // comma-separated 0=Sun..6=Sat
   language: varchar("language", { length: 8 }).default("ar").notNull(), // ar | en
   scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+  communityNotifs: boolean("communityNotifs").default(true).notNull(),
+  appUpdatesNotifs: boolean("appUpdatesNotifs").default(true).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 

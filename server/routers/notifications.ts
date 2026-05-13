@@ -23,7 +23,9 @@ import {
   getNotificationSettings,
   upsertNotificationSettings,
   updateNotificationTaskUid,
+  getDb,
 } from "../db";
+import { eq } from "drizzle-orm";
 import {
   createHeartbeatJob,
   updateHeartbeatJob,
@@ -61,7 +63,10 @@ function buildCron(reminderTime: string, days: string): string {
 export const notificationsRouter = router({
   /** Returns the VAPID public key so the browser can create a PushSubscription */
   getVapidPublicKey: publicProcedure.query(() => {
-    return { publicKey: ENV.vapidPublicKey };
+    if (!ENV.vapidPublicKey || !ENV.vapidPrivateKey) {
+      console.error("[Notifications] ❌ VAPID keys not set! Run: node -e \"const wp=require('web-push'); const keys=wp.generateVAPIDKeys(); console.log(JSON.stringify(keys))\" and add VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY to .env");
+    }
+    return { publicKey: ENV.vapidPublicKey, configured: !!ENV.vapidPublicKey };
   }),
 
   /** Save a browser PushSubscription and enable reminder cron */
@@ -176,36 +181,51 @@ export const notificationsRouter = router({
     const settings = await getNotificationSettings(userId);
     const subscription = await getPushSubscriptionByUser(userId);
     return {
-      enabled: settings?.enabled ?? false,
-      reminderTime: settings?.reminderTime ?? "09:00",
-      days: settings?.days ?? "0,1,2,3,4,5,6",
-      language: settings?.language ?? "ar",
-      hasSubscription: !!subscription,
+      enabled:          settings?.enabled ?? false,
+      reminderTime:     settings?.reminderTime ?? "09:00",
+      days:             settings?.days ?? "0,1,2,3,4,5,6",
+      language:         settings?.language ?? "ar",
+      hasSubscription:  !!subscription,
+      communityNotifs:  settings?.communityNotifs  ?? true,
+      appUpdatesNotifs: settings?.appUpdatesNotifs ?? true,
     };
   }),
 
-  /** Update reminder time / days without changing subscription */
+  /** Update reminder time / days / notification preferences */
   updateSettings: protectedProcedure
     .input(
       z.object({
-        reminderTime: z.string().regex(/^\d{2}:\d{2}$/),
-        days: z.string(),
-        language: z.enum(["ar", "en"]),
+        reminderTime:     z.string().regex(/^\d{2}:\d{2}$/),
+        days:             z.string(),
+        language:         z.enum(["ar", "en"]),
+        communityNotifs:  z.boolean().optional(),
+        appUpdatesNotifs: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
       const settings = await getNotificationSettings(userId);
 
-      if (!settings?.enabled || !settings?.scheduleCronTaskUid) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No active subscription to update",
+      // Allow saving preferences even without an active subscription
+      if (settings && (!settings.enabled || !settings.scheduleCronTaskUid)) {
+        await upsertNotificationSettings({
+          userId,
+          enabled: settings.enabled,
+          reminderTime: input.reminderTime,
+          days: input.days,
+          language: input.language,
+          scheduleCronTaskUid: settings.scheduleCronTaskUid ?? null,
+          communityNotifs:  input.communityNotifs  ?? settings.communityNotifs  ?? true,
+          appUpdatesNotifs: input.appUpdatesNotifs ?? settings.appUpdatesNotifs ?? true,
         });
+        return { success: true };
       }
 
-      const sessionToken =
-        parseCookie(ctx.req.headers.cookie ?? "")[COOKIE_NAME] ?? "";
+      if (!settings?.enabled || !settings?.scheduleCronTaskUid) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No active subscription to update" });
+      }
+
+      const sessionToken = parseCookie(ctx.req.headers.cookie ?? "")[COOKIE_NAME] ?? "";
       const cron = buildCron(input.reminderTime, input.days);
 
       await updateHeartbeatJob(
@@ -221,8 +241,32 @@ export const notificationsRouter = router({
         days: input.days,
         language: input.language,
         scheduleCronTaskUid: settings.scheduleCronTaskUid,
+        communityNotifs:  input.communityNotifs  ?? settings.communityNotifs  ?? true,
+        appUpdatesNotifs: input.appUpdatesNotifs ?? settings.appUpdatesNotifs ?? true,
       });
 
+      return { success: true };
+    }),
+
+  /** Update only notification preferences (community / app updates) — no subscription required */
+  updatePreferences: protectedProcedure
+    .input(z.object({
+      communityNotifs:  z.boolean().optional(),
+      appUpdatesNotifs: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const settings = await getNotificationSettings(userId);
+      await upsertNotificationSettings({
+        userId,
+        enabled:              settings?.enabled ?? false,
+        reminderTime:         settings?.reminderTime ?? "09:00",
+        days:                 settings?.days ?? "0,1,2,3,4,5,6",
+        language:             settings?.language ?? "ar",
+        scheduleCronTaskUid:  settings?.scheduleCronTaskUid ?? null,
+        communityNotifs:      input.communityNotifs  ?? settings?.communityNotifs  ?? true,
+        appUpdatesNotifs:     input.appUpdatesNotifs ?? settings?.appUpdatesNotifs ?? true,
+      });
       return { success: true };
     }),
 
@@ -264,7 +308,6 @@ export const notificationsRouter = router({
     } catch (err: unknown) {
       const error = err as { statusCode?: number; message?: string };
       if (error?.statusCode === 410 || error?.statusCode === 404) {
-        // Subscription expired — clean up
         await deletePushSubscription(userId);
       }
       throw new TRPCError({
@@ -273,6 +316,81 @@ export const notificationsRouter = router({
       });
     }
   }),
+
+  /** Admin: get all users who have push subscriptions */
+  adminGetSubscribedUsers: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+    const db = await getDb();
+    if (!db) return [];
+    const { pushSubscriptions } = await import("../../drizzle/schema");
+    const { users } = await import("../../drizzle/schema");
+    const rows = await db
+      .select({
+        userId: pushSubscriptions.userId,
+        name:   users.name,
+        email:  users.email,
+      })
+      .from(pushSubscriptions)
+      .leftJoin(users, eq(users.id, pushSubscriptions.userId));
+    return rows;
+  }),
+
+  /** Admin: send a custom push notification to a specific user */
+  adminSendPush: protectedProcedure
+    .input(z.object({
+      userId:  z.number(),
+      title:   z.string().min(1).max(100),
+      body:    z.string().min(1).max(300),
+      url:     z.string().default("/"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const sub = await getPushSubscriptionByUser(input.userId);
+      if (!sub) throw new TRPCError({ code: "NOT_FOUND", message: "User has no push subscription" });
+
+      const result = await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+        title: input.title,
+        body:  input.body,
+        icon:  "/icons/icon-192.png",
+        url:   input.url,
+      });
+
+      if (result === "error") throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Push failed" });
+      if (result === "expired") {
+        await deletePushSubscription(input.userId);
+        throw new TRPCError({ code: "NOT_FOUND", message: "Subscription expired — user must re-enable notifications" });
+      }
+      return { success: true };
+    }),
+
+  /** Admin: broadcast a push to ALL subscribed users */
+  adminBroadcastPush: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1).max(100),
+      body:  z.string().min(1).max(300),
+      url:   z.string().default("/"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const { pushSubscriptions } = await import("../../drizzle/schema");
+      const subs = await db.select().from(pushSubscriptions);
+
+      let sent = 0, failed = 0;
+      for (const sub of subs) {
+        const result = await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+          title: input.title,
+          body:  input.body,
+          icon:  "/icons/icon-192.png",
+          url:   input.url,
+        });
+        if (result === "ok") sent++;
+        else { failed++; if (result === "expired") await deletePushSubscription(sub.userId); }
+      }
+      return { sent, failed, total: subs.length };
+    }),
 });
 
 /** Send a push notification to a single subscription (used by the scheduled handler) */

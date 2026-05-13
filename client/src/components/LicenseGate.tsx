@@ -5,7 +5,7 @@
 //
 // Supports auto-verification via URL: ?key=PRIME-XXXX-XXXX
 // ============================================================
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
 
 const NAVY = '#1B2E5E';
@@ -21,6 +21,8 @@ interface StoredLicense {
   customerName: string;
   customerEmail: string;
   verifiedAt: string;
+  plan: string;
+  expiresAt: string | null;
 }
 
 interface LicenseGateProps {
@@ -28,12 +30,13 @@ interface LicenseGateProps {
 }
 
 export function LicenseGate({ children }: LicenseGateProps) {
-  const [licenseKey, setLicenseKey] = useState('');
-  const [isVerified, setIsVerified] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [licenseKey, setLicenseKey]   = useState('');
+  const [isVerified, setIsVerified]   = useState(false);
+  const [storedLicense, setStoredLicense] = useState<StoredLicense | null>(null);
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(true);
   const [autoVerifying, setAutoVerifying] = useState(false);
-
+  const [popupDismissed, setPopupDismissed] = useState<boolean>(false);
   const verifyMutation = trpc.license.verify.useMutation();
 
   const doVerify = async (key: string): Promise<boolean> => {
@@ -42,13 +45,15 @@ export function LicenseGate({ children }: LicenseGateProps) {
       if (result.success) {
         const license: StoredLicense = {
           key: key.trim(),
-          customerName: result.customerName || '',
+          customerName:  result.customerName  || '',
           customerEmail: result.customerEmail || '',
-          verifiedAt: new Date().toISOString(),
+          verifiedAt:    new Date().toISOString(),
+          plan:          result.plan ?? 'lifetime',
+          expiresAt:     result.expiresAt ? (result.expiresAt instanceof Date ? result.expiresAt.toISOString() : String(result.expiresAt)) : null,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(license));
+        setStoredLicense(license);
         setIsVerified(true);
-        // Clean the key from the URL without reloading
         const url = new URL(window.location.href);
         url.searchParams.delete('key');
         window.history.replaceState({}, '', url.toString());
@@ -73,9 +78,20 @@ export function LicenseGate({ children }: LicenseGateProps) {
         if (stored) {
           const parsed: StoredLicense = JSON.parse(stored);
           if (parsed.key && parsed.verifiedAt) {
-            setIsVerified(true);
-            setLoading(false);
-            return;
+            // Check if expired locally
+            if (parsed.expiresAt && new Date(parsed.expiresAt) < new Date()) {
+              localStorage.removeItem(STORAGE_KEY);
+            } else {
+              setStoredLicense(parsed);
+              setIsVerified(true);
+              // Initialize popup dismissed state from localStorage
+              try {
+                const popupKey = `primefit_trial_popup_${parsed.key}`;
+                setPopupDismissed(localStorage.getItem(popupKey) === 'dismissed');
+              } catch {}
+              setLoading(false);
+              return;
+            }
           }
         }
       } catch {
@@ -125,12 +141,138 @@ export function LicenseGate({ children }: LicenseGateProps) {
     );
   }
 
-  // Already verified — show the app
+  // Already verified — show the app with trial popup + renewal banner
   if (isVerified) {
-    return <>{children}</>;
+    const expiresAt  = storedLicense?.expiresAt ? new Date(storedLicense.expiresAt) : null;
+    const daysLeft   = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86400_000) : null;
+    const isTrial    = daysLeft !== null && daysLeft <= 7;
+    const showBanner = isTrial && daysLeft !== null && daysLeft > 0;
+    const planLabels: Record<string, string> = { monthly: 'شهري', quarterly: 'ربع سنوي', yearly: 'سنوي', lifetime: 'دائم' };
+    const planLabel  = planLabels[storedLicense?.plan ?? 'lifetime'] ?? 'دائم';
+
+    const POPUP_KEY  = `primefit_trial_popup_${storedLicense?.key ?? 'x'}`;
+    const dismissPopup = () => {
+      try { localStorage.setItem(POPUP_KEY, 'dismissed'); } catch {}
+      setPopupDismissed(true);
+    };
+    const showPopup = isTrial && !popupDismissed && expiresAt !== null;
+
+    return (
+      <>
+        {/* Trial awareness popup — shown once */}
+        {showPopup && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 10000,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px', fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+          }}>
+            <div dir="rtl" style={{
+              background: '#111827', borderRadius: 24, padding: '28px 24px',
+              maxWidth: 360, width: '100%',
+              border: '1.5px solid rgba(255,215,0,0.3)',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: '50%',
+                background: 'rgba(255,215,0,0.1)',
+                border: '2px solid rgba(255,215,0,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 36, margin: '0 auto 16px',
+              }}>⏳</div>
+
+              <h2 style={{ color: '#FFD700', fontSize: 18, fontWeight: 900, margin: '0 0 10px' }}>
+                تجربتك المجانية نشطة!
+              </h2>
+              <p style={{ color: '#F9FAFB', fontSize: 14, fontWeight: 700, margin: '0 0 8px' }}>
+                لديك{' '}
+                <span style={{ color: '#00E5FF', fontSize: 22 }}>{daysLeft}</span>
+                {' '}{daysLeft === 1 ? 'يوم' : 'أيام'} مجانية
+              </p>
+              <p style={{ color: '#9CA3AF', fontSize: 12, margin: '0 0 4px', lineHeight: 1.6 }}>
+                تنتهي تجربتك في{' '}
+                <strong style={{ color: '#F9FAFB' }}>
+                  {expiresAt?.toLocaleDateString('ar-KW', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                  })}
+                </strong>
+              </p>
+              <p style={{ color: '#9CA3AF', fontSize: 12, margin: '0 0 20px', lineHeight: 1.6 }}>
+                بعد انتهاء التجربة ستحتاج إلى الاشتراك للمتابعة.
+                استمتعي بجميع الميزات خلال هذه الفترة! 💪
+              </p>
+
+              <div style={{
+                background: '#1F2937', borderRadius: 14, padding: '12px 16px',
+                marginBottom: 20, textAlign: 'right',
+              }}>
+                {['🤖 مدرب AI شخصي', '📊 تحليلات متقدمة', '🏆 تحديات أسبوعية', '👥 مجتمع مميز'].map(f => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}>
+                    <span style={{ color: '#22C55E', fontSize: 13, flexShrink: 0 }}>✓</span>
+                    <span style={{ color: '#F9FAFB', fontSize: 12 }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={dismissPopup}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                  color: '#0D1B2A', border: 'none', borderRadius: 14,
+                  padding: '14px', fontSize: 15, fontWeight: 900,
+                  cursor: 'pointer', fontFamily: 'Cairo, sans-serif',
+                  marginBottom: 10,
+                }}
+              >
+                🚀 فهمت، لنبدأ!
+              </button>
+              <p style={{ color: '#4B5563', fontSize: 10, margin: 0 }}>
+                سيظهر هذا الإشعار مرة واحدة فقط
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Expiry banner — shown after popup dismissed */}
+        {showBanner && popupDismissed && (
+          <div dir="rtl" style={{
+            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+            background: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#F59E0B',
+            color: 'white', padding: '10px 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            fontFamily: 'Cairo, sans-serif', fontSize: 13, fontWeight: 700,
+          }}>
+            <span>⚠️ ينتهي اشتراكك خلال {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'}</span>
+            <a href={PRODUCT_URL} target="_blank" rel="noopener noreferrer" style={{
+              background: 'white',
+              color: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#D97706',
+              borderRadius: 8, padding: '5px 14px',
+              fontSize: 12, fontWeight: 900, textDecoration: 'none',
+            }}>🔄 جدد</a>
+          </div>
+        )}
+
+        <div style={{ paddingTop: showBanner && popupDismissed ? 44 : 0 }}>
+          {children}
+        </div>
+
+        {storedLicense && (
+          <div style={{
+            position: 'fixed', bottom: 80, left: 12, zIndex: 100,
+            background: 'rgba(27,46,94,0.85)', backdropFilter: 'blur(6px)',
+            borderRadius: 20, padding: '4px 10px',
+            fontSize: 10, fontWeight: 700, color: '#A8D4E8',
+            fontFamily: 'Cairo, sans-serif', direction: 'rtl', pointerEvents: 'none',
+          }}>
+            {planLabel} {expiresAt ? `· ${expiresAt.toLocaleDateString('ar-SA')}` : '· ∞'}
+          </div>
+        )}
+      </>
+    );
   }
 
-  // License entry screen
+    // License entry screen
   return (
     <div dir="rtl" style={{
       minHeight: '100vh',
@@ -256,24 +398,6 @@ export function LicenseGate({ children }: LicenseGateProps) {
           <p style={{ margin: '0 0 8px', color: '#7A9BB5', fontSize: 12 }}>
             لا تملك مفتاح ترخيص؟
           </p>
-          <a
-            href="/pricing"
-            style={{
-              display: 'inline-block',
-              background: `linear-gradient(135deg, ${NAVY}, #0F1E3D)`,
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: 10,
-              padding: '10px 20px',
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: 'Cairo, sans-serif',
-              marginBottom: 8,
-            }}
-          >
-            💎 عرض خطط الاشتراك
-          </a>
-          <br />
           <a
             href={PRODUCT_URL}
             target="_blank"

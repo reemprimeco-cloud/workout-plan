@@ -217,6 +217,8 @@ export async function upsertNotificationSettings(data: InsertNotificationSetting
       days: data.days,
       language: data.language,
       scheduleCronTaskUid: data.scheduleCronTaskUid,
+      communityNotifs: data.communityNotifs,
+      appUpdatesNotifs: data.appUpdatesNotifs,
     },
   });
 }
