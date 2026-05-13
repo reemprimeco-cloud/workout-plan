@@ -125,7 +125,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'داخل الفخذ والأرداف', defaultSets: 3, defaultReps: '15', defaultWeight: '8 كجم',
     restSeconds: 60, image: IMG.glutes, tip: 'قدماك متباعدتان وأصابعهما للخارج، أمسكي دمبلاً واحداً بكلتي يديك.',
     tipEn: 'Feet wide apart, toes pointing out, hold one dumbbell with both hands.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=qJwFMBFDFSg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=kjlfpqXnyL8',
     category: 'weights', sessionTypes: ['lower_body'],
   },
   {
@@ -165,7 +165,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'عضلة السمانة', defaultSets: 3, defaultReps: '20', defaultWeight: 'وزن الجسم',
     restSeconds: 30, image: IMG.lunges, tip: 'ارتفعي على أصابع قدميك، اثبتي ثانية، انزلي ببطء.',
     tipEn: 'Rise on toes, hold for one second, lower slowly.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=-M4-G8p1fCI',
+    youtubeUrl: 'https://www.youtube.com/watch?v=baEXLy09Ncc',
     category: 'weights', sessionTypes: ['lower_body', 'full_body'],
   },
 
@@ -175,7 +175,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الرقبة', defaultSets: 1, defaultReps: '10 لكل اتجاه', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.warmup, tip: 'ببطء وتحكم، لإرخاء عضلات الرقبة.',
     tipEn: 'Slow and controlled, loosen neck muscles.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=3lzLSRBMVBM',
+    youtubeUrl: 'https://www.youtube.com/watch?v=2M80Mn0VBPw',
     category: 'cardio', sessionTypes: ['warm_up'],
   },
   {
@@ -183,7 +183,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكتف', defaultSets: 1, defaultReps: '15 للأمام + 15 للخلف', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.warmup, tip: 'لتدفئة مفاصل الكتف.',
     tipEn: 'Warm up shoulder joints.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=0OvkjNMBFBE',
+    youtubeUrl: 'https://www.youtube.com/watch?v=140RTNMciH8',
     category: 'cardio', sessionTypes: ['warm_up'],
   },
   {
@@ -191,7 +191,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الورك', defaultSets: 1, defaultReps: '10 لكل اتجاه', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.warmup, tip: 'لإرخاء مفاصل الورك قبل التمرين.',
     tipEn: 'Loosen hip joints before workout.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=1OgRFiRFMlI',
+    youtubeUrl: 'https://www.youtube.com/watch?v=JYqLwajOGjI',
     category: 'cardio', sessionTypes: ['warm_up'],
   },
   {
@@ -199,7 +199,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الورك والفخذ', defaultSets: 1, defaultReps: '15 لكل ساق', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.warmup, tip: 'أمسكي الحائط للتوازن، أرجحي الساق للأمام والخلف.',
     tipEn: 'Hold a wall for balance, swing leg forward and back.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=6jOHKFEVIYo',
+    youtubeUrl: 'https://www.youtube.com/watch?v=naW8u72lOzI',
     category: 'cardio', sessionTypes: ['warm_up'],
   },
   {
@@ -215,7 +215,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الجسم كله', defaultSets: 2, defaultReps: '30 ثانية', defaultWeight: 'وزن الجسم',
     restSeconds: 15, image: IMG.warmup, tip: 'ارفعي الركبتين إلى مستوى الورك، ابقي خفيفة على قدميك.',
     tipEn: 'Drive knees up to hip height, stay light on feet.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=8opcQdC-V-U',
+    youtubeUrl: 'https://www.youtube.com/watch?v=QgClj9UxWcQ',
     category: 'cardio', sessionTypes: ['warm_up', 'quick_workouts'],
   },
 
@@ -225,7 +225,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الفخذ الأمامي', defaultSets: 1, defaultReps: '30 ثانية لكل ساق', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.lunges, tip: 'أمسكي الكاحل، قفي منتصبة، أحسي بالشد في مقدمة الفخذ.',
     tipEn: 'Hold ankle, stand tall, feel stretch in front of thigh.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=OB-4BHLlHbk',
+    youtubeUrl: 'https://www.youtube.com/watch?v=2hKbghN2fUE',
     category: 'cardio', sessionTypes: ['stretching'],
   },
   {
@@ -233,7 +233,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الفخذ الخلفي', defaultSets: 1, defaultReps: '30 ثانية لكل ساق', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.deadlift, tip: 'اجلسي على الأرض، مدي ساقاً واحدة، امتدي نحو القدم.',
     tipEn: 'Sit on floor, extend one leg, reach toward foot.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=YUFWmqCCbhA',
+    youtubeUrl: 'https://www.youtube.com/watch?v=wr_8aak4Wbc',
     category: 'cardio', sessionTypes: ['stretching'],
   },
   {
@@ -241,7 +241,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الورك الأمامي', defaultSets: 1, defaultReps: '30 ثانية لكل جهة', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.lunges, tip: 'وضعية الطعنة، ادفعي الورك للأمام بلطف.',
     tipEn: 'Lunge position, push hips forward gently.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=YqF8GBdMRbA',
+    youtubeUrl: 'https://www.youtube.com/watch?v=iZ1eZBY4fwM',
     category: 'cardio', sessionTypes: ['stretching'],
   },
   {
@@ -249,7 +249,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الصدر والكتف', defaultSets: 1, defaultReps: '30 ثانية', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.chest, tip: 'شبكي يديك خلف ظهرك، افتحي الصدر للأعلى.',
     tipEn: 'Clasp hands behind back, open chest upward.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=_-4Fj4-XMHU',
+    youtubeUrl: 'https://www.youtube.com/watch?v=M850sCj9LHQ',
     category: 'cardio', sessionTypes: ['stretching'],
   },
   {
@@ -257,7 +257,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكتف', defaultSets: 1, defaultReps: '30 ثانية لكل ذراع', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.shoulder, tip: 'اسحبي الذراع عبر الصدر، أحسي بالشد في الكتف.',
     tipEn: 'Pull arm across chest, feel stretch in shoulder.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=tJBLFXkxpxU',
+    youtubeUrl: 'https://www.youtube.com/watch?v=-1K0m5ywRcY',
     category: 'cardio', sessionTypes: ['stretching'],
   },
   {
@@ -291,7 +291,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '12 لكل ساق', defaultWeight: 'وزن الجسم',
     restSeconds: 45, image: IMG.lunges, tip: 'خطوي للخلف، انزلي الركبة نحو الأرض، أبقي الجذع منتصباً.',
     tipEn: 'Step back, lower knee toward floor, keep torso upright.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=xrjMxOZ5HLM',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R-g5yPNYv2k',
     category: 'weights', sessionTypes: ['home_workouts'],
   },
   {
@@ -325,7 +325,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكور', defaultSets: 1, defaultReps: '100 ضربة', defaultWeight: 'وزن الجسم',
     restSeconds: 30, image: IMG.abs, tip: 'الساقان بزاوية 45°، حركات الذراعين 5 داخل + 5 خارج، تنفس إيقاعي.',
     tipEn: 'Legs at 45°, pump arms 5 in + 5 out, breathe rhythmically.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=6ePNMDNYMCc',
+    youtubeUrl: 'https://www.youtube.com/watch?v=9mlone4NObI',
     category: 'core', sessionTypes: ['pilates'],
   },
   {
@@ -333,7 +333,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكور والعمود الفقري', defaultSets: 3, defaultReps: '8', defaultWeight: 'وزن الجسم',
     restSeconds: 30, image: IMG.abs, tip: 'قشري العمود الفقري عن الأرض ببطء، تحكمي في النزول.',
     tipEn: 'Peel spine off floor slowly, control the descent.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=OMbGNpxz3Bs',
+    youtubeUrl: 'https://www.youtube.com/watch?v=PGnibcCcAUE',
     category: 'core', sessionTypes: ['pilates'],
   },
   {
@@ -341,7 +341,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكور والفخذ', defaultSets: 3, defaultReps: '10 لكل ساق', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.abs, tip: 'بدّلي الساقين، أبقي الكتفين مرفوعتين عن الحصيرة.',
     tipEn: 'Alternate legs, keep shoulders off mat.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=VYn2KPzFjBk',
+    youtubeUrl: 'https://www.youtube.com/watch?v=Ad4lgW4ieAM',
     category: 'core', sessionTypes: ['pilates'],
   },
   {
@@ -349,7 +349,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكور', defaultSets: 3, defaultReps: '10', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.abs, tip: 'شهيق مع المد، زفير مع السحب، أبقي أسفل الظهر مسطحاً.',
     tipEn: 'Inhale extend, exhale pull in, keep lower back flat.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=Ks6KGvqpJXc',
+    youtubeUrl: 'https://www.youtube.com/watch?v=fuwzt4d7FuY',
     category: 'core', sessionTypes: ['pilates'],
   },
   {
@@ -357,7 +357,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'العمود الفقري والكور', defaultSets: 3, defaultReps: '8', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.plank, tip: 'اجلسي منتصبة، امتدي للأمام، اسحبي البطن للداخل.',
     tipEn: 'Sit tall, reach forward, scoop belly in.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=0OvkjNMBFBE',
+    youtubeUrl: 'https://www.youtube.com/watch?v=140RTNMciH8',
     category: 'core', sessionTypes: ['pilates'],
   },
   {
@@ -365,7 +365,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الظهر والكور', defaultSets: 3, defaultReps: '8', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.plank, tip: 'استلقي على بطنك، ارفعي الصدر باستخدام عضلات الظهر.',
     tipEn: 'Lie face down, lift chest using back muscles.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=Ue0UkQfpJuA',
+    youtubeUrl: 'https://www.youtube.com/watch?v=lslSedpC23Y',
     category: 'core', sessionTypes: ['pilates'],
   },
 
@@ -375,7 +375,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'العمود الفقري الصدري', defaultSets: 2, defaultReps: '10 لكل جهة', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.plank, tip: 'على الأربع، أدوري العمود الفقري العلوي، تابعي اليد بعينيك.',
     tipEn: 'On all fours, rotate upper spine, follow hand with eyes.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=5xbFBDPuJBk',
+    youtubeUrl: 'https://www.youtube.com/watch?v=hhvHpsxKjXw',
     category: 'cardio', sessionTypes: ['mobility'],
   },
   {
@@ -383,7 +383,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الورك', defaultSets: 2, defaultReps: '60 ثانية لكل جهة', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.glutes, tip: 'اجلسي مع كلتا الساقين بزاوية 90°، انحني فوق الساق الأمامية.',
     tipEn: 'Sit with both legs at 90°, lean over front leg.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=v_ZK74OiKMY',
+    youtubeUrl: 'https://www.youtube.com/watch?v=t4Zz6-aG8Iw',
     category: 'cardio', sessionTypes: ['mobility'],
   },
   {
@@ -391,7 +391,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الكاحل', defaultSets: 2, defaultReps: '10 لكل اتجاه', defaultWeight: 'وزن الجسم',
     restSeconds: 0, image: IMG.lunges, tip: 'لتحسين مرونة الكاحل والوقاية من الإصابات.',
     tipEn: 'Improve ankle mobility and prevent injury.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=oFqVlMNxMlQ',
+    youtubeUrl: 'https://www.youtube.com/watch?v=mzTQGYGI0Ng',
     category: 'cardio', sessionTypes: ['mobility'],
   },
   {
@@ -407,7 +407,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الجسم كله', defaultSets: 2, defaultReps: '5 لكل جهة', defaultWeight: 'وزن الجسم',
     restSeconds: 20, image: IMG.lunges, tip: 'يجمع إطالة الورك والصدر والفخذ الخلفي.',
     tipEn: 'Combines hip flexor, thoracic, and hamstring stretch.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=wJxyNFMSCxg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=-CiWQ2IvY34',
     category: 'cardio', sessionTypes: ['mobility'],
   },
   {
@@ -415,7 +415,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الورك والأرداف', defaultSets: 1, defaultReps: '60 ثانية لكل جهة', defaultWeight: 'وزن الجسم',
     restSeconds: 10, image: IMG.glute2, tip: 'فتح عميق للورك، تنفسي واسترخي في الإطالة.',
     tipEn: 'Deep hip opener, breathe and relax into the stretch.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=24tib-iIQFE',
+    youtubeUrl: 'https://www.youtube.com/watch?v=0_zPqA65Nok',
     category: 'cardio', sessionTypes: ['mobility'],
   },
 
@@ -425,7 +425,7 @@ export const masterExercises: ExerciseTemplate[] = [
     muscleGroup: 'الجسم كله', defaultSets: 3, defaultReps: '10', defaultWeight: 'وزن الجسم',
     restSeconds: 30, image: IMG.warmup, tip: 'حركة انفجارية لكامل الجسم، يمكن التعديل بالخطو بدلاً من القفز.',
     tipEn: 'Full body explosive movement, modify by stepping instead of jumping.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=818SFMIxjXk',
+    youtubeUrl: 'https://www.youtube.com/watch?v=BqWQkblauo8',
     category: 'cardio', sessionTypes: ['quick_workouts'],
   },
   {
@@ -574,7 +574,7 @@ export const upperBodyExercises = [
     muscleGroup: 'عضلات البطن الجانبية', defaultSets: 3, defaultReps: '25 ثانية لكل جهة', defaultWeight: 'وزن الجسم',
     restSeconds: 30, image: IMG.plank, tip: 'جسمك خط مستقيم من الرأس للقدمين، ركزي على شد الخصر.',
     tipEn: 'Body in straight line from head to feet, focus on squeezing the waist.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=_6vjo5yFo1U',
+    youtubeUrl: 'https://www.youtube.com/watch?v=iNbH7_edNI8',
     category: 'core', sessionTypes: ['core_cardio', 'chest_shoulders'],
   },
   {
@@ -632,7 +632,7 @@ export const upperBodyExercises = [
     restSeconds: 0, image: IMG.rower,
     tip: 'التجديف يعمل على 86% من عضلات الجسم — مثالي للإحماء الشامل. ابدئي بـ 10–15 دقيقة بإيقاع منتظم.',
     tipEn: 'Rowing engages 86% of body muscles — ideal for full warm-up. Start with 10–15 min at steady pace.',
-    youtubeUrl: 'https://www.youtube.com/watch?v=H0r_9EBTmgk',
+    youtubeUrl: 'https://www.youtube.com/watch?v=J1nf2Zfbazs',
     category: 'cardio', sessionTypes: ['active_rest', 'core_cardio', 'full_body', 'lower_body', 'upper_arms', 'chest_shoulders'],
   },
 ];

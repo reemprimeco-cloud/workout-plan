@@ -122,11 +122,11 @@
 - [x] Add floating action button (FAB) for new post in Community feed tab
 
 ## New Workout Category Cards
-- [ ] Add 6 new session types to exercises.ts (warm_up, stretching, home_workouts, pilates, mobility, quick_workouts)
-- [ ] Add exercise data for each new category (Arabic + English names)
-- [ ] Add new cards to CheckInPanel grid using exact same card style
-- [ ] Wire new session types into ActiveSession for exercise list, timer, progress tracking
-- [ ] Bilingual support: Arabic + English for all new content
+- [x] Add 6 new session types to exercises.ts (warm_up, stretching, home_workouts, pilates, mobility, quick_workouts)
+- [x] Add exercise data for each new category (Arabic + English names)
+- [x] Add new cards to CheckInPanel grid using exact same card style
+- [x] Wire new session types into ActiveSession for exercise list, timer, progress tracking
+- [x] Bilingual support: Arabic + English for all new content
 
 ## Icon & Layout Update
 - [x] Generate navy blue outline SVG icons for all 14 workout category cards
