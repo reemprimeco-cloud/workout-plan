@@ -439,9 +439,9 @@ export default function AdminPanel() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
-                      <tr style={{ background: '#F0F4F8' }}>
+                      <tr style={{ background: NAVY }}>
                         {[t('colCode', lang), t('colCustomer', lang), t('colEmail', lang), t('colNote', lang), t('colStatus', lang), t('colExpiry', lang), t('colUsed', lang), t('colCreated', lang), t('colActions', lang)].map(h => (
-                          <th key={h} style={{ padding: '10px 12px', textAlign: isRTL ? 'right' : 'left', color: NAVY, fontWeight: 700, fontSize: 12, borderBottom: `2px solid ${SKY_LIGHT}`, whiteSpace: 'nowrap' }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 12px', textAlign: isRTL ? 'right' : 'left', color: 'white', fontWeight: 700, fontSize: 12, borderBottom: `2px solid ${SKY_LIGHT}`, whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
