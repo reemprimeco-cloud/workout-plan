@@ -12,7 +12,10 @@ import {
   listBroadcasts,
   getAllLicensedCustomerEmails,
   listAccessCodes,
+  getDb,
 } from "../db";
+import { subscriptions } from "../../drizzle/schema";
+import { desc } from "drizzle-orm";
 import { sendBroadcastEmail } from "../_core/email";
 import { storagePut } from "../storage";
 
@@ -114,6 +117,19 @@ export const adminRouter = router({
       });
       return { success: true };
     }),
+
+  // ── Subscriptions ─────────────────────────────────────────────────────────
+  listSubscriptions: protectedProcedure.query(async ({ ctx }) => {
+    requireAdmin(ctx.user.role);
+    const database = await getDb();
+    if (!database) return [];
+    const rows = await database
+      .select()
+      .from(subscriptions)
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(200);
+    return rows;
+  }),
 
   sendBroadcast: protectedProcedure
     .input(

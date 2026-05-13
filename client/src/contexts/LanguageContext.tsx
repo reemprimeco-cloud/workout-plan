@@ -324,7 +324,13 @@ const LanguageContext = createContext<LanguageContextType>({
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
-    return (localStorage.getItem('gym_lang') as Lang) || 'en';
+    // If user has previously chosen a language, respect that choice
+    const saved = localStorage.getItem('gym_lang') as Lang | null;
+    if (saved === 'ar' || saved === 'en') return saved;
+    // Otherwise auto-detect from device/browser language
+    const deviceLang = navigator.language || (navigator as any).userLanguage || '';
+    // Arabic locales start with 'ar'
+    return deviceLang.toLowerCase().startsWith('ar') ? 'ar' : 'en';
   });
 
   const setLang = (l: Lang) => {

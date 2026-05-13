@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
-import { getDb } from "../db";
-import { subscriptions, billingHistory } from "../../drizzle/schema";
+import { getDb, verifyAccessCode } from "../db";
+import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { createInvoice, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 
@@ -55,22 +55,117 @@ export const subscriptionRouter = router({
       .limit(1);
 
     if (rows.length === 0) {
-      return { plan: "free", status: "active", expiresAt: null };
+      return { plan: "free", status: "active", expiresAt: null, licenseKey: null };
     }
 
     const sub = rows[0];
 
     // Auto-expire if past expiresAt
-    if (sub.expiresAt && sub.expiresAt < new Date() && sub.status === "active") {
+    if (sub.expiresAt && sub.expiresAt < new Date() && (sub.status === "active" || sub.status === "trialing")) {
       await database
         .update(subscriptions)
         .set({ status: "expired" })
         .where(eq(subscriptions.userId, userId));
+
+      // Deactivate linked license key if this was a free trial
+      if (sub.licenseKey && sub.plan === "free") {
+        await database
+          .update(accessCodes)
+          .set({ isActive: false })
+          .where(eq(accessCodes.code, sub.licenseKey));
+        console.log(`[Subscription] Auto-deactivated free trial key ${sub.licenseKey} for user ${userId}`);
+      }
+
       return { ...sub, status: "expired" };
     }
 
     return sub;
   }),
+
+  // Activate a free trial using a PRIME-XXXX-XXXX license key
+  activateFreeTrial: protectedProcedure
+    .input(z.object({ licenseKey: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const userId = ctx.user.openId;
+      const key = input.licenseKey.trim().toUpperCase();
+
+      // Verify the license key is valid and active
+      const codeRow = await verifyAccessCode(key);
+      if (!codeRow) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid or expired license key",
+        });
+      }
+
+      // Check if user already has an active paid subscription
+      const existing = await database
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .limit(1);
+
+      if (existing.length > 0) {
+        const sub = existing[0];
+        if (sub.status === "active" && sub.plan !== "free") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You already have an active paid subscription",
+          });
+        }
+        if (sub.status === "trialing") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You already have an active free trial",
+          });
+        }
+      }
+
+      // Set free trial expiry: use key's expiresAt if set, otherwise 30 days
+      const now = new Date();
+      let trialExpiresAt: Date;
+      if (codeRow.expiresAt) {
+        trialExpiresAt = new Date(codeRow.expiresAt);
+      } else {
+        trialExpiresAt = new Date(now);
+        trialExpiresAt.setDate(trialExpiresAt.getDate() + 30);
+      }
+
+      if (existing.length > 0) {
+        await database
+          .update(subscriptions)
+          .set({
+            plan: "free",
+            status: "trialing",
+            startsAt: now,
+            expiresAt: trialExpiresAt,
+            licenseKey: key,
+            updatedAt: now,
+          })
+          .where(eq(subscriptions.userId, userId));
+      } else {
+        await database.insert(subscriptions).values({
+          userId,
+          plan: "free",
+          status: "trialing",
+          period: "monthly",
+          startsAt: now,
+          expiresAt: trialExpiresAt,
+          licenseKey: key,
+        });
+      }
+
+      console.log(`[Subscription] Free trial activated for user ${userId} with key ${key}, expires ${trialExpiresAt.toISOString()}`);
+
+      return {
+        success: true,
+        expiresAt: trialExpiresAt,
+        message: "Free trial activated successfully",
+      };
+    }),
 
   // Create a checkout URL for a plan
   createCheckout: protectedProcedure

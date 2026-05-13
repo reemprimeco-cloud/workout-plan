@@ -1,11 +1,14 @@
 // ProfilePanel - Smart editable profile with BMI, personalized plan, language switcher
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { trpc } from '@/lib/trpc';
+import { useLocation } from 'wouter';
+import { useAuth } from '@/_core/hooks/useAuth';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -151,10 +154,160 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
+
+// ── My Subscription Card ──────────────────────────────────────────────────
+function MySubscriptionCard() {
+  const { lang } = useLanguage();
+  const [, navigate] = useLocation();
+  const subQuery = trpc.subscription.getStatus.useQuery(undefined, { retry: false });
+  const activateMutation = trpc.subscription.activateFreeTrial.useMutation({
+    onSuccess: () => subQuery.refetch(),
+  });
+  const [keyInput, setKeyInput] = useState('');
+  const [showInput, setShowInput] = useState(false);
+  const [errMsg, setErrMsg] = useState('');
+
+  const sub = subQuery.data;
+  const isTrialing = sub?.status === 'trialing';
+  const isActive = sub?.status === 'active' && sub?.plan !== 'free';
+  const isExpired = sub?.status === 'expired';
+
+  const planLabel: Record<string, Record<'ar'|'en', string>> = {
+    free: { ar: 'مجاني', en: 'Free' },
+    prime_plus: { ar: 'برايم بلس', en: 'Prime Plus' },
+    prime_pro: { ar: 'برايم برو', en: 'Prime Pro' },
+  };
+  const statusLabel: Record<string, Record<'ar'|'en', string>> = {
+    active: { ar: '✅ نشط', en: '✅ Active' },
+    trialing: { ar: '🔵 تجريبي', en: '🔵 Free Trial' },
+    expired: { ar: '⏰ منتهي', en: '⏰ Expired' },
+    cancelled: { ar: '❌ ملغي', en: '❌ Cancelled' },
+    pending: { ar: '⏳ معلق', en: '⏳ Pending' },
+  };
+  const statusColor: Record<string, string> = {
+    active: '#16A34A', trialing: '#2563EB', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706',
+  };
+
+  const handleActivate = () => {
+    setErrMsg('');
+    if (!keyInput.trim()) { setErrMsg(lang === 'ar' ? 'يرجى إدخال مفتاح الترخيص' : 'Please enter a license key'); return; }
+    activateMutation.mutate(
+      { licenseKey: keyInput.trim() },
+      {
+        onError: (err: any) => setErrMsg(err.message),
+        onSuccess: () => { setShowInput(false); setKeyInput(''); },
+      }
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-md p-5">
+      <h3 className="font-bold text-gray-800 mb-3">💳 {lang === 'ar' ? 'اشتراكي' : 'My Subscription'}</h3>
+      {subQuery.isLoading ? (
+        <p className="text-sm text-gray-400">⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">{lang === 'ar' ? 'الخطة' : 'Plan'}</span>
+            <span className="font-bold text-gray-800">
+              {planLabel[sub?.plan ?? 'free']?.[lang] ?? (sub?.plan ?? 'Free')}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">{lang === 'ar' ? 'الحالة' : 'Status'}</span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold"
+              style={{ background: `${statusColor[sub?.status ?? 'active']}18`, color: statusColor[sub?.status ?? 'active'] }}>
+              {statusLabel[sub?.status ?? 'active']?.[lang] ?? sub?.status ?? 'Active'}
+            </span>
+          </div>
+          {sub?.expiresAt && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</span>
+              <span className="text-sm font-semibold text-gray-700">
+                {new Date(sub.expiresAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB')}
+              </span>
+            </div>
+          )}
+          {sub?.licenseKey && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</span>
+              <span className="font-mono text-xs text-gray-600">{sub.licenseKey}</span>
+            </div>
+          )}
+          {/* Activate free trial section */}
+          {!isActive && !isTrialing && (
+            <div className="pt-2 border-t border-gray-100">
+              {!showInput ? (
+                <button
+                  onClick={() => setShowInput(true)}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
+                  style={{ background: '#1B2E5E', color: 'white' }}
+                >
+                  🔑 {lang === 'ar' ? 'تفعيل بمفتاح ترخيص مجاني' : 'Activate with Free License Key'}
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={keyInput}
+                    onChange={e => setKeyInput(e.target.value.toUpperCase())}
+                    placeholder="PRIME-XXXX-XXXX"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:border-[#1B2E5E] outline-none"
+                    style={{ direction: 'ltr' }}
+                  />
+                  {errMsg && <p className="text-xs text-red-500">{errMsg}</p>}
+                  <div className="flex gap-2">
+                    <button onClick={() => { setShowInput(false); setKeyInput(''); setErrMsg(''); }}
+                      className="flex-1 py-2 rounded-xl border-2 border-gray-200 text-gray-600 text-sm font-semibold">
+                      {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                    </button>
+                    <button onClick={handleActivate} disabled={activateMutation.isPending}
+                      className="flex-1 py-2 rounded-xl text-sm font-bold text-white"
+                      style={{ background: activateMutation.isPending ? '#94A3B8' : '#1B2E5E' }}>
+                      {activateMutation.isPending ? '⏳' : (lang === 'ar' ? '✅ تفعيل' : '✅ Activate')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {isExpired && (
+            <p className="text-xs text-orange-500 pt-1">
+              {lang === 'ar' ? '⚠️ انتهت صلاحية اشتراكك. يمكنك إعادة استخدام مفتاح الترخيص بعد الشراء.' : '⚠️ Your subscription has expired. You can reuse your license key after purchasing a plan.'}
+            </p>
+          )}
+          {/* Renew / Upgrade CTA */}
+          {(isExpired || (!isActive && !isTrialing)) && (
+            <button
+              onClick={() => navigate('/pricing')}
+              className="w-full py-2.5 rounded-xl text-sm font-bold mt-2 transition-all"
+              style={{ background: 'linear-gradient(135deg, #E05A00, #FF8C42)', color: 'white' }}
+            >
+              💎 {lang === 'ar' ? 'عرض خطط الاشتراك' : 'View Subscription Plans'}
+            </button>
+          )}
+          {isActive && (
+            <div className="pt-2 border-t border-gray-100">
+              <button
+                onClick={() => navigate('/pricing')}
+                className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
+                style={{ background: '#F0F4F8', color: '#1B2E5E' }}
+              >
+                🔄 {lang === 'ar' ? 'تجديد أو ترقية الاشتراك' : 'Renew or Upgrade Plan'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
   const { lang, setLang, t, isRTL } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ ...profile });
@@ -164,6 +317,47 @@ export function ProfilePanel() {
   // Inline target weight editing
   const [editingTarget, setEditingTarget] = useState(false);
   const [inlineTarget, setInlineTarget] = useState(profile.targetWeight.toString());
+  // Avatar upload
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const profileQuery = trpc.userProfile.getProfile.useQuery(undefined, { enabled: isAuthenticated, retry: false });
+  const uploadAvatarMutation = trpc.userProfile.uploadAvatar.useMutation({
+    onSuccess: (data) => {
+      setAvatarPreview(data.url);
+      profileQuery.refetch();
+    },
+  });
+  const updateNameMutation = trpc.userProfile.updateDisplayName.useMutation();
+  // Sync avatar from DB on load
+  useEffect(() => {
+    if (profileQuery.data?.avatarUrl) {
+      setAvatarPreview(profileQuery.data.avatarUrl);
+    }
+  }, [profileQuery.data?.avatarUrl]);
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert(lang === 'ar' ? 'حجم الصورة كبير جداً (الحد 5 ميجابايت)' : 'Image too large (max 5 MB)');
+      return;
+    }
+    setAvatarUploading(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      setAvatarPreview(base64); // optimistic preview
+      try {
+        await uploadAvatarMutation.mutateAsync({ base64, mimeType: file.type });
+      } catch (err: any) {
+        alert(err.message ?? 'Upload failed');
+        setAvatarPreview(profileQuery.data?.avatarUrl ?? null);
+      } finally {
+        setAvatarUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
   const bmiCat = getBMICategory(plan.bmi, lang);
@@ -183,6 +377,10 @@ export function ProfilePanel() {
       startWeight: Number(form.startWeight) || profile.startWeight,
       gender: form.gender,
     });
+    // Sync name to DB if authenticated
+    if (isAuthenticated && form.name) {
+      updateNameMutation.mutate({ name: form.name });
+    }
     setEditing(false);
   };
 
@@ -202,11 +400,51 @@ export function ProfilePanel() {
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
         <div className="bg-gradient-to-r from-[#E05A00] to-[#FF8C42] p-5 text-white">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black">{profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</h2>
-              <p className="text-orange-100 text-sm mt-0.5">
-                {lang === 'ar' ? `${profile.age} سنة • ${profile.height} سم` : `${profile.age} yrs • ${profile.height} cm`}
-              </p>
+            <div className="flex items-center gap-3">
+              {/* Avatar circle — tap to upload */}
+              <div className="relative flex-shrink-0">
+                <div
+                  onClick={() => isAuthenticated && avatarInputRef.current?.click()}
+                  className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/60 shadow-md flex items-center justify-center cursor-pointer"
+                  style={{ background: 'rgba(255,255,255,0.2)' }}
+                  title={lang === 'ar' ? 'انقر لتغيير الصورة' : 'Tap to change photo'}
+                >
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-black text-white">
+                      {(profile.name || '?').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  {avatarUploading && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                      <span className="text-white text-xs">⏳</span>
+                    </div>
+                  )}
+                </div>
+                {isAuthenticated && (
+                  <div
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow cursor-pointer"
+                    style={{ border: '1.5px solid #E05A00' }}
+                  >
+                    <span style={{ fontSize: 10 }}>📷</span>
+                  </div>
+                )}
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-black">{profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</h2>
+                <p className="text-orange-100 text-sm mt-0.5">
+                  {lang === 'ar' ? `${profile.age} سنة • ${profile.height} سم` : `${profile.age} yrs • ${profile.height} cm`}
+                </p>
+              </div>
             </div>
             <button onClick={() => { setForm({ ...profile }); setEditing(true); }}
               className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition-all">
@@ -333,8 +571,25 @@ export function ProfilePanel() {
         </div>
       </div>
 
+      {/* My Subscription Card */}
+      <MySubscriptionCard />
       {/* Notification Settings */}
       <NotificationSettings />
+      {/* WhatsApp Contact Button */}
+      <div className="pb-2">
+        <a
+          href="https://wa.me/96565068000"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all"
+          style={{ background: '#25D366', color: 'white', textDecoration: 'none' }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          {lang === 'ar' ? '📞 تواصل عبر واتسآب — 65068000' : '📞 Contact Us via WhatsApp — 65068000'}
+        </a>
+      </div>
       {/* Change License Button */}
       <div className="pb-2">
         <button

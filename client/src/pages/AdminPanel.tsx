@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'broadcast' | 'profile';
+type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -99,6 +99,17 @@ const T: Record<string, Record<Lang, string>> = {
   profileSaving: { ar: '⏳ جاري الحفظ...', en: '⏳ Saving...' },
   profileSaved: { ar: '✅ تم الحفظ بنجاح!', en: '✅ Saved successfully!' },
   uploadPhoto: { ar: '📷 تغيير الصورة', en: '📷 Change Photo' },
+  // Subscriptions tab
+  tabSubscriptions: { ar: '💳 الاشتراكات', en: '💳 Subscriptions' },
+  subNoData: { ar: 'لا توجد اشتراكات بعد.', en: 'No subscriptions yet.' },
+  subActive: { ar: '✅ نشط', en: '✅ Active' },
+  subTrialing: { ar: '🔵 تجريبي', en: '🔵 Trialing' },
+  subExpired: { ar: '⏰ منتهي', en: '⏰ Expired' },
+  subCancelled: { ar: '❌ ملغي', en: '❌ Cancelled' },
+  subPending: { ar: '⏳ معلق', en: '⏳ Pending' },
+  planFree: { ar: 'مجاني', en: 'Free' },
+  planPrimePlus: { ar: 'برايم بلس', en: 'Prime Plus' },
+  planPrimePro: { ar: 'برايم برو', en: 'Prime Pro' },
 };
 
 const t = (key: string, lang: Lang) => T[key]?.[lang] ?? key;
@@ -140,6 +151,7 @@ export default function AdminPanel() {
   const statsQuery = trpc.admin.getStats.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const codesQuery = trpc.license.list.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const broadcastsQuery = trpc.admin.listBroadcasts.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
+  const subscriptionsQuery = trpc.admin.listSubscriptions.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const profileQuery = trpc.admin.getProfile.useQuery(undefined, {
     enabled: !!user && user.role === 'admin',
   });
@@ -299,6 +311,7 @@ export default function AdminPanel() {
         {([
           ['dashboard', t('tabDashboard', lang)],
           ['licenses', t('tabLicenses', lang)],
+          ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
@@ -590,6 +603,73 @@ export default function AdminPanel() {
               )}
             </div>
           </>
+        )}
+
+        {/* ── SUBSCRIPTIONS TAB ── */}
+        {activeTab === 'subscriptions' && (
+          <div style={cardStyle}>
+            <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('tabSubscriptions', lang)}</h2>
+            {subscriptionsQuery.isLoading ? (
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+            ) : (subscriptionsQuery.data ?? []).length === 0 ? (
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{t('subNoData', lang)}</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: NAVY, color: 'white' }}>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'معرف المستخدم' : 'User ID'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الخطة' : 'Plan'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(subscriptionsQuery.data ?? []).map((sub, i) => {
+                      const statusColor: Record<string, string> = {
+                        active: '#16A34A', trialing: '#2563EB', expired: '#DC2626',
+                        cancelled: '#64748b', pending: '#D97706',
+                      };
+                      const planLabel: Record<string, string> = {
+                        free: t('planFree', lang),
+                        prime_plus: t('planPrimePlus', lang),
+                        prime_pro: t('planPrimePro', lang),
+                      };
+                      const statusLabel: Record<string, string> = {
+                        active: t('subActive', lang),
+                        trialing: t('subTrialing', lang),
+                        expired: t('subExpired', lang),
+                        cancelled: t('subCancelled', lang),
+                        pending: t('subPending', lang),
+                      };
+                      return (
+                        <tr key={sub.id} style={{ background: i % 2 === 0 ? '#F8FBFF' : 'white', borderBottom: `1px solid ${SKY_LIGHT}44` }}>
+                          <td style={{ padding: '10px 12px', color: '#334155', fontFamily: 'monospace', fontSize: 11 }}>
+                            {sub.userId.length > 16 ? sub.userId.slice(0, 16) + '…' : sub.userId}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY }}>
+                            {planLabel[sub.plan] ?? sub.plan}
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}18`, color: statusColor[sub.status] ?? '#64748b', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11 }}>
+                              {statusLabel[sub.status] ?? sub.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                            {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB') : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: sub.licenseKey ? '#1B2E5E' : '#CBD5E1' }}>
+                            {sub.licenseKey ?? '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         )}
 
         {/* ── PROFILE TAB ── */}

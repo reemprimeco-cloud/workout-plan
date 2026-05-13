@@ -71,6 +71,20 @@
       "when": 1778709756317,
       "tag": "0009_worried_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1778711982243,
+      "tag": "0010_marvelous_the_watchers",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1778712935158,
+      "tag": "0011_tan_wolfsbane",
+      "breakpoints": true
     }
   ]
 }
