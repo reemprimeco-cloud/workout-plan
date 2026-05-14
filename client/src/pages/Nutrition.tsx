@@ -967,6 +967,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [analysis, setAnalysis]     = useState<any>(null);
   const [editItems, setEditItems]   = useState<any[]>([]);
+  const [editingCell, setEditingCell] = useState<{idx: number; field: string} | null>(null);
   const [mealType, setMealType]     = useState<MealType>("lunch");
   const [notes, setNotes]           = useState("");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -1207,18 +1208,49 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                   { k: "protein",  label: tl("protein",  lang), unit: "g",    color: C_PROTEIN, bg: "#FEF2F2" },
                   { k: "carbs",    label: tl("carbs",    lang), unit: "g",    color: C_CARBS,   bg: "#FFFBEB" },
                   { k: "fat",      label: tl("fat",      lang), unit: "g",    color: C_FAT,     bg: "#F5F3FF" },
-                ].map(m => (
-                  <div key={m.k} style={{
-                    background: m.bg, border: `1px solid ${m.color}22`,
-                    borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
-                  }}>
-                    <div style={{ color: m.color, fontSize: 13, fontWeight: 800 }}>
-                      {Math.round(item[m.k] ?? 0)}
+                ].map(m => {
+                  const isEditing = editingCell?.idx === idx && editingCell?.field === m.k;
+                  return (
+                    <div key={m.k}
+                      onClick={() => !isEditing && setEditingCell({ idx, field: m.k })}
+                      style={{
+                        background: m.bg, border: `1px solid ${isEditing ? m.color : m.color + "22"}`,
+                        borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
+                        cursor: isEditing ? "default" : "pointer",
+                        boxShadow: isEditing ? `0 0 0 2px ${m.color}44` : "none",
+                        transition: "box-shadow 0.15s",
+                      }}>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          autoFocus
+                          defaultValue={Math.round(item[m.k] ?? 0)}
+                          onBlur={e => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val >= 0) updateItem(idx, m.k, val);
+                            setEditingCell(null);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                            if (e.key === "Escape") setEditingCell(null);
+                          }}
+                          style={{
+                            width: 52, textAlign: "center", border: "none", outline: "none",
+                            background: "transparent", color: m.color, fontSize: 13, fontWeight: 800,
+                            fontFamily: "inherit", padding: 0,
+                          }}
+                        />
+                      ) : (
+                        <div style={{ color: m.color, fontSize: 13, fontWeight: 800 }}>
+                          {Math.round(item[m.k] ?? 0)}
+                        </div>
+                      )}
+                      <div style={{ color: MUTED, fontSize: 9 }}>{m.unit}</div>
+                      <div style={{ color: MUTED, fontSize: 9 }}>{m.label}</div>
+                      {!isEditing && <div style={{ color: m.color, fontSize: 7, opacity: 0.6, marginTop: 1 }}>✏️</div>}
                     </div>
-                    <div style={{ color: MUTED, fontSize: 9 }}>{m.unit}</div>
-                    <div style={{ color: MUTED, fontSize: 9 }}>{m.label}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
