@@ -9,6 +9,7 @@ import type { UserProfile, GymSession } from '../hooks/useGymTracker';
 import { sessionTypes } from '../data/exercises';
 import type { SessionType } from '../data/exercises';
 import { useLanguage } from '../contexts/LanguageContext';
+import { SessionHistory } from './SessionHistory';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -29,6 +30,7 @@ interface Props {
   sessions: GymSession[];
   profile: UserProfile;
   onLogWeight: (w: number) => void;
+  onDelete: (id: string) => void;
 }
 
 // ── CSV Export ─────────────────────────────────────────────
@@ -95,8 +97,9 @@ function WeightTooltip({ active, payload, label }: any) {
   );
 }
 
-export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight }: Props) {
+export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, onDelete }: Props) {
   const { lang } = useLanguage();
+  const [subTab, setSubTab] = useState<'stats' | 'history'>('stats');
   const [newWeight, setNewWeight] = useState('');
   const [exportMsg, setExportMsg] = useState('');
   const [exportError, setExportError] = useState('');
@@ -146,6 +149,38 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight }:
 
   return (
     <div dir={isAr ? 'rtl' : 'ltr'}>
+      {/* ── Sub-tab switcher ── */}
+      <div style={{
+        display: 'flex', gap: 8, marginBottom: 16,
+        background: 'white', borderRadius: 14, padding: 4,
+        boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
+      }}>
+        {(['stats', 'history'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setSubTab(t)}
+            style={{
+              flex: 1, padding: '9px 0', borderRadius: 10, border: 'none',
+              background: subTab === t ? '#1B2E5E' : 'transparent',
+              color: subTab === t ? 'white' : '#7A9BB5',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontFamily: isAr ? 'Cairo, sans-serif' : 'Inter, system-ui, sans-serif',
+            }}
+          >
+            {t === 'stats' ? (isAr ? '📊 الإحصائيات' : '📊 Statistics') : (isAr ? '📋 السجل' : '📋 History')}
+          </button>
+        ))}
+      </div>
+
+      {/* ── History sub-tab ── */}
+      {subTab === 'history' && (
+        <SessionHistory sessions={sessions} onDelete={onDelete} />
+      )}
+
+      {/* ── Stats sub-tab ── */}
+      {subTab === 'stats' && <>
+
       {/* ── Main Stats ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
@@ -429,6 +464,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight }:
           </div>
         )}
       </div>
+    </>}
     </div>
   );
 }

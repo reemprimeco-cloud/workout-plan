@@ -1,4 +1,4 @@
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, double, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -397,3 +397,65 @@ export const jackpotWinners = mysqlTable("jackpot_winners", {
   notifiedAdmin:  boolean("notifiedAdmin").default(false).notNull(),
 });
 export type JackpotWinner = typeof jackpotWinners.$inferSelect;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── AI NUTRITION SYSTEM ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Per-user daily nutrition goals (calories, macros, water)
+export const nutritionGoals = mysqlTable("nutrition_goals", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull().unique(),
+  calories:       int("calories").notNull().default(2000),
+  proteinG:       int("proteinG").notNull().default(150),   // grams
+  carbsG:         int("carbsG").notNull().default(200),
+  fatG:           int("fatG").notNull().default(65),
+  waterMl:        int("waterMl").notNull().default(2500),   // ml
+  updatedAt:      timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type NutritionGoal = typeof nutritionGoals.$inferSelect;
+export type InsertNutritionGoal = typeof nutritionGoals.$inferInsert;
+
+// Individual meal entries (each food item logged)
+export const mealEntries = mysqlTable("meal_entries", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull(),
+  date:           varchar("date", { length: 10 }).notNull(),   // YYYY-MM-DD
+  mealType:       mysqlEnum("mealType", ["breakfast", "lunch", "dinner", "snack"]).notNull(),
+  foodName:       varchar("foodName", { length: 255 }).notNull(),
+  foodNameAr:     varchar("foodNameAr", { length: 255 }),
+  calories:       int("calories").notNull().default(0),
+  proteinG:       double("proteinG").notNull().default(0),
+  carbsG:         double("carbsG").notNull().default(0),
+  fatG:           double("fatG").notNull().default(0),
+  servingSize:    varchar("servingSize", { length: 64 }),      // e.g. "100g", "1 cup"
+  imageUrl:       varchar("imageUrl", { length: 512 }),        // AI scan image
+  addedByAI:      boolean("addedByAI").default(false).notNull(),
+  createdAt:      timestamp("createdAt").defaultNow().notNull(),
+});
+export type MealEntry = typeof mealEntries.$inferSelect;
+export type InsertMealEntry = typeof mealEntries.$inferInsert;
+
+// Daily water intake log (each glass/bottle logged)
+export const waterLogs = mysqlTable("water_logs", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull(),
+  date:           varchar("date", { length: 10 }).notNull(),   // YYYY-MM-DD
+  amountMl:       int("amountMl").notNull().default(250),
+  loggedAt:       timestamp("loggedAt").defaultNow().notNull(),
+});
+export type WaterLog = typeof waterLogs.$inferSelect;
+export type InsertWaterLog = typeof waterLogs.$inferInsert;
+
+// AI-generated nutrition insights (stored per user, refreshed daily)
+export const nutritionInsights = mysqlTable("nutrition_insights", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull(),
+  type:           mysqlEnum("type", ["protein", "hydration", "calories", "macros", "recovery", "general"]).notNull(),
+  content:        text("content").notNull(),
+  contentAr:      text("contentAr"),
+  priority:       mysqlEnum("priority", ["high", "medium", "low"]).notNull().default("medium"),
+  createdAt:      timestamp("createdAt").defaultNow().notNull(),
+});
+export type NutritionInsight = typeof nutritionInsights.$inferSelect;
+export type InsertNutritionInsight = typeof nutritionInsights.$inferInsert;

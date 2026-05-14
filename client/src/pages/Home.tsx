@@ -21,6 +21,7 @@ import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
 import MyCoach from './MyCoach';
 import Community from './Community';
+import Nutrition from './Nutrition';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -29,7 +30,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 
-type Tab = 'home' | 'history' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
+type Tab = 'home' | 'nutrition' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -91,7 +92,7 @@ export default function Home() {
 
   const tabs: { id: Tab; iconUrl: string; label: string }[] = [
     { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
-    { id: 'history', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: t('navHistory') },
+    { id: 'nutrition', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: isRTL ? 'التغذية' : 'Nutrition' },
     { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
     { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: t('navGuide') },
     { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
@@ -217,8 +218,8 @@ export default function Home() {
           </>
         )}
 
-        {activeTab === 'history' && <SessionHistory sessions={data.sessions} onDelete={tracker.deleteSession} />}
-        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} />}
+        {activeTab === 'nutrition' && <Nutrition />}
+        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} />}
         {activeTab === 'guide' && <WorkoutGuide />}
         {activeTab === 'exercises' && (
           <div style={{ padding: '16px' }}>
