@@ -482,10 +482,65 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
   );
 }
 
+// ── Exceed Warning Banner ────────────────────────────────────────────────────
+function ExceedWarning({ lang, exceeded, onOpenGoals }: {
+  lang: string;
+  exceeded: { calories: boolean; protein: boolean; carbs: boolean; fat: boolean };
+  onOpenGoals: () => void;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  const items: string[] = [];
+  if (exceeded.calories) items.push(lang === "ar" ? "السعرات" : "Calories");
+  if (exceeded.protein)  items.push(lang === "ar" ? "البروتين" : "Protein");
+  if (exceeded.carbs)    items.push(lang === "ar" ? "الكربوهيدرات" : "Carbs");
+  if (exceeded.fat)      items.push(lang === "ar" ? "الدهون" : "Fat");
+  if (items.length === 0) return null;
+
+  const advice = lang === "ar"
+    ? `⚠️ تجاوزت الهدف اليومي في: ${items.join("، ")}. حاول تقليل الوجبات الدسمة وزيادة شرب الماء. تذكر أن الاتساق أهم من الكمال!`
+    : `⚠️ You exceeded your daily goal for: ${items.join(", ")}. Try reducing heavy meals and drink more water. Remember: consistency matters more than perfection!`;
+
+  return (
+    <div style={{
+      background: "#FEF2F2", border: "1.5px solid #FECACA",
+      borderRadius: 16, padding: "14px 16px", marginBottom: 14,
+      display: "flex", alignItems: "flex-start", gap: 10,
+    }}>
+      <span style={{ fontSize: 22, flexShrink: 0 }}>🚨</span>
+      <div style={{ flex: 1 }}>
+        <p style={{ color: "#DC2626", fontSize: 13, fontWeight: 800, margin: "0 0 6px" }}>
+          {lang === "ar" ? "تجاوزت الهدف اليومي!" : "Daily Target Exceeded!"}
+        </p>
+        <p style={{ color: "#7F1D1D", fontSize: 12, margin: "0 0 10px", lineHeight: 1.6 }}>{advice}</p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={onOpenGoals} style={{
+            background: "#DC2626", color: "white", border: "none",
+            borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>
+            {lang === "ar" ? "تعديل الأهداف" : "Adjust Goals"}
+          </button>
+          <button onClick={() => setDismissed(true)} style={{
+            background: "#FEE2E2", color: "#DC2626", border: "1px solid #FECACA",
+            borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>
+            {lang === "ar" ? "إغلاق" : "Dismiss"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard Tab ─────────────────────────────────────────────────────────────
 function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => void }) {
   const utils = trpc.useUtils();
-  const { data: todayLog, isLoading } = trpc.nutrition.getTodayLog.useQuery({ date: undefined });
+  const { data: todayLog, isLoading } = trpc.nutrition.getTodayLog.useQuery(
+    { date: undefined },
+    { refetchOnWindowFocus: true, staleTime: 0 }
+  );
   const { data: weeklyData } = trpc.nutrition.getWeeklyTrends.useQuery();
   const logWater = trpc.nutrition.logWater.useMutation({
     onSuccess: () => utils.nutrition.getTodayLog.invalidate(),
@@ -509,8 +564,19 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
   const fatGoal   = goals?.fatG     ?? 65;
   const waterGoal = goals?.waterMl  ?? 2500;
 
+  const exceeded = {
+    calories: totals.calories > calGoal,
+    protein:  totals.proteinG > protGoal,
+    carbs:    totals.carbsG   > carbGoal,
+    fat:      totals.fatG     > fatGoal,
+  };
+  const anyExceeded = exceeded.calories || exceeded.protein || exceeded.carbs || exceeded.fat;
+
   return (
     <div>
+      {/* Exceed warning */}
+      {anyExceeded && <ExceedWarning lang={lang} exceeded={exceeded} onOpenGoals={onOpenGoals} />}
+
       {/* Calorie ring card */}
       <CalorieRing consumed={totals.calories} goal={calGoal} lang={lang} />
 

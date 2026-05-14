@@ -19,20 +19,13 @@ import crypto from "crypto";
 import { ENV } from "../_core/env";
 import { createAccessCode, getAccessCodeByOrderId } from "../db";
 import { sendLicenseEmail } from "../_core/email";
+import { generateLicenseKey, detectPlan, planToExpiry, hasPrimeFitProduct, PRIME_FIT_PRODUCT_ID } from "./licenseUtils";
 
 // Statuses that trigger license delivery
 const TRIGGER_STATUSES = new Set(["processing", "completed"]);
 
-// Only issue licenses for this specific WooCommerce product
-const PRIME_FIT_PRODUCT_ID = 5802;
 
-/** Check if an order contains the Prime Fit product */
-function hasPrimeFitProduct(order: any): boolean {
-  const lineItems: any[] = order?.line_items ?? [];
-  return lineItems.some(
-    (item) => item.product_id === PRIME_FIT_PRODUCT_ID || item.variation_id === PRIME_FIT_PRODUCT_ID
-  );
-}
+
 
 /** Verify WooCommerce HMAC-SHA256 webhook signature */
 function verifyWooSignature(rawBody: Buffer, signature: string): boolean {
@@ -54,14 +47,6 @@ function verifyWooSignature(rawBody: Buffer, signature: string): boolean {
   }
 }
 
-/** Generate a license key in format PRIME-XXXX-XXXX using only A-Z0-9 */
-function generateLicenseKey(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I to avoid confusion
-  const part = () => Array.from({ length: 4 }, () =>
-    chars[crypto.randomInt(0, chars.length)]
-  ).join("");
-  return `PRIME-${part()}-${part()}`;
-}
 
 export async function wooCommerceWebhookHandler(req: Request, res: Response) {
   // ── Step 0: Log everything incoming for debugging ─────────────────────────
@@ -101,65 +86,67 @@ export async function wooCommerceWebhookHandler(req: Request, res: Response) {
       return res.json({ ok: true, skipped: `status-not-triggered (${status})` });
     }
 
+    // ── Only process Prime Fit orders ──────────────────────────────────────
+    if (!hasPrimeFitProduct(order)) {
+      console.log(`[WooWebhook] Order #${orderId} does not contain Prime Fit product — skipping`);
+      return res.json({ ok: true, skipped: "not-prime-fit-product" });
+    }
+
     if (!orderId) {
       return res.status(400).json({ error: "missing-order-id" });
     }
 
-    // ── 3. Only process Prime Fit product orders ───────────────────────────
-    if (!hasPrimeFitProduct(order)) {
-      console.log(`[WooWebhook] Order #${orderId} skipped — no Prime Fit product (ID: ${PRIME_FIT_PRODUCT_ID})`);
-      return res.json({ ok: true, skipped: "not-prime-fit-product" });
-    }
-
-    // ── 4. Extract customer info ────────────────────────────────────────────
+    // ── 3. Extract customer info ────────────────────────────────────────────
     const billing = order?.billing ?? {};
     const customerEmail: string = billing.email ?? order?.customer?.email ?? "";
     const customerName: string = [billing.first_name, billing.last_name]
       .filter(Boolean).join(" ") || order?.customer?.username || "Customer";
 
+    console.log(`[WooWebhook] Customer: ${customerName} <${customerEmail}>`);
+
     if (!customerEmail) {
-      console.warn(`[WooWebhook] Order #${orderId} has no customer email — cannot deliver license`);
+      console.warn(`[WooWebhook] Order #${orderId} has no customer email`);
       return res.status(400).json({ error: "missing-customer-email" });
     }
 
-    // ── 5. Idempotency — don't issue duplicate codes for same order ─────────
+    // ── 4. Idempotency check ───────────────────────────────────────────────
     let existing = null;
     try {
       existing = await getAccessCodeByOrderId(orderId);
-    } catch {
-      // orderId column may not exist yet — skip idempotency check
+    } catch (dbErr: any) {
+      // orderId column may not exist yet if migration hasn't run
+      console.warn("[WooWebhook] Idempotency check failed (migration pending?):", dbErr.message);
     }
+
     if (existing) {
-      console.log(`[WooWebhook] Order #${orderId} already has code ${existing.code} — skipping`);
+      console.log(`[WooWebhook] Order #${orderId} already has code — skipping`);
       return res.json({ ok: true, skipped: "already-issued", code: existing.code });
     }
 
-    // ── 6. Generate & save license key ─────────────────────────────────────
+    // ── 5. Generate & save license key ─────────────────────────────────────
     const licenseKey = generateLicenseKey();
+    const plan       = detectPlan(order?.line_items ?? []);
+    const expiresAt  = planToExpiry(plan);
+    console.log(`[WooWebhook] Plan: ${plan} | Expires: ${expiresAt?.toISOString() ?? "never"}`);
 
     try {
       await createAccessCode({
-        code: licenseKey,
-        customerName,
-        customerEmail,
-        note: `Auto-generated for WooCommerce order #${orderId} (status: ${status})`,
-        isActive: true,
-        orderId,
+        code: licenseKey, customerName, customerEmail,
+        note: `Auto-generated for WooCommerce order #${orderId} (status: ${status}) — plan: ${plan}`,
+        isActive: true, orderId, expiresAt,
       });
-    } catch {
-      // orderId column missing — insert without it
+    } catch (dbErr: any) {
+      console.warn("[WooWebhook] Insert with orderId failed, retrying without:", dbErr.message);
       await createAccessCode({
-        code: licenseKey,
-        customerName,
-        customerEmail,
-        note: `Auto-generated for WooCommerce order #${orderId} (status: ${status}) — run migration 0006`,
-        isActive: true,
+        code: licenseKey, customerName, customerEmail,
+        note: `Auto-generated for WooCommerce order #${orderId} (status: ${status}) — plan: ${plan}`,
+        isActive: true, expiresAt,
       });
     }
 
-    console.log(`[WooWebhook] ✅ License ${licenseKey} issued for order #${orderId} (${customerEmail})`);
+    console.log(`[WooWebhook] ✅ License ${licenseKey} saved for order #${orderId}`);
 
-    // ── 7. Email the license key to the customer ───────────────────────────
+    // ── 6. Email the license key ───────────────────────────────────────────
     const emailSent = await sendLicenseEmail({
       to: customerEmail,
       customerName,

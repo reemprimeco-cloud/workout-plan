@@ -34,7 +34,7 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
 
   try {
     const secret = req.headers["webhook-secret"] ?? req.headers["x-webhook-secret"];
-    if (ENV.myFatoorahWebhookSecret && secret !== ENV.myFatoorahWebhookSecret) {
+    if (ENV.myfatoorahWebhookKey && secret !== ENV.myfatoorahWebhookKey) {
       console.warn("[MFWebhook] Invalid secret");
       return res.status(401).json({ error: "invalid-secret" });
     }
