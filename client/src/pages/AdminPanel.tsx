@@ -463,7 +463,7 @@ function AdminChallengesTab({ lang }: { lang: string }) {
   );
 }
 export default function AdminPanel() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const utils = trpc.useUtils();
   const [lang, setLang] = useState<Lang>('ar');
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -576,9 +576,26 @@ export default function AdminPanel() {
   }
   if (user.role !== 'admin') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+      <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <div style={{ fontSize: 48 }}>🚫</div>
         <div style={{ color: 'white', fontSize: 18, fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>{t('forbidden', lang)}</div>
+        <div style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Cairo, sans-serif', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+          {lang === 'ar'
+            ? `أنت مسجل دخول بحساب: ${user.email || user.name}. يرجى تسجيل الخروج والدخول بحساب المدير.`
+            : `Logged in as: ${user.email || user.name}. Please sign out and log in with the admin account.`}
+        </div>
+        <button
+          onClick={async () => { await logout(); window.location.href = '/admin'; }}
+          style={{
+            background: `linear-gradient(135deg, ${CYAN}, #00B8D4)`,
+            color: NAVY, border: 'none', borderRadius: 12,
+            padding: '12px 28px', fontSize: 14, fontWeight: 900,
+            cursor: 'pointer', fontFamily: 'Cairo, sans-serif',
+            marginTop: 4,
+          }}
+        >
+          {lang === 'ar' ? '🔓 تسجيل الخروج والدخول بحساب آخر' : '🔓 Sign Out & Switch Account'}
+        </button>
         <a href="/" style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Cairo, sans-serif' }}>← {lang === 'ar' ? 'العودة للتطبيق' : 'Back to App'}</a>
       </div>
     );
