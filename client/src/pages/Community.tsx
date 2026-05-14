@@ -8,6 +8,8 @@ import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useSocket } from "../contexts/SocketContext";
 import NotificationBell from "../components/NotificationBell";
+import { MentionInput } from "../components/MentionInput";
+import SpinWheel from "../components/SpinWheel";
 
 // ── Brand colors ──────────────────────────────────────────────────────────────
 const NAVY      = "#0D1B2A";
@@ -136,6 +138,35 @@ function Avatar({ name, size = 40, color = CYAN, photoUrl }: { name: string; siz
   );
 }
 
+// ── Render text with clickable @mention chips ─────────────────────────────────
+function renderMentionText(text: string, accentColor: string = "#00E5FF") {
+  const parts = text.split(/(@[\w؀-ۿ]+)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^@[\w؀-ۿ]+$/.test(part) ? (
+          <span
+            key={i}
+            style={{
+              color: accentColor,
+              fontWeight: 700,
+              cursor: "default",
+              background: `${accentColor}18`,
+              borderRadius: 4,
+              padding: "0 3px",
+              fontSize: "0.95em",
+            }}
+          >
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 // ── Stories Bar ───────────────────────────────────────────────────────────────
 function StoriesBar({ lang }: { lang: string }) {
   const { data: stories, isLoading } = trpc.community.getStories.useQuery();
@@ -229,8 +260,7 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentText, setEditCommentText] = useState("");
   const [showPostMenu, setShowPostMenu] = useState(false);
-  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-  const [mentionCursor, setMentionCursor] = useState(0);
+
   const utils = trpc.useUtils();
   const isOwner = currentUserId === post.userId;
 
@@ -240,10 +270,7 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
   const { data: myReactionData } = trpc.community.getMyReaction.useQuery(
     { postId: post.id }, { enabled: !!currentUserId }
   );
-  const { data: mentionSuggestions } = trpc.community.getMentionSuggestions.useQuery(
-    { query: mentionQuery?.trim() ?? "" },
-    { enabled: !!mentionQuery && mentionQuery.trim().length > 0 }
-  );
+
 
   useEffect(() => { if (myReactionData) setMyReaction((myReactionData.type as string) ?? null); }, [myReactionData]);
 
@@ -255,7 +282,7 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
     onSettled: () => utils.community.getFeed.invalidate(),
   });
   const commentMutation = trpc.community.addComment.useMutation({
-    onSuccess: () => { setCommentText(""); setMentionQuery(null); utils.community.getComments.invalidate({ postId: post.id }); },
+    onSuccess: () => { setCommentText(""); utils.community.getComments.invalidate({ postId: post.id }); },
   });
   const deletePostMutation = trpc.community.deletePost.useMutation({
     onSuccess: () => utils.community.getFeed.invalidate(),
@@ -270,28 +297,6 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
     onSuccess: () => { setEditingCommentId(null); utils.community.getComments.invalidate({ postId: post.id }); },
   });
 
-  const handleCommentChange = (val: string) => {
-    setCommentText(val);
-    const lastAt = val.lastIndexOf("@");
-    if (lastAt !== -1) {
-      const afterAt = val.slice(lastAt + 1);
-      if (/^[\w\u0600-\u06FF]{0,30}$/.test(afterAt)) {
-        setMentionQuery(afterAt || " ");
-        setMentionCursor(lastAt);
-      } else {
-        setMentionQuery(null);
-      }
-    } else {
-      setMentionQuery(null);
-    }
-  };
-
-  const insertMention = (name: string) => {
-    const before = commentText.slice(0, mentionCursor);
-    const after = commentText.slice(mentionCursor + 1 + (mentionQuery?.trim().length ?? 0));
-    setCommentText(`${before}@${name} ${after}`);
-    setMentionQuery(null);
-  };
 
   const submitComment = () => {
     if (commentText.trim()) {
@@ -374,7 +379,7 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
         </div>
       ) : (
         <div style={{ padding: "0 16px 12px" }}>
-          <p style={{ color: TEXT_MAIN, fontSize: 14, lineHeight: 1.6, margin: 0 }}>{post.content}</p>
+          <p style={{ color: TEXT_MAIN, fontSize: 14, lineHeight: 1.6, margin: 0 }}>{renderMentionText(post.content ?? "", CYAN)}</p>
         </div>
       )}
       {post.imageUrl && (
@@ -443,50 +448,36 @@ function PostCard({ post, lang, currentUserId }: { post: any; lang: string; curr
                       </div>
                     </div>
                   ) : (
-                    <p style={{ color: TEXT_MAIN, fontSize: 12, margin: "2px 0 0" }}>{c.content}</p>
+                    <p style={{ color: TEXT_MAIN, fontSize: 12, margin: "2px 0 0" }}>{renderMentionText(c.content ?? "", CYAN)}</p>
                   )}
                 </div>
               </div>
             );
           })}
           {currentUserId && (
-            <div style={{ position: "relative", marginTop: 8 }}>
-              {mentionQuery && (mentionSuggestions ?? []).length > 0 && (
-                <div style={{
-                  position: "absolute", bottom: "100%", left: 0, right: 0,
-                  background: CARD_BG2, borderRadius: 10, boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-                  zIndex: 100, maxHeight: 160, overflowY: "auto", marginBottom: 4,
-                }}>
-                  {(mentionSuggestions ?? []).map((u: any) => (
-                    <button key={u.id} onClick={() => insertMention(u.name)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 8, width: "100%",
-                        padding: "8px 12px", background: "none", border: "none", cursor: "pointer",
-                        color: TEXT_MAIN, fontSize: 13, textAlign: "left",
-                      }}>
-                      <Avatar name={u.name ?? "U"} size={24} color={CYAN} photoUrl={u.avatarUrl} />
-                      @{u.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
+            <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "flex-end" }}>
+              <div style={{ flex: 1 }}>
+                <MentionInput
                   value={commentText}
-                  onChange={e => handleCommentChange(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
+                  onChange={setCommentText}
+                  onSubmit={submitComment}
                   placeholder={`${t("addComment", lang)} (@${lang === "ar" ? "اذكر شخصاً" : "mention"})`}
-                  style={{
-                    flex: 1, background: CARD_BG2, border: `1px solid ${CARD_BG2}`,
-                    borderRadius: 8, padding: "6px 10px", color: TEXT_MAIN, fontSize: 12,
-                    outline: "none",
-                  }}
+                  multiline={false}
+                  lang={lang}
+                  bgColor={CARD_BG2}
+                  textColor={TEXT_MAIN}
+                  accentColor={CYAN}
+                  dropdownBg={CARD_BG}
+                  dropdownHoverBg={CARD_BG2}
+                  subTextColor={TEXT_SUB}
+                  borderColor={CARD_BG2}
+                  inputStyle={{ fontSize: 12, padding: "6px 10px", borderRadius: 8 }}
                 />
-                <button onClick={submitComment}
-                  style={{ background: CYAN, color: NAVY, border: "none", borderRadius: 8, padding: "6px 12px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                  {t("send", lang)}
-                </button>
               </div>
+              <button onClick={submitComment}
+                style={{ background: CYAN, color: NAVY, border: "none", borderRadius: 8, padding: "6px 12px", fontWeight: 700, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>
+                {t("send", lang)}
+              </button>
             </div>
           )}
         </div>
@@ -576,19 +567,22 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
           {/* Avatar + textarea row */}
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
             <Avatar name={"U"} size={40} />
-            <textarea
-              autoFocus
+            <MentionInput
               value={content}
-              onChange={e => setContent(e.target.value)}
+              onChange={setContent}
               placeholder={t("postPlaceholder", lang)}
+              multiline={true}
               rows={4}
-              style={{
-                flex: 1, background: "transparent", border: "none",
-                color: TEXT_MAIN, fontSize: 16, lineHeight: 1.6,
-                resize: "none", outline: "none",
-                direction: isRTL ? "rtl" : "ltr",
-                fontFamily: "inherit",
-              }}
+              lang={lang}
+              bgColor="transparent"
+              textColor={TEXT_MAIN}
+              accentColor={CYAN}
+              dropdownBg={CARD_BG2}
+              dropdownHoverBg="#2A2A2E"
+              subTextColor={TEXT_SUB}
+              borderColor="transparent"
+              inputStyle={{ fontSize: 16, padding: "0", border: "none", borderRadius: 0 }}
+              style={{ flex: 1 }}
             />
           </div>
 
@@ -711,27 +705,57 @@ function ChallengesPanel({ lang }: { lang: string }) {
   const { data: challenges, isLoading } = trpc.community.getChallenges.useQuery();
   const { data: myChallenges } = trpc.community.getMyChallenges.useQuery();
   const utils = trpc.useUtils();
+  const [spinChallengeId, setSpinChallengeId] = useState<number | null>(null);
   const joinMutation = trpc.community.joinChallenge.useMutation({
     onSuccess: () => { utils.community.getMyChallenges.invalidate(); utils.community.getChallenges.invalidate(); },
   });
-  const joinedIds = new Set((myChallenges ?? []).map((c: any) => c.challengeId));
-
+  const completeMutation = trpc.community.completeChallenge.useMutation({
+    onSuccess: (data, vars) => {
+      utils.community.getMyChallenges.invalidate();
+      if (!data.alreadyCompleted) {
+        setSpinChallengeId(vars.challengeId);
+      }
+    },
+  });
+  const joinedMap = new Map((myChallenges ?? []).map((c: any) => [c.challengeId, c]));
   return (
     <div>
+      {spinChallengeId !== null && (
+        <SpinWheel
+          challengeId={spinChallengeId}
+          lang={lang as "ar" | "en"}
+          onClose={() => setSpinChallengeId(null)}
+        />
+      )}
       <h3 style={{ color: TEXT_MAIN, fontWeight: 800, fontSize: 16, margin: "0 0 12px" }}>
         🎯 {t("challenges", lang)}
       </h3>
       {isLoading ? <div style={{ color: TEXT_SUB }}>{t("loading", lang)}</div> : (
         (challenges ?? []).map((ch: any) => {
-          const joined = joinedIds.has(ch.id);
+          const participation = joinedMap.get(ch.id);
+          const joined = !!participation;
+          const completed = !!participation?.completedAt;
           const daysLeft = daysUntil(ch.endDate);
           return (
             <div key={ch.id} style={{
-              background: CARD_BG, border: `1px solid ${joined ? GREEN + "44" : CARD_BG2}`,
+              background: CARD_BG,
+              border: `1px solid ${completed ? ORANGE + "66" : joined ? GREEN + "44" : CARD_BG2}`,
               borderRadius: 14, padding: "14px 16px", marginBottom: 10,
+              position: "relative", overflow: "hidden",
             }}>
+              {completed && (
+                <div style={{
+                  position: "absolute", top: 0, right: 0,
+                  background: `linear-gradient(135deg, ${ORANGE}, #FF4040)`,
+                  color: "white", fontSize: 9, fontWeight: 900,
+                  padding: "3px 10px", borderBottomLeftRadius: 8,
+                  letterSpacing: "0.05em",
+                }}>
+                  {lang === "ar" ? "✅ مكتمل" : "✅ DONE"}
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, paddingRight: completed ? 60 : 0 }}>
                   <div style={{ color: TEXT_MAIN, fontWeight: 800, fontSize: 14 }}>
                     {lang === "ar" ? ch.titleAr : ch.title}
                   </div>
@@ -746,18 +770,44 @@ function ChallengesPanel({ lang }: { lang: string }) {
                     </span>
                   </div>
                 </div>
-                <button
-                  onClick={() => !joined && joinMutation.mutate({ challengeId: ch.id })}
-                  disabled={joined || joinMutation.isPending}
-                  style={{
-                    background: joined ? `${GREEN}22` : `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})`,
-                    border: `1px solid ${joined ? GREEN : "transparent"}`,
-                    borderRadius: 10, padding: "8px 16px",
-                    color: joined ? GREEN : NAVY, fontWeight: 800, fontSize: 13,
-                    cursor: joined ? "default" : "pointer", flexShrink: 0, marginLeft: 12,
-                  }}>
-                  {joined ? `✅ ${t("joined", lang)}` : t("join", lang)}
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0, marginLeft: 12 }}>
+                  <button
+                    onClick={() => !joined && joinMutation.mutate({ challengeId: ch.id })}
+                    disabled={joined || joinMutation.isPending}
+                    style={{
+                      background: joined ? `${GREEN}22` : `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})`,
+                      border: `1px solid ${joined ? GREEN : "transparent"}`,
+                      borderRadius: 10, padding: "8px 16px",
+                      color: joined ? GREEN : NAVY, fontWeight: 800, fontSize: 13,
+                      cursor: joined ? "default" : "pointer",
+                    }}>
+                    {joined ? `✅ ${t("joined", lang)}` : t("join", lang)}
+                  </button>
+                  {joined && !completed && (
+                    <button
+                      onClick={() => completeMutation.mutate({ challengeId: ch.id })}
+                      disabled={completeMutation.isPending}
+                      style={{
+                        background: `linear-gradient(135deg, ${ORANGE}, #FF4040)`,
+                        border: "none", borderRadius: 10, padding: "8px 16px",
+                        color: "white", fontWeight: 800, fontSize: 12, cursor: "pointer",
+                        boxShadow: `0 4px 12px ${ORANGE}44`,
+                      }}>
+                      {lang === "ar" ? "🎰 أكملت!" : "🎰 Done!"}
+                    </button>
+                  )}
+                  {completed && (
+                    <button
+                      onClick={() => setSpinChallengeId(ch.id)}
+                      style={{
+                        background: `${ORANGE}22`, border: `1px solid ${ORANGE}44`,
+                        borderRadius: 10, padding: "8px 16px",
+                        color: ORANGE, fontWeight: 800, fontSize: 12, cursor: "pointer",
+                      }}>
+                      {lang === "ar" ? "🎁 مكافأة" : "🎁 Reward"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );

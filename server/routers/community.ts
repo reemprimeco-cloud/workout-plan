@@ -22,8 +22,8 @@ import {
   getUnreadNotificationCount,
 } from "../db";
 import { getDb } from "../db";
-import { users, communityPosts, communityComments } from "../../drizzle/schema";
-import { eq, like, sql } from "drizzle-orm";
+import { users, communityPosts, communityComments, postMentions } from "../../drizzle/schema";
+import { eq, like, sql, desc } from "drizzle-orm";
 import { getIO } from "../_core/index";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
 import { sendPushToSubscription } from "./notifications";
@@ -144,7 +144,13 @@ export const communityRouter = router({
       });
       await addXp({ userId: ctx.user.id, event: "post", points: xpAward });
 
-      // ── Broadcast new post to all connected users ─────────────────────────
+      // ── Process @mentions in post content ──────────────────────────────────────
+      if (post.id) {
+        processMentions({ content: input.content, actorId: ctx.user.id, postId: post.id })
+          .catch(() => { /* non-fatal */ });
+      }
+
+      // ── Broadcast new post to all connected users ─────────────────────
       try {
         const db = await getDb();
         const actor = db ? await db.select({ name: users.name })
@@ -306,6 +312,10 @@ export const communityRouter = router({
           }
         }
       } catch (e) { /* non-fatal */ }
+
+      // ── Process @mentions in comment ─────────────────────────────────────────
+      processMentions({ content: input.content, actorId: ctx.user.id, postId: input.postId })
+        .catch(() => { /* non-fatal */ });
 
       return { success: true };
     }),
@@ -545,17 +555,152 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
       return { success: true };
     }),
 
-  /** Get @mention suggestions — users whose name starts with the query */
+  /** Get @mention suggestions — fuzzy search by any position in name (Arabic + English) */
   getMentionSuggestions: protectedProcedure
-    .input(z.object({ query: z.string().min(1).max(50) }))
-    .query(async ({ input }) => {
+    .input(z.object({ query: z.string().min(0).max(50) }))
+    .query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) return [];
-      const rows = await db
+      const q = input.query.trim();
+      if (!q) {
+        // No query — return suggested users (most recently active, excluding self)
+        const rows = await db
+          .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+          .from(users)
+          .orderBy(desc(users.lastSignedIn))
+          .limit(8);
+        return rows.filter(r => r.name && r.id !== ctx.user.id);
+      }
+      // Fuzzy: prefix match first, then contains match
+      const prefixRows = await db
         .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
         .from(users)
-        .where(like(users.name, `${input.query}%`))
+        .where(like(users.name, `${q}%`))
         .limit(8);
-      return rows.filter(r => r.name);
+      const containsRows = await db
+        .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+        .from(users)
+        .where(like(users.name, `%${q}%`))
+        .limit(12);
+      // Merge: prefix first, then contains (dedup by id, exclude self)
+      const seen = new Set<number>();
+      const merged: { id: number; name: string | null; avatarUrl: string | null }[] = [];
+      for (const r of [...prefixRows, ...containsRows]) {
+        if (r.name && r.id !== ctx.user.id && !seen.has(r.id)) {
+          seen.add(r.id);
+          merged.push(r);
+        }
+        if (merged.length >= 8) break;
+      }
+      return merged;
     }),
+
+  /** Complete a challenge and mark completedAt for spin wheel eligibility */
+  completeChallenge: protectedProcedure
+    .input(z.object({ challengeId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const { challengeParticipants } = await import("../../drizzle/schema");
+      const { and } = await import("drizzle-orm");
+      const [participation] = await db
+        .select()
+        .from(challengeParticipants)
+        .where(and(
+          eq(challengeParticipants.challengeId, input.challengeId),
+          eq(challengeParticipants.userId, ctx.user.id),
+        ))
+        .limit(1);
+      if (!participation) throw new TRPCError({ code: "NOT_FOUND", message: "Not joined" });
+      if (participation.completedAt) return { alreadyCompleted: true };
+      await db.update(challengeParticipants)
+        .set({ completedAt: new Date() })
+        .where(and(
+          eq(challengeParticipants.challengeId, input.challengeId),
+          eq(challengeParticipants.userId, ctx.user.id),
+        ));
+      return { alreadyCompleted: false };
+    }),
+
+  /** Get suggested users to mention (recent active users, excluding self) */
+  getSuggestedMentions: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+    const rows = await db
+      .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+      .from(users)
+      .orderBy(desc(users.lastSignedIn))
+      .limit(6);
+    return rows.filter(r => r.name && r.id !== ctx.user.id);
+  }),
 });
+
+// ── Helper: extract @mentions from text and send notifications ────────────────
+export async function processMentions({
+  content, actorId, postId, commentId,
+}: { content: string; actorId: number; postId: number; commentId?: number }) {
+  const db = await getDb();
+  if (!db) return;
+  // Extract all @name tokens (supports Arabic Unicode names)
+  const mentionRegex = /@([\w\u0600-\u06FF]+)/g;
+  const tokens: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = mentionRegex.exec(content)) !== null) {
+    tokens.push(m[1]);
+  }
+  if (tokens.length === 0) return;
+  // Look up actor name once
+  const actorRows = await db.select({ name: users.name }).from(users).where(eq(users.id, actorId)).limit(1);
+  const actorName = actorRows[0]?.name ?? "Someone";
+  for (const token of tokens) {
+    // Exact match first, then prefix
+    const matched = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(like(users.name, token))
+      .limit(1);
+    const mentionedUser = matched[0];
+    if (!mentionedUser || mentionedUser.id === actorId) continue;
+    // Save mention record (ignore duplicate)
+    try {
+      await db.insert(postMentions).values({
+        mentionedId: mentionedUser.id,
+        actorId,
+        postId,
+        commentId: commentId ?? null,
+      });
+    } catch { /* ignore duplicate */ }
+    // Send in-app notification
+    try {
+      await createSocialNotification({
+        userId: mentionedUser.id,
+        actorId,
+        type: "mention",
+        postId,
+        message: `🔔 ${actorName} ذكرك في ${commentId ? "تعليق" : "منشور"}`,
+        messageEn: `🔔 ${actorName} mentioned you in a ${commentId ? "comment" : "post"}`,
+      });
+      // Real-time socket
+      const io = getIO();
+      io?.to(`user:${mentionedUser.id}`).emit("notification", {
+        type: "mention",
+        message: `🔔 ${actorName} mentioned you`,
+        postId,
+      });
+      // Web push
+      const sub = await getPushSubscriptionByUser(mentionedUser.id);
+      const settings = await getNotificationSettings(mentionedUser.id);
+      if (sub) {
+        const lang = settings?.language ?? "ar";
+        await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+          title: "Prime Fit",
+          body: lang === "ar"
+            ? `🔔 ${actorName} ذكرك في ${commentId ? "تعليق" : "منشور"}`
+            : `🔔 ${actorName} mentioned you in a ${commentId ? "comment" : "post"}`,
+          icon: "/icons/icon-192.png",
+          url: "/community",
+        });
+      }
+    } catch { /* non-fatal */ }
+  }
+}
