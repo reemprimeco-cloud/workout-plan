@@ -1,152 +1,228 @@
 /**
  * Nutrition — Prime Fit
- * AI food recognition · USDA nutrition data · Meal logging
- * Clean white / light theme — comfortable for the eyes
- *
- * Tabs: Dashboard | Scanner | Meals | Insights
+ * Design matches reference screenshots:
+ *  - Light/white background (#F0F4F8 page, white cards)
+ *  - Horizontal icon tab bar (Dashboard / Meals / Scanner / Insights)
+ *  - Goals button top-right
+ *  - Dashboard: large calorie ring + 3 stat boxes + macro bars + 3 small rings
+ *    + water intake (4 cup buttons) + weekly bar chart
+ *  - Scanner: camera/upload + manual search
+ *  - Meals: meal history cards
+ *  - Insights: AI insights
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 
-// ── Light design tokens ───────────────────────────────────────────────────────
-const BG        = "#F7F9FC";       // page background — very soft blue-white
-const WHITE     = "#FFFFFF";       // card surface
-const BORDER    = "#E8EDF4";       // card border
-const SHADOW    = "0 2px 12px rgba(27,46,94,0.07)";
-const NAVY      = "#1B2E5E";       // primary text / brand
-const NAVY_LIGHT = "#3B5998";      // secondary navy
-const SKY       = "#2196F3";       // primary accent (blue)
-const SKY_LIGHT = "#E3F2FD";       // accent bg tint
-const GREEN     = "#22C55E";
-const GREEN_BG  = "#F0FDF4";
-const ORANGE    = "#F97316";
-const ORANGE_BG = "#FFF7ED";
-const PURPLE    = "#8B5CF6";
-const PURPLE_BG = "#F5F3FF";
-const GOLD      = "#F59E0B";
-const GOLD_BG   = "#FFFBEB";
-const RED       = "#EF4444";
-const RED_BG    = "#FEF2F2";
-const TEXT      = "#1E293B";       // primary text
-const TEXT2     = "#475569";       // secondary text
-const MUTED     = "#94A3B8";       // muted / placeholder
-const CYAN      = "#06B6D4";       // teal accent
+// ── Design tokens (matches main app light theme) ──────────────────────────────
+const PAGE_BG   = "#F0F4F8";
+const WHITE     = "#FFFFFF";
+const NAVY      = "#1B2E5E";
+const NAVY_DARK = "#0F1E3D";
+const SKY       = "#7BB8D4";
+const SKY_LIGHT = "#E8F4FB";
+const BORDER    = "#DDE6F0";
+const SHADOW    = "0 2px 12px rgba(27,46,94,0.08)";
+const TEXT      = "#1B2E5E";
+const TEXT2     = "#4A6080";
+const MUTED     = "#8FA8C0";
+
+// Macro accent colors
+const C_PROTEIN = "#EF4444";   // red dot
+const C_CARBS   = "#F59E0B";   // amber dot
+const C_FAT     = "#8B5CF6";   // purple dot
+const C_CAL     = "#1B2E5E";   // navy (calorie ring)
+const C_GREEN   = "#22C55E";   // goal met bar
+const C_WATER   = "#38BDF8";   // water blue
 
 // ── Translations ──────────────────────────────────────────────────────────────
 const T: Record<string, Record<string, string>> = {
-  title:        { ar: "تتبع التغذية", en: "Nutrition Tracker" },
+  title:        { ar: "التغذية", en: "Nutrition" },
   dashboard:    { ar: "لوحة التحكم", en: "Dashboard" },
-  scanner:      { ar: "مسح الطعام", en: "Scan Food" },
-  meals:        { ar: "وجباتي", en: "My Meals" },
-  insights:     { ar: "تحليلات AI", en: "AI Insights" },
-  scan:         { ar: "مسح بالكاميرا", en: "Scan Food" },
-  upload:       { ar: "رفع صورة", en: "Upload Photo" },
-  analyzing:    { ar: "جاري تحليل الطعام...", en: "Analyzing food..." },
-  today:        { ar: "اليوم", en: "Today" },
-  history:      { ar: "السجل", en: "History" },
-  calories:     { ar: "سعرات", en: "Calories" },
+  meals:        { ar: "وجباتي", en: "Meals" },
+  scanner:      { ar: "الماسح", en: "Scanner" },
+  insights:     { ar: "تحليلات", en: "Insights" },
+  goals:        { ar: "الأهداف", en: "Goals" },
+  dailyCal:     { ar: "السعرات اليومية", en: "Daily Calories" },
+  macros:       { ar: "الماكرو", en: "Macronutrients" },
+  waterIntake:  { ar: "استهلاك الماء", en: "Water Intake" },
+  weeklyTrend:  { ar: "الاتجاه الأسبوعي", en: "Weekly Trend" },
+  remaining:    { ar: "متبقي", en: "Remaining" },
+  consumed:     { ar: "مستهلك", en: "Consumed" },
+  goal:         { ar: "الهدف", en: "Goal" },
   protein:      { ar: "بروتين", en: "Protein" },
   carbs:        { ar: "كربوهيدرات", en: "Carbs" },
   fat:          { ar: "دهون", en: "Fat" },
-  fiber:        { ar: "ألياف", en: "Fiber" },
-  water:        { ar: "الماء", en: "Water" },
-  grams:        { ar: "غرام", en: "g" },
-  save:         { ar: "حفظ الوجبة", en: "Save Meal" },
+  calories:     { ar: "سعرات", en: "Calories" },
+  kcal:         { ar: "سعرة", en: "kcal" },
+  of:           { ar: "من", en: "of" },
+  goalMet:      { ar: "الهدف محقق", en: "Goal met" },
+  belowGoal:    { ar: "أقل من الهدف", en: "Below goal" },
+  scan:         { ar: "مسح بالكاميرا", en: "Scan Food" },
+  upload:       { ar: "رفع صورة", en: "Upload Photo" },
+  analyzing:    { ar: "جاري التحليل...", en: "Analyzing..." },
+  noFood:       { ar: "لم يتم التعرف على طعام. حاول صورة أوضح.", en: "No food detected. Try a clearer image." },
+  tryAgain:     { ar: "حاول مجدداً", en: "Try Again" },
+  addToDiary:   { ar: "أضف للسجل", en: "Add to Diary" },
   saving:       { ar: "جاري الحفظ...", en: "Saving..." },
   saved:        { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
   edit:         { ar: "تعديل", en: "Edit" },
   delete:       { ar: "حذف", en: "Delete" },
-  noMeals:      { ar: "لا توجد وجبات مسجلة بعد", en: "No meals logged yet" },
+  noMeals:      { ar: "لا توجد وجبات بعد", en: "No meals logged yet" },
   breakfast:    { ar: "فطور", en: "Breakfast" },
   lunch:        { ar: "غداء", en: "Lunch" },
   dinner:       { ar: "عشاء", en: "Dinner" },
   snack:        { ar: "وجبة خفيفة", en: "Snack" },
-  goal:         { ar: "الهدف", en: "Goal" },
-  tryAgain:     { ar: "حاول مجدداً", en: "Try Again" },
-  noFood:       { ar: "لم يتم التعرف على طعام. حاول صورة أوضح.", en: "No food detected. Try a clearer image." },
-  insight:      { ar: "تحليل AI", en: "AI Insight" },
-  portion:      { ar: "الحصة", en: "Portion" },
+  mealType:     { ar: "نوع الوجبة", en: "Meal Type" },
   total:        { ar: "الإجمالي", en: "Total" },
   searchFood:   { ar: "ابحث عن طعام...", en: "Search food..." },
-  addFood:      { ar: "إضافة طعام", en: "Add Food" },
+  addFood:      { ar: "إضافة", en: "Add" },
   barcodeHint:  { ar: "دعم الباركود — قريباً!", en: "Barcode support — coming soon!" },
-  addWater:     { ar: "أضف ماء", en: "Add Water" },
-  ml:           { ar: "مل", en: "ml" },
-  weeklyTrend:  { ar: "الاتجاه الأسبوعي", en: "Weekly Trend" },
   generateInsights: { ar: "توليد تحليلات AI", en: "Generate AI Insights" },
   generating:   { ar: "جاري التوليد...", en: "Generating..." },
   noInsights:   { ar: "اضغط لتوليد تحليلات مخصصة", en: "Tap to generate personalized insights" },
-  addToDiary:   { ar: "أضف للسجل", en: "Add to Diary" },
-  mealType:     { ar: "نوع الوجبة", en: "Meal Type" },
+  saveGoals:    { ar: "حفظ الأهداف", en: "Save Goals" },
+  savingGoals:  { ar: "جاري الحفظ...", en: "Saving..." },
+  savedGoals:   { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
+  ml:           { ar: "مل", en: "ml" },
 };
-
 const tl = (k: string, lang: string) => T[k]?.[lang] ?? T[k]?.en ?? k;
 
 const MEAL_ICONS: Record<string, string> = { breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎" };
 
-// ── Shared card style ─────────────────────────────────────────────────────────
+// ── Shared card ───────────────────────────────────────────────────────────────
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({
-  background: WHITE,
-  borderRadius: 16,
-  border: `1px solid ${BORDER}`,
-  boxShadow: SHADOW,
-  padding: "16px",
-  marginBottom: 12,
+  background: WHITE, borderRadius: 20,
+  border: `1px solid ${BORDER}`, boxShadow: SHADOW,
+  padding: "18px 16px", marginBottom: 14,
   ...extra,
 });
 
-// ── Circular progress ─────────────────────────────────────────────────────────
-function CircleProgress({ value, max, color, colorBg, label, size = 76 }: {
-  value: number; max: number; color: string; colorBg: string; label: string; size?: number;
-}) {
-  const pct  = Math.min(value / Math.max(max, 1), 1);
-  const r    = (size / 2) - 7;
+// ── Large calorie ring ────────────────────────────────────────────────────────
+function CalorieRing({ consumed, goal, lang }: { consumed: number; goal: number; lang: string }) {
+  const size = 180;
+  const r = 74;
   const circ = 2 * Math.PI * r;
+  const pct = Math.min(consumed / Math.max(goal, 1), 1);
   const dash = circ * (1 - pct);
+  const remaining = Math.max(goal - consumed, 0);
+
   return (
-    <div style={{ textAlign: "center", position: "relative" }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={colorBg} strokeWidth={6} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={6}
-          strokeDasharray={circ} strokeDashoffset={dash}
-          strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease" }} />
-      </svg>
-      <div style={{
-        position: "absolute", top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)",
-        fontSize: size > 70 ? 14 : 12, fontWeight: 800, color: TEXT,
-        lineHeight: 1.1,
-      }}>
-        {Math.round(value)}
+    <div style={card()}>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 4 }}>
+        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>🔥 {tl("dailyCal", lang)}</span>
       </div>
-      <div style={{ fontSize: 10, color: TEXT2, marginTop: 4, fontWeight: 600 }}>{label}</div>
+
+      {/* Ring */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+        <div style={{ position: "relative", width: size, height: size }}>
+          <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E8EDF4" strokeWidth={12} />
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={NAVY} strokeWidth={12}
+              strokeDasharray={circ} strokeDashoffset={dash}
+              strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
+          </svg>
+          <div style={{
+            position: "absolute", top: "50%", left: "50%",
+            transform: "translate(-50%, -50%)", textAlign: "center",
+          }}>
+            <div style={{ color: TEXT, fontSize: 36, fontWeight: 900, lineHeight: 1 }}>
+              {Math.round(consumed)}
+            </div>
+            <div style={{ color: MUTED, fontSize: 13, marginTop: 4 }}>/ {goal}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>{tl("kcal", lang)}</div>
+        <div style={{ color: MUTED, fontSize: 12 }}>{tl("of", lang)} {goal}</div>
+      </div>
+
+      {/* 3 stat boxes */}
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{
+          flex: 1, background: "#F0FDF4", borderRadius: 14, padding: "12px 8px", textAlign: "center",
+          border: "1px solid #BBF7D0",
+        }}>
+          <div style={{ color: C_GREEN, fontSize: 20, fontWeight: 900 }}>{Math.round(remaining)}</div>
+          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
+        </div>
+        <div style={{
+          flex: 1, background: PAGE_BG, borderRadius: 14, padding: "12px 8px", textAlign: "center",
+          border: `1px solid ${BORDER}`,
+        }}>
+          <div style={{ color: TEXT, fontSize: 20, fontWeight: 900 }}>{Math.round(consumed)}</div>
+          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
+        </div>
+        <div style={{
+          flex: 1, background: SKY_LIGHT, borderRadius: 14, padding: "12px 8px", textAlign: "center",
+          border: `1px solid ${SKY}44`,
+        }}>
+          <div style={{ color: SKY, fontSize: 20, fontWeight: 900 }}>{goal}</div>
+          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ── Macro stat card ───────────────────────────────────────────────────────────
-function MacroCard({ label, value, max, unit, color, colorBg, icon }: {
-  label: string; value: number; max: number; unit: string;
-  color: string; colorBg: string; icon: string;
+// ── Small macro ring ──────────────────────────────────────────────────────────
+function SmallRing({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
+  const size = 90;
+  const r = 34;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(value / Math.max(max, 1), 1);
+  const dash = circ * (1 - pct);
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
+        <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E8EDF4" strokeWidth={7} />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={7}
+            strokeDasharray={circ} strokeDashoffset={dash}
+            strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease" }} />
+        </svg>
+        {/* colored dot at top */}
+        <div style={{
+          position: "absolute", top: 2, left: "50%", transform: "translateX(-50%)",
+          width: 8, height: 8, borderRadius: "50%", background: color,
+        }} />
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)", textAlign: "center",
+        }}>
+          <div style={{ color: TEXT, fontSize: 15, fontWeight: 900, lineHeight: 1 }}>
+            {Math.round(value)}
+          </div>
+          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>/ {max}</div>
+        </div>
+      </div>
+      <div style={{ color: TEXT, fontSize: 12, fontWeight: 700, marginTop: 6 }}>{label}</div>
+    </div>
+  );
+}
+
+// ── Macro progress bar ────────────────────────────────────────────────────────
+function MacroBar({ label, value, max, unit, color }: {
+  label: string; value: number; max: number; unit: string; color: string;
 }) {
   const pct = Math.min(value / Math.max(max, 1), 1);
   return (
-    <div style={{
-      background: colorBg, borderRadius: 14, padding: "12px 14px",
-      border: `1px solid ${color}22`, flex: 1, minWidth: 0,
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <span style={{ fontSize: 16 }}>{icon}</span>
-        <span style={{ color, fontSize: 11, fontWeight: 700 }}>
-          {Math.round(value)}/{max}{unit}
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ color: TEXT, fontSize: 14, fontWeight: 700 }}>{label}</span>
+        <span style={{ color: MUTED, fontSize: 13 }}>
+          {Math.round(value)}{unit} / {max}{unit}
         </span>
       </div>
-      <div style={{ color: TEXT, fontSize: 13, fontWeight: 800, marginBottom: 6 }}>{label}</div>
-      <div style={{ background: `${color}22`, borderRadius: 4, height: 5, overflow: "hidden" }}>
+      <div style={{ background: "#E8EDF4", borderRadius: 6, height: 7, overflow: "hidden" }}>
         <div style={{
           width: `${pct * 100}%`, height: "100%",
-          background: color, borderRadius: 4,
+          background: color, borderRadius: 6,
           transition: "width 0.5s ease",
         }} />
       </div>
@@ -154,117 +230,43 @@ function MacroCard({ label, value, max, unit, color, colorBg, icon }: {
   );
 }
 
-// ── Macro pill ─────────────────────────────────────────────────────────────────
-function MacroPill({ label, value, unit = "g", color, colorBg }: {
-  label: string; value: number; unit?: string; color: string; colorBg: string;
-}) {
-  return (
-    <div style={{
-      background: colorBg, border: `1px solid ${color}33`,
-      borderRadius: 10, padding: "7px 10px", textAlign: "center", minWidth: 62,
-    }}>
-      <div style={{ color, fontSize: 14, fontWeight: 800 }}>{Math.round(value)}</div>
-      <div style={{ color: TEXT2, fontSize: 9, marginTop: 1 }}>{unit === "kcal" ? "kcal" : unit}</div>
-      <div style={{ color: MUTED, fontSize: 9 }}>{label}</div>
-    </div>
-  );
-}
-
-// ── Editable food item row ────────────────────────────────────────────────────
-function FoodItemRow({ item, lang, onUpdate, onRemove }: {
-  item: any; lang: string;
-  onUpdate: (field: string, val: number) => void;
-  onRemove: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const confColor = item.confidence === "high" ? GREEN : item.confidence === "medium" ? GOLD : MUTED;
-
-  return (
-    <div style={{
-      background: WHITE, borderRadius: 12, padding: "12px 14px",
-      marginBottom: 8, border: `1px solid ${BORDER}`,
-      boxShadow: "0 1px 4px rgba(27,46,94,0.05)",
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-        <div style={{ flex: 1 }}>
-          <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>
-            {lang === "ar" && item.nameAr ? item.nameAr : item.name}
-          </span>
-          <span style={{ color: confColor, fontSize: 10, marginRight: 6, marginLeft: 6 }}>●</span>
-          <span style={{ color: MUTED, fontSize: 11 }}>
-            {lang === "ar" ? item.portionDescAr || item.portionDesc : item.portionDesc}
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button onClick={() => setEditing(!editing)} style={{
-            background: SKY_LIGHT, border: `1px solid ${SKY}33`, color: SKY,
-            borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
-          }}>{tl("edit", lang)}</button>
-          <button onClick={onRemove} style={{
-            background: RED_BG, border: `1px solid ${RED}33`, color: RED,
-            borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
-          }}>✕</button>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {[
-          { k: "calories", label: tl("calories", lang), unit: "kcal", color: ORANGE, bg: ORANGE_BG },
-          { k: "protein",  label: tl("protein",  lang), unit: "g",    color: SKY,    bg: SKY_LIGHT },
-          { k: "carbs",    label: tl("carbs",    lang), unit: "g",    color: GOLD,   bg: GOLD_BG },
-          { k: "fat",      label: tl("fat",      lang), unit: "g",    color: PURPLE, bg: PURPLE_BG },
-        ].map(m => (
-          editing ? (
-            <div key={m.k} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-              <input
-                type="number"
-                value={item[m.k] ?? 0}
-                onChange={e => onUpdate(m.k, parseFloat(e.target.value) || 0)}
-                style={{
-                  width: 56, background: m.bg, border: `1.5px solid ${m.color}55`,
-                  borderRadius: 8, padding: "5px 6px", color: m.color,
-                  fontSize: 13, fontWeight: 700, textAlign: "center", outline: "none",
-                }}
-              />
-              <span style={{ color: MUTED, fontSize: 9 }}>{m.label}</span>
-            </div>
-          ) : (
-            <MacroPill key={m.k} label={m.label} value={item[m.k] ?? 0} unit={m.unit} color={m.color} colorBg={m.bg} />
-          )
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Water tracker ─────────────────────────────────────────────────────────────
-function WaterTracker({ lang, totalMl, goalMl, onAdd }: {
+// ── Water intake ──────────────────────────────────────────────────────────────
+function WaterCard({ lang, totalMl, goalMl, onAdd }: {
   lang: string; totalMl: number; goalMl: number; onAdd: (ml: number) => void;
 }) {
   const pct = Math.min(totalMl / Math.max(goalMl, 1), 1);
-  const cups = [250, 500, 750];
+  const cups = [
+    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150, icon: "💧" },
+    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250, icon: "💧" },
+    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330, icon: "💧" },
+    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500, icon: "💧" },
+  ];
   return (
     <div style={card()}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <span style={{ color: TEXT, fontSize: 14, fontWeight: 800 }}>💧 {tl("water", lang)}</span>
-        <span style={{ color: CYAN, fontSize: 12, fontWeight: 700, background: "#E0F7FA", borderRadius: 20, padding: "2px 10px" }}>
-          {totalMl} / {goalMl} {tl("ml", lang)}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>💧 {tl("waterIntake", lang)}</span>
+        <span style={{ color: C_WATER, fontSize: 13, fontWeight: 700 }}>
+          {totalMl}{tl("ml", lang)} / {goalMl}{tl("ml", lang)}
         </span>
       </div>
-      <div style={{ background: "#E3F2FD", borderRadius: 8, height: 10, marginBottom: 12, overflow: "hidden" }}>
+      <div style={{ background: "#E8EDF4", borderRadius: 8, height: 8, marginBottom: 16, overflow: "hidden" }}>
         <div style={{
           width: `${pct * 100}%`, height: "100%",
-          background: `linear-gradient(90deg, ${CYAN}, ${SKY})`,
+          background: `linear-gradient(90deg, ${C_WATER}, #0EA5E9)`,
           borderRadius: 8, transition: "width 0.5s ease",
         }} />
       </div>
       <div style={{ display: "flex", gap: 8 }}>
-        {cups.map(ml => (
-          <button key={ml} onClick={() => onAdd(ml)} style={{
-            flex: 1, background: "#E3F2FD", border: `1px solid ${CYAN}44`,
-            borderRadius: 10, padding: "8px 4px", color: CYAN,
-            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+        {cups.map(c => (
+          <button key={c.ml} onClick={() => onAdd(c.ml)} style={{
+            flex: 1, background: SKY_LIGHT, border: `1px solid ${C_WATER}33`,
+            borderRadius: 14, padding: "12px 4px",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            cursor: "pointer", fontFamily: "inherit",
           }}>
-            +{ml}{tl("ml", lang)}
+            <span style={{ fontSize: 22 }}>{c.icon}</span>
+            <span style={{ color: TEXT, fontSize: 11, fontWeight: 700 }}>{c.label}</span>
+            <span style={{ color: C_WATER, fontSize: 10 }}>{c.ml}{tl("ml", lang)}</span>
           </button>
         ))}
       </div>
@@ -274,41 +276,255 @@ function WaterTracker({ lang, totalMl, goalMl, onAdd }: {
 
 // ── Weekly bar chart ──────────────────────────────────────────────────────────
 function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string; goalCalories: number }) {
+  const [tooltip, setTooltip] = useState<{ idx: number; x: number } | null>(null);
   const maxCal = Math.max(...trend.map(d => d.calories), goalCalories, 1);
+
   return (
     <div style={card()}>
-      <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 14px" }}>
-        📈 {tl("weeklyTrend", lang)}
-      </p>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 5, height: 80 }}>
-        {trend.map((d, i) => {
-          const h = Math.round((d.calories / maxCal) * 70);
-          const isToday = i === trend.length - 1;
-          return (
-            <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{
-                width: "100%", height: h, minHeight: 4,
-                background: isToday
-                  ? `linear-gradient(180deg, ${ORANGE}, ${GOLD})`
-                  : `${SKY}44`,
-                borderRadius: "6px 6px 0 0",
-                transition: "height 0.4s ease",
-              }} />
-              <span style={{ color: MUTED, fontSize: 8 }}>{d.dayLabel}</span>
-            </div>
-          );
-        })}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>📈 {tl("weeklyTrend", lang)}</span>
       </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-        <span style={{ color: GOLD, fontSize: 10, background: GOLD_BG, borderRadius: 20, padding: "2px 8px" }}>
-          {tl("goal", lang)}: {goalCalories} kcal
-        </span>
+
+      {/* Chart area */}
+      <div style={{ position: "relative" }}>
+        {/* Y-axis labels */}
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 4, paddingLeft: 28 }}>
+          {/* Y labels */}
+          <div style={{
+            position: "absolute", left: 0, top: 0, bottom: 20,
+            display: "flex", flexDirection: "column", justifyContent: "space-between",
+          }}>
+            {[4, 3, 2, 1, 0].map(v => (
+              <span key={v} style={{ color: MUTED, fontSize: 9 }}>{v}</span>
+            ))}
+          </div>
+
+          {/* Bars */}
+          <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 4, height: 120 }}>
+            {trend.map((d, i) => {
+              const h = Math.round((d.calories / maxCal) * 110);
+              const metGoal = d.calories >= goalCalories;
+              const isToday = i === trend.length - 1;
+              return (
+                <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, position: "relative" }}
+                  onMouseEnter={() => setTooltip({ idx: i, x: i })}
+                  onMouseLeave={() => setTooltip(null)}
+                  onTouchStart={() => setTooltip({ idx: i, x: i })}
+                >
+                  {tooltip?.idx === i && (
+                    <div style={{
+                      position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)",
+                      background: WHITE, border: `1px solid ${BORDER}`, borderRadius: 10,
+                      padding: "6px 10px", zIndex: 10, whiteSpace: "nowrap",
+                      boxShadow: SHADOW, marginBottom: 4,
+                    }}>
+                      <div style={{ color: TEXT, fontSize: 11, fontWeight: 700 }}>{d.dayLabel}</div>
+                      <div style={{ color: TEXT2, fontSize: 10 }}>
+                        {lang === "ar" ? "السعرات" : "Calories"} : {Math.round(d.calories)} kcal
+                      </div>
+                    </div>
+                  )}
+                  <div style={{
+                    width: "100%", height: Math.max(h, 4),
+                    background: metGoal ? C_GREEN : (isToday ? "#CBD5E1" : "#CBD5E1"),
+                    borderRadius: "5px 5px 0 0",
+                    transition: "height 0.4s ease",
+                    opacity: isToday ? 1 : 0.7,
+                  }} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* X-axis labels */}
+        <div style={{ display: "flex", paddingLeft: 28, marginTop: 4, gap: 4 }}>
+          {trend.map(d => (
+            <div key={d.date} style={{ flex: 1, textAlign: "center" }}>
+              <span style={{ color: MUTED, fontSize: 9 }}>{d.dayLabel}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 12, height: 12, borderRadius: 3, background: C_GREEN }} />
+          <span style={{ color: TEXT2, fontSize: 11 }}>{tl("goalMet", lang)}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 12, height: 12, borderRadius: 3, background: "#CBD5E1" }} />
+          <span style={{ color: TEXT2, fontSize: 11 }}>{tl("belowGoal", lang)}</span>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Meal card (history) ───────────────────────────────────────────────────────
+// ── Goals Modal ───────────────────────────────────────────────────────────────
+function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClose: () => void }) {
+  const utils = trpc.useUtils();
+  const [cal,   setCal]   = useState(goals?.calories ?? 2000);
+  const [prot,  setProt]  = useState(goals?.proteinG ?? 150);
+  const [carbs, setCarbs] = useState(goals?.carbsG   ?? 200);
+  const [fat,   setFat]   = useState(goals?.fatG     ?? 65);
+  const [water, setWater] = useState(goals?.waterMl  ?? 2500);
+  const [status, setStatus] = useState<"idle"|"saving"|"saved">("idle");
+
+  const setGoals = trpc.nutrition.setGoals.useMutation({
+    onSuccess: () => {
+      utils.nutrition.getTodayLog.invalidate();
+      utils.nutrition.getGoals.invalidate();
+    },
+  });
+
+  const handleSave = async () => {
+    setStatus("saving");
+    await setGoals.mutateAsync({ calories: cal, proteinG: prot, carbsG: carbs, fatG: fat, waterMl: water });
+    setStatus("saved");
+    setTimeout(() => { setStatus("idle"); onClose(); }, 1200);
+  };
+
+  const Field = ({ label, value, onChange, min, max, unit }: any) => (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+        <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{label}</span>
+        <span style={{ color: MUTED, fontSize: 12 }}>{unit}</span>
+      </div>
+      <input
+        type="number" value={value}
+        onChange={e => onChange(parseInt(e.target.value) || min)}
+        min={min} max={max}
+        style={{
+          width: "100%", boxSizing: "border-box",
+          background: PAGE_BG, border: `1.5px solid ${BORDER}`,
+          borderRadius: 12, padding: "10px 14px", color: TEXT,
+          fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none",
+        }}
+      />
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(15,30,61,0.55)",
+      zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center",
+    }} onClick={onClose}>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: WHITE, borderRadius: "24px 24px 0 0",
+          width: "100%", maxWidth: 480, padding: "24px 20px 36px",
+          boxShadow: "0 -8px 40px rgba(27,46,94,0.18)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 900, margin: 0 }}>
+            🎯 {tl("goals", lang)}
+          </h2>
+          <button onClick={onClose} style={{
+            background: PAGE_BG, border: "none", borderRadius: "50%",
+            width: 32, height: 32, fontSize: 16, cursor: "pointer", color: TEXT2,
+          }}>✕</button>
+        </div>
+
+        <Field label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   min={500}  max={10000} unit="kcal" />
+        <Field label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  min={0}    max={500}   unit="g" />
+        <Field label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} min={0}    max={1000}  unit="g" />
+        <Field label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   min={0}    max={300}   unit="g" />
+        <Field label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} min={500}  max={10000} unit="ml" />
+
+        <button onClick={handleSave} disabled={status !== "idle"} style={{
+          width: "100%",
+          background: status === "saved"
+            ? `linear-gradient(135deg, #22C55E, #16A34A)`
+            : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+          color: WHITE, border: "none", borderRadius: 14,
+          padding: "14px", fontSize: 15, fontWeight: 900,
+          cursor: status !== "idle" ? "not-allowed" : "pointer",
+          fontFamily: "inherit", marginTop: 4,
+          opacity: status === "saving" ? 0.7 : 1,
+        }}>
+          {status === "saved" ? tl("savedGoals", lang) : status === "saving" ? tl("savingGoals", lang) : tl("saveGoals", lang)}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard Tab ─────────────────────────────────────────────────────────────
+function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => void }) {
+  const utils = trpc.useUtils();
+  const { data: todayLog, isLoading } = trpc.nutrition.getTodayLog.useQuery({ date: undefined });
+  const { data: weeklyData } = trpc.nutrition.getWeeklyTrends.useQuery();
+  const logWater = trpc.nutrition.logWater.useMutation({
+    onSuccess: () => utils.nutrition.getTodayLog.invalidate(),
+  });
+
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px 0" }}>
+        <div style={{ fontSize: 32, animation: "spin 1s linear infinite" }}>⏳</div>
+      </div>
+    );
+  }
+
+  const goals   = todayLog?.goals;
+  const totals  = todayLog?.totals ?? { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+  const totalWaterMl = todayLog?.totalWaterMl ?? 0;
+
+  const calGoal   = goals?.calories ?? 2000;
+  const protGoal  = goals?.proteinG ?? 150;
+  const carbGoal  = goals?.carbsG   ?? 200;
+  const fatGoal   = goals?.fatG     ?? 65;
+  const waterGoal = goals?.waterMl  ?? 2500;
+
+  return (
+    <div>
+      {/* Calorie ring card */}
+      <CalorieRing consumed={totals.calories} goal={calGoal} lang={lang} />
+
+      {/* Macronutrients card */}
+      <div style={card()}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
+          <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>🥩 {tl("macros", lang)}</span>
+        </div>
+
+        {/* Progress bars */}
+        <MacroBar label={tl("protein", lang)} value={totals.proteinG} max={protGoal} unit="g" color={C_PROTEIN} />
+        <MacroBar label={tl("carbs",   lang)} value={totals.carbsG}   max={carbGoal} unit="g" color={C_CARBS} />
+        <MacroBar label={tl("fat",     lang)} value={totals.fatG}     max={fatGoal}  unit="g" color={C_FAT} />
+
+        {/* 3 small rings */}
+        <div style={{ display: "flex", justifyContent: "space-around", marginTop: 16 }}>
+          <SmallRing value={totals.proteinG} max={protGoal} color={C_PROTEIN} label={tl("protein", lang)} />
+          <SmallRing value={totals.carbsG}   max={carbGoal} color={C_CARBS}   label={tl("carbs",   lang)} />
+          <SmallRing value={totals.fatG}     max={fatGoal}  color={C_FAT}     label={tl("fat",     lang)} />
+        </div>
+      </div>
+
+      {/* Water intake */}
+      <WaterCard
+        lang={lang}
+        totalMl={totalWaterMl}
+        goalMl={waterGoal}
+        onAdd={(ml) => logWater.mutate({ amountMl: ml })}
+      />
+
+      {/* Weekly chart */}
+      {weeklyData?.trend && weeklyData.trend.length > 0 && (
+        <WeeklyChart
+          trend={weeklyData.trend}
+          lang={lang}
+          goalCalories={weeklyData.goals?.calories ?? calGoal}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Meal card ─────────────────────────────────────────────────────────────────
 function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const time = new Date(meal.logged_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -319,21 +535,22 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
       background: WHITE, borderRadius: 16, marginBottom: 10,
       border: `1px solid ${BORDER}`, boxShadow: SHADOW, overflow: "hidden",
     }}>
-      <div
-        onClick={() => setExpanded(!expanded)}
-        style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-      >
+      <div onClick={() => setExpanded(!expanded)} style={{
+        padding: "14px 16px", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: ORANGE_BG, display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 22, flexShrink: 0,
+            width: 44, height: 44, borderRadius: 12, background: "#FFF7ED",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
           }}>
             {MEAL_ICONS[meal.meal_type] ?? "🍽️"}
           </div>
           <div>
             <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: 0 }}>
-              {lang === "ar" ? (meal.items?.[0]?.name_ar || meal.items?.[0]?.name || tl(meal.meal_type, lang)) : (meal.items?.[0]?.name || tl(meal.meal_type, lang))}
+              {lang === "ar"
+                ? meal.items?.[0]?.name_ar || meal.items?.[0]?.name || tl(meal.meal_type, lang)
+                : meal.items?.[0]?.name || tl(meal.meal_type, lang)}
               {meal.items?.length > 1 ? ` +${meal.items.length - 1}` : ""}
             </p>
             <p style={{ color: MUTED, fontSize: 10, margin: "2px 0 0" }}>{date} · {time}</p>
@@ -341,8 +558,8 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{
-            color: ORANGE, fontSize: 13, fontWeight: 800,
-            background: ORANGE_BG, borderRadius: 20, padding: "3px 10px",
+            color: "#F97316", fontSize: 13, fontWeight: 800,
+            background: "#FFF7ED", borderRadius: 20, padding: "3px 10px",
           }}>
             {Math.round(meal.total_calories)} kcal
           </span>
@@ -358,22 +575,31 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
               borderRadius: 12, marginBottom: 12, marginTop: 12,
             }} />
           )}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12, marginTop: 10 }}>
-            <MacroPill label={tl("calories", lang)} value={meal.total_calories} unit="kcal" color={ORANGE} colorBg={ORANGE_BG} />
-            <MacroPill label={tl("protein",  lang)} value={meal.total_protein}  color={SKY}    colorBg={SKY_LIGHT} />
-            <MacroPill label={tl("carbs",    lang)} value={meal.total_carbs}    color={GOLD}   colorBg={GOLD_BG} />
-            <MacroPill label={tl("fat",      lang)} value={meal.total_fat}      color={PURPLE} colorBg={PURPLE_BG} />
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12, marginBottom: 12 }}>
+            {[
+              { l: tl("protein", lang), v: meal.total_protein, c: C_PROTEIN, bg: "#FEF2F2" },
+              { l: tl("carbs",   lang), v: meal.total_carbs,   c: C_CARBS,   bg: "#FFFBEB" },
+              { l: tl("fat",     lang), v: meal.total_fat,     c: C_FAT,     bg: "#F5F3FF" },
+            ].map(m => (
+              <div key={m.l} style={{
+                background: m.bg, border: `1px solid ${m.c}22`,
+                borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
+              }}>
+                <div style={{ color: m.c, fontSize: 13, fontWeight: 800 }}>{Math.round(m.v)}g</div>
+                <div style={{ color: MUTED, fontSize: 9 }}>{m.l}</div>
+              </div>
+            ))}
           </div>
           {meal.items?.map((item: any, i: number) => (
             <div key={i} style={{
-              background: BG, borderRadius: 10, padding: "8px 12px", marginBottom: 6,
+              background: PAGE_BG, borderRadius: 10, padding: "8px 12px", marginBottom: 6,
               display: "flex", justifyContent: "space-between", alignItems: "center",
               border: `1px solid ${BORDER}`,
             }}>
               <span style={{ color: TEXT2, fontSize: 12 }}>
                 {lang === "ar" ? item.name_ar || item.name : item.name}
               </span>
-              <span style={{ color: ORANGE, fontSize: 12, fontWeight: 700 }}>
+              <span style={{ color: "#F97316", fontSize: 12, fontWeight: 700 }}>
                 {Math.round(item.calories)} kcal
               </span>
             </div>
@@ -383,14 +609,14 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
               background: SKY_LIGHT, border: `1px solid ${SKY}33`,
               borderRadius: 10, padding: "10px 12px", marginTop: 10,
             }}>
-              <p style={{ color: NAVY_LIGHT, fontSize: 11, margin: 0, lineHeight: 1.6 }}>
+              <p style={{ color: NAVY, fontSize: 11, margin: 0, lineHeight: 1.6 }}>
                 💡 {lang === "ar" ? meal.insight_ar : meal.insight_en}
               </p>
             </div>
           )}
           <button onClick={onDelete} style={{
-            marginTop: 10, background: RED_BG, border: `1px solid ${RED}33`,
-            color: RED, borderRadius: 8, padding: "6px 14px", fontSize: 11,
+            marginTop: 10, background: "#FEF2F2", border: "1px solid #FECACA",
+            color: "#EF4444", borderRadius: 8, padding: "6px 14px", fontSize: 11,
             cursor: "pointer", fontFamily: "inherit",
           }}>🗑️ {tl("delete", lang)}</button>
         </div>
@@ -399,128 +625,44 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
   );
 }
 
-// ── Dashboard Tab ─────────────────────────────────────────────────────────────
-function DashboardTab({ lang }: { lang: string }) {
+// ── Meals Tab ─────────────────────────────────────────────────────────────────
+function MealsTab({ lang }: { lang: string }) {
   const utils = trpc.useUtils();
-  const { data: todayLog, isLoading } = trpc.nutrition.getTodayLog.useQuery({ date: undefined });
-  const { data: weeklyData } = trpc.nutrition.getWeeklyTrends.useQuery();
-  const logWater = trpc.nutrition.logWater.useMutation({
-    onSuccess: () => utils.nutrition.getTodayLog.invalidate(),
+  const { data: history, isLoading } = trpc.nutrition.getMealHistory.useQuery({ limit: 30 });
+  const deleteMeal = trpc.nutrition.deleteMeal.useMutation({
+    onSuccess: () => {
+      utils.nutrition.getMealHistory.invalidate();
+      utils.nutrition.getTodayLog.invalidate();
+      utils.nutrition.getToday.invalidate();
+    },
   });
 
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: "center", padding: "48px 0" }}>
-        <div style={{ fontSize: 32, marginBottom: 12, animation: "spin 1s linear infinite" }}>⏳</div>
-        <p style={{ color: MUTED, fontSize: 13 }}>{lang === "ar" ? "جاري التحميل..." : "Loading..."}</p>
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div style={{ textAlign: "center", padding: "48px 0" }}>
+      <div style={{ fontSize: 32, animation: "spin 1s linear infinite" }}>⏳</div>
+    </div>
+  );
 
-  const goals   = todayLog?.goals;
-  const totals  = todayLog?.totals ?? { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
-  const totalWaterMl = todayLog?.totalWaterMl ?? 0;
-  const mealCount    = todayLog?.meals?.length ?? 0;
-
-  const calGoal   = goals?.calories ?? 2000;
-  const protGoal  = goals?.proteinG ?? 120;
-  const carbGoal  = goals?.carbsG   ?? 250;
-  const fatGoal   = goals?.fatG     ?? 65;
-  const waterGoal = goals?.waterMl  ?? 2000;
+  if (!history?.length) return (
+    <div style={{ textAlign: "center", padding: "56px 0" }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: "50%", background: "#FFF7ED",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 40, margin: "0 auto 16px",
+      }}>🍽️</div>
+      <p style={{ color: TEXT, fontSize: 15, fontWeight: 700, margin: "0 0 6px" }}>{tl("noMeals", lang)}</p>
+      <p style={{ color: MUTED, fontSize: 12 }}>
+        {lang === "ar" ? "استخدم الماسح لإضافة وجباتك" : "Use the scanner to add your meals"}
+      </p>
+    </div>
+  );
 
   return (
     <div>
-      {/* Today hero card */}
-      <div style={{
-        background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY_LIGHT} 100%)`,
-        borderRadius: 20, padding: "20px 16px", marginBottom: 14,
-        boxShadow: "0 4px 20px rgba(27,46,94,0.18)",
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-          <div>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, margin: 0 }}>
-              {lang === "ar" ? "اليوم" : "Today"}
-            </p>
-            <p style={{ color: "#fff", fontSize: 16, fontWeight: 900, margin: "2px 0 0" }}>
-              {lang === "ar" ? "ملخص التغذية" : "Nutrition Summary"}
-            </p>
-          </div>
-          <span style={{
-            background: "rgba(255,255,255,0.15)", borderRadius: 20,
-            padding: "4px 12px", color: "rgba(255,255,255,0.9)", fontSize: 11,
-          }}>
-            {mealCount} {lang === "ar" ? "وجبات" : "meals"}
-          </span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-around", gap: 8 }}>
-          <CircleProgress value={totals.calories} max={calGoal}  color="#FF9800" colorBg="rgba(255,152,0,0.2)"  label={tl("calories", lang)} size={76} />
-          <CircleProgress value={totals.proteinG} max={protGoal} color="#29B6F6" colorBg="rgba(41,182,246,0.2)" label={tl("protein",  lang)} size={76} />
-          <CircleProgress value={totals.carbsG}   max={carbGoal} color="#FDD835" colorBg="rgba(253,216,53,0.2)" label={tl("carbs",    lang)} size={76} />
-          <CircleProgress value={totals.fatG}     max={fatGoal}  color="#CE93D8" colorBg="rgba(206,147,216,0.2)" label={tl("fat",    lang)} size={76} />
-        </div>
-      </div>
-
-      {/* Macro cards row */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <MacroCard label={tl("protein",  lang)} value={totals.proteinG} max={protGoal} unit="g"    color={SKY}    colorBg={SKY_LIGHT} icon="💪" />
-        <MacroCard label={tl("carbs",    lang)} value={totals.carbsG}   max={carbGoal} unit="g"    color={GOLD}   colorBg={GOLD_BG}   icon="🌾" />
-        <MacroCard label={tl("fat",      lang)} value={totals.fatG}     max={fatGoal}  unit="g"    color={PURPLE} colorBg={PURPLE_BG} icon="🥑" />
-      </div>
-
-      {/* Water tracker */}
-      <WaterTracker
-        lang={lang}
-        totalMl={totalWaterMl}
-        goalMl={waterGoal}
-        onAdd={(ml) => logWater.mutate({ amountMl: ml })}
-      />
-
-      {/* Weekly chart */}
-      {weeklyData?.trend && weeklyData.trend.length > 0 && (
-        <WeeklyChart
-          trend={weeklyData.trend}
-          lang={lang}
-          goalCalories={weeklyData.goals?.calories ?? 2000}
-        />
-      )}
-
-      {/* Today's meals list */}
-      {todayLog?.meals && todayLog.meals.length > 0 && (
-        <div style={card()}>
-          <p style={{ color: TEXT, fontSize: 14, fontWeight: 800, margin: "0 0 12px" }}>
-            🍽️ {lang === "ar" ? "وجبات اليوم" : "Today's Meals"}
-          </p>
-          {todayLog.meals.map((meal: any) => (
-            <div key={meal.id} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "10px 0", borderBottom: `1px solid ${BORDER}`,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10, background: ORANGE_BG,
-                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
-                }}>
-                  {MEAL_ICONS[meal.mealType] ?? "🍽️"}
-                </div>
-                <div>
-                  <p style={{ color: TEXT, fontSize: 12, fontWeight: 700, margin: 0 }}>
-                    {lang === "ar" && meal.foodNameAr ? meal.foodNameAr : meal.foodName}
-                  </p>
-                  <p style={{ color: MUTED, fontSize: 10, margin: "1px 0 0" }}>
-                    {tl(meal.mealType, lang)} · {meal.servingSize || ""}
-                  </p>
-                </div>
-              </div>
-              <span style={{
-                color: ORANGE, fontSize: 12, fontWeight: 700,
-                background: ORANGE_BG, borderRadius: 20, padding: "2px 8px",
-              }}>
-                {meal.calories} kcal
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      {history.map((meal: any) => (
+        <MealCard key={meal.id} meal={meal} lang={lang}
+          onDelete={() => deleteMeal.mutate({ mealId: meal.id })} />
+      ))}
     </div>
   );
 }
@@ -528,7 +670,7 @@ function DashboardTab({ lang }: { lang: string }) {
 // ── Scanner Tab ───────────────────────────────────────────────────────────────
 type ScanStatus = "idle" | "analyzing" | "ready";
 type SaveStatus = "idle" | "saving" | "saved";
-type MealType = "breakfast" | "lunch" | "dinner" | "snack";
+type MealType   = "breakfast" | "lunch" | "dinner" | "snack";
 
 function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
   const utils = trpc.useUtils();
@@ -563,8 +705,8 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
     setPreviewUrl(URL.createObjectURL(file));
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const dataUrl  = e.target?.result as string;
-      const base64   = dataUrl.split(",")[1];
+      const dataUrl = e.target?.result as string;
+      const base64  = dataUrl.split(",")[1];
       const mimeType = file.type || "image/jpeg";
       try {
         const res = await analyzeFood.mutateAsync({ imageBase64: base64, mimeType });
@@ -606,11 +748,8 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
     setSaveStatus("saving");
     try {
       await saveMeal.mutateAsync({
-        mealType,
-        imageUrl:  analysis?.imageUrl,
-        notes,
-        insightAr: analysis?.insightAr ?? "",
-        insightEn: analysis?.insightEn ?? "",
+        mealType, imageUrl: analysis?.imageUrl, notes,
+        insightAr: analysis?.insightAr ?? "", insightEn: analysis?.insightEn ?? "",
         items: editItems.map(item => ({
           name: item.name, nameAr: item.nameAr ?? "",
           estimatedGrams: item.estimatedGrams ?? 100,
@@ -652,57 +791,46 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
     <div>
       {status === "idle" && (
         <>
-          {/* Action buttons */}
           <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-            <button
-              onClick={() => cameraInputRef.current?.click()}
-              style={{
-                flex: 1,
-                background: `linear-gradient(135deg, ${SKY}, ${CYAN})`,
-                border: "none", borderRadius: 18, padding: "22px 12px",
-                color: WHITE, fontWeight: 900, fontSize: 14,
-                cursor: "pointer", fontFamily: "inherit",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-                boxShadow: `0 4px 16px ${SKY}44`,
-              }}
-            >
+            <button onClick={() => cameraInputRef.current?.click()} style={{
+              flex: 1, background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+              border: "none", borderRadius: 18, padding: "22px 12px",
+              color: WHITE, fontWeight: 900, fontSize: 14,
+              cursor: "pointer", fontFamily: "inherit",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+              boxShadow: `0 4px 16px ${NAVY}44`,
+            }}>
               <span style={{ fontSize: 34 }}>📷</span>
               {tl("scan", lang)}
             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                flex: 1, background: WHITE, border: `1.5px solid ${BORDER}`,
-                borderRadius: 18, padding: "22px 12px",
-                color: TEXT, fontWeight: 900, fontSize: 14,
-                cursor: "pointer", fontFamily: "inherit",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-                boxShadow: SHADOW,
-              }}
-            >
+            <button onClick={() => fileInputRef.current?.click()} style={{
+              flex: 1, background: WHITE, border: `1.5px solid ${BORDER}`,
+              borderRadius: 18, padding: "22px 12px",
+              color: TEXT, fontWeight: 900, fontSize: 14,
+              cursor: "pointer", fontFamily: "inherit",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+              boxShadow: SHADOW,
+            }}>
               <span style={{ fontSize: 34 }}>🖼️</span>
               {tl("upload", lang)}
             </button>
           </div>
 
-          {/* Barcode coming soon */}
           <div style={{
-            background: GOLD_BG, border: `1.5px dashed ${GOLD}66`,
+            background: "#FFFBEB", border: `1.5px dashed #F59E0B66`,
             borderRadius: 14, padding: "12px 16px", marginBottom: 14,
             display: "flex", alignItems: "center", gap: 10,
           }}>
             <span style={{ fontSize: 22 }}>📊</span>
-            <span style={{ color: GOLD, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>
               {tl("barcodeHint", lang)}
             </span>
           </div>
 
-          {/* Manual search */}
           <ManualSearch lang={lang} mealType={mealType} setMealType={setMealType} />
         </>
       )}
 
-      {/* Analyzing */}
       {status === "analyzing" && (
         <div style={{ textAlign: "center", padding: "40px 0" }}>
           {previewUrl && (
@@ -712,28 +840,26 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             }} />
           )}
           <div style={{ fontSize: 36, marginBottom: 12, animation: "spin 1s linear infinite" }}>🔍</div>
-          <p style={{ color: SKY, fontSize: 14, fontWeight: 700 }}>{tl("analyzing", lang)}</p>
+          <p style={{ color: NAVY, fontSize: 14, fontWeight: 700 }}>{tl("analyzing", lang)}</p>
           <p style={{ color: MUTED, fontSize: 11 }}>
             {lang === "ar" ? "يتم تحليل الطعام بالذكاء الاصطناعي..." : "AI is identifying food items..."}
           </p>
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div style={{
-          background: RED_BG, border: `1px solid ${RED}44`, borderRadius: 14,
+          background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 14,
           padding: "14px 16px", marginBottom: 16, textAlign: "center",
         }}>
-          <p style={{ color: RED, fontSize: 13, margin: "0 0 10px" }}>{error}</p>
+          <p style={{ color: "#EF4444", fontSize: 13, margin: "0 0 10px" }}>{error}</p>
           <button onClick={() => { setError(""); setPreviewUrl(null); }} style={{
-            background: RED_BG, border: `1px solid ${RED}44`, color: RED, borderRadius: 8,
+            background: "#FEF2F2", border: "1px solid #FECACA", color: "#EF4444", borderRadius: 8,
             padding: "6px 16px", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
           }}>{tl("tryAgain", lang)}</button>
         </div>
       )}
 
-      {/* Results */}
       {status === "ready" && editItems.length > 0 && (
         <>
           {previewUrl && (
@@ -747,13 +873,12 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               background: SKY_LIGHT, border: `1px solid ${SKY}33`,
               borderRadius: 12, padding: "10px 14px", marginBottom: 12,
             }}>
-              <p style={{ color: NAVY_LIGHT, fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+              <p style={{ color: NAVY, fontSize: 12, margin: 0, lineHeight: 1.6 }}>
                 💡 {lang === "ar" ? analysis.insightAr : analysis.insightEn}
               </p>
             </div>
           )}
 
-          {/* Meal type selector */}
           <div style={{ marginBottom: 14 }}>
             <p style={{ color: TEXT2, fontSize: 11, fontWeight: 700, margin: "0 0 8px" }}>
               {tl("mealType", lang)}
@@ -762,9 +887,9 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               {(["breakfast","lunch","dinner","snack"] as const).map(mt => (
                 <button key={mt} onClick={() => setMealType(mt)} style={{
                   padding: "7px 14px", borderRadius: 20,
-                  border: mealType === mt ? `1.5px solid ${SKY}` : `1px solid ${BORDER}`,
-                  background: mealType === mt ? SKY_LIGHT : WHITE,
-                  color: mealType === mt ? SKY : TEXT2,
+                  border: mealType === mt ? `1.5px solid ${NAVY}` : `1px solid ${BORDER}`,
+                  background: mealType === mt ? NAVY : WHITE,
+                  color: mealType === mt ? WHITE : TEXT2,
                   fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                 }}>
                   {MEAL_ICONS[mt]} {tl(mt, lang)}
@@ -774,34 +899,70 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
           </div>
 
           {editItems.map((item, idx) => (
-            <FoodItemRow
-              key={idx} item={item} lang={lang}
-              onUpdate={(f, v) => updateItem(idx, f, v)}
-              onRemove={() => removeItem(idx)}
-            />
+            <div key={idx} style={{
+              background: WHITE, borderRadius: 12, padding: "12px 14px",
+              marginBottom: 8, border: `1px solid ${BORDER}`, boxShadow: SHADOW,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>
+                  {lang === "ar" && item.nameAr ? item.nameAr : item.name}
+                </span>
+                <button onClick={() => removeItem(idx)} style={{
+                  background: "#FEF2F2", border: "1px solid #FECACA", color: "#EF4444",
+                  borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
+                }}>✕</button>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[
+                  { k: "calories", label: tl("calories", lang), unit: "kcal", color: "#F97316", bg: "#FFF7ED" },
+                  { k: "protein",  label: tl("protein",  lang), unit: "g",    color: C_PROTEIN, bg: "#FEF2F2" },
+                  { k: "carbs",    label: tl("carbs",    lang), unit: "g",    color: C_CARBS,   bg: "#FFFBEB" },
+                  { k: "fat",      label: tl("fat",      lang), unit: "g",    color: C_FAT,     bg: "#F5F3FF" },
+                ].map(m => (
+                  <div key={m.k} style={{
+                    background: m.bg, border: `1px solid ${m.color}22`,
+                    borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
+                  }}>
+                    <div style={{ color: m.color, fontSize: 13, fontWeight: 800 }}>
+                      {Math.round(item[m.k] ?? 0)}
+                    </div>
+                    <div style={{ color: MUTED, fontSize: 9 }}>{m.unit}</div>
+                    <div style={{ color: MUTED, fontSize: 9 }}>{m.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
 
-          {/* Totals */}
           <div style={{
-            background: BG, borderRadius: 14, padding: "14px 16px", marginBottom: 14,
+            background: PAGE_BG, borderRadius: 14, padding: "14px 16px", marginBottom: 14,
             border: `1px solid ${BORDER}`,
           }}>
             <p style={{ color: TEXT2, fontSize: 11, margin: "0 0 10px", fontWeight: 700 }}>
               {tl("total", lang)}
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "space-around" }}>
-              <MacroPill label={tl("calories", lang)} value={totals.calories} unit="kcal" color={ORANGE} colorBg={ORANGE_BG} />
-              <MacroPill label={tl("protein",  lang)} value={totals.protein}  color={SKY}    colorBg={SKY_LIGHT} />
-              <MacroPill label={tl("carbs",    lang)} value={totals.carbs}    color={GOLD}   colorBg={GOLD_BG} />
-              <MacroPill label={tl("fat",      lang)} value={totals.fat}      color={PURPLE} colorBg={PURPLE_BG} />
+              {[
+                { l: tl("calories", lang), v: totals.calories, u: "kcal", c: "#F97316", bg: "#FFF7ED" },
+                { l: tl("protein",  lang), v: totals.protein,  u: "g",    c: C_PROTEIN, bg: "#FEF2F2" },
+                { l: tl("carbs",    lang), v: totals.carbs,    u: "g",    c: C_CARBS,   bg: "#FFFBEB" },
+                { l: tl("fat",      lang), v: totals.fat,      u: "g",    c: C_FAT,     bg: "#F5F3FF" },
+              ].map(m => (
+                <div key={m.l} style={{
+                  background: m.bg, border: `1px solid ${m.c}22`,
+                  borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
+                }}>
+                  <div style={{ color: m.c, fontSize: 13, fontWeight: 800 }}>{Math.round(m.v)}</div>
+                  <div style={{ color: MUTED, fontSize: 9 }}>{m.u}</div>
+                  <div style={{ color: MUTED, fontSize: 9 }}>{m.l}</div>
+                </div>
+              ))}
             </div>
           </div>
 
           <textarea
             placeholder={lang === "ar" ? "ملاحظات اختيارية..." : "Optional notes..."}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            rows={2}
+            value={notes} onChange={e => setNotes(e.target.value)} rows={2}
             style={{
               width: "100%", boxSizing: "border-box",
               background: WHITE, border: `1px solid ${BORDER}`,
@@ -811,22 +972,19 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             }}
           />
 
-          <button onClick={handleSave} disabled={saveStatus === "saving" || saveStatus === "saved"} style={{
+          <button onClick={handleSave} disabled={saveStatus !== "idle"} style={{
             width: "100%",
             background: saveStatus === "saved"
-              ? `linear-gradient(135deg, ${GREEN}, #16A34A)`
-              : `linear-gradient(135deg, ${SKY}, ${CYAN})`,
+              ? `linear-gradient(135deg, #22C55E, #16A34A)`
+              : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
             color: WHITE, border: "none", borderRadius: 14,
             padding: "14px", fontSize: 15, fontWeight: 900,
-            cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
-            fontFamily: "inherit",
-            opacity: saveStatus === "saving" ? 0.7 : 1,
-            boxShadow: saveStatus === "saved" ? "none" : `0 4px 16px ${SKY}44`,
+            cursor: saveStatus !== "idle" ? "not-allowed" : "pointer",
+            fontFamily: "inherit", opacity: saveStatus === "saving" ? 0.7 : 1,
+            boxShadow: `0 4px 16px ${NAVY}44`,
           }}>
-            {saveStatus === "saved"
-              ? tl("saved", lang)
-              : saveStatus === "saving"
-              ? tl("saving", lang)
+            {saveStatus === "saved" ? tl("saved", lang)
+              : saveStatus === "saving" ? tl("saving", lang)
               : `💾 ${tl("addToDiary", lang)}`}
           </button>
         </>
@@ -877,34 +1035,43 @@ function ManualSearch({ lang, mealType, setMealType }: {
         🔍 {lang === "ar" ? "بحث يدوي" : "Manual Search"}
       </p>
       <input
-        type="text"
-        placeholder={tl("searchFood", lang)}
-        value={query}
+        type="text" placeholder={tl("searchFood", lang)} value={query}
         onChange={e => setQuery(e.target.value)}
         style={{
           width: "100%", boxSizing: "border-box",
-          background: BG, border: `1px solid ${BORDER}`,
+          background: PAGE_BG, border: `1px solid ${BORDER}`,
           borderRadius: 12, padding: "10px 14px", color: TEXT,
           fontSize: 13, fontFamily: "inherit", marginBottom: 8, outline: "none",
         }}
       />
       {result?.portion && (
         <div style={{ marginTop: 8 }}>
-          <p style={{ color: SKY, fontSize: 12, fontWeight: 700, margin: "0 0 8px" }}>
+          <p style={{ color: NAVY, fontSize: 12, fontWeight: 700, margin: "0 0 8px" }}>
             {result.food?.description}
           </p>
           <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-            <MacroPill label={tl("calories", lang)} value={result.portion.calories} unit="kcal" color={ORANGE} colorBg={ORANGE_BG} />
-            <MacroPill label={tl("protein",  lang)} value={result.portion.protein}  color={SKY}    colorBg={SKY_LIGHT} />
-            <MacroPill label={tl("carbs",    lang)} value={result.portion.carbs}    color={GOLD}   colorBg={GOLD_BG} />
-            <MacroPill label={tl("fat",      lang)} value={result.portion.fat}      color={PURPLE} colorBg={PURPLE_BG} />
+            {[
+              { l: tl("calories", lang), v: result.portion.calories, u: "kcal", c: "#F97316", bg: "#FFF7ED" },
+              { l: tl("protein",  lang), v: result.portion.protein,  u: "g",    c: C_PROTEIN, bg: "#FEF2F2" },
+              { l: tl("carbs",    lang), v: result.portion.carbs,    u: "g",    c: C_CARBS,   bg: "#FFFBEB" },
+              { l: tl("fat",      lang), v: result.portion.fat,      u: "g",    c: C_FAT,     bg: "#F5F3FF" },
+            ].map(m => (
+              <div key={m.l} style={{
+                background: m.bg, border: `1px solid ${m.c}22`,
+                borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
+              }}>
+                <div style={{ color: m.c, fontSize: 13, fontWeight: 800 }}>{Math.round(m.v)}</div>
+                <div style={{ color: MUTED, fontSize: 9 }}>{m.u}</div>
+                <div style={{ color: MUTED, fontSize: 9 }}>{m.l}</div>
+              </div>
+            ))}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
             <input
               type="number" value={grams}
               onChange={e => setGrams(parseInt(e.target.value) || 100)}
               style={{
-                width: 70, background: BG, border: `1px solid ${BORDER}`,
+                width: 70, background: PAGE_BG, border: `1px solid ${BORDER}`,
                 borderRadius: 8, padding: "6px 8px", color: TEXT,
                 fontSize: 13, fontFamily: "inherit", outline: "none",
               }}
@@ -915,9 +1082,9 @@ function ManualSearch({ lang, mealType, setMealType }: {
             {(["breakfast","lunch","dinner","snack"] as const).map(mt => (
               <button key={mt} onClick={() => setMealType(mt)} style={{
                 padding: "5px 10px", borderRadius: 16,
-                border: mealType === mt ? `1.5px solid ${SKY}` : `1px solid ${BORDER}`,
-                background: mealType === mt ? SKY_LIGHT : WHITE,
-                color: mealType === mt ? SKY : TEXT2,
+                border: mealType === mt ? `1.5px solid ${NAVY}` : `1px solid ${BORDER}`,
+                background: mealType === mt ? NAVY : WHITE,
+                color: mealType === mt ? WHITE : TEXT2,
                 fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
               }}>
                 {MEAL_ICONS[mt]} {tl(mt, lang)}
@@ -927,65 +1094,16 @@ function ManualSearch({ lang, mealType, setMealType }: {
           <button onClick={handleAdd} disabled={adding || added} style={{
             width: "100%",
             background: added
-              ? `linear-gradient(135deg, ${GREEN}, #16A34A)`
-              : `linear-gradient(135deg, ${SKY}, ${CYAN})`,
+              ? `linear-gradient(135deg, #22C55E, #16A34A)`
+              : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
             color: WHITE, border: "none", borderRadius: 12,
             padding: "10px", fontSize: 13, fontWeight: 900,
             cursor: adding ? "not-allowed" : "pointer", fontFamily: "inherit",
-            boxShadow: added ? "none" : `0 3px 12px ${SKY}44`,
           }}>
             {added ? "✅ " + tl("saved", lang) : adding ? tl("saving", lang) : `+ ${tl("addFood", lang)}`}
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── Meals Tab ─────────────────────────────────────────────────────────────────
-function MealsTab({ lang }: { lang: string }) {
-  const utils = trpc.useUtils();
-  const { data: history, isLoading } = trpc.nutrition.getMealHistory.useQuery({ limit: 30 });
-  const deleteMeal = trpc.nutrition.deleteMeal.useMutation({
-    onSuccess: () => {
-      utils.nutrition.getMealHistory.invalidate();
-      utils.nutrition.getTodayLog.invalidate();
-      utils.nutrition.getToday.invalidate();
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: "center", padding: "40px 0" }}>
-        <div style={{ fontSize: 32, marginBottom: 12, animation: "spin 1s linear infinite" }}>⏳</div>
-      </div>
-    );
-  }
-
-  if (!history?.length) {
-    return (
-      <div style={{ textAlign: "center", padding: "48px 0" }}>
-        <div style={{
-          width: 80, height: 80, borderRadius: "50%", background: ORANGE_BG,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 40, margin: "0 auto 16px",
-        }}>🍽️</div>
-        <p style={{ color: TEXT, fontSize: 15, fontWeight: 700, margin: "0 0 6px" }}>{tl("noMeals", lang)}</p>
-        <p style={{ color: MUTED, fontSize: 12 }}>
-          {lang === "ar" ? "استخدم الماسح لإضافة وجباتك" : "Use the scanner to add your meals"}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      {history.map((meal: any) => (
-        <MealCard
-          key={meal.id} meal={meal} lang={lang}
-          onDelete={() => deleteMeal.mutate({ mealId: meal.id })}
-        />
-      ))}
     </div>
   );
 }
@@ -1002,11 +1120,6 @@ function InsightsTab({ lang }: { lang: string }) {
     protein: "💪", hydration: "💧", calories: "🔥",
     carbs: "🌾", fat: "🥑", recovery: "🛌", sugar: "🍬", default: "💡",
   };
-  const priorityStyle = (p: string) => ({
-    color:  p === "high" ? RED   : p === "medium" ? GOLD   : GREEN,
-    bg:     p === "high" ? RED_BG : p === "medium" ? GOLD_BG : GREEN_BG,
-    border: p === "high" ? RED   : p === "medium" ? GOLD   : GREEN,
-  });
 
   return (
     <div>
@@ -1016,14 +1129,14 @@ function InsightsTab({ lang }: { lang: string }) {
         style={{
           width: "100%",
           background: generateInsights.isPending
-            ? BG
-            : `linear-gradient(135deg, ${GOLD}, ${ORANGE})`,
+            ? PAGE_BG
+            : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
           color: generateInsights.isPending ? MUTED : WHITE,
           border: generateInsights.isPending ? `1px solid ${BORDER}` : "none",
           borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 900,
           cursor: generateInsights.isPending ? "not-allowed" : "pointer",
           fontFamily: "inherit", marginBottom: 16,
-          boxShadow: generateInsights.isPending ? "none" : `0 4px 16px ${ORANGE}44`,
+          boxShadow: generateInsights.isPending ? "none" : `0 4px 16px ${NAVY}44`,
         }}
       >
         {generateInsights.isPending
@@ -1054,24 +1167,24 @@ function InsightsTab({ lang }: { lang: string }) {
       {insights?.map((insight: any, i: number) => {
         const category = insight.category ?? "default";
         const icon = insightIcons[category] ?? insightIcons.default;
-        const ps = priorityStyle(insight.priority ?? "low");
+        const pColor = insight.priority === "high" ? "#EF4444" : insight.priority === "medium" ? "#F59E0B" : "#22C55E";
+        const pBg    = insight.priority === "high" ? "#FEF2F2" : insight.priority === "medium" ? "#FFFBEB" : "#F0FDF4";
         return (
           <div key={i} style={{
             background: WHITE, borderRadius: 16, padding: "16px",
-            marginBottom: 10, border: `1px solid ${ps.border}22`,
-            boxShadow: SHADOW,
+            marginBottom: 10, border: `1px solid ${pColor}22`, boxShadow: SHADOW,
           }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
               <div style={{
-                width: 44, height: 44, borderRadius: 12, background: ps.bg,
+                width: 44, height: 44, borderRadius: 12, background: pBg,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 22, flexShrink: 0,
               }}>{icon}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{
-                    color: ps.color, fontSize: 10, fontWeight: 700,
-                    background: ps.bg, borderRadius: 20, padding: "2px 8px",
+                    color: pColor, fontSize: 10, fontWeight: 700,
+                    background: pBg, borderRadius: 20, padding: "2px 8px",
                     textTransform: "uppercase",
                   }}>
                     {insight.priority ?? "info"}
@@ -1096,70 +1209,78 @@ function InsightsTab({ lang }: { lang: string }) {
 }
 
 // ── Main Nutrition Page ───────────────────────────────────────────────────────
-type NutritionTab = "dashboard" | "scanner" | "meals" | "insights";
+type NutritionTab = "dashboard" | "meals" | "scanner" | "insights";
 
 export default function Nutrition() {
   const { lang, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState<NutritionTab>("dashboard");
+  const [showGoals, setShowGoals] = useState(false);
+  const { data: goals } = trpc.nutrition.getGoals.useQuery();
+
+  const today = new Date().toLocaleDateString(lang === "ar" ? "ar-KW" : "en-US", {
+    weekday: "long", month: "long", day: "numeric",
+  });
 
   const tabs: { id: NutritionTab; icon: string; label: string }[] = [
     { id: "dashboard", icon: "📊", label: tl("dashboard", lang) },
-    { id: "scanner",   icon: "📷", label: tl("scanner",   lang) },
     { id: "meals",     icon: "🍽️", label: tl("meals",     lang) },
+    { id: "scanner",   icon: "📷", label: tl("scanner",   lang) },
     { id: "insights",  icon: "🤖", label: tl("insights",  lang) },
   ];
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       minHeight: "100vh",
-      background: BG,
+      background: PAGE_BG,
       fontFamily: lang === "ar" ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
       color: TEXT,
     }}>
-      {/* Header */}
-      <div style={{
-        background: WHITE,
-        padding: "16px 16px 0",
-        borderBottom: `1px solid ${BORDER}`,
-        boxShadow: "0 1px 8px rgba(27,46,94,0.06)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: 10,
-            background: `linear-gradient(135deg, ${NAVY}, ${NAVY_LIGHT})`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 20,
-          }}>🥗</div>
+      {/* Page header */}
+      <div style={{ padding: "16px 16px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
           <div>
-            <h1 style={{ color: NAVY, fontSize: 17, fontWeight: 900, margin: 0 }}>
-              <span style={{ color: SKY }}>Prime</span> {tl("title", lang)}
+            <h1 style={{ color: TEXT, fontSize: 24, fontWeight: 900, margin: 0 }}>
+              🥗 {tl("title", lang)}
             </h1>
-            <p style={{ color: MUTED, fontSize: 10, margin: 0 }}>
-              {lang === "ar" ? "تتبع طعامك يومياً" : "Track your daily nutrition"}
-            </p>
+            <p style={{ color: MUTED, fontSize: 12, margin: "3px 0 0" }}>{today}</p>
           </div>
+          <button
+            onClick={() => setShowGoals(true)}
+            style={{
+              background: WHITE, border: `1px solid ${BORDER}`,
+              borderRadius: 20, padding: "8px 16px",
+              display: "flex", alignItems: "center", gap: 6,
+              color: TEXT, fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+              boxShadow: SHADOW,
+            }}
+          >
+            🎯 {tl("goals", lang)}
+          </button>
         </div>
 
-        {/* Tab bar */}
-        <div style={{ display: "flex", gap: 0 }}>
+        {/* Tab bar — icon style */}
+        <div style={{
+          background: WHITE, borderRadius: 16, padding: "6px",
+          display: "flex", gap: 4, marginBottom: 16,
+          border: `1px solid ${BORDER}`, boxShadow: SHADOW,
+        }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                flex: 1, padding: "10px 4px 12px",
-                background: "none", border: "none",
-                borderBottom: activeTab === tab.id
-                  ? `2.5px solid ${SKY}`
-                  : "2.5px solid transparent",
-                color: activeTab === tab.id ? SKY : MUTED,
+                flex: 1, padding: "10px 4px",
+                background: activeTab === tab.id ? NAVY : "transparent",
+                border: "none", borderRadius: 12,
+                color: activeTab === tab.id ? WHITE : MUTED,
                 fontSize: 10, fontWeight: 700, cursor: "pointer",
                 fontFamily: "inherit",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
                 transition: "all 0.2s",
               }}
             >
-              <span style={{ fontSize: 17 }}>{tab.icon}</span>
+              <span style={{ fontSize: 18 }}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -1167,12 +1288,17 @@ export default function Nutrition() {
       </div>
 
       {/* Content */}
-      <div style={{ padding: "16px 16px 100px" }}>
-        {activeTab === "dashboard" && <DashboardTab lang={lang} />}
-        {activeTab === "scanner"   && <ScannerTab lang={lang} onSaved={() => setActiveTab("meals")} />}
+      <div style={{ padding: "0 16px 100px" }}>
+        {activeTab === "dashboard" && <DashboardTab lang={lang} onOpenGoals={() => setShowGoals(true)} />}
         {activeTab === "meals"     && <MealsTab lang={lang} />}
+        {activeTab === "scanner"   && <ScannerTab lang={lang} onSaved={() => setActiveTab("meals")} />}
         {activeTab === "insights"  && <InsightsTab lang={lang} />}
       </div>
+
+      {/* Goals modal */}
+      {showGoals && (
+        <GoalsModal lang={lang} goals={goals} onClose={() => setShowGoals(false)} />
+      )}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
