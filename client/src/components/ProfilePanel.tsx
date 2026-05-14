@@ -1,6 +1,6 @@
 // ProfilePanel - Smart editable profile with BMI, personalized plan, language switcher
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
@@ -165,6 +165,21 @@ export function ProfilePanel() {
   const [editingTarget, setEditingTarget] = useState(false);
   const [inlineTarget, setInlineTarget] = useState(profile.targetWeight.toString());
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(profile.avatarUrl);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      setAvatarPreview(url);
+      updateProfile({ ...profile, avatarUrl: url });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
   const bmiCat = getBMICategory(plan.bmi, lang);
   const bmiPercent = Math.min(100, Math.max(0, ((plan.bmi - 15) / (40 - 15)) * 100));
@@ -217,7 +232,7 @@ export function ProfilePanel() {
               {profile.name ? profile.name.trim()[0].toUpperCase() : '?'}
             </div>
             <button
-              onClick={() => { setForm({ ...profile }); setEditing(true); }}
+              onClick={() => fileInputRef.current?.click()}
               style={{
                 position: 'absolute', bottom: 0,
                 ...(isRTL ? { left: 0 } : { right: 0 }),
@@ -226,8 +241,15 @@ export function ProfilePanel() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', fontSize: 11, color: 'white',
               }}
-              aria-label="Edit profile"
+              aria-label="Change photo"
             >+</button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarChange}
+            />
           </div>
 
           {/* Stats columns */}
@@ -486,8 +508,17 @@ export function ProfilePanel() {
 
       {/* Edit Modal - rendered via Portal to escape stacking context */}
       {editing && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center p-4" style={{ zIndex: 9999 }}>
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          padding: '0 0 0 0',
+        }}>
+          <div style={{
+            background: 'white', borderRadius: '20px 20px 0 0',
+            width: '100%', maxWidth: 520,
+            maxHeight: '92vh', overflowY: 'auto',
+          }}>
             <div className="p-5">
               <h3 className="text-lg font-black text-gray-800 mb-4">✏️ {t('editProfile')}</h3>
               <div className="space-y-4">
@@ -584,9 +615,11 @@ export function ProfilePanel() {
               </div>
               <div className="flex gap-3 mt-6">
                 <button onClick={() => setEditing(false)}
-                  className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold">{t('cancel')}</button>
+                  style={{ flex: 1, padding: '12px 0', borderRadius: 12, border: '2px solid #E5E7EB', background: 'white', color: '#6B7280', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >{t('cancel')}</button>
                 <button onClick={handleSave}
-                  className="flex-1 py-3 rounded-xl bg-[#E05A00] text-white font-bold">✅ {t('save')}</button>
+                  style={{ flex: 1, padding: '12px 0', borderRadius: 12, border: 'none', background: '#1B2E5E', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >✅ {t('save')}</button>
               </div>
             </div>
           </div>

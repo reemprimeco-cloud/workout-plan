@@ -73,6 +73,7 @@ export interface UserProfile {
   height: number;
   gender: 'female' | 'male';
   startDate: string;
+  avatarUrl?: string;
 }
 
 export interface AppData {
@@ -440,10 +441,17 @@ export function useGymTracker() {
     updateProfile,
     logWeight,
     resetAll: () => {
-      // Remove from storage immediately, then reset state and reload
-      localStorage.removeItem(STORAGE_KEY);
+      // Clear all Prime Fit localStorage keys
+      const keysToRemove = Object.keys(localStorage).filter(k =>
+        k.startsWith('gym_tracker') ||
+        k.startsWith('primefit_') ||
+        k.startsWith('prime_fit_') ||
+        k === STORAGE_KEY
+      );
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      // Reset state
       setData({ ...DEFAULT_DATA, profile: { ...DEFAULT_PROFILE, startDate: new Date().toISOString().split('T')[0] } });
-      setTimeout(() => window.location.reload(), 100);
+      setTimeout(() => window.location.reload(), 150);
     },
     profile: data.profile,
     allExercises: [...masterExercises, ...data.customExercises],
