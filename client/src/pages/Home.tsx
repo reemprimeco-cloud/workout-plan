@@ -243,7 +243,7 @@ export default function Home() {
 
         {activeTab === 'nutrition' && <Nutrition />}
         {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} />}
-        {activeTab === 'guide' && <WorkoutGuide />}
+        {activeTab === 'guide' && <WorkoutGuide gender={(data.profile.gender as 'male' | 'female') || 'female'} />}
         {activeTab === 'exercises' && (
           <div style={{ padding: '16px' }}>
             <div style={{ marginBottom: 16 }}>
@@ -451,7 +451,7 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 11, color: '#7A9BB5' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
           <span style={{ fontSize: 11, color: NAVY, fontWeight: 700 }}>
-            {stats.progressPercent}% • {lang === 'ar' ? 'خسرتِ' : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 🎉
+            {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 🎉
           </span>
         </div>
       </div>
