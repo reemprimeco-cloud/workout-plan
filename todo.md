@@ -266,3 +266,10 @@
 - [x] NewPostForm: full-screen bottom sheet on mobile (100vh, slides up from bottom)
 - [x] NewPostForm: proper keyboard-aware layout (content scrolls, action bar stays pinned)
 - [x] NewPostForm: close button at top, post button clearly visible
+
+## Feature Batch 15 — Renewal ZIP + Swipe + Challenge Create + 7-day expiry
+
+- [x] Apply primefit-renewal.zip: db.ts (getAccessCodeByEmail, extendSubscription), email.ts, myfatoorahWebhook.ts, AdminPanel.tsx
+- [x] NewPostForm: swipe-down gesture on drag handle to dismiss
+- [x] Admin panel: Create Challenge form (title, description, duration, XP reward)
+- [x] License key: set expiresAt = usedAt + 7 days when key is first verified (first use triggers 7-day countdown)

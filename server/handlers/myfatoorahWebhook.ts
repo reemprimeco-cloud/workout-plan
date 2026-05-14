@@ -1,133 +1,165 @@
+/**
+ * MyFatoorah Webhook Handler — POST /api/webhooks/myfatoorah
+ *
+ * On successful payment:
+ *   1. Validates webhook secret
+ *   2. Verifies payment with MyFatoorah API
+ *   3. Finds existing license key by customer email
+ *   4. Extends expiresAt on the SAME key (no new key generated)
+ *   5. Emails the customer their existing key with new expiry
+ *   6. Upserts the subscription record in the DB
+ */
 import type { Request, Response } from "express";
-import { getDb } from "../db";
-import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { verifyWebhookSignature, getPaymentStatus, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
+import { ENV } from "../_core/env";
+import { getPaymentStatus } from "../_core/myfatoorah";
+import { getDb, getAccessCodeByEmail, extendSubscription } from "../db";
+import { subscriptions, billingHistory } from "../../drizzle/schema";
+import { sendRenewalEmail } from "../_core/email";
 
-interface MyfatoorahWebhookPayload {
-  Event: number;         // 1 = payment success, 2 = payment failed
-  CountryIso: string;
-  Data: {
-    InvoiceId: number;
-    InvoiceStatus: "Paid" | "Failed" | "Pending";
-    CustomerReference: string;  // our userId
-    InvoiceValue: number;
-    PaymentGateway?: string;
-    ReferenceId?: string;
-  };
+type SubscriptionPlan = "free" | "prime_plus" | "prime_pro";
+type BillingPeriod = "monthly" | "yearly";
+
+const PERIOD_DAYS: Record<BillingPeriod, number> = { monthly: 30, yearly: 365 };
+
+function detectPlanFromAmount(amount: number): { plan: SubscriptionPlan; period: BillingPeriod } {
+  if (amount >= 35) return { plan: "prime_pro",  period: "yearly"  };
+  if (amount >= 20) return { plan: "prime_plus", period: "yearly"  };
+  if (amount >= 4)  return { plan: "prime_pro",  period: "monthly" };
+  return                   { plan: "prime_plus", period: "monthly" };
 }
 
-export async function handleMyfatoorahWebhook(req: Request, res: Response) {
+export async function myfatoorahWebhookHandler(req: Request, res: Response) {
+  console.log("[MFWebhook] Incoming webhook");
+
   try {
-    const rawBody: Buffer = req.body;
-    const signature = (req.headers["signature"] as string) || "";
-
-    // Verify signature if provided
-    if (signature && !verifyWebhookSignature(rawBody, signature)) {
-      console.warn("[MyFatoorah Webhook] Invalid signature");
-      res.status(401).json({ error: "Invalid signature" });
-      return;
+    const secret = req.headers["webhook-secret"] ?? req.headers["x-webhook-secret"];
+    if (ENV.myFatoorahWebhookSecret && secret !== ENV.myFatoorahWebhookSecret) {
+      console.warn("[MFWebhook] Invalid secret");
+      return res.status(401).json({ error: "invalid-secret" });
     }
 
-    const payload: MyfatoorahWebhookPayload = JSON.parse(rawBody.toString());
-    console.log("[MyFatoorah Webhook] Event:", payload.Event, "InvoiceId:", payload.Data?.InvoiceId);
+    const body      = req.body;
+    const invoiceId = String(body?.Data?.InvoiceId ?? body?.InvoiceId ?? "");
+    if (!invoiceId) return res.status(400).json({ error: "missing-invoice-id" });
 
-    const invoiceId = String(payload.Data?.InvoiceId);
-    const userId = payload.Data?.CustomerReference;
+    const payment      = await getPaymentStatus(invoiceId);
+    const status       = String(payment?.status ?? "");
+    const userId       = String(payment?.userId ?? "");
+    const email = (body?.Data?.CustomerEmail ?? body?.CustomerEmail ?? "").toLowerCase().trim();
+    const amount       = Number(payment?.amount ?? 0);
+    const currency     = "KWD";
+    const customerName = String(body?.Data?.CustomerName ?? body?.CustomerName ?? "Customer");
 
-    if (!invoiceId || !userId) {
-      res.status(400).json({ error: "Missing invoiceId or userId" });
-      return;
-    }
+    console.log(`[MFWebhook] Status: ${status} | Email: ${email || "(none)"} | Amount: ${amount}`);
 
-    // Fetch full payment status from MyFatoorah to confirm
-    const paymentStatus = await getPaymentStatus(invoiceId);
-    const database = await getDb();
-    if (!database) throw new Error("Database not available");
-
-    if (paymentStatus.status === "Paid") {
-      const { plan, period } = resolvePlanFromAmount(paymentStatus.amount);
-
-      const now = new Date();
-      const expiresAt = new Date(now);
-      if (period === "yearly") {
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      } else {
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
+    if (status !== "Paid") {
+      if (["Failed", "Expired"].includes(status) && userId) {
+        const db = await getDb();
+        if (db) {
+          const { plan, period } = detectPlanFromAmount(amount);
+          await db.insert(billingHistory).values({
+            userId, plan, period,
+            amount: String(amount), currency,
+            status: "failed",
+            invoiceId,
+            paymentRef: null,
+          });
+        }
       }
+      return res.json({ ok: true, skipped: `status: ${status}` });
+    }
 
-      // Upsert subscription
-      const existing = await database
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.userId, userId))
-        .limit(1);
+    // Detect plan from pending subscription record or amount
+    let plan: SubscriptionPlan = "prime_plus";
+    let period: BillingPeriod  = "monthly";
+    try {
+      const db = await getDb();
+      if (db) {
+        const pending = await db.select().from(subscriptions)
+          .where(eq(subscriptions.invoiceId, invoiceId))
+          .limit(1);
+        if (pending[0]?.plan && pending[0]?.period) {
+          plan   = pending[0].plan   as SubscriptionPlan;
+          period = pending[0].period as BillingPeriod;
+        } else {
+          const d = detectPlanFromAmount(amount);
+          plan = d.plan; period = d.period;
+        }
+      }
+    } catch {
+      const d = detectPlanFromAmount(amount);
+      plan = d.plan; period = d.period;
+    }
 
-      const linkedLicenseKey = existing.length > 0 ? existing[0].licenseKey : null;
+    // Extend existing license key by email
+    let licenseCode: string | null = null;
+    let newExpiry:   Date   | null = null;
 
-      if (existing.length > 0) {
-        await database
-          .update(subscriptions)
-          .set({ plan, period, status: "active", startsAt: now, expiresAt, invoiceId, updatedAt: now })
+    if (email) {
+      const existing = await getAccessCodeByEmail(email);
+      if (existing) {
+        const dbPlan = (period === "yearly" ? "yearly" : "monthly") as "monthly" | "yearly";
+        newExpiry   = await extendSubscription(existing.id, dbPlan);
+        licenseCode = existing.code;
+        console.log(`[MFWebhook] Extended key ${licenseCode} until ${newExpiry?.toDateString()}`);
+        if (newExpiry) {
+          await sendRenewalEmail({
+            to: email,
+            customerName,
+            licenseKey: licenseCode,
+            plan,
+            period,
+            newExpiresAt: newExpiry,
+            orderNumber: invoiceId,
+          });
+        }
+      } else {
+        console.warn(`[MFWebhook] No license key found for ${email}`);
+      }
+    }
+
+    // Upsert subscription record
+    const expiry = newExpiry ?? new Date(Date.now() + PERIOD_DAYS[period] * 86400_000);
+    const db = await getDb();
+    if (db && userId) {
+      const existingSub = await db.select().from(subscriptions)
+        .where(eq(subscriptions.userId, userId)).limit(1);
+      if (existingSub.length > 0) {
+        await db.update(subscriptions)
+          .set({ plan, status: "active", period, startsAt: new Date(), expiresAt: expiry, invoiceId, licenseKey: licenseCode })
           .where(eq(subscriptions.userId, userId));
       } else {
-        await database.insert(subscriptions).values({
-          userId, plan, period, status: "active", startsAt: now, expiresAt, invoiceId,
+        await db.insert(subscriptions).values({
+          userId, plan, status: "active", period,
+          startsAt: new Date(), expiresAt: expiry,
+          invoiceId, licenseKey: licenseCode,
         });
       }
 
-      // Re-activate the linked license key if user had a free trial key
-      if (linkedLicenseKey) {
-        await database
-          .update(accessCodes)
-          .set({ isActive: true })
-          .where(eq(accessCodes.code, linkedLicenseKey));
-        console.log(`[MyFatoorah Webhook] Re-activated license key ${linkedLicenseKey} after paid subscription for user ${userId}`);
-      }
-
-      // Record billing history
-      await database.insert(billingHistory).values({
-        userId,
-        plan,
-        period,
-        amount: String(paymentStatus.amount),
-        currency: "KWD",
+      await db.insert(billingHistory).values({
+        userId, plan, period,
+        amount: String(amount), currency,
         status: "paid",
         invoiceId,
-        paymentRef: paymentStatus.transactionId,
+        paymentRef: String(payment?.transactionId ?? ""),
       });
-
-      console.log(
-        `[MyFatoorah Webhook] ✅ Subscription activated: user=${userId} plan=${plan} period=${period} expires=${expiresAt.toISOString()}`
-      );
-    } else if (paymentStatus.status === "Failed") {
-      const { plan, period } = resolvePlanFromAmount(paymentStatus.amount);
-      await database.insert(billingHistory).values({
-        userId,
-        plan,
-        period,
-        amount: String(paymentStatus.amount),
-        currency: "KWD",
-        status: "failed",
-        invoiceId,
-      });
-      console.log(`[MyFatoorah Webhook] ❌ Payment failed: user=${userId} invoiceId=${invoiceId}`);
     }
 
-    res.status(200).json({ ok: true });
-  } catch (err) {
-    console.error("[MyFatoorah Webhook] Error:", err);
-    res.status(500).json({ error: "Internal server error", detail: String(err) });
+    return res.json({
+      ok: true,
+      licenseExtended: !!licenseCode,
+      licenseCode,
+      newExpiry: expiry.toISOString(),
+      plan,
+      period,
+    });
+
+  } catch (err: any) {
+    console.error("[MFWebhook] Error:", err.message);
+    return res.status(500).json({ error: err.message });
   }
 }
 
-function resolvePlanFromAmount(amount: number): { plan: PlanId; period: Period } {
-  for (const [planKey, prices] of Object.entries(PLAN_PRICES)) {
-    for (const [periodKey, price] of Object.entries(prices)) {
-      if (Math.abs(price - amount) < 0.01) {
-        return { plan: planKey as PlanId, period: periodKey as Period };
-      }
-    }
-  }
-  return { plan: "prime_plus", period: "monthly" };
-}
+// Alias for backward compatibility
+export { myfatoorahWebhookHandler as handleMyfatoorahWebhook };

@@ -3,7 +3,7 @@
  * leaderboard, challenges, XP/levels, and AI insights.
  */
 import { z } from "zod";
-import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
+import { router, protectedProcedure, publicProcedure, adminProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "../_core/llm";
 import { storagePut } from "../storage";
@@ -22,7 +22,7 @@ import {
   getUnreadNotificationCount,
 } from "../db";
 import { getDb } from "../db";
-import { users, communityPosts, communityComments, postMentions } from "../../drizzle/schema";
+import { users, communityPosts, communityComments, postMentions, communityChallenges } from "../../drizzle/schema";
 import { eq, like, sql, desc } from "drizzle-orm";
 import { getIO } from "../_core/index";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
@@ -633,6 +633,37 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
       .limit(6);
     return rows.filter(r => r.name && r.id !== ctx.user.id);
   }),
+  /** Admin: create a new challenge */
+  createChallenge: adminProcedure
+    .input(z.object({
+      title: z.string().min(1),
+      titleAr: z.string().min(1),
+      description: z.string().default(""),
+      descriptionAr: z.string().default(""),
+      xpReward: z.number().int().min(1).default(100),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      type: z.enum(["streak", "sessions", "cardio", "weight", "custom"]).default("custom"),
+      targetValue: z.number().int().min(1).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const today = new Date().toISOString().slice(0, 10);
+      await db.insert(communityChallenges).values({
+        title: input.title,
+        titleAr: input.titleAr,
+        description: input.description,
+        descriptionAr: input.descriptionAr,
+        xpReward: input.xpReward,
+        startDate: today,
+        endDate: input.endDate,
+        type: input.type,
+        targetValue: input.targetValue,
+        isActive: true,
+        participantsCount: 0,
+      });
+      return { success: true };
+    }),
 });
 
 // ── Helper: extract @mentions from text and send notifications ────────────────
