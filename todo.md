@@ -310,3 +310,29 @@
 - [x] TDEE auto-calculator button in Goals modal
 - [x] Fix getWeeklyTrends to read from mealLogs (v2)
 - [x] Link daily nutrition context to Coach AI
+
+## Feature Batch 19 — Avatar S3 Upload
+- [ ] Add uploadAvatar procedure to userProfile router (base64 → S3 → return URL)
+- [ ] Update ProfilePanel.tsx to call uploadAvatar and store S3 URL instead of base64
+
+## Feature Batch 20 — Arabic Gender-Aware Text (Male vs Female)
+- [ ] Fix all Arabic feminine text to show masculine form when profile.gender === 'male' — across all pages and components
+- [ ] Home.tsx / CheckInPanel: session start buttons, motivational text
+- [ ] ProfilePanel.tsx: plan description, BMI labels, goal text
+- [ ] ActiveSession.tsx: exercise instructions, motivational text
+- [ ] SessionHistory.tsx: session labels
+- [ ] StatsPanel.tsx: stats descriptions
+- [ ] WorkoutGuide.tsx: guide text
+- [ ] Nutrition.tsx: nutrition advice text
+- [ ] MyCoach.tsx: coach system prompt
+- [ ] exercises.ts / exerciseData.ts: any hardcoded Arabic feminine text
+
+
+## Feature Batch 20 — Arabic Gender-Aware Text (Male vs Female)
+- [ ] Fix all Arabic feminine text to show masculine form when profile.gender === male
+- [ ] Home.tsx / CheckInPanel: session start buttons, motivational text
+- [ ] ProfilePanel.tsx: plan description, goal text
+- [ ] ActiveSession.tsx: exercise instructions, motivational text
+- [ ] WorkoutGuide.tsx: guide text
+- [ ] Nutrition.tsx: nutrition advice text
+- [ ] MyCoach.tsx: coach system prompt

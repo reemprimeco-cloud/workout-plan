@@ -31,6 +31,7 @@ export interface ExerciseTemplate {
   image: string;
   tip: string;
   tipEn: string;
+  tipMale?: string;
   youtubeUrl: string;
   category: 'weights' | 'cardio' | 'core' | 'aqua' | 'sauna';
   sessionTypes: SessionType[];
@@ -83,7 +84,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'squat_bw', nameAr: 'سكوات بوزن الجسم', nameEn: 'Bodyweight Squat',
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '15', defaultWeight: 'وزن الجسم',
-    restSeconds: 60, image: IMG.lunges, tip: 'ظهرك مستقيم، ركبتيك لا تتجاوزان أصابع القدم، انزلي حتى تصبح الفخذان موازيتين للأرض.',
+    restSeconds: 60, image: IMG.lunges, tip: 'ظهرك مستقيم، ركبتيك لا تتجاوزان أصابع القدم، انزلي حتى تصبح الفخذان موازيتين للأرض.', tipMale: 'ظهرك مستقيم، ركبتيك لا تتجاوزان أصابع القدم، انزل حتى تصبح الفخذان موازيتين للأرض.',
     tipEn: 'Keep back straight, knees behind toes, lower until thighs are parallel to floor.',
     youtubeUrl: 'https://www.youtube.com/watch?v=aclHkVaku9U',
     category: 'weights', sessionTypes: ['lower_body', 'full_body'],
@@ -91,7 +92,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'squat_db', nameAr: 'سكوات بالدمبلز', nameEn: 'Dumbbell Squat',
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '12', defaultWeight: '5 كجم لكل يد',
-    restSeconds: 60, image: IMG.deadlift, tip: 'أمسكي دمبلاً في كل يد، الظهر مستقيم، انزلي ببطء وارتفعي بقوة.',
+    restSeconds: 60, image: IMG.deadlift, tip: 'أمسكي دمبلاً في كل يد، الظهر مستقيم، انزلي ببطء وارتفعي بقوة.', tipMale: 'أمسك دمبلاً في كل يد، الظهر مستقيم، انزل ببطء وارتفع بقوة.',
     tipEn: 'Hold a dumbbell in each hand, keep back straight, lower slowly and drive up powerfully.',
     youtubeUrl: 'https://www.youtube.com/watch?v=Dy28eq2PjcM',
     category: 'weights', sessionTypes: ['lower_body', 'full_body'],
@@ -99,7 +100,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'lunge_db', nameAr: 'الطعنات بالدمبلز', nameEn: 'Dumbbell Lunge',
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '12 لكل رجل', defaultWeight: '3 كجم لكل يد',
-    restSeconds: 60, image: IMG.lunges, tip: 'خطوي للأمام، انزلي حتى تلمس الركبة الخلفية الأرض تقريباً.',
+    restSeconds: 60, image: IMG.lunges, tip: 'خطوي للأمام، انزلي حتى تلمس الركبة الخلفية الأرض تقريباً.', tipMale: 'خطُ للأمام، انزل حتى تلمس الركبة الخلفية الأرض تقريباً.',
     tipEn: 'Step forward, lower until back knee nearly touches the floor, keep torso upright.',
     youtubeUrl: 'https://www.youtube.com/watch?v=QOVaHwm-Q6U',
     category: 'weights', sessionTypes: ['lower_body', 'full_body'],
@@ -107,7 +108,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'hip_thrust', nameAr: 'دفع الورك (Hip Thrust)', nameEn: 'Hip Thrust',
     muscleGroup: 'الأرداف', defaultSets: 4, defaultReps: '15', defaultWeight: '10 كجم',
-    restSeconds: 60, image: IMG.glute2, tip: 'كتفاك على مقعد، ارفعي الأرداف وضغطيها في الأعلى لمدة ثانيتين.',
+    restSeconds: 60, image: IMG.glute2, tip: 'كتفاك على مقعد، ارفعي الأرداف وضغطيها في الأعلى لمدة ثانيتين.', tipMale: 'كتفاك على مقعد، ارفع الأرداف واضغطها في الأعلى لمدة ثانيتين.',
     tipEn: 'Shoulders on bench, drive hips up and squeeze glutes at the top for 2 seconds.',
     youtubeUrl: 'https://www.youtube.com/watch?v=xDmFkJxPzeM',
     category: 'weights', sessionTypes: ['lower_body', 'full_body'],
@@ -115,7 +116,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'rdl', nameAr: 'الرفعة الرومانية', nameEn: 'Romanian Deadlift',
     muscleGroup: 'الفخذ الخلفي والأرداف', defaultSets: 3, defaultReps: '12', defaultWeight: '8 كجم لكل يد',
-    restSeconds: 75, image: IMG.deadlift, tip: 'انحني للأمام مع ثني خفيف في الركبة، ظهرك مستقيم، حتى تشعري بشد في الفخذ الخلفي.',
+    restSeconds: 75, image: IMG.deadlift, tip: 'انحني للأمام مع ثني خفيف في الركبة، ظهرك مستقيم، حتى تشعري بشد في الفخذ الخلفي.', tipMale: 'انحنِ للأمام مع ثني خفيف في الركبة، ظهرك مستقيم، حتى تشعر بشد في الفخذ الخلفي.',
     tipEn: 'Hinge forward with slight knee bend, keep back flat until you feel hamstring stretch.',
     youtubeUrl: 'https://www.youtube.com/watch?v=JCXUYuzwNrM',
     category: 'weights', sessionTypes: ['lower_body'],
@@ -123,7 +124,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'sumo_squat', nameAr: 'سكوات السومو', nameEn: 'Sumo Squat',
     muscleGroup: 'داخل الفخذ والأرداف', defaultSets: 3, defaultReps: '15', defaultWeight: '8 كجم',
-    restSeconds: 60, image: IMG.glutes, tip: 'قدماك متباعدتان وأصابعهما للخارج، أمسكي دمبلاً واحداً بكلتي يديك.',
+    restSeconds: 60, image: IMG.glutes, tip: 'قدماك متباعدتان وأصابعهما للخارج، أمسكي دمبلاً واحداً بكلتي يديك.', tipMale: 'قدماك متباعدتان وأصابعهما للخارج، أمسك دمبلاً واحداً بكلتي يديك.',
     tipEn: 'Feet wide apart, toes pointing out, hold one dumbbell with both hands.',
     youtubeUrl: 'https://www.youtube.com/watch?v=kjlfpqXnyL8',
     category: 'weights', sessionTypes: ['lower_body'],
@@ -131,7 +132,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'donkey_kicks', nameAr: 'ركلات الحمار (Donkey Kicks)', nameEn: 'Donkey Kicks',
     muscleGroup: 'الأرداف', defaultSets: 3, defaultReps: '15 لكل رجل', defaultWeight: 'وزن الجسم',
-    restSeconds: 45, image: IMG.glute2, tip: 'على الأربع، ارفعي ساقك للخلف وللأعلى مع ضغط الأرداف.',
+    restSeconds: 45, image: IMG.glute2, tip: 'على الأربع، ارفعي ساقك للخلف وللأعلى مع ضغط الأرداف.', tipMale: 'على الأربع، ارفع ساقك للخلف وللأعلى مع ضغط الأرداف.',
     tipEn: 'On all fours, kick one leg back and up, squeezing glutes at the top.',
     youtubeUrl: 'https://www.youtube.com/watch?v=SJ1Xuz9D-ZQ',
     category: 'weights', sessionTypes: ['lower_body'],
@@ -139,7 +140,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'leg_press', nameAr: 'ضغط الساقين (Leg Press)', nameEn: 'Leg Press',
     muscleGroup: 'الفخذين والأرداف', defaultSets: 3, defaultReps: '15', defaultWeight: '30 كجم',
-    restSeconds: 75, image: IMG.deadlift, tip: 'قدماك على اللوحة بعرض الكتفين، ادفعي ببطء دون قفل الركبتين.',
+    restSeconds: 75, image: IMG.deadlift, tip: 'قدماك على اللوحة بعرض الكتفين، ادفعي ببطء دون قفل الركبتين.', tipMale: 'قدماك على اللوحة بعرض الكتفين، ادفع ببطء دون قفل الركبتين.',
     tipEn: 'Feet shoulder-width on platform, push slowly without locking knees.',
     youtubeUrl: 'https://www.youtube.com/watch?v=IZxyjW7MPJQ',
     category: 'weights', sessionTypes: ['lower_body'],
@@ -147,7 +148,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'leg_curl', nameAr: 'ثني الساقين (Leg Curl)', nameEn: 'Leg Curl',
     muscleGroup: 'الفخذ الخلفي', defaultSets: 3, defaultReps: '15', defaultWeight: '15 كجم',
-    restSeconds: 60, image: IMG.deadlift, tip: 'ابطئي حركة العودة، لا تتركي الوزن يسقط بسرعة.',
+    restSeconds: 60, image: IMG.deadlift, tip: 'ابطئي حركة العودة، لا تتركي الوزن يسقط بسرعة.', tipMale: 'أبطئ حركة العودة، لا تترك الوزن يسقط بسرعة.',
     tipEn: 'Slow the return movement, do not let the weight drop quickly.',
     youtubeUrl: 'https://www.youtube.com/watch?v=1Tq3QdYUuHs',
     category: 'weights', sessionTypes: ['lower_body'],
@@ -155,7 +156,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'leg_ext', nameAr: 'تمديد الساقين (Leg Extension)', nameEn: 'Leg Extension',
     muscleGroup: 'عضلة الفخذ الأمامية', defaultSets: 3, defaultReps: '15', defaultWeight: '15 كجم',
-    restSeconds: 60, image: IMG.deadlift, tip: 'مدي الساقين بالكامل واثبتي ثانية في الأعلى.',
+    restSeconds: 60, image: IMG.deadlift, tip: 'مدي الساقين بالكامل واثبتي ثانية في الأعلى.', tipMale: 'مُد الساقين بالكامل واثبت ثانية في الأعلى.',
     tipEn: 'Extend legs fully and hold for one second at the top.',
     youtubeUrl: 'https://www.youtube.com/watch?v=YyvSfVjQeL0',
     category: 'weights', sessionTypes: ['lower_body'],
@@ -163,7 +164,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'calf_raises', nameAr: 'رفع السمانة', nameEn: 'Calf Raises',
     muscleGroup: 'عضلة السمانة', defaultSets: 3, defaultReps: '20', defaultWeight: 'وزن الجسم',
-    restSeconds: 30, image: IMG.lunges, tip: 'ارتفعي على أصابع قدميك، اثبتي ثانية، انزلي ببطء.',
+    restSeconds: 30, image: IMG.lunges, tip: 'ارتفعي على أصابع قدميك، اثبتي ثانية، انزلي ببطء.', tipMale: 'ارتفع على أصابع قدميك، اثبت ثانية، انزل ببطء.',
     tipEn: 'Rise on toes, hold for one second, lower slowly.',
     youtubeUrl: 'https://www.youtube.com/watch?v=baEXLy09Ncc',
     category: 'weights', sessionTypes: ['lower_body', 'full_body'],
@@ -197,7 +198,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'warmup_leg_swings', nameAr: 'تأرجح الساق', nameEn: 'Leg Swings',
     muscleGroup: 'الورك والفخذ', defaultSets: 1, defaultReps: '15 لكل ساق', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.warmup, tip: 'أمسكي الحائط للتوازن، أرجحي الساق للأمام والخلف.',
+    restSeconds: 0, image: IMG.warmup, tip: 'أمسكي الحائط للتوازن، أرجحي الساق للأمام والخلف.', tipMale: 'أمسك الحائط للتوازن، أرجح الساق للأمام والخلف.',
     tipEn: 'Hold a wall for balance, swing leg forward and back.',
     youtubeUrl: 'https://www.youtube.com/watch?v=naW8u72lOzI',
     category: 'cardio', sessionTypes: ['warm_up'],
@@ -213,7 +214,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'warmup_high_knees', nameAr: 'رفع الركبتين', nameEn: 'High Knees',
     muscleGroup: 'الجسم كله', defaultSets: 2, defaultReps: '30 ثانية', defaultWeight: 'وزن الجسم',
-    restSeconds: 15, image: IMG.warmup, tip: 'ارفعي الركبتين إلى مستوى الورك، ابقي خفيفة على قدميك.',
+    restSeconds: 15, image: IMG.warmup, tip: 'ارفعي الركبتين إلى مستوى الورك، ابقي خفيفة على قدميك.', tipMale: 'ارفع الركبتين إلى مستوى الورك، ابقَ خفيفاً على قدميك.',
     tipEn: 'Drive knees up to hip height, stay light on feet.',
     youtubeUrl: 'https://www.youtube.com/watch?v=QgClj9UxWcQ',
     category: 'cardio', sessionTypes: ['warm_up', 'quick_workouts'],
@@ -223,7 +224,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'stretch_quad', nameAr: 'إطالة الفخذ الأمامي', nameEn: 'Standing Quad Stretch',
     muscleGroup: 'الفخذ الأمامي', defaultSets: 1, defaultReps: '30 ثانية لكل ساق', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.lunges, tip: 'أمسكي الكاحل، قفي منتصبة، أحسي بالشد في مقدمة الفخذ.',
+    restSeconds: 0, image: IMG.lunges, tip: 'أمسكي الكاحل، قفي منتصبة، أحسي بالشد في مقدمة الفخذ.', tipMale: 'أمسك الكاحل، قف منتصباً، أحس بالشد في مقدمة الفخذ.',
     tipEn: 'Hold ankle, stand tall, feel stretch in front of thigh.',
     youtubeUrl: 'https://www.youtube.com/watch?v=2hKbghN2fUE',
     category: 'cardio', sessionTypes: ['stretching'],
@@ -231,7 +232,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'stretch_hamstring', nameAr: 'إطالة الفخذ الخلفي', nameEn: 'Seated Hamstring Stretch',
     muscleGroup: 'الفخذ الخلفي', defaultSets: 1, defaultReps: '30 ثانية لكل ساق', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.deadlift, tip: 'اجلسي على الأرض، مدي ساقاً واحدة، امتدي نحو القدم.',
+    restSeconds: 0, image: IMG.deadlift, tip: 'اجلسي على الأرض، مدي ساقاً واحدة، امتدي نحو القدم.', tipMale: 'اجلس على الأرض، مُد ساقاً واحدة، امتد نحو القدم.',
     tipEn: 'Sit on floor, extend one leg, reach toward foot.',
     youtubeUrl: 'https://www.youtube.com/watch?v=wr_8aak4Wbc',
     category: 'cardio', sessionTypes: ['stretching'],
@@ -239,7 +240,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'stretch_hip_flexor', nameAr: 'إطالة عضلة الورك الأمامية', nameEn: 'Hip Flexor Stretch',
     muscleGroup: 'الورك الأمامي', defaultSets: 1, defaultReps: '30 ثانية لكل جهة', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.lunges, tip: 'وضعية الطعنة، ادفعي الورك للأمام بلطف.',
+    restSeconds: 0, image: IMG.lunges, tip: 'وضعية الطعنة، ادفعي الورك للأمام بلطف.', tipMale: 'وضعية الطعنة، ادفع الورك للأمام بلطف.',
     tipEn: 'Lunge position, push hips forward gently.',
     youtubeUrl: 'https://www.youtube.com/watch?v=iZ1eZBY4fwM',
     category: 'cardio', sessionTypes: ['stretching'],
@@ -255,7 +256,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'stretch_shoulder', nameAr: 'إطالة الكتف', nameEn: 'Cross-Body Shoulder Stretch',
     muscleGroup: 'الكتف', defaultSets: 1, defaultReps: '30 ثانية لكل ذراع', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.shoulder, tip: 'اسحبي الذراع عبر الصدر، أحسي بالشد في الكتف.',
+    restSeconds: 0, image: IMG.shoulder, tip: 'اسحبي الذراع عبر الصدر، أحسي بالشد في الكتف.', tipMale: 'اسحب الذراع عبر الصدر، أحس بالشد في الكتف.',
     tipEn: 'Pull arm across chest, feel stretch in shoulder.',
     youtubeUrl: 'https://www.youtube.com/watch?v=-1K0m5ywRcY',
     category: 'cardio', sessionTypes: ['stretching'],
@@ -263,7 +264,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'stretch_child_pose', nameAr: 'وضعية الطفل', nameEn: "Child's Pose",
     muscleGroup: 'الظهر والورك', defaultSets: 1, defaultReps: '60 ثانية', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.plank, tip: 'اركعي ومدي ذراعيك للأمام، تنفسي بعمق.',
+    restSeconds: 0, image: IMG.plank, tip: 'اركعي ومدي ذراعيك للأمام، تنفسي بعمق.', tipMale: 'اركع ومُد ذراعيك للأمام، تنفس بعمق.',
     tipEn: 'Kneel and reach arms forward, breathe deeply.',
     youtubeUrl: 'https://www.youtube.com/watch?v=eqVMAPM00DM',
     category: 'cardio', sessionTypes: ['stretching'],
@@ -273,7 +274,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'home_pushup', nameAr: 'تمرين الضغط', nameEn: 'Push-Up',
     muscleGroup: 'الصدر والترايسبس', defaultSets: 3, defaultReps: '12', defaultWeight: 'وزن الجسم',
-    restSeconds: 60, image: IMG.chest, tip: 'أبقي جسمك مستقيماً، انزلي حتى يلمس الصدر الأرض.',
+    restSeconds: 60, image: IMG.chest, tip: 'أبقي جسمك مستقيماً، انزلي حتى يلمس الصدر الأرض.', tipMale: 'أبقِ جسمك مستقيماً، انزل حتى يلمس الصدر الأرض.',
     tipEn: 'Keep body straight, lower chest to floor.',
     youtubeUrl: 'https://www.youtube.com/watch?v=IODxDxX7oi4',
     category: 'weights', sessionTypes: ['home_workouts', 'quick_workouts'],
@@ -281,7 +282,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'home_squat', nameAr: 'سكوات بوزن الجسم', nameEn: 'Bodyweight Squat',
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '15', defaultWeight: 'وزن الجسم',
-    restSeconds: 45, image: IMG.lunges, tip: 'قدماك بعرض الكتفين، انزلي حتى تتوازى الفخذان.',
+    restSeconds: 45, image: IMG.lunges, tip: 'قدماك بعرض الكتفين، انزلي حتى تتوازى الفخذان.', tipMale: 'قدماك بعرض الكتفين، انزل حتى تتوازى الفخذان.',
     tipEn: 'Feet shoulder-width, lower until thighs parallel.',
     youtubeUrl: 'https://www.youtube.com/watch?v=aclHkVaku9U',
     category: 'weights', sessionTypes: ['home_workouts'],
@@ -289,7 +290,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'home_lunge', nameAr: 'الطعنة العكسية', nameEn: 'Reverse Lunge',
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '12 لكل ساق', defaultWeight: 'وزن الجسم',
-    restSeconds: 45, image: IMG.lunges, tip: 'خطوي للخلف، انزلي الركبة نحو الأرض، أبقي الجذع منتصباً.',
+    restSeconds: 45, image: IMG.lunges, tip: 'خطوي للخلف، انزلي الركبة نحو الأرض، أبقي الجذع منتصباً.', tipMale: 'خطُ للخلف، انزل الركبة نحو الأرض، أبقِ الجذع منتصباً.',
     tipEn: 'Step back, lower knee toward floor, keep torso upright.',
     youtubeUrl: 'https://www.youtube.com/watch?v=R-g5yPNYv2k',
     category: 'weights', sessionTypes: ['home_workouts'],
@@ -297,7 +298,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'home_glute_bridge', nameAr: 'جسر الأرداف', nameEn: 'Glute Bridge',
     muscleGroup: 'الأرداف', defaultSets: 3, defaultReps: '20', defaultWeight: 'وزن الجسم',
-    restSeconds: 30, image: IMG.glute2, tip: 'استلقي على ظهرك، ارفعي الورك، اضغطي الأرداف في الأعلى.',
+    restSeconds: 30, image: IMG.glute2, tip: 'استلقي على ظهرك، ارفعي الورك، اضغطي الأرداف في الأعلى.', tipMale: 'استلقِ على ظهرك، ارفع الورك، اضغط الأرداف في الأعلى.',
     tipEn: 'Lie on back, drive hips up, squeeze glutes at top.',
     youtubeUrl: 'https://www.youtube.com/watch?v=OUgsJ8-Vi0E',
     category: 'weights', sessionTypes: ['home_workouts'],
@@ -313,7 +314,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'home_mountain_climbers', nameAr: 'تسلق الجبل', nameEn: 'Mountain Climbers',
     muscleGroup: 'الكور والكارديو', defaultSets: 3, defaultReps: '30 ثانية', defaultWeight: 'وزن الجسم',
-    restSeconds: 30, image: IMG.abs, tip: 'أحضري الركبتين بالتناوب نحو الصدر، أبقي الورك مستوياً.',
+    restSeconds: 30, image: IMG.abs, tip: 'أحضري الركبتين بالتناوب نحو الصدر، أبقي الورك مستوياً.', tipMale: 'أحضر الركبتين بالتناوب نحو الصدر، أبقِ الورك مستوياً.',
     tipEn: 'Drive knees to chest alternately, keep hips level.',
     youtubeUrl: 'https://www.youtube.com/watch?v=nmwgirgXLYM',
     category: 'core', sessionTypes: ['home_workouts'],
@@ -339,7 +340,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'pilates_single_leg_stretch', nameAr: 'إطالة ساق واحدة', nameEn: 'Single Leg Stretch',
     muscleGroup: 'الكور والفخذ', defaultSets: 3, defaultReps: '10 لكل ساق', defaultWeight: 'وزن الجسم',
-    restSeconds: 20, image: IMG.abs, tip: 'بدّلي الساقين، أبقي الكتفين مرفوعتين عن الحصيرة.',
+    restSeconds: 20, image: IMG.abs, tip: 'بدّلي الساقين، أبقي الكتفين مرفوعتين عن الحصيرة.', tipMale: 'بدّل الساقين، أبقِ الكتفين مرفوعتين عن الحصيرة.',
     tipEn: 'Alternate legs, keep shoulders off mat.',
     youtubeUrl: 'https://www.youtube.com/watch?v=Ad4lgW4ieAM',
     category: 'core', sessionTypes: ['pilates'],
@@ -347,7 +348,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'pilates_double_leg_stretch', nameAr: 'إطالة الساقين معاً', nameEn: 'Double Leg Stretch',
     muscleGroup: 'الكور', defaultSets: 3, defaultReps: '10', defaultWeight: 'وزن الجسم',
-    restSeconds: 20, image: IMG.abs, tip: 'شهيق مع المد، زفير مع السحب، أبقي أسفل الظهر مسطحاً.',
+    restSeconds: 20, image: IMG.abs, tip: 'شهيق مع المد، زفير مع السحب، أبقي أسفل الظهر مسطحاً.', tipMale: 'شهيق مع المد، زفير مع السحب، أبقِ أسفل الظهر مسطحاً.',
     tipEn: 'Inhale extend, exhale pull in, keep lower back flat.',
     youtubeUrl: 'https://www.youtube.com/watch?v=fuwzt4d7FuY',
     category: 'core', sessionTypes: ['pilates'],
@@ -355,7 +356,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'pilates_spine_stretch', nameAr: 'إطالة العمود الفقري للأمام', nameEn: 'Spine Stretch Forward',
     muscleGroup: 'العمود الفقري والكور', defaultSets: 3, defaultReps: '8', defaultWeight: 'وزن الجسم',
-    restSeconds: 20, image: IMG.plank, tip: 'اجلسي منتصبة، امتدي للأمام، اسحبي البطن للداخل.',
+    restSeconds: 20, image: IMG.plank, tip: 'اجلسي منتصبة، امتدي للأمام، اسحبي البطن للداخل.', tipMale: 'اجلس منتصباً، امتد للأمام، اسحب البطن للداخل.',
     tipEn: 'Sit tall, reach forward, scoop belly in.',
     youtubeUrl: 'https://www.youtube.com/watch?v=140RTNMciH8',
     category: 'core', sessionTypes: ['pilates'],
@@ -363,7 +364,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'pilates_swan', nameAr: 'وضعية البجعة', nameEn: 'Swan Dive',
     muscleGroup: 'الظهر والكور', defaultSets: 3, defaultReps: '8', defaultWeight: 'وزن الجسم',
-    restSeconds: 20, image: IMG.plank, tip: 'استلقي على بطنك، ارفعي الصدر باستخدام عضلات الظهر.',
+    restSeconds: 20, image: IMG.plank, tip: 'استلقي على بطنك، ارفعي الصدر باستخدام عضلات الظهر.', tipMale: 'استلقِ على بطنك، ارفع الصدر باستخدام عضلات الظهر.',
     tipEn: 'Lie face down, lift chest using back muscles.',
     youtubeUrl: 'https://www.youtube.com/watch?v=lslSedpC23Y',
     category: 'core', sessionTypes: ['pilates'],
@@ -373,7 +374,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'mob_thoracic_rotation', nameAr: 'دوران الصدر', nameEn: 'Thoracic Rotation',
     muscleGroup: 'العمود الفقري الصدري', defaultSets: 2, defaultReps: '10 لكل جهة', defaultWeight: 'وزن الجسم',
-    restSeconds: 20, image: IMG.plank, tip: 'على الأربع، أدوري العمود الفقري العلوي، تابعي اليد بعينيك.',
+    restSeconds: 20, image: IMG.plank, tip: 'على الأربع، أدوري العمود الفقري العلوي، تابعي اليد بعينيك.', tipMale: 'على الأربع، أدر العمود الفقري العلوي، تابع اليد بعينيك.',
     tipEn: 'On all fours, rotate upper spine, follow hand with eyes.',
     youtubeUrl: 'https://www.youtube.com/watch?v=hhvHpsxKjXw',
     category: 'cardio', sessionTypes: ['mobility'],
@@ -431,7 +432,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'quick_squat_jumps', nameAr: 'سكوات القفز', nameEn: 'Jump Squats',
     muscleGroup: 'الأرداف والفخذين', defaultSets: 3, defaultReps: '12', defaultWeight: 'وزن الجسم',
-    restSeconds: 30, image: IMG.lunges, tip: 'انزلي عميقاً ثم اقفزي للأعلى بقوة، اهبطي بلطف.',
+    restSeconds: 30, image: IMG.lunges, tip: 'انزلي عميقاً ثم اقفزي للأعلى بقوة، اهبطي بلطف.', tipMale: 'انزل عميقاً ثم اقفز للأعلى بقوة، اهبط بلطف.',
     tipEn: 'Squat deep then explode upward, land softly.',
     youtubeUrl: 'https://www.youtube.com/watch?v=CVaEhXotL7M',
     category: 'cardio', sessionTypes: ['quick_workouts'],
@@ -439,7 +440,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'quick_pushup', nameAr: 'تمرين الضغط السريع', nameEn: 'Push-Up',
     muscleGroup: 'الصدر والترايسبس', defaultSets: 3, defaultReps: '12', defaultWeight: 'وزن الجسم',
-    restSeconds: 30, image: IMG.chest, tip: 'أبقي الكور مشدوداً، نطاق حركة كامل.',
+    restSeconds: 30, image: IMG.chest, tip: 'أبقي الكور مشدوداً، نطاق حركة كامل.', tipMale: 'أبقِ الكور مشدوداً، نطاق حركة كامل.',
     tipEn: 'Keep core tight, full range of motion.',
     youtubeUrl: 'https://www.youtube.com/watch?v=IODxDxX7oi4',
     category: 'weights', sessionTypes: ['quick_workouts'],
@@ -466,7 +467,7 @@ export const upperBodyExercises = [
   {
     id: 'hammer_curl', nameAr: 'ثني المطرقة (Hammer Curl)', nameEn: 'Hammer Curl',
     muscleGroup: 'البايسبس والساعد', defaultSets: 3, defaultReps: '12', defaultWeight: '4 كجم لكل يد',
-    restSeconds: 45, image: IMG.arms, tip: 'الإبهام للأعلى، ارفعي الدمبل بحركة متحكمة.',
+    restSeconds: 45, image: IMG.arms, tip: 'الإبهام للأعلى، ارفعي الدمبل بحركة متحكمة.', tipMale: 'الإبهام للأعلى، ارفع الدمبل بحركة متحكمة.',
     tipEn: 'Thumbs up position, lift dumbbell in a controlled motion.',
     youtubeUrl: 'https://www.youtube.com/watch?v=zC3nLlEvin4',
     category: 'weights', sessionTypes: ['upper_arms'],
@@ -474,7 +475,7 @@ export const upperBodyExercises = [
   {
       id: 'tricep_ext', nameAr: 'تمديد الترايسبس فوق الرأس', nameEn: 'Tricep Overhead Extension',
     muscleGroup: 'الترايسبس', defaultSets: 3, defaultReps: '12', defaultWeight: '5 كجم',
-    restSeconds: 45, image: IMG.arms, tip: 'مرفقاك بجانب رأسك، مدي ذراعيك للأعلى دون تحريك المرفقين.',
+    restSeconds: 45, image: IMG.arms, tip: 'مرفقاك بجانب رأسك، مدي ذراعيك للأعلى دون تحريك المرفقين.', tipMale: 'مرفقاك بجانب رأسك، مُد ذراعيك للأعلى دون تحريك المرفقين.',
     tipEn: 'Elbows beside head, extend arms upward without moving elbows.',
     youtubeUrl: 'https://www.youtube.com/watch?v=YbX7Wd8jQ-Q',
     category: 'weights', sessionTypes: ['upper_arms', 'full_body'],
@@ -482,7 +483,7 @@ export const upperBodyExercises = [
   {
     id: 'tricep_pushdown', nameAr: 'دفع الترايسبس بالكابل', nameEn: 'Tricep Pushdown',
     muscleGroup: 'الترايسبس', defaultSets: 3, defaultReps: '15', defaultWeight: '10 كجم',
-    restSeconds: 45, image: IMG.arms, tip: 'مرفقاك ثابتان، ادفعي للأسفل واثبتي ثانية.',
+    restSeconds: 45, image: IMG.arms, tip: 'مرفقاك ثابتان، ادفعي للأسفل واثبتي ثانية.', tipMale: 'مرفقاك ثابتان، ادفع للأسفل واثبت ثانية.',
     tipEn: 'Keep elbows fixed, push down and hold for one second.',
     youtubeUrl: 'https://www.youtube.com/watch?v=2-LAMcpzODU',
     category: 'weights', sessionTypes: ['upper_arms'],
@@ -490,7 +491,7 @@ export const upperBodyExercises = [
   {
     id: 'lat_pulldown', nameAr: 'سحب الكابل للأسفل (Lat Pulldown)', nameEn: 'Lat Pulldown',
     muscleGroup: 'عضلة الظهر العريضة', defaultSets: 3, defaultReps: '12', defaultWeight: '20 كجم',
-    restSeconds: 60, image: IMG.lat, tip: 'اسحبي الكابل نحو صدرك، مرفقاك للخارج.',
+    restSeconds: 60, image: IMG.lat, tip: 'اسحبي الكابل نحو صدرك، مرفقاك للخارج.', tipMale: 'اسحب الكابل نحو صدرك، مرفقاك للخارج.',
     tipEn: 'Pull bar to chest, elbows pointing outward and downward.',
     youtubeUrl: 'https://www.youtube.com/watch?v=CAwf7n6Luuc',
     category: 'weights', sessionTypes: ['upper_arms', 'full_body'],
@@ -498,7 +499,7 @@ export const upperBodyExercises = [
   {
     id: 'db_row', nameAr: 'تجديف الدمبل أحادي الذراع', nameEn: 'Dumbbell Row',
     muscleGroup: 'عضلة الظهر', defaultSets: 3, defaultReps: '12 لكل يد', defaultWeight: '8 كجم',
-    restSeconds: 60, image: IMG.lat, tip: 'ظهرك موازي للأرض، اسحبي الدمبل نحو خصرك مع ثني المرفق.',
+    restSeconds: 60, image: IMG.lat, tip: 'ظهرك موازي للأرض، اسحبي الدمبل نحو خصرك مع ثني المرفق.', tipMale: 'ظهرك موازي للأرض، اسحب الدمبل نحو خصرك مع ثني المرفق.',
     tipEn: 'Back parallel to floor, pull dumbbell toward hip with elbow bent.',
     youtubeUrl: 'https://www.youtube.com/watch?v=roCP6wCXPqo',
     category: 'weights', sessionTypes: ['upper_arms'],
@@ -837,21 +838,21 @@ export const sessionTypes: Record<SessionType, {
 
 // ===== AQUA CLASS EXERCISES =====
 export const aquaExercises = [
-  { nameAr: 'المشي في الماء', nameEn: 'Water Walking', duration: '5 دقائق', tip: 'ابدئي بالمشي للإحماء' },
-  { nameAr: 'القفز في الماء (Aqua Jumping Jacks)', nameEn: 'Aqua Jumping Jacks', duration: '3 × دقيقة', tip: 'افتحي ذراعيك وساقيك معاً' },
-  { nameAr: 'ركل الماء للأمام (Flutter Kicks)', nameEn: 'Flutter Kicks', duration: '3 × دقيقة', tip: 'أمسكي حافة المسبح وركلي بسرعة' },
-  { nameAr: 'تمرين الدمبل المائي (Water Dumbbell Curls)', nameEn: 'Water Dumbbell Curls', duration: '3 × 15 تكرار', tip: 'استخدمي الدمبل المائي لمقاومة الماء' },
+  { nameAr: 'المشي في الماء', nameEn: 'Water Walking', duration: '5 دقائق', tip: 'ابدئي بالمشي للإحماء', tipMale: 'ابدأ بالمشي للإحماء' },
+  { nameAr: 'القفز في الماء (Aqua Jumping Jacks)', nameEn: 'Aqua Jumping Jacks', duration: '3 × دقيقة', tip: 'افتحي ذراعيك وساقيك معاً', tipMale: 'افتح ذراعيك وساقيك معاً' },
+  { nameAr: 'ركل الماء للأمام (Flutter Kicks)', nameEn: 'Flutter Kicks', duration: '3 × دقيقة', tip: 'أمسكي حافة المسبح وركلي بسرعة', tipMale: 'أمسك حافة المسبح واركل بسرعة' },
+  { nameAr: 'تمرين الدمبل المائي (Water Dumbbell Curls)', nameEn: 'Water Dumbbell Curls', duration: '3 × 15 تكرار', tip: 'استخدمي الدمبل المائي لمقاومة الماء', tipMale: 'استخدم الدمبل المائي لمقاومة الماء' },
   { nameAr: 'الركض في الماء (Aqua Jogging)', nameEn: 'Aqua Jogging', duration: '5 دقائق', tip: 'الماء يقاوم حركتك ويزيد من حرق السعرات' },
   { nameAr: 'تمرين الأرداف في الماء (Aqua Squats)', nameEn: 'Aqua Squats', duration: '3 × 15 تكرار', tip: 'السكوات في الماء أقل ضغطاً على الركبتين' },
-  { nameAr: 'تمرين الجانبين (Side Kicks)', nameEn: 'Side Kicks', duration: '3 × 12 لكل جهة', tip: 'ارفعي ساقك للجانب ضد مقاومة الماء' },
+  { nameAr: 'تمرين الجانبين (Side Kicks)', nameEn: 'Side Kicks', duration: '3 × 12 لكل جهة', tip: 'ارفعي ساقك للجانب ضد مقاومة الماء', tipMale: 'ارفع ساقك للجانب ضد مقاومة الماء' },
   { nameAr: 'التمدد والإطالة المائية', nameEn: 'Aqua Stretching', duration: '5 دقائق', tip: 'الماء يساعد على مرونة أفضل' },
 ];
 
 // ===== SAUNA PROTOCOL =====
 export const saunaProtocol = [
-  { phase: 'الجلسة الأولى', duration: '10 دقائق', temp: '70-80°C', tip: 'ادخلي وأنتِ مرتاحة، لا تدخلي مباشرة بعد تمرين مكثف' },
-  { phase: 'استراحة خارجية', duration: '5 دقائق', temp: 'درجة حرارة الغرفة', tip: 'اشربي ماءً واستريحي خارج السونا' },
+  { phase: 'الجلسة الأولى', duration: '10 دقائق', temp: '70-80°C', tip: 'ادخلي وأنتِ مرتاحة، لا تدخلي مباشرة بعد تمرين مكثف', tipMale: 'ادخل وأنت مرتاح، لا تدخل مباشرة بعد تمرين مكثف' },
+  { phase: 'استراحة خارجية', duration: '5 دقائق', temp: 'درجة حرارة الغرفة', tip: 'اشربي ماءً واستريحي خارج السونا', tipMale: 'اشرب ماءً واسترح خارج السونا' },
   { phase: 'الجلسة الثانية', duration: '10 دقائق', temp: '75-85°C', tip: 'يمكنك رفع الحرارة قليلاً في الجلسة الثانية' },
   { phase: 'تبريد', duration: '3-5 دقائق', temp: 'ماء بارد أو درجة حرارة معتدلة', tip: 'دش بارد أو بارد معتدل لإغلاق المسام' },
-  { phase: 'راحة نهائية', duration: '10 دقائق', temp: 'درجة حرارة الغرفة', tip: 'اشربي 500 مل ماء على الأقل واستريحي' },
+  { phase: 'راحة نهائية', duration: '10 دقائق', temp: 'درجة حرارة الغرفة', tip: 'اشربي 500 مل ماء على الأقل واستريحي', tipMale: 'اشرب 500 مل ماء على الأقل واسترح' },
 ];

@@ -2,6 +2,7 @@
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { trpc } from '@/lib/trpc';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
@@ -38,7 +39,7 @@ function calcPlan(age: number, weight: number, targetWeight: number, height: num
   let sessionsPerWeek = 4;
   if (bmi < 25) {
     planName = 'برنامج بناء العضلات والتنشيط'; planNameEn = 'Muscle Building & Toning';
-    planDesc = 'وزنك في النطاق الطبيعي - ركزي على بناء العضلات وتحسين القوام';
+    planDesc = gender === 'female' ? 'وزنك في النطاق الطبيعي - ركزي على بناء العضلات وتحسين القوام' : 'وزنك في النطاق الطبيعي - ركز على بناء العضلات وتحسين القوام';
     planDescEn = 'Weight is in normal range - focus on muscle building and body toning';
     sessionsPerWeek = 4;
   } else if (bmi < 30) {
@@ -167,15 +168,35 @@ export function ProfilePanel() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(profile.avatarUrl);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const uploadAvatarMutation = trpc.userProfile.uploadAvatar.useMutation();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert(lang === 'ar' ? 'حجم الصورة كبير جداً (الحد الأقصى 5 ميجابايت)' : 'Image too large (max 5 MB)');
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target?.result as string;
-      setAvatarPreview(url);
-      updateProfile({ ...profile, avatarUrl: url });
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      setAvatarPreview(base64); // Show preview immediately
+      setAvatarUploading(true);
+      try {
+        const { url } = await uploadAvatarMutation.mutateAsync({
+          base64,
+          mimeType: file.type || 'image/jpeg',
+        });
+        // Store S3 URL (not base64) in localStorage profile
+        updateProfile({ ...profile, avatarUrl: url });
+        setAvatarPreview(url);
+      } catch {
+        // Fallback: keep base64 in localStorage if S3 upload fails
+        updateProfile({ ...profile, avatarUrl: base64 });
+      } finally {
+        setAvatarUploading(false);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -228,8 +249,33 @@ export function ProfilePanel() {
               fontSize: 34, fontWeight: 900, color: 'white',
               boxShadow: '0 0 0 3px white, 0 0 0 4.5px #1B2E5E22',
               userSelect: 'none',
+              overflow: 'hidden',
+              position: 'relative',
             }}>
-              {profile.name ? profile.name.trim()[0].toUpperCase() : '?'}
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="avatar"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
+              ) : (
+                profile.name ? profile.name.trim()[0].toUpperCase() : '?'
+              )}
+              {/* Loading overlay while uploading to S3 */}
+              {avatarUploading && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(27,46,94,0.6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    border: '3px solid rgba(255,255,255,0.35)',
+                    borderTopColor: 'white',
+                    animation: 'spin 0.8s linear infinite',
+                  }} />
+                </div>
+              )}
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
