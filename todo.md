@@ -274,15 +274,19 @@
 - [x] Admin panel: Create Challenge form (title, description, duration, XP reward)
 - [x] License key: set expiresAt = usedAt + 7 days when key is first verified (first use triggers 7-day countdown)
 
-- [ ] Move History tab inside Stats tab as a sub-tab; remove History from bottom nav bar to free up a slot
+- [x] Move History tab inside Stats tab as a sub-tab; remove History from bottom nav bar to free up a slot
 
 ## AI Nutrition System
-- [ ] DB schema: nutrition_goals, nutrition_logs, meal_entries, water_logs, nutrition_insights tables
-- [ ] Backend: nutrition tRPC router (getTodayLog, logMeal, deleteMeal, logWater, getWeeklyTrends, getInsights, scanFood, setGoals)
-- [ ] Frontend: Nutrition page with Dashboard tab (calories ring, macro cards, water tracker, weekly chart)
-- [ ] Frontend: Meal Tracking tab (breakfast/lunch/dinner/snacks with add/delete entries)
-- [ ] Frontend: AI Food Scanner (image upload → LLM analysis → confirm/edit → add to diary)
-- [ ] Frontend: AI Nutrition Insights tab (AI-generated insights based on workout + nutrition data)
-- [ ] Wire Nutrition tab into bottom nav (replace freed History slot)
-- [ ] Bilingual support (Arabic/English) throughout nutrition system
-- [ ] Integration with AI Coach context (pass nutrition data to coach system prompt)
+- [x] DB schema: nutrition_goals, nutrition_logs, meal_entries, water_logs, nutrition_insights tables
+- [x] Backend: nutrition tRPC router (getTodayLog, logMeal, deleteMeal, logWater, getWeeklyTrends, getInsights, scanFood, setGoals)
+- [x] Frontend: Nutrition page with Dashboard tab (calories ring, macro cards, water tracker, weekly chart)
+- [x] Frontend: Meal Tracking tab (breakfast/lunch/dinner/snacks with add/delete entries)
+- [x] Frontend: AI Food Scanner (image upload → LLM analysis → confirm/edit → add to diary)
+- [x] Frontend: AI Nutrition Insights tab (AI-generated insights based on workout + nutrition data)
+- [x] Wire Nutrition tab into bottom nav (replace freed History slot)
+- [x] Bilingual support (Arabic/English) throughout nutrition system
+- [x] Integration with AI Coach context (pass nutrition data to coach system prompt)
+- [x] Apply primefit-nutrition.zip: foodAnalysis.ts, usda.ts, nutritionDb.ts, new Nutrition.tsx with USDA integration
+- [x] Apply primefit-svg-icons.zip: SVG icons for Nutrition and Pricing tabs in bottom nav
+- [x] Add meal_logs and meal_log_items tables to DB schema (nutrition v2)
+- [x] Add analyzeFood, saveMeal, getToday, getMealHistory, deleteMeal, searchFood procedures to nutrition router

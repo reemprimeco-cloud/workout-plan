@@ -459,3 +459,50 @@ export const nutritionInsights = mysqlTable("nutrition_insights", {
 });
 export type NutritionInsight = typeof nutritionInsights.$inferSelect;
 export type InsertNutritionInsight = typeof nutritionInsights.$inferInsert;
+
+// ── Nutrition v2: Meal Logs (one row per meal scan/save) ──────────────────────
+export const mealLogs = mysqlTable("meal_logs", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull(),
+  mealType:       mysqlEnum("mealType", ["breakfast", "lunch", "dinner", "snack"]).notNull(),
+  loggedAt:       timestamp("loggedAt").defaultNow().notNull(),
+  imageUrl:       varchar("imageUrl", { length: 512 }),
+  notes:          text("notes"),
+  insightAr:      text("insightAr"),
+  insightEn:      text("insightEn"),
+  totalCalories:  double("totalCalories").notNull().default(0),
+  totalProtein:   double("totalProtein").notNull().default(0),
+  totalCarbs:     double("totalCarbs").notNull().default(0),
+  totalFat:       double("totalFat").notNull().default(0),
+  totalFiber:     double("totalFiber").notNull().default(0),
+  totalSugar:     double("totalSugar").notNull().default(0),
+  totalSodium:    double("totalSodium").notNull().default(0),
+});
+export type MealLog = typeof mealLogs.$inferSelect;
+export type InsertMealLog = typeof mealLogs.$inferInsert;
+
+// Individual food items within a meal log
+export const mealLogItems = mysqlTable("meal_log_items", {
+  id:              int("id").autoincrement().primaryKey(),
+  mealLogId:       int("mealLogId").notNull(),
+  name:            varchar("name", { length: 255 }).notNull(),
+  nameAr:          varchar("nameAr", { length: 255 }),
+  estimatedGrams:  double("estimatedGrams").notNull().default(100),
+  portionDesc:     varchar("portionDesc", { length: 255 }),
+  portionDescAr:   varchar("portionDescAr", { length: 255 }),
+  fdcId:           int("fdcId"),
+  confidence:      mysqlEnum("confidence", ["high", "medium", "low"]).notNull().default("high"),
+  calories:        double("calories").notNull().default(0),
+  protein:         double("protein").notNull().default(0),
+  carbs:           double("carbs").notNull().default(0),
+  fat:             double("fat").notNull().default(0),
+  fiber:           double("fiber").notNull().default(0),
+  sugar:           double("sugar").notNull().default(0),
+  sodium:          double("sodium").notNull().default(0),
+  per100gCalories: double("per100gCalories").notNull().default(0),
+  per100gProtein:  double("per100gProtein").notNull().default(0),
+  per100gCarbs:    double("per100gCarbs").notNull().default(0),
+  per100gFat:      double("per100gFat").notNull().default(0),
+});
+export type MealLogItem = typeof mealLogItems.$inferSelect;
+export type InsertMealLogItem = typeof mealLogItems.$inferInsert;

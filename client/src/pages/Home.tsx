@@ -4,7 +4,7 @@
 // Brand: Prime Printing Co.
 // Supports full Arabic/English translation via LanguageContext
 // ============================================================
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useGymTracker } from '../hooks/useGymTracker';
@@ -90,6 +90,29 @@ export default function Home() {
     setTimeout(() => setStartingSession(false), 300);
   };
 
+  // Inline SVG icons for tabs without CDN webp icons
+  const TabSVGIcons: Record<string, (active: boolean) => React.ReactElement> = {
+    pricing: (active) => (
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+        style={{ opacity: active ? 1 : 0.45 }}>
+        <circle cx="15" cy="15" r="12" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
+        <path d="M15 8v14M11 11.5c0-1.1.9-2 2-2h3.5a2 2 0 010 4H13a2 2 0 000 4H17a2 2 0 002-2"
+          stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    ),
+    nutrition: (active) => (
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+        style={{ opacity: active ? 1 : 0.45 }}>
+        {/* Plate */}
+        <circle cx="15" cy="17" r="9" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
+        {/* Fork */}
+        <path d="M9 6v4M9 10c0 1.1.9 2 2 2v5" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M7 6v3M11 6v3" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
+        {/* Knife */}
+        <path d="M21 6c0 0 1 2 1 4s-1 3-1 3v4" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  };
   const tabs: { id: Tab; iconUrl: string; label: string }[] = [
     { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
     { id: 'nutrition', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: isRTL ? 'التغذية' : 'Nutrition' },
@@ -275,7 +298,10 @@ export default function Home() {
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
             }}
           >
-            <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
+            {TabSVGIcons[tab.id]
+              ? TabSVGIcons[tab.id](activeTab === tab.id)
+              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
+            }
             <span style={{
               fontSize: 10, fontWeight: 700,
               color: activeTab === tab.id ? NAVY : '#7A9BB5',
