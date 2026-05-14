@@ -311,6 +311,7 @@ export default function MyCoach() {
   const historyQuery   = trpc.coach.getHistory.useQuery({ limit: 40 }, { enabled: isAuthenticated });
   const todayCheckin   = trpc.coach.getTodayCheckin.useQuery(undefined, { enabled: isAuthenticated });
   const insightsQuery  = trpc.coach.getInsights.useQuery({ limit: 8 }, { enabled: isAuthenticated });
+  const todayNutrition = trpc.nutrition.getTodayLog.useQuery({ date: undefined }, { enabled: isAuthenticated, staleTime: 0 });
   const utils          = trpc.useUtils();
 
   const chatMutation          = trpc.coach.chat.useMutation();
@@ -356,6 +357,19 @@ export default function MyCoach() {
     targetWeight: profile.targetWeight,
     streak: stats.streak,
     weeklyCompletion,
+    todayNutrition: todayNutrition.data ? {
+      calories:     Math.round(todayNutrition.data.totals.calories),
+      proteinG:     Math.round(todayNutrition.data.totals.proteinG),
+      carbsG:       Math.round(todayNutrition.data.totals.carbsG),
+      fatG:         Math.round(todayNutrition.data.totals.fatG),
+      waterMl:      todayNutrition.data.totalWaterMl,
+      goalCalories: todayNutrition.data.goals?.calories ?? 2000,
+      goalProtein:  todayNutrition.data.goals?.proteinG ?? 150,
+      goalCarbs:    todayNutrition.data.goals?.carbsG   ?? 200,
+      goalFat:      todayNutrition.data.goals?.fatG     ?? 65,
+      goalWater:    todayNutrition.data.goals?.waterMl  ?? 2500,
+      mealCount:    todayNutrition.data.meals?.length   ?? 0,
+    } : undefined,
   });
 
   const sendMessage = async (text: string) => {

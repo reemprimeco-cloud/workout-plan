@@ -228,16 +228,19 @@ export const nutritionRouter = router({
   if (!db) throw new Error("DB unavailable");
     const from = daysAgoStr(6);
     const to   = todayStr();
+    // Use timestamps for mealLogs (which stores loggedAt, not date string)
+    const fromTs = new Date(from + "T00:00:00.000Z");
+    const toTs   = new Date(to   + "T23:59:59.999Z");
 
     const [meals, water, goals] = await Promise.all([
       db
         .select()
-        .from(mealEntries)
+        .from(mealLogs)
         .where(
           and(
-            eq(mealEntries.userId, ctx.user.id),
-            gte(mealEntries.date, from),
-            lte(mealEntries.date, to)
+            eq(mealLogs.userId, ctx.user.id),
+            gte(mealLogs.loggedAt, fromTs),
+            lte(mealLogs.loggedAt, toTs)
           )
         ),
       db
@@ -260,11 +263,15 @@ export const nutritionRouter = router({
       days[d] = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0, waterMl: 0 };
     }
     for (const m of meals) {
-      if (days[m.date]) {
-        days[m.date].calories += m.calories;
-        days[m.date].proteinG += Number(m.proteinG);
-        days[m.date].carbsG   += Number(m.carbsG);
-        days[m.date].fatG     += Number(m.fatG);
+      // Extract YYYY-MM-DD from loggedAt timestamp
+      const dateKey = m.loggedAt instanceof Date
+        ? m.loggedAt.toISOString().slice(0, 10)
+        : String(m.loggedAt).slice(0, 10);
+      if (days[dateKey]) {
+        days[dateKey].calories += Number(m.totalCalories ?? 0);
+        days[dateKey].proteinG += Number(m.totalProtein  ?? 0);
+        days[dateKey].carbsG   += Number(m.totalCarbs    ?? 0);
+        days[dateKey].fatG     += Number(m.totalFat      ?? 0);
       }
     }
     for (const w of water) {

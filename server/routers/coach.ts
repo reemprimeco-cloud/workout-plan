@@ -41,10 +41,25 @@ function buildSystemPrompt(
     weeklyCompletion?: number;
     recentCheckins?: { feeling: number; energy: number; sleep: number; date: string }[];
     recentInsights?: string[];
+    todayNutrition?: {
+      calories: number; proteinG: number; carbsG: number; fatG: number; waterMl: number;
+      goalCalories: number; goalProtein: number; goalCarbs: number; goalFat: number; goalWater: number;
+      mealCount: number;
+    };
   }
 ): string {
   const isAr = lang === "ar";
 
+  const nutritionBlock = context.todayNutrition
+    ? `
+Today's nutrition:
+- Calories: ${context.todayNutrition.calories} / ${context.todayNutrition.goalCalories} kcal (${Math.round((context.todayNutrition.calories / Math.max(1, context.todayNutrition.goalCalories)) * 100)}%)
+- Protein: ${context.todayNutrition.proteinG}g / ${context.todayNutrition.goalProtein}g
+- Carbs: ${context.todayNutrition.carbsG}g / ${context.todayNutrition.goalCarbs}g
+- Fat: ${context.todayNutrition.fatG}g / ${context.todayNutrition.goalFat}g
+- Water: ${context.todayNutrition.waterMl}ml / ${context.todayNutrition.goalWater}ml
+- Meals logged today: ${context.todayNutrition.mealCount}`.trim()
+    : "";
   const contextBlock = `
 User profile:
 - Name: ${context.name ?? "Unknown"}
@@ -54,6 +69,7 @@ User profile:
 - Weekly workout completion: ${context.weeklyCompletion ?? 0}%
 - Recent check-ins (last 7 days): ${JSON.stringify(context.recentCheckins ?? [])}
 - Recent AI insights: ${(context.recentInsights ?? []).join(" | ")}
+${nutritionBlock}
 `.trim();
 
   if (isAr) {
@@ -96,6 +112,11 @@ export const coachRouter = router({
           targetWeight: z.number().optional(),
           streak: z.number().optional(),
           weeklyCompletion: z.number().optional(),
+          todayNutrition: z.object({
+            calories: z.number(), proteinG: z.number(), carbsG: z.number(), fatG: z.number(), waterMl: z.number(),
+            goalCalories: z.number(), goalProtein: z.number(), goalCarbs: z.number(), goalFat: z.number(), goalWater: z.number(),
+            mealCount: z.number(),
+          }).optional(),
         }).optional(),
       })
     )
@@ -125,6 +146,7 @@ export const coachRouter = router({
         targetWeight: input.context?.targetWeight ?? memory?.goalWeight ?? undefined,
         streak: input.context?.streak,
         weeklyCompletion: input.context?.weeklyCompletion,
+        todayNutrition: input.context?.todayNutrition,
         recentCheckins,
         recentInsights,
       });
