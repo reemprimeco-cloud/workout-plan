@@ -119,11 +119,16 @@ export async function verifyAccessCode(code: string) {
       .where(eq(accessCodes.id, row.id));
     return null;
   }
-  // Mark as used if first time
+  // Mark as used if first time; set 7-day expiry for free-trial keys (no expiresAt set yet)
   if (!row.usedAt) {
+    const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    // Only set expiry if the key has no expiry date yet (free trial scenario)
+    const newExpiresAt = row.expiresAt ? row.expiresAt : sevenDaysFromNow;
     await db.update(accessCodes)
-      .set({ usedAt: new Date() })
+      .set({ usedAt: new Date(), expiresAt: newExpiresAt })
       .where(eq(accessCodes.id, row.id));
+    // Return updated row with new expiresAt
+    return { ...row, usedAt: new Date(), expiresAt: newExpiresAt };
   }
   return row;
 }
@@ -159,6 +164,32 @@ export async function deleteAccessCode(id: number) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
   await db.delete(accessCodes).where(eq(accessCodes.id, id));
+}
+
+// ── Access Code Renewal Helpers ─────────────────────────────────────────────
+
+export async function getAccessCodeByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(accessCodes)
+    .where(eq(accessCodes.customerEmail, email.toLowerCase().trim()))
+    .orderBy(desc(accessCodes.createdAt))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function extendSubscription(id: number, plan: 'monthly' | 'quarterly' | 'yearly' | 'lifetime') {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  const DAYS: Record<string, number | null> = { monthly: 30, quarterly: 90, yearly: 365, lifetime: null };
+  const days = DAYS[plan];
+  // Extend from today or from current expiry (whichever is later)
+  const rows = await db.select().from(accessCodes).where(eq(accessCodes.id, id)).limit(1);
+  const current = rows[0]?.expiresAt;
+  const base = current && new Date(current) > new Date() ? new Date(current) : new Date();
+  const expiresAt = days ? new Date(base.getTime() + days * 86400_000) : null;
+  await db.update(accessCodes).set({ expiresAt, isActive: true }).where(eq(accessCodes.id, id));
+  return expiresAt;
 }
 
 // ── Push Subscriptions ─────────────────────────────────────────────────────

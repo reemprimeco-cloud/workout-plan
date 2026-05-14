@@ -3,7 +3,7 @@
 // Tabs: Dashboard | License Keys | Broadcast | Profile
 // Language: Arabic / English toggle
 // ============================================================
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'rewards' | 'profile';
+type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -112,6 +112,7 @@ const T: Record<string, Record<Lang, string>> = {
   planPrimePro: { ar: 'برايم برو', en: 'Prime Pro' },
   // Rewards tab
   tabRewards: { ar: '🎰 المكافآت', en: '🎰 Rewards' },
+  tabChallenges: { ar: '🏆 التحديات', en: '🏆 Challenges' },
   rewardName: { ar: 'اسم المكافأة', en: 'Reward Name' },
   rewardProbability: { ar: 'الاحتمالية %', en: 'Probability %' },
   rewardTier: { ar: 'المستوى', en: 'Tier' },
@@ -321,6 +322,146 @@ function AdminRewardsTab({ lang }: { lang: string }) {
   );
 }
 
+// ── Admin Challenges Tab ─────────────────────────────────────────────────────
+function AdminChallengesTab({ lang }: { lang: string }) {
+  const isRTL = lang === 'ar';
+  const utils = trpc.useUtils();
+  const challengesQuery = trpc.community.getChallenges.useQuery();
+  const createMutation = trpc.community.createChallenge.useMutation({
+    onSuccess: () => {
+      utils.community.getChallenges.invalidate();
+      setForm({ title: '', titleAr: '', description: '', descriptionAr: '', xpReward: 100, endDate: '', type: 'custom', targetValue: 1 });
+      setMsg('✅ ' + (lang === 'ar' ? 'تم إنشاء التحدي بنجاح' : 'Challenge created successfully'));
+      setTimeout(() => setMsg(''), 3000);
+    },
+    onError: (e) => setMsg('❌ ' + e.message),
+  });
+  const [form, setForm] = React.useState({
+    title: '', titleAr: '', description: '', descriptionAr: '',
+    xpReward: 100, endDate: '', type: 'custom' as const, targetValue: 1,
+  });
+  const [msg, setMsg] = React.useState('');
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 14px', borderRadius: 10,
+    border: '1.5px solid #CBD5E1', fontSize: 14, outline: 'none',
+    background: '#F8FAFC', color: '#1B2E5E',
+    direction: isRTL ? 'rtl' : 'ltr',
+  };
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontWeight: 700, fontSize: 13,
+    color: '#1B2E5E', marginBottom: 6,
+  };
+
+  return (
+    <div>
+      {/* Create Challenge Form */}
+      <div style={{ background: 'white', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 4px 20px rgba(27,46,94,0.08)' }}>
+        <h2 style={{ margin: '0 0 20px', color: '#1B2E5E', fontSize: 16, fontWeight: 900 }}>
+          {lang === 'ar' ? '➕ إنشاء تحدي جديد' : '➕ Create New Challenge'}
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'العنوان (إنجليزي)' : 'Title (English)'}</label>
+            <input style={inputStyle} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. 7-Day Streak" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'}</label>
+            <input style={{ ...inputStyle, direction: 'rtl' }} value={form.titleAr} onChange={e => setForm(f => ({ ...f, titleAr: e.target.value }))} placeholder="مثال: سلسلة 7 أيام" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'الوصف (إنجليزي)' : 'Description (English)'}</label>
+            <input style={inputStyle} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional description" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'الوصف (عربي)' : 'Description (Arabic)'}</label>
+            <input style={{ ...inputStyle, direction: 'rtl' }} value={form.descriptionAr} onChange={e => setForm(f => ({ ...f, descriptionAr: e.target.value }))} placeholder="وصف اختياري" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'نقاط XP' : 'XP Reward'}</label>
+            <input type="number" min={1} style={inputStyle} value={form.xpReward} onChange={e => setForm(f => ({ ...f, xpReward: Number(e.target.value) }))} />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'End Date'}</label>
+            <input type="date" style={inputStyle} value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'النوع' : 'Type'}</label>
+            <select style={inputStyle} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as any }))}>
+              <option value="custom">{lang === 'ar' ? 'مخصص' : 'Custom'}</option>
+              <option value="sessions">{lang === 'ar' ? 'جلسات' : 'Sessions'}</option>
+              <option value="streak">{lang === 'ar' ? 'سلسلة' : 'Streak'}</option>
+              <option value="cardio">{lang === 'ar' ? 'كارديو' : 'Cardio'}</option>
+              <option value="weight">{lang === 'ar' ? 'وزن' : 'Weight'}</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'القيمة المستهدفة' : 'Target Value'}</label>
+            <input type="number" min={1} style={inputStyle} value={form.targetValue} onChange={e => setForm(f => ({ ...f, targetValue: Number(e.target.value) }))} />
+          </div>
+        </div>
+        {msg && <p style={{ color: msg.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{msg}</p>}
+        <button
+          onClick={() => {
+            if (!form.title || !form.titleAr || !form.endDate) {
+              setMsg('❌ ' + (lang === 'ar' ? 'يرجى ملء الحقول المطلوبة' : 'Please fill required fields'));
+              return;
+            }
+            createMutation.mutate(form);
+          }}
+          disabled={createMutation.isPending}
+          style={{
+            background: createMutation.isPending ? '#94A3B8' : 'linear-gradient(135deg, #1B2E5E, #0F1E3D)',
+            color: 'white', border: 'none', borderRadius: 12,
+            padding: '12px 28px', fontSize: 14, fontWeight: 900,
+            cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {createMutation.isPending ? (lang === 'ar' ? 'جاري الإنشاء...' : 'Creating...') : (lang === 'ar' ? '✅ إنشاء التحدي' : '✅ Create Challenge')}
+        </button>
+      </div>
+
+      {/* Existing Challenges List */}
+      <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(27,46,94,0.08)' }}>
+        <h2 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
+          {lang === 'ar' ? '📋 التحديات الحالية' : '📋 Active Challenges'}
+        </h2>
+        {challengesQuery.isLoading ? (
+          <p style={{ color: '#94A3B8' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+        ) : !challengesQuery.data?.length ? (
+          <p style={{ color: '#94A3B8' }}>{lang === 'ar' ? 'لا توجد تحديات' : 'No challenges yet'}</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {challengesQuery.data.map(ch => (
+              <div key={ch.id} style={{
+                border: '1.5px solid #E2E8F0', borderRadius: 12, padding: '14px 18px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 14 }}>
+                    {lang === 'ar' ? ch.titleAr : ch.title}
+                  </div>
+                  <div style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                    {lang === 'ar' ? `ينتهي: ${ch.endDate}` : `Ends: ${ch.endDate}`}
+                    {' · '}{ch.xpReward} XP
+                    {' · '}{ch.participantsCount} {lang === 'ar' ? 'مشارك' : 'participants'}
+                  </div>
+                </div>
+                <span style={{
+                  background: ch.isActive ? '#DCFCE7' : '#FEE2E2',
+                  color: ch.isActive ? '#16A34A' : '#DC2626',
+                  borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 700,
+                }}>
+                  {ch.isActive ? (lang === 'ar' ? 'نشط' : 'Active') : (lang === 'ar' ? 'منتهي' : 'Ended')}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 export default function AdminPanel() {
   const { user, loading } = useAuth();
   const utils = trpc.useUtils();
@@ -521,6 +662,7 @@ export default function AdminPanel() {
           ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
           ['rewards', t('tabRewards', lang)],
+          ['challenges', t('tabChallenges', lang)],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
           <button
@@ -883,6 +1025,8 @@ export default function AdminPanel() {
         {/* ── REWARDS TAB ── */}
         {activeTab === 'rewards' && <AdminRewardsTab lang={lang} />}
 
+        {/* ── CHALLENGES TAB ── */}
+        {activeTab === 'challenges' && <AdminChallengesTab lang={lang} />}
         {/* ── PROFILE TAB ── */}
         {activeTab === 'profile' && (
           <div style={cardStyle}>

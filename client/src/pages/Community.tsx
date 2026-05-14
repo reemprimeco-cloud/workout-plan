@@ -494,7 +494,39 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef<number | null>(null);
+  const dragCurrentY = useRef<number>(0);
   const utils = trpc.useUtils();
+
+  const handleDragStart = (e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+    dragCurrentY.current = 0;
+    if (sheetRef.current) sheetRef.current.style.transition = 'none';
+  };
+
+  const handleDragMove = (e: React.TouchEvent) => {
+    if (dragStartY.current === null) return;
+    const delta = e.touches[0].clientY - dragStartY.current;
+    if (delta < 0) return;
+    dragCurrentY.current = delta;
+    if (sheetRef.current) sheetRef.current.style.transform = `translateY(${delta}px)`;
+  };
+
+  const handleDragEnd = () => {
+    if (dragStartY.current === null) return;
+    dragStartY.current = null;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = 'transform 0.25s ease';
+      if (dragCurrentY.current > 120) {
+        sheetRef.current.style.transform = 'translateY(100%)';
+        setTimeout(onClose, 240);
+      } else {
+        sheetRef.current.style.transform = 'translateY(0)';
+      }
+    }
+    dragCurrentY.current = 0;
+  };
   const createPost = trpc.community.createPost.useMutation({
     onSuccess: () => { utils.community.getFeed.invalidate(); onClose(); },
   });
@@ -532,6 +564,7 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
     >
       {/* Sheet — full width, up to 100dvh, slides up */}
       <div
+        ref={sheetRef}
         dir={isRTL ? "rtl" : "ltr"}
         style={{
           background: "#18181B",
@@ -548,7 +581,12 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
         }}
       >
         {/* ── Drag handle ── */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+        <div
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+          style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px", cursor: "grab" }}
+        >
           <div style={{ width: 36, height: 4, borderRadius: 2, background: "#3F3F46" }} />
         </div>
 
