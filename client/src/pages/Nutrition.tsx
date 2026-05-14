@@ -1213,7 +1213,7 @@ function InsightsTab({ lang }: { lang: string }) {
 
   const insightIcons: Record<string, string> = {
     protein: "💪", hydration: "💧", calories: "🔥",
-    carbs: "🌾", fat: "🥑", recovery: "🛌", sugar: "🍬", default: "💡",
+    macros: "🥗", recovery: "🛌", general: "💡", default: "💡",
   };
 
   return (
@@ -1289,10 +1289,8 @@ function InsightsTab({ lang }: { lang: string }) {
                   </span>
                 </div>
                 <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: "0 0 6px" }}>
-                  {lang === "ar" ? insight.titleAr ?? insight.title : insight.title}
-                </p>
-                <p style={{ color: TEXT2, fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                  {lang === "ar" ? insight.bodyAr ?? insight.body : insight.body}
+                  {insight.type ? (insightIcons[insight.type] ?? insightIcons.default) + " " : ""}
+                  {lang === "ar" ? insight.contentAr ?? insight.content : insight.content}
                 </p>
               </div>
             </div>
