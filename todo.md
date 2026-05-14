@@ -224,27 +224,27 @@
 
 ## Feature Batch 12 — Instagram-style @Mention System
 
-- [ ] Server: searchUsers procedure for mention autocomplete (by first letters, Arabic + English)
-- [ ] Server: store mentions in a new post_mentions / comment_mentions table
-- [ ] Server: send push notification to mentioned user when post/comment is created
-- [ ] Client: MentionInput component — real-time @ dropdown, suggested users, smart autocomplete
-- [ ] Client: render clickable @mention chips in post content and comment content
-- [ ] Client: mobile-optimized UX (touch-friendly dropdown, keyboard avoidance)
+- [x] Server: searchUsers procedure for mention autocomplete (by first letters, Arabic + English)
+- [x] Server: store mentions in a new post_mentions / comment_mentions table
+- [x] Server: send push notification to mentioned user when post/comment is created
+- [x] Client: MentionInput component — real-time @ dropdown, suggested users, smart autocomplete
+- [x] Client: render clickable @mention chips in post content and comment content
+- [x] Client: mobile-optimized UX (touch-friendly dropdown, keyboard avoidance)
 
 ## Feature Batch 13 — Challenge Reward Spin Wheel
 
-- [ ] Fix Community.tsx stray `};` syntax error (line 299)
-- [ ] Fix @mention system: remove remaining old mention state/functions
-- [ ] Schema: reward_spins, reward_history, reward_probabilities, challenge_rewards, jackpot_winners tables
-- [ ] Server: spin wheel router with probability engine (server-side), anti-abuse (one spin per challenge), reward dispatch
-- [ ] Server: admin CRUD for reward probabilities, enable/disable rewards, jackpot monitoring
-- [ ] SpinWheel component: canvas-based animated wheel, realistic spin physics, suspense effect, glowing winner
-- [ ] Confetti celebration overlay on win
-- [ ] Haptic vibration support (navigator.vibrate)
-- [ ] Sound effects support (Web Audio API)
-- [ ] Celebration popup showing reward won
-- [ ] Wire SpinWheel into Community challenges completion flow
-- [ ] Admin Rewards tab in AdminPanel: edit probabilities, add/remove rewards, track history, monitor jackpots
+- [x] Fix Community.tsx stray `};` syntax error (line 299)
+- [x] Fix @mention system: remove remaining old mention state/functions
+- [x] Schema: reward_spins, reward_history, reward_probabilities, challenge_rewards, jackpot_winners tables
+- [x] Server: spin wheel router with probability engine (server-side), anti-abuse (one spin per challenge), reward dispatch
+- [x] Server: admin CRUD for reward probabilities, enable/disable rewards, jackpot monitoring
+- [x] SpinWheel component: canvas-based animated wheel, realistic spin physics, suspense effect, glowing winner
+- [x] Confetti celebration overlay on win
+- [x] Haptic vibration support (navigator.vibrate)
+- [x] Sound effects support (Web Audio API)
+- [x] Celebration popup showing reward won
+- [x] Wire SpinWheel into Community challenges completion flow
+- [x] Admin Rewards tab in AdminPanel: edit probabilities, add/remove rewards, track history, monitor jackpots
 
 ## Feature Batch 13 — Challenge Reward Spin Wheel
 
@@ -256,3 +256,13 @@
 - [x] AdminPanel: Rewards tab with reward list editor, jackpot winners, spin history, stats
 - [x] @mention system: MentionInput component, getMentionSuggestions, processMentions, mention notifications
 - [x] Tests: 7 new spin wheel probability engine tests (111 total passing)
+
+## Feature Batch 14 — Mention UX & Post Form Mobile Fix
+
+- [x] MentionInput: dropdown always renders above the cursor/input, never below
+- [x] MentionInput: large touch targets (min 56px row height) for easy mobile tapping
+- [x] MentionInput: smooth scroll inside dropdown, max 4 items visible at once
+- [x] MentionInput: dropdown positioned with fixed/portal rendering to avoid clipping
+- [x] NewPostForm: full-screen bottom sheet on mobile (100vh, slides up from bottom)
+- [x] NewPostForm: proper keyboard-aware layout (content scrolls, action bar stays pinned)
+- [x] NewPostForm: close button at top, post button clearly visible

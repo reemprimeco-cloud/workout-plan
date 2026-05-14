@@ -6,10 +6,14 @@
  * - Fuzzy search by first letters (Arabic + English)
  * - Suggested users shown when @ is typed with no query yet
  * - Keyboard navigation (↑ ↓ Enter Escape Tab)
+ * - Portal-based dropdown: renders in document.body so it's NEVER clipped
+ * - Always positions ABOVE the input (flips below only if not enough space)
+ * - Large touch targets (56px row height) for easy mobile tapping
  * - Touch-friendly, mobile-optimized
  * - Renders as <textarea> (multiline) or <input> (single-line)
  */
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -40,7 +44,7 @@ interface MentionInputProps {
 }
 
 // ── Avatar mini ───────────────────────────────────────────────────────────────
-function MiniAvatar({ name, photoUrl, size = 28, color = "#7BB8D4" }: {
+function MiniAvatar({ name, photoUrl, size = 36, color = "#7BB8D4" }: {
   name: string; photoUrl?: string | null; size?: number; color?: string;
 }) {
   const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -49,7 +53,7 @@ function MiniAvatar({ name, photoUrl, size = 28, color = "#7BB8D4" }: {
       <div style={{
         width: size, height: size, borderRadius: "50%",
         overflow: "hidden", flexShrink: 0,
-        border: `1.5px solid ${color}`,
+        border: `2px solid ${color}`,
       }}>
         <img src={photoUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
@@ -59,13 +63,171 @@ function MiniAvatar({ name, photoUrl, size = 28, color = "#7BB8D4" }: {
     <div style={{
       width: size, height: size, borderRadius: "50%",
       background: `linear-gradient(135deg, ${color}33, ${color}66)`,
-      border: `1.5px solid ${color}`,
+      border: `2px solid ${color}`,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.38, fontWeight: 800, color,
       flexShrink: 0,
     }}>
       {initials}
     </div>
+  );
+}
+
+// ── Portal Dropdown ───────────────────────────────────────────────────────────
+/**
+ * Renders the mention dropdown in document.body via a portal so it is never
+ * clipped by overflow:hidden parents (e.g. the NewPostForm sheet).
+ * Positions itself ABOVE the anchor element by default; flips below if there
+ * isn't enough space above.
+ */
+function MentionDropdown({
+  anchorRef,
+  items,
+  selectedIdx,
+  onSelect,
+  onHover,
+  isRTL,
+  mentionQuery,
+  dropdownBg,
+  dropdownHoverBg,
+  textColor,
+  subTextColor,
+  borderColor,
+  accentColor,
+}: {
+  anchorRef: React.RefObject<HTMLElement | null>;
+  items: MentionUser[];
+  selectedIdx: number;
+  onSelect: (u: MentionUser) => void;
+  onHover: (idx: number) => void;
+  isRTL: boolean;
+  mentionQuery: string | null;
+  dropdownBg: string;
+  dropdownHoverBg: string;
+  textColor: string;
+  subTextColor: string;
+  borderColor: string;
+  accentColor: string;
+}) {
+  const [pos, setPos] = useState<{ top: number; left: number; width: number; openUp: boolean } | null>(null);
+
+  useEffect(() => {
+    const anchor = anchorRef.current;
+    if (!anchor) return;
+
+    const update = () => {
+      const rect = anchor.getBoundingClientRect();
+      const dropdownH = Math.min(items.length * 64 + 40, 280); // estimated height
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUp = spaceAbove > dropdownH || spaceAbove > spaceBelow;
+
+      setPos({
+        top: openUp ? rect.top + window.scrollY - dropdownH - 6 : rect.bottom + window.scrollY + 6,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        openUp,
+      });
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [anchorRef, items.length]);
+
+  if (!pos) return null;
+
+  return createPortal(
+    <div
+      style={{
+        position: "absolute",
+        top: pos.top,
+        left: pos.left,
+        width: pos.width,
+        background: dropdownBg,
+        borderRadius: 16,
+        boxShadow: "0 8px 40px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.08)",
+        zIndex: 99999,
+        overflow: "hidden",
+        maxHeight: 280,
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+        // Smooth scroll on iOS
+      }}
+    >
+      {/* Header */}
+      <div style={{
+        padding: "10px 14px 6px",
+        fontSize: 11,
+        color: subTextColor,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        borderBottom: `1px solid ${borderColor}`,
+        background: dropdownBg,
+        position: "sticky",
+        top: 0,
+        zIndex: 1,
+      }}>
+        {mentionQuery
+          ? (isRTL ? `نتائج "@${mentionQuery}"` : `Results for "@${mentionQuery}"`)
+          : (isRTL ? "مقترحون" : "Suggestions")}
+      </div>
+
+      {/* User rows — 56px min height for easy tapping */}
+      {items.map((u, idx) => (
+        <button
+          key={u.id}
+          onMouseDown={e => { e.preventDefault(); onSelect(u); }}
+          onTouchStart={e => { e.preventDefault(); e.stopPropagation(); onSelect(u); }}
+          onMouseEnter={() => onHover(idx)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            width: "100%",
+            minHeight: 56,
+            padding: "10px 14px",
+            background: idx === selectedIdx
+              ? dropdownHoverBg
+              : "transparent",
+            border: "none",
+            borderBottom: `1px solid ${borderColor}22`,
+            cursor: "pointer",
+            color: textColor,
+            fontSize: 14,
+            textAlign: isRTL ? "right" : "left",
+            direction: isRTL ? "rtl" : "ltr",
+            transition: "background 0.12s",
+            WebkitTapHighlightColor: "transparent",
+            touchAction: "manipulation",
+          }}
+        >
+          <MiniAvatar name={u.name ?? "U"} photoUrl={u.avatarUrl} size={36} color={accentColor} />
+          <div style={{ flex: 1, minWidth: 0, textAlign: isRTL ? "right" : "left" }}>
+            <div style={{ fontWeight: 700, color: textColor, fontSize: 14, lineHeight: 1.3 }}>
+              {u.name}
+            </div>
+            <div style={{ fontSize: 12, color: subTextColor, marginTop: 1 }}>
+              @{u.name}
+            </div>
+          </div>
+          {idx === selectedIdx && (
+            <div style={{
+              fontSize: 11, color: accentColor, fontWeight: 700, flexShrink: 0,
+              background: `${accentColor}22`, borderRadius: 8, padding: "2px 7px",
+            }}>
+              {isRTL ? "↵" : "↵"}
+            </div>
+          )}
+        </button>
+      ))}
+    </div>,
+    document.body
   );
 }
 
@@ -92,11 +254,10 @@ export function MentionInput({
 
   // ── Mention state ─────────────────────────────────────────────────────────
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-  const [mentionCursor, setMentionCursor] = useState(0); // char index of the @ sign
+  const [mentionCursor, setMentionCursor] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // ── Query ─────────────────────────────────────────────────────────────────
   const { data: suggestions = [] } = trpc.community.getMentionSuggestions.useQuery(
@@ -114,12 +275,10 @@ export function MentionInput({
   const handleChange = useCallback((val: string) => {
     onChange(val);
 
-    // Find the last @ before the cursor position
     const el = inputRef.current;
     const cursorPos = el ? (el.selectionStart ?? val.length) : val.length;
     const textBeforeCursor = val.slice(0, cursorPos);
 
-    // Find the last @ that is either at start or preceded by whitespace
     const lastAtIdx = textBeforeCursor.lastIndexOf("@");
     if (lastAtIdx === -1) {
       setDropdownOpen(false);
@@ -127,13 +286,13 @@ export function MentionInput({
       return;
     }
 
-    // Make sure there's no space between @ and cursor
     const afterAt = textBeforeCursor.slice(lastAtIdx + 1);
+    // Allow Arabic letters, Latin letters, digits, underscore — no spaces
     const isValidQuery = /^[\w\u0600-\u06FF]{0,40}$/.test(afterAt);
 
     if (isValidQuery) {
       setMentionCursor(lastAtIdx);
-      setMentionQuery(afterAt); // empty string = show suggested users
+      setMentionQuery(afterAt);
       setDropdownOpen(true);
     } else {
       setDropdownOpen(false);
@@ -150,12 +309,11 @@ export function MentionInput({
     onChange(newVal);
     setDropdownOpen(false);
     setMentionQuery(null);
-    // Restore focus and move cursor after the inserted mention
     setTimeout(() => {
       const el = inputRef.current;
       if (el) {
         el.focus();
-        const newPos = before.length + user.name!.length + 2; // @name + space
+        const newPos = before.length + user.name!.length + 2;
         el.setSelectionRange(newPos, newPos);
       }
     }, 0);
@@ -187,36 +345,38 @@ export function MentionInput({
     }
   }, [dropdownOpen, suggestions, selectedIdx, insertMention, onSubmit]);
 
-  // ── Close dropdown on outside click ──────────────────────────────────────
+  // ── Close dropdown on outside click/touch ────────────────────────────────
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
-        inputRef.current && !inputRef.current.contains(e.target as Node)
-      ) {
-        setDropdownOpen(false);
-        setMentionQuery(null);
-      }
+    const handler = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (inputRef.current && inputRef.current.contains(target)) return;
+      setDropdownOpen(false);
+      setMentionQuery(null);
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
   }, []);
 
-  // ── Shared input props ────────────────────────────────────────────────────
+  // ── Shared input styles ───────────────────────────────────────────────────
   const sharedStyle: React.CSSProperties = {
     width: "100%",
     background: bgColor,
     border: `1px solid ${borderColor}`,
     borderRadius: 10,
-    padding: "8px 12px",
+    padding: "10px 12px",
     color: textColor,
-    fontSize: 14,
+    fontSize: 15,
     outline: "none",
     resize: "none",
     direction: isRTL ? "rtl" : "ltr",
     fontFamily: "inherit",
     lineHeight: 1.6,
     boxSizing: "border-box",
+    WebkitAppearance: "none",
     ...inputStyle,
   };
 
@@ -224,78 +384,23 @@ export function MentionInput({
 
   return (
     <div style={{ position: "relative", width: "100%", ...style }}>
-      {/* ── Mention dropdown ── */}
+      {/* ── Portal dropdown — renders in document.body, never clipped ── */}
       {dropdownOpen && dropdownItems.length > 0 && (
-        <div
-          ref={dropdownRef}
-          style={{
-            position: "absolute",
-            bottom: "calc(100% + 6px)",
-            left: 0,
-            right: 0,
-            background: dropdownBg,
-            borderRadius: 12,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
-            zIndex: 500,
-            overflow: "hidden",
-            maxHeight: 240,
-            overflowY: "auto",
-          }}
-        >
-          {/* Header */}
-          <div style={{
-            padding: "8px 12px 4px",
-            fontSize: 11,
-            color: subTextColor,
-            fontWeight: 600,
-            letterSpacing: "0.05em",
-            borderBottom: `1px solid ${borderColor}`,
-          }}>
-            {mentionQuery
-              ? (isRTL ? `نتائج "@${mentionQuery}"` : `Results for "@${mentionQuery}"`)
-              : (isRTL ? "اقتراحات" : "Suggestions")}
-          </div>
-
-          {/* User rows */}
-          {dropdownItems.map((u, idx) => (
-            <button
-              key={u.id}
-              onMouseDown={e => { e.preventDefault(); insertMention(u); }}
-              onTouchStart={e => { e.preventDefault(); insertMention(u); }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                width: "100%",
-                padding: "9px 12px",
-                background: idx === selectedIdx ? dropdownHoverBg : "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: textColor,
-                fontSize: 13,
-                textAlign: isRTL ? "right" : "left",
-                direction: isRTL ? "rtl" : "ltr",
-                transition: "background 0.1s",
-              }}
-              onMouseEnter={() => setSelectedIdx(idx)}
-            >
-              <MiniAvatar name={u.name ?? "U"} photoUrl={u.avatarUrl} size={30} color={accentColor} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, color: textColor, fontSize: 13 }}>
-                  {u.name}
-                </div>
-                <div style={{ fontSize: 11, color: subTextColor }}>
-                  @{u.name}
-                </div>
-              </div>
-              {idx === selectedIdx && (
-                <div style={{ fontSize: 10, color: accentColor, fontWeight: 600, flexShrink: 0 }}>
-                  {isRTL ? "↵ اختر" : "↵ select"}
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
+        <MentionDropdown
+          anchorRef={inputRef as React.RefObject<HTMLElement>}
+          items={dropdownItems}
+          selectedIdx={selectedIdx}
+          onSelect={insertMention}
+          onHover={setSelectedIdx}
+          isRTL={isRTL}
+          mentionQuery={mentionQuery}
+          dropdownBg={dropdownBg}
+          dropdownHoverBg={dropdownHoverBg}
+          textColor={textColor}
+          subTextColor={subTextColor}
+          borderColor={borderColor}
+          accentColor={accentColor}
+        />
       )}
 
       {/* ── Input / Textarea ── */}

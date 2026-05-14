@@ -495,11 +495,9 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
   const [imageMime, setImageMime] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
-
   const createPost = trpc.community.createPost.useMutation({
     onSuccess: () => { utils.community.getFeed.invalidate(); onClose(); },
   });
-
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -515,56 +513,104 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
     };
     reader.readAsDataURL(file);
   };
-
   const isRTL = lang === "ar";
+  const canPost = content.trim().length > 0 && !createPost.isPending;
+
   return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200,
-      display: "flex", alignItems: "flex-end", justifyContent: "center",
-      backdropFilter: "blur(4px)",
-    }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div dir={isRTL ? "rtl" : "ltr"} style={{
-        background: "#18181B", borderRadius: "24px 24px 0 0",
-        width: "100%", maxWidth: 600,
-        animation: "slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-        boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
-        overflow: "hidden",
-      }}>
-        {/* ── Header ── */}
+    /* Full-screen overlay */
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "rgba(0,0,0,0.88)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-end",
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Sheet — full width, up to 100dvh, slides up */}
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        style={{
+          background: "#18181B",
+          borderRadius: "20px 20px 0 0",
+          width: "100%",
+          maxWidth: 640,
+          /* On mobile: fill available height above keyboard */
+          maxHeight: "92dvh",
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideUp 0.28s cubic-bezier(0.34,1.56,0.64,1)",
+          boxShadow: "0 -8px 48px rgba(0,0,0,0.7)",
+          overflow: "hidden",
+        }}
+      >
+        {/* ── Drag handle ── */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: "#3F3F46" }} />
+        </div>
+
+        {/* ── Header bar ── */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 16px 10px",
-          borderBottom: `1px solid #2A2A2E`,
+          padding: "4px 16px 12px",
+          borderBottom: "1px solid #2A2A2E",
+          flexShrink: 0,
         }}>
-          <button onClick={onClose} style={{
-            background: "none", border: "none", color: TEXT_SUB,
-            fontSize: 15, fontWeight: 600, cursor: "pointer", padding: "4px 8px",
-          }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: "#27272A", border: "none", color: "#A1A1AA",
+              fontSize: 14, fontWeight: 600, cursor: "pointer",
+              padding: "8px 14px", borderRadius: 20,
+              minWidth: 64, minHeight: 36,
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
             {isRTL ? "إلغاء" : "Cancel"}
           </button>
-          <span style={{ color: TEXT_MAIN, fontWeight: 800, fontSize: 15 }}>
+
+          <span style={{ color: "#F4F4F5", fontWeight: 800, fontSize: 15 }}>
             {t("newPost", lang)}
           </span>
+
           <button
             onClick={() => {
-              if (!content.trim()) return;
-              createPost.mutate({ type: postType, content, imageBase64: imageBase64 ?? undefined, imageMime: imageMime ?? undefined, visibility });
+              if (!canPost) return;
+              createPost.mutate({
+                type: postType,
+                content,
+                imageBase64: imageBase64 ?? undefined,
+                imageMime: imageMime ?? undefined,
+                visibility,
+              });
             }}
-            disabled={!content.trim() || createPost.isPending}
+            disabled={!canPost}
             style={{
-              background: content.trim() ? `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})` : "#2A2A2E",
+              background: canPost ? `linear-gradient(135deg, ${CYAN}, ${CYAN_DIM})` : "#27272A",
               border: "none", borderRadius: 20,
-              color: content.trim() ? NAVY : TEXT_SUB,
-              fontWeight: 800, fontSize: 14, cursor: content.trim() ? "pointer" : "not-allowed",
-              padding: "6px 18px", transition: "all 0.2s",
-            }}>
+              color: canPost ? NAVY : "#52525B",
+              fontWeight: 800, fontSize: 14,
+              cursor: canPost ? "pointer" : "not-allowed",
+              padding: "8px 18px", minHeight: 36, minWidth: 64,
+              transition: "all 0.2s",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
             {createPost.isPending ? "..." : t("share", lang)}
           </button>
         </div>
 
-        {/* ── Composer body ── */}
-        <div style={{ padding: "16px 16px 0" }}>
-          {/* Avatar + textarea row */}
+        {/* ── Scrollable body ── */}
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          padding: "16px 16px 0",
+        }}>
+          {/* Avatar + textarea */}
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
             <Avatar name={"U"} size={40} />
             <MentionInput
@@ -572,16 +618,22 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
               onChange={setContent}
               placeholder={t("postPlaceholder", lang)}
               multiline={true}
-              rows={4}
+              rows={6}
               lang={lang}
               bgColor="transparent"
               textColor={TEXT_MAIN}
               accentColor={CYAN}
-              dropdownBg={CARD_BG2}
+              dropdownBg="#1C1C1F"
               dropdownHoverBg="#2A2A2E"
               subTextColor={TEXT_SUB}
               borderColor="transparent"
-              inputStyle={{ fontSize: 16, padding: "0", border: "none", borderRadius: 0 }}
+              inputStyle={{
+                fontSize: 16,
+                padding: "0",
+                border: "none",
+                borderRadius: 0,
+                minHeight: 120,
+              }}
               style={{ flex: 1 }}
             />
           </div>
@@ -592,68 +644,100 @@ function NewPostForm({ lang, onClose }: { lang: string; onClose: () => void }) {
               <img
                 src={`data:${imageMime};base64,${imageBase64}`}
                 alt="preview"
-                style={{ width: "100%", maxHeight: 240, objectFit: "cover", display: "block" }}
+                style={{ width: "100%", maxHeight: 260, objectFit: "cover", display: "block" }}
               />
               <button
                 onClick={() => { setImageBase64(null); setImageMime(null); setPostType("text"); }}
                 style={{
                   position: "absolute", top: 8, right: 8,
-                  background: "rgba(0,0,0,0.6)", border: "none", borderRadius: "50%",
-                  width: 28, height: 28, color: "white", cursor: "pointer", fontSize: 14,
+                  background: "rgba(0,0,0,0.65)", border: "none", borderRadius: "50%",
+                  width: 32, height: 32, color: "white", cursor: "pointer", fontSize: 16,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}
               >✕</button>
             </div>
           )}
+
+          {/* Type pills */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 8, overflowX: "auto", paddingBottom: 4 }}>
+            {(["text", "image", "achievement"] as const).map(tp => (
+              <button key={tp} onClick={() => {
+                setPostType(tp);
+                if (tp === "image") fileRef.current?.click();
+              }} style={{
+                flexShrink: 0, padding: "7px 16px", borderRadius: 20,
+                border: `1.5px solid ${postType === tp ? CYAN : "#2A2A2E"}`,
+                background: postType === tp ? `${CYAN}22` : "transparent",
+                color: postType === tp ? CYAN : TEXT_SUB,
+                fontSize: 13, cursor: "pointer",
+                fontWeight: postType === tp ? 700 : 400,
+                transition: "all 0.15s",
+                minHeight: 36,
+                WebkitTapHighlightColor: "transparent",
+              }}>
+                {tp === "text" ? `💬 ${t("text", lang)}` : tp === "image" ? `📸 ${t("image", lang)}` : `🏆 ${t("achievement", lang)}`}
+              </button>
+            ))}
+          </div>
+
+          {/* Visibility pills */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
+            {(["public", "friends", "private"] as const).map(v => (
+              <button key={v} onClick={() => setVisibility(v)} style={{
+                flexShrink: 0, padding: "7px 16px", borderRadius: 20,
+                border: `1.5px solid ${visibility === v ? ORANGE : "#2A2A2E"}`,
+                background: visibility === v ? `${ORANGE}22` : "transparent",
+                color: visibility === v ? ORANGE : TEXT_SUB,
+                fontSize: 13, cursor: "pointer",
+                fontWeight: visibility === v ? 700 : 400,
+                transition: "all 0.15s",
+                minHeight: 36,
+                WebkitTapHighlightColor: "transparent",
+              }}>
+                {v === "public" ? `🌍 ${t("public", lang)}` : v === "friends" ? `👥 ${t("friendsOnly", lang)}` : `🔒 ${t("private", lang)}`}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* ── Type pills ── */}
-        <div style={{ display: "flex", gap: 8, padding: "8px 16px", overflowX: "auto" }}>
-          {(["text", "image", "achievement"] as const).map(tp => (
-            <button key={tp} onClick={() => {
-              setPostType(tp);
-              if (tp === "image") fileRef.current?.click();
-            }} style={{
-              flexShrink: 0, padding: "5px 14px", borderRadius: 20,
-              border: `1.5px solid ${postType === tp ? CYAN : "#2A2A2E"}`,
-              background: postType === tp ? `${CYAN}22` : "transparent",
-              color: postType === tp ? CYAN : TEXT_SUB, fontSize: 12, cursor: "pointer",
-              fontWeight: postType === tp ? 700 : 400,
-              transition: "all 0.15s",
-            }}>
-              {tp === "text" ? `💬 ${t("text", lang)}` : tp === "image" ? `📸 ${t("image", lang)}` : `🏆 ${t("achievement", lang)}`}
-            </button>
-          ))}
-          {/* Visibility pill */}
-          {(["public", "friends", "private"] as const).map(v => (
-            <button key={v} onClick={() => setVisibility(v)} style={{
-              flexShrink: 0, padding: "5px 14px", borderRadius: 20,
-              border: `1.5px solid ${visibility === v ? ORANGE : "#2A2A2E"}`,
-              background: visibility === v ? `${ORANGE}22` : "transparent",
-              color: visibility === v ? ORANGE : TEXT_SUB, fontSize: 12, cursor: "pointer",
-              fontWeight: visibility === v ? 700 : 400,
-              transition: "all 0.15s",
-            }}>
-              {v === "public" ? `🌍 ${t("public", lang)}` : v === "friends" ? `👥 ${t("friendsOnly", lang)}` : `🔒 ${t("private", lang)}`}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Bottom toolbar ── */}
+        {/* ── Pinned bottom toolbar ── */}
         <div style={{
           display: "flex", alignItems: "center", gap: 16,
-          padding: "10px 16px 28px",
-          borderTop: `1px solid #2A2A2E`,
+          padding: "12px 16px",
+          paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          borderTop: "1px solid #2A2A2E",
+          background: "#18181B",
+          flexShrink: 0,
         }}>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
-          <button onClick={() => fileRef.current?.click()} style={{
-            background: "none", border: "none", cursor: "pointer", fontSize: 22, padding: 4,
-          }} title={lang === "ar" ? "أضف صورة" : "Add photo"}>📷</button>
-          <button onClick={() => setPostType("achievement")} style={{
-            background: "none", border: "none", cursor: "pointer", fontSize: 22, padding: 4,
-          }} title={lang === "ar" ? "إنجاز" : "Achievement"}>🏆</button>
+          <button
+            onClick={() => fileRef.current?.click()}
+            style={{
+              background: "#27272A", border: "none", cursor: "pointer",
+              fontSize: 20, padding: "8px 12px", borderRadius: 12,
+              minWidth: 44, minHeight: 44,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              WebkitTapHighlightColor: "transparent",
+            }}
+            title={lang === "ar" ? "أضف صورة" : "Add photo"}
+          >📷</button>
+          <button
+            onClick={() => setPostType("achievement")}
+            style={{
+              background: postType === "achievement" ? `${ORANGE}22` : "#27272A",
+              border: "none", cursor: "pointer",
+              fontSize: 20, padding: "8px 12px", borderRadius: 12,
+              minWidth: 44, minHeight: 44,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              WebkitTapHighlightColor: "transparent",
+            }}
+            title={lang === "ar" ? "إنجاز" : "Achievement"}
+          >🏆</button>
           <span style={{ flex: 1 }} />
-          <span style={{ color: content.length > 200 ? ORANGE : TEXT_SUB, fontSize: 12 }}>
+          <span style={{
+            color: content.length > 400 ? ORANGE : TEXT_SUB,
+            fontSize: 12, fontWeight: 600,
+          }}>
             {content.length}/500
           </span>
         </div>
