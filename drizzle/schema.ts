@@ -506,3 +506,51 @@ export const mealLogItems = mysqlTable("meal_log_items", {
 });
 export type MealLogItem = typeof mealLogItems.$inferSelect;
 export type InsertMealLogItem = typeof mealLogItems.$inferInsert;
+
+// ── Health Reports & AI Medical Analysis ────────────────────────────────────
+export const healthReports = mysqlTable("health_reports", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      int("userId").notNull(),
+  fileUrl:     varchar("fileUrl", { length: 512 }).notNull(),
+  fileKey:     varchar("fileKey", { length: 512 }).notNull(),
+  fileName:    varchar("fileName", { length: 255 }).notNull(),
+  fileType:    varchar("fileType", { length: 50 }).notNull(),
+  reportType:  varchar("reportType", { length: 100 }),
+  notes:       text("notes"),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+});
+export type HealthReport = typeof healthReports.$inferSelect;
+export type InsertHealthReport = typeof healthReports.$inferInsert;
+
+export const aiHealthAnalysis = mysqlTable("ai_health_analysis", {
+  id:               int("id").autoincrement().primaryKey(),
+  userId:           int("userId").notNull(),
+  reportId:         int("reportId"),
+  summaryEn:        text("summaryEn").notNull(),
+  summaryAr:        text("summaryAr").notNull(),
+  conditionsFound:  text("conditionsFound"),
+  restrictions:     text("restrictions"),
+  safeExercises:    text("safeExercises"),
+  warningExercises: text("warningExercises"),
+  recoveryTips:     text("recoveryTips"),
+  createdAt:        timestamp("createdAt").defaultNow().notNull(),
+});
+export type AiHealthAnalysis = typeof aiHealthAnalysis.$inferSelect;
+export type InsertAiHealthAnalysis = typeof aiHealthAnalysis.$inferInsert;
+
+export const personalizedPrograms = mysqlTable("personalized_programs", {
+  id:            int("id").autoincrement().primaryKey(),
+  userId:        int("userId").notNull(),
+  analysisId:    int("analysisId"),
+  titleEn:       varchar("titleEn", { length: 255 }).notNull(),
+  titleAr:       varchar("titleAr", { length: 255 }).notNull(),
+  descriptionEn: text("descriptionEn").notNull(),
+  descriptionAr: text("descriptionAr").notNull(),
+  weeklyPlan:    text("weeklyPlan").notNull(),
+  cardioGuidance:text("cardioGuidance"),
+  stretchingPlan:text("stretchingPlan"),
+  isActive:      boolean("isActive").default(true).notNull(),
+  createdAt:     timestamp("createdAt").defaultNow().notNull(),
+});
+export type PersonalizedProgram = typeof personalizedPrograms.$inferSelect;
+export type InsertPersonalizedProgram = typeof personalizedPrograms.$inferInsert;

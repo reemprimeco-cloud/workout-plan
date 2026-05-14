@@ -365,14 +365,16 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
 // ── Goals Modal ───────────────────────────────────────────────────────────────
 function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClose: () => void }) {
   const utils = trpc.useUtils();
-  const [cal,   setCal]   = useState(goals?.calories ?? 2000);
-  const [prot,  setProt]  = useState(goals?.proteinG ?? 150);
-  const [carbs, setCarbs] = useState(goals?.carbsG   ?? 200);
-  const [fat,   setFat]   = useState(goals?.fatG     ?? 65);
-  const [water, setWater] = useState(goals?.waterMl  ?? 2500);
-  const [status, setStatus] = useState<"idle"|"saving"|"saved">("idle");
+  // String state so users can freely clear and retype on mobile
+  const [cal,   setCal]   = useState(String(goals?.calories ?? 2000));
+  const [prot,  setProt]  = useState(String(goals?.proteinG ?? 150));
+  const [carbs, setCarbs] = useState(String(goals?.carbsG   ?? 200));
+  const [fat,   setFat]   = useState(String(goals?.fatG     ?? 65));
+  const [water, setWater] = useState(String(goals?.waterMl  ?? 2500));
+  const [status, setStatus] = useState<"idle"|"saving"|"saved"|"error">("idle");
+  const [errMsg, setErrMsg] = useState("");
 
-  const setGoals = trpc.nutrition.setGoals.useMutation({
+  const setGoalsMutation = trpc.nutrition.setGoals.useMutation({
     onSuccess: () => {
       utils.nutrition.getTodayLog.invalidate();
       utils.nutrition.getGoals.invalidate();
@@ -380,27 +382,48 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
   });
 
   const handleSave = async () => {
+    // Clamp to valid ranges
+    const calNum   = Math.max(500,  Math.min(10000, parseInt(cal,   10) || 2000));
+    const protNum  = Math.max(0,    Math.min(500,   parseInt(prot,  10) || 150));
+    const carbsNum = Math.max(0,    Math.min(1000,  parseInt(carbs, 10) || 200));
+    const fatNum   = Math.max(0,    Math.min(300,   parseInt(fat,   10) || 65));
+    const waterNum = Math.max(500,  Math.min(10000, parseInt(water, 10) || 2500));
     setStatus("saving");
-    await setGoals.mutateAsync({ calories: cal, proteinG: prot, carbsG: carbs, fatG: fat, waterMl: water });
-    setStatus("saved");
-    setTimeout(() => { setStatus("idle"); onClose(); }, 1200);
+    setErrMsg("");
+    try {
+      await setGoalsMutation.mutateAsync({ calories: calNum, proteinG: protNum, carbsG: carbsNum, fatG: fatNum, waterMl: waterNum });
+      setStatus("saved");
+      setTimeout(() => { setStatus("idle"); onClose(); }, 1200);
+    } catch (err: any) {
+      setStatus("error");
+      setErrMsg(lang === "ar" ? "حدث خطأ، حاول مجدداً" : "Error saving. Please try again.");
+      setTimeout(() => setStatus("idle"), 2500);
+    }
   };
 
-  const Field = ({ label, value, onChange, min, max, unit }: any) => (
+  const Field = ({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit: string }) => (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
         <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{label}</span>
         <span style={{ color: MUTED, fontSize: 12 }}>{unit}</span>
       </div>
       <input
-        type="number" value={value}
-        onChange={e => onChange(parseInt(e.target.value) || min)}
-        min={min} max={max}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={value}
+        onChange={e => {
+          const v = e.target.value;
+          // Allow empty string or digits only
+          if (v === "" || /^\d+$/.test(v)) onChange(v);
+        }}
+        onFocus={e => e.target.select()}
         style={{
           width: "100%", boxSizing: "border-box",
           background: PAGE_BG, border: `1.5px solid ${BORDER}`,
-          borderRadius: 12, padding: "10px 14px", color: TEXT,
-          fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none",
+          borderRadius: 12, padding: "12px 14px", color: TEXT,
+          fontSize: 16, fontWeight: 700, fontFamily: "inherit", outline: "none",
+          WebkitAppearance: "none" as any,
         }}
       />
     </div>
@@ -429,20 +452,26 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
           }}>✕</button>
         </div>
 
-        <Field label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   min={500}  max={10000} unit="kcal" />
-        <Field label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  min={0}    max={500}   unit="g" />
-        <Field label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} min={0}    max={1000}  unit="g" />
-        <Field label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   min={0}    max={300}   unit="g" />
-        <Field label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} min={500}  max={10000} unit="ml" />
+        <Field label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   unit="kcal" />
+        <Field label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  unit="g" />
+        <Field label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} unit="g" />
+        <Field label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   unit="g" />
+        <Field label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} unit="ml" />
 
-        <button onClick={handleSave} disabled={status !== "idle"} style={{
+        {errMsg ? (
+          <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", marginBottom: 8 }}>{errMsg}</div>
+        ) : null}
+
+        <button onClick={handleSave} disabled={status === "saving" || status === "saved"} style={{
           width: "100%",
           background: status === "saved"
             ? `linear-gradient(135deg, #22C55E, #16A34A)`
+            : status === "error"
+            ? `linear-gradient(135deg, #EF4444, #DC2626)`
             : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
           color: WHITE, border: "none", borderRadius: 14,
           padding: "14px", fontSize: 15, fontWeight: 900,
-          cursor: status !== "idle" ? "not-allowed" : "pointer",
+          cursor: (status === "saving" || status === "saved") ? "not-allowed" : "pointer",
           fontFamily: "inherit", marginTop: 4,
           opacity: status === "saving" ? 0.7 : 1,
         }}>
