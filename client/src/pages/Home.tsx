@@ -436,7 +436,7 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>⚖️ {t('weightProgress')}</span>
           <span style={{ fontSize: 12, color: '#7A9BB5' }}>
-            {profile.currentWeight} {t('kg')} ← {profile.targetWeight} {t('kg')}
+            {profile.currentWeight} {t('kg')} {isRTL ? '←' : '→'} {profile.targetWeight} {t('kg')}
           </span>
         </div>
         <div style={{ height: 10, background: '#D0DFF0', borderRadius: 5, overflow: 'hidden' }}>
