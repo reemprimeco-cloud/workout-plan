@@ -88,20 +88,29 @@ export const nutritionRouter = router({
     }),
 
   // ── Today's Log ────────────────────────────────────────────────────────────
+  // Reads from mealLogs (v2) so that deleteMeal syncs Dashboard charts
   getTodayLog: protectedProcedure
     .input(z.object({ date: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
   if (!db) throw new Error("DB unavailable");
       const date = input.date ?? todayStr();
-      const [meals, water, goals] = await Promise.all([
+      // Build start/end of the requested day
+      const [y, mo, d] = date.split("-").map(Number);
+      const startOfDay = new Date(y, mo - 1, d);
+      const endOfDay   = new Date(startOfDay.getTime() + 86400000);
+      const [mealLogsRows, water, goals] = await Promise.all([
         db
           .select()
-          .from(mealEntries)
+          .from(mealLogs)
           .where(
-            and(eq(mealEntries.userId, ctx.user.id), eq(mealEntries.date, date))
+            and(
+              eq(mealLogs.userId, ctx.user.id),
+              gte(mealLogs.loggedAt, startOfDay),
+              lte(mealLogs.loggedAt, endOfDay)
+            )
           )
-          .orderBy(mealEntries.createdAt),
+          .orderBy(mealLogs.loggedAt),
         db
           .select()
           .from(waterLogs)
@@ -112,19 +121,19 @@ export const nutritionRouter = router({
         getOrCreateGoals(ctx.user.id),
       ]);
 
-      // Compute daily totals
-      const totals = meals.reduce(
+      // Compute daily totals from mealLogs (v2)
+      const totals = mealLogsRows.reduce(
         (acc, m) => ({
-          calories: acc.calories + m.calories,
-          proteinG: acc.proteinG + Number(m.proteinG),
-          carbsG:   acc.carbsG   + Number(m.carbsG),
-          fatG:     acc.fatG     + Number(m.fatG),
+          calories: acc.calories + Number(m.totalCalories ?? 0),
+          proteinG: acc.proteinG + Number(m.totalProtein  ?? 0),
+          carbsG:   acc.carbsG   + Number(m.totalCarbs    ?? 0),
+          fatG:     acc.fatG     + Number(m.totalFat      ?? 0),
         }),
         { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 }
       );
       const totalWaterMl = water.reduce((s, w) => s + w.amountMl, 0);
 
-      return { meals, water, goals, totals, totalWaterMl, date };
+      return { meals: mealLogsRows, water, goals, totals, totalWaterMl, date };
     }),
 
   // ── Log Meal ───────────────────────────────────────────────────────────────
