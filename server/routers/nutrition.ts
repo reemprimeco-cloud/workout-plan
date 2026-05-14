@@ -17,12 +17,16 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
+import { analyzeFoodImage } from "../_core/foodAnalysis";
+import { searchUSDAFood, extractNutrition, scaleNutrition } from "../_core/usda";
 import { getDb } from "../db";
 import {
   nutritionGoals,
   mealEntries,
   waterLogs,
   nutritionInsights,
+  mealLogs,
+  mealLogItems,
 } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 
@@ -162,7 +166,7 @@ export const nutritionRouter = router({
     }),
 
   // ── Delete Meal ────────────────────────────────────────────────────────────
-  deleteMeal: protectedProcedure
+  deleteMealEntry: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -465,4 +469,232 @@ Reply with JSON array only:
       .where(eq(nutritionInsights.userId, ctx.user.id))
       .orderBy(desc(nutritionInsights.createdAt));
   }),
+  // ── Nutrition v2: AI Food Analysis ────────────────────────────────────────────
+  /** Analyze a food image using Vision LLM + USDA lookup */
+  analyzeFood: protectedProcedure
+    .input(z.object({
+      imageBase64: z.string().min(100),
+      mimeType:    z.string().default("image/jpeg"),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const analysis = await analyzeFoodImage(input.imageBase64, input.mimeType);
+        return { analysis };
+      } catch (err: any) {
+        throw new Error(`Analysis failed: ${err.message}`);
+      }
+    }),
+
+  /** Save a meal after user reviews/edits the analysis */
+  saveMeal: protectedProcedure
+    .input(z.object({
+      mealType:  z.enum(["breakfast", "lunch", "dinner", "snack"]),
+      imageUrl:  z.string().optional(),
+      notes:     z.string().optional(),
+      insightAr: z.string().optional(),
+      insightEn: z.string().optional(),
+      items: z.array(z.object({
+        name:            z.string(),
+        nameAr:          z.string().optional().default(""),
+        estimatedGrams:  z.number(),
+        portionDesc:     z.string().optional().default(""),
+        portionDescAr:   z.string().optional().default(""),
+        fdcId:           z.number().optional(),
+        confidence:      z.enum(["high", "medium", "low"]).optional().default("high"),
+        calories:        z.number(),
+        protein:         z.number(),
+        carbs:           z.number(),
+        fat:             z.number(),
+        fiber:           z.number().optional().default(0),
+        sugar:           z.number().optional().default(0),
+        sodium:          z.number().optional().default(0),
+        per100gCalories: z.number().optional().default(0),
+        per100gProtein:  z.number().optional().default(0),
+        per100gCarbs:    z.number().optional().default(0),
+        per100gFat:      z.number().optional().default(0),
+      })),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      // Compute totals
+      const totals = input.items.reduce((acc, item) => ({
+        calories: acc.calories + item.calories,
+        protein:  acc.protein  + item.protein,
+        carbs:    acc.carbs    + item.carbs,
+        fat:      acc.fat      + item.fat,
+        fiber:    acc.fiber    + (item.fiber ?? 0),
+        sugar:    acc.sugar    + (item.sugar ?? 0),
+        sodium:   acc.sodium   + (item.sodium ?? 0),
+      }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0 });
+      // Insert meal log
+      const [result] = await db.insert(mealLogs).values({
+        userId:        ctx.user.id,
+        mealType:      input.mealType,
+        imageUrl:      input.imageUrl,
+        notes:         input.notes,
+        insightAr:     input.insightAr,
+        insightEn:     input.insightEn,
+        totalCalories: totals.calories,
+        totalProtein:  totals.protein,
+        totalCarbs:    totals.carbs,
+        totalFat:      totals.fat,
+        totalFiber:    totals.fiber,
+        totalSugar:    totals.sugar,
+        totalSodium:   totals.sodium,
+      });
+      const mealLogId = (result as any).insertId as number;
+      // Insert items
+      if (input.items.length > 0) {
+        await db.insert(mealLogItems).values(
+          input.items.map(i => ({
+            mealLogId,
+            name:            i.name,
+            nameAr:          i.nameAr ?? "",
+            estimatedGrams:  i.estimatedGrams,
+            portionDesc:     i.portionDesc ?? "",
+            portionDescAr:   i.portionDescAr ?? "",
+            fdcId:           i.fdcId,
+            confidence:      (i.confidence ?? "high") as "high" | "medium" | "low",
+            calories:        i.calories,
+            protein:         i.protein,
+            carbs:           i.carbs,
+            fat:             i.fat,
+            fiber:           i.fiber ?? 0,
+            sugar:           i.sugar ?? 0,
+            sodium:          i.sodium ?? 0,
+            per100gCalories: i.per100gCalories ?? 0,
+            per100gProtein:  i.per100gProtein ?? 0,
+            per100gCarbs:    i.per100gCarbs ?? 0,
+            per100gFat:      i.per100gFat ?? 0,
+          }))
+        );
+      }
+      return { success: true, mealId: String(mealLogId) };
+    }),
+
+  /** Get today's nutrition summary (for TodaySummary bar) */
+  getToday: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+    const today = new Date();
+    // Start of today UTC
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay   = new Date(startOfDay.getTime() + 86400000);
+    const logs = await db
+      .select()
+      .from(mealLogs)
+      .where(
+        and(
+          eq(mealLogs.userId, ctx.user.id),
+          gte(mealLogs.loggedAt, startOfDay),
+          lte(mealLogs.loggedAt, endOfDay)
+        )
+      );
+    const totals = logs.reduce((acc, m) => ({
+      calories: acc.calories + Number(m.totalCalories),
+      protein:  acc.protein  + Number(m.totalProtein),
+      carbs:    acc.carbs    + Number(m.totalCarbs),
+      fat:      acc.fat      + Number(m.totalFat),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+    return {
+      meal_count: logs.length,
+      calories:   Math.round(totals.calories),
+      protein:    Math.round(totals.protein * 10) / 10,
+      carbs:      Math.round(totals.carbs * 10) / 10,
+      fat:        Math.round(totals.fat * 10) / 10,
+    };
+  }),
+
+  /** Get meal history with items */
+  getMealHistory: protectedProcedure
+    .input(z.object({ limit: z.number().default(20) }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      const logs = await db
+        .select()
+        .from(mealLogs)
+        .where(eq(mealLogs.userId, ctx.user.id))
+        .orderBy(desc(mealLogs.loggedAt))
+        .limit(input.limit);
+      if (!logs.length) return [];
+      // Fetch items for all logs
+      const logIds = logs.map(l => l.id);
+      const allItems = await db
+        .select()
+        .from(mealLogItems)
+        .where(
+          logIds.length === 1
+            ? eq(mealLogItems.mealLogId, logIds[0])
+            : eq(mealLogItems.mealLogId, logIds[0]) // fallback — loop below handles multi
+        );
+      // For multiple logs, fetch items per log
+      const itemsByLogId: Record<number, typeof allItems> = {};
+      for (const logId of logIds) {
+        const items = await db
+          .select()
+          .from(mealLogItems)
+          .where(eq(mealLogItems.mealLogId, logId));
+        itemsByLogId[logId] = items;
+      }
+      // Return in the shape the new Nutrition.tsx expects
+      return logs.map(log => ({
+        id:             String(log.id),
+        meal_type:      log.mealType,
+        logged_at:      log.loggedAt.toISOString(),
+        image_url:      log.imageUrl,
+        notes:          log.notes,
+        insight_ar:     log.insightAr,
+        insight_en:     log.insightEn,
+        total_calories: Number(log.totalCalories),
+        total_protein:  Number(log.totalProtein),
+        total_carbs:    Number(log.totalCarbs),
+        total_fat:      Number(log.totalFat),
+        total_fiber:    Number(log.totalFiber),
+        total_sugar:    Number(log.totalSugar),
+        total_sodium:   Number(log.totalSodium),
+        items: (itemsByLogId[log.id] ?? []).map(item => ({
+          id:             String(item.id),
+          meal_id:        String(item.mealLogId),
+          name:           item.name,
+          name_ar:        item.nameAr,
+          estimated_grams: Number(item.estimatedGrams),
+          portion_desc:   item.portionDesc,
+          calories:       Number(item.calories),
+          protein:        Number(item.protein),
+          carbs:          Number(item.carbs),
+          fat:            Number(item.fat),
+          fiber:          Number(item.fiber),
+        })),
+      }));
+    }),
+
+  /** Delete a meal log (v2 — accepts string mealId) */
+  deleteMeal: protectedProcedure
+    .input(z.object({ mealId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      const id = parseInt(input.mealId, 10);
+      if (isNaN(id)) throw new Error("Invalid meal ID");
+      // Delete items first
+      await db.delete(mealLogItems).where(eq(mealLogItems.mealLogId, id));
+      // Delete log
+      await db.delete(mealLogs).where(
+        and(eq(mealLogs.id, id), eq(mealLogs.userId, ctx.user.id))
+      );
+      return { success: true };
+    }),
+
+  /** Manual food text search via USDA */
+  searchFood: protectedProcedure
+    .input(z.object({ query: z.string().min(2), grams: z.number().default(100) }))
+    .query(async ({ input }) => {
+      const food = await searchUSDAFood(input.query);
+      if (!food) return null;
+      const per100g = extractNutrition(food);
+      const portion = scaleNutrition(per100g, input.grams);
+      return { food, per100g, portion };
+    }),
 });

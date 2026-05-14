@@ -1,978 +1,660 @@
-// ============================================================
-// Nutrition Page — AI Nutrition System
-// Design: Prime Fit — Navy Blue #1B2E5E + Sky Blue #7BB8D4
-// Features: Dashboard, Meal Tracking, AI Food Scanner, AI Insights
-// Bilingual: Arabic (Kuwaiti dialect) + English
-// ============================================================
-import { useState, useRef, useCallback } from 'react';
-import { trpc } from '@/lib/trpc';
-import { useLanguage } from '../contexts/LanguageContext';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, Cell,
-} from 'recharts';
+/**
+ * Nutrition — Prime Fit
+ * AI food recognition · USDA nutrition data · Meal logging
+ * Mobile-first dark neon design matching the app aesthetic
+ */
+import { useState, useRef, useCallback } from "react";
+import { trpc } from "@/lib/trpc";
+import { useLanguage } from "../contexts/LanguageContext";
 
-// ── Brand colors ────────────────────────────────────────────
-const NAVY      = '#1B2E5E';
-const NAVY_DARK = '#0F1E3D';
-const SKY       = '#7BB8D4';
-const SKY_LIGHT = '#A8D4E8';
-const GREEN     = '#10B981';
-const ORANGE    = '#F59E0B';
-const PURPLE    = '#8B5CF6';
-const RED       = '#EF4444';
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const NAVY    = "#0D1B2A";
+const NAVY2   = "#1B2E5E";
+const CYAN    = "#00E5FF";
+const GREEN   = "#22C55E";
+const ORANGE  = "#FF6B35";
+const GOLD    = "#FFD700";
+const RED     = "#EF4444";
+const CARD    = "#111827";
+const CARD2   = "#1F2937";
+const TEXT    = "#F9FAFB";
+const MUTED   = "#9CA3AF";
 
-type NutritionTab = 'dashboard' | 'meals' | 'scanner' | 'insights';
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+// ── Translations ──────────────────────────────────────────────────────────────
+const T: Record<string, Record<string, string>> = {
+  title:        { ar: "تتبع التغذية", en: "Nutrition Tracker" },
+  scan:         { ar: "مسح الطعام بالكاميرا", en: "Scan Food" },
+  upload:       { ar: "رفع صورة", en: "Upload Photo" },
+  manual:       { ar: "إضافة يدوي", en: "Add Manually" },
+  analyzing:    { ar: "جاري تحليل الطعام...", en: "Analyzing food..." },
+  today:        { ar: "اليوم", en: "Today" },
+  history:      { ar: "السجل", en: "History" },
+  calories:     { ar: "سعرات", en: "Calories" },
+  protein:      { ar: "بروتين", en: "Protein" },
+  carbs:        { ar: "كربوهيدرات", en: "Carbs" },
+  fat:          { ar: "دهون", en: "Fat" },
+  fiber:        { ar: "ألياف", en: "Fiber" },
+  grams:        { ar: "غرام", en: "g" },
+  save:         { ar: "حفظ الوجبة", en: "Save Meal" },
+  saving:       { ar: "جاري الحفظ...", en: "Saving..." },
+  saved:        { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
+  edit:         { ar: "تعديل", en: "Edit" },
+  delete:       { ar: "حذف", en: "Delete" },
+  noMeals:      { ar: "لا توجد وجبات مسجلة بعد", en: "No meals logged yet" },
+  breakfast:    { ar: "فطور", en: "Breakfast" },
+  lunch:        { ar: "غداء", en: "Lunch" },
+  dinner:       { ar: "عشاء", en: "Dinner" },
+  snack:        { ar: "وجبة خفيفة", en: "Snack" },
+  goal:         { ar: "الهدف", en: "Goal" },
+  tryAgain:     { ar: "حاول مجدداً", en: "Try Again" },
+  noFood:       { ar: "لم يتم التعرف على طعام. حاول صورة أوضح.", en: "No food detected. Try a clearer image." },
+  insight:      { ar: "تحليل AI", en: "AI Insight" },
+  portion:      { ar: "الحصة", en: "Portion" },
+  total:        { ar: "الإجمالي", en: "Total" },
+  searchFood:   { ar: "ابحث عن طعام...", en: "Search food..." },
+  addFood:      { ar: "إضافة طعام", en: "Add Food" },
+  barcodeHint:  { ar: "دعم الباركود — قريباً!", en: "Barcode support — coming soon!" },
+};
 
-// ── Circular Progress Ring ──────────────────────────────────
-function Ring({
-  value, max, color, size = 80, strokeWidth = 8, label, sublabel,
-}: {
-  value: number; max: number; color: string; size?: number;
-  strokeWidth?: number; label: string; sublabel?: string;
-}) {
-  const r = (size - strokeWidth) / 2;
-  const circ = 2 * Math.PI * r;
-  const pct = Math.min(value / Math.max(max, 1), 1);
-  const dash = pct * circ;
+const t = (k: string, lang: string) => T[k]?.[lang] ?? T[k]?.en ?? k;
+
+const MEAL_ICONS: Record<string, string> = { breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎" };
+const MACRO_COLORS = { calories: ORANGE, protein: CYAN, carbs: GOLD, fat: "#A78BFA", fiber: GREEN };
+
+// ── Macro pill ─────────────────────────────────────────────────────────────────
+function MacroPill({ label, value, unit = "g", color }: { label: string; value: number; unit?: string; color: string }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E8EFF7" strokeWidth={strokeWidth} />
-        <circle
-          cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke={color} strokeWidth={strokeWidth}
-          strokeDasharray={`${dash} ${circ}`}
-          strokeLinecap="round"
-          style={{ transition: 'stroke-dasharray 0.6s ease' }}
-        />
-      </svg>
-      <div style={{ textAlign: 'center', marginTop: -size * 0.7, marginBottom: size * 0.5 }}>
-        <div style={{ fontSize: size * 0.18, fontWeight: 900, color: NAVY }}>{value}</div>
-        <div style={{ fontSize: size * 0.12, color: '#7A9BB5' }}>/ {max}</div>
-      </div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: NAVY, textAlign: 'center' }}>{label}</div>
-      {sublabel && <div style={{ fontSize: 10, color: '#7A9BB5', textAlign: 'center' }}>{sublabel}</div>}
-    </div>
-  );
-}
-
-// ── Macro Bar ───────────────────────────────────────────────
-function MacroBar({ label, value, max, color, unit = 'g' }: {
-  label: string; value: number; max: number; color: string; unit?: string;
-}) {
-  const pct = Math.min((value / Math.max(max, 1)) * 100, 100);
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>{label}</span>
-        <span style={{ fontSize: 12, color: '#7A9BB5' }}>{Math.round(value)}{unit} / {max}{unit}</span>
-      </div>
-      <div style={{ height: 8, background: '#E8EFF7', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{
-          height: '100%', width: `${pct}%`, background: color,
-          borderRadius: 4, transition: 'width 0.6s ease',
-        }} />
-      </div>
-    </div>
-  );
-}
-
-// ── Water Drop Button ───────────────────────────────────────
-function WaterButton({ ml, label, onClick }: { ml: number; label: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      flex: 1, padding: '10px 4px', borderRadius: 12,
-      background: `linear-gradient(135deg, ${SKY}22, ${SKY}44)`,
-      border: `1px solid ${SKY}66`, cursor: 'pointer',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+    <div style={{
+      background: `${color}18`, border: `1px solid ${color}44`,
+      borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
     }}>
-      <span style={{ fontSize: 20 }}>💧</span>
-      <span style={{ fontSize: 11, fontWeight: 700, color: NAVY }}>{label}</span>
-      <span style={{ fontSize: 10, color: '#7A9BB5' }}>{ml}ml</span>
-    </button>
-  );
-}
-
-// ── Dashboard Tab ───────────────────────────────────────────
-function DashboardTab({ isAr }: { isAr: boolean }) {
-  const utils = trpc.useUtils();
-  const { data: todayData, isLoading } = trpc.nutrition.getTodayLog.useQuery({ date: undefined });
-  const { data: weekData } = trpc.nutrition.getWeeklyTrends.useQuery();
-  const logWater = trpc.nutrition.logWater.useMutation({
-    onSuccess: () => utils.nutrition.getTodayLog.invalidate(),
-  });
-
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: 'center', padding: 40, color: '#7A9BB5' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🥗</div>
-        {isAr ? 'جاري التحميل...' : 'Loading...'}
-      </div>
-    );
-  }
-
-  const goals   = todayData?.goals;
-  const totals  = todayData?.totals ?? { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 };
-  const waterMl = todayData?.totalWaterMl ?? 0;
-  const waterGoal = goals?.waterMl ?? 2500;
-
-  const waterPct = Math.min((waterMl / waterGoal) * 100, 100);
-
-  const waterOptions = [
-    { ml: 150, label: isAr ? 'كوب صغير' : 'Small Cup' },
-    { ml: 250, label: isAr ? 'كوب' : 'Cup' },
-    { ml: 330, label: isAr ? 'علبة' : 'Can' },
-    { ml: 500, label: isAr ? 'قنينة' : 'Bottle' },
-  ];
-
-  return (
-    <div>
-      {/* ── Calories Ring ── */}
-      <div style={{
-        background: 'white', borderRadius: 20, padding: '20px 16px', marginBottom: 14,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-      }}>
-        <h3 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-          🔥 {isAr ? 'السعرات اليومية' : 'Daily Calories'}
-        </h3>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <Ring
-            value={Math.round(totals.calories)}
-            max={goals?.calories ?? 2000}
-            color={totals.calories > (goals?.calories ?? 2000) ? RED : NAVY}
-            size={110}
-            strokeWidth={10}
-            label={isAr ? 'سعرة حرارية' : 'kcal'}
-            sublabel={isAr ? `من ${goals?.calories ?? 2000}` : `of ${goals?.calories ?? 2000}`}
-          />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, textAlign: 'center' }}>
-          {[
-            { label: isAr ? 'متبقي' : 'Remaining', value: Math.max(0, (goals?.calories ?? 2000) - Math.round(totals.calories)), color: GREEN, unit: isAr ? 'سعرة' : 'kcal' },
-            { label: isAr ? 'مستهلك' : 'Consumed', value: Math.round(totals.calories), color: NAVY, unit: isAr ? 'سعرة' : 'kcal' },
-            { label: isAr ? 'الهدف' : 'Goal', value: goals?.calories ?? 2000, color: SKY, unit: isAr ? 'سعرة' : 'kcal' },
-          ].map(s => (
-            <div key={s.label} style={{ background: `${s.color}12`, borderRadius: 12, padding: '10px 4px' }}>
-              <div style={{ fontSize: 16, fontWeight: 900, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 9, color: '#7A9BB5', marginTop: 1 }}>{s.unit}</div>
-              <div style={{ fontSize: 10, color: '#3D5A80', marginTop: 2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Macro Bars ── */}
-      <div style={{
-        background: 'white', borderRadius: 20, padding: '18px 16px', marginBottom: 14,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-      }}>
-        <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-          🥩 {isAr ? 'المغذيات الكبرى' : 'Macronutrients'}
-        </h3>
-        <MacroBar label={isAr ? 'بروتين' : 'Protein'} value={totals.proteinG} max={goals?.proteinG ?? 150} color={RED} />
-        <MacroBar label={isAr ? 'كربوهيدرات' : 'Carbs'} value={totals.carbsG} max={goals?.carbsG ?? 200} color={ORANGE} />
-        <MacroBar label={isAr ? 'دهون' : 'Fat'} value={totals.fatG} max={goals?.fatG ?? 65} color={PURPLE} />
-        {/* Macro rings row */}
-        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 16 }}>
-          <Ring value={Math.round(totals.proteinG)} max={goals?.proteinG ?? 150} color={RED} size={72} strokeWidth={7} label={isAr ? 'بروتين' : 'Protein'} />
-          <Ring value={Math.round(totals.carbsG)} max={goals?.carbsG ?? 200} color={ORANGE} size={72} strokeWidth={7} label={isAr ? 'كارب' : 'Carbs'} />
-          <Ring value={Math.round(totals.fatG)} max={goals?.fatG ?? 65} color={PURPLE} size={72} strokeWidth={7} label={isAr ? 'دهون' : 'Fat'} />
-        </div>
-      </div>
-
-      {/* ── Water Tracker ── */}
-      <div style={{
-        background: 'white', borderRadius: 20, padding: '18px 16px', marginBottom: 14,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ margin: 0, color: NAVY, fontSize: 15, fontWeight: 900 }}>
-            💧 {isAr ? 'شرب الماء' : 'Water Intake'}
-          </h3>
-          <span style={{ fontSize: 13, fontWeight: 700, color: SKY }}>
-            {waterMl}ml / {waterGoal}ml
-          </span>
-        </div>
-        {/* Water fill bar */}
-        <div style={{ height: 14, background: '#E8EFF7', borderRadius: 7, overflow: 'hidden', marginBottom: 14 }}>
-          <div style={{
-            height: '100%', width: `${waterPct}%`,
-            background: `linear-gradient(90deg, ${SKY_LIGHT}, ${SKY})`,
-            borderRadius: 7, transition: 'width 0.6s ease',
-          }} />
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {waterOptions.map(opt => (
-            <WaterButton
-              key={opt.ml}
-              ml={opt.ml}
-              label={opt.label}
-              onClick={() => logWater.mutate({ amountMl: opt.ml })}
-            />
-          ))}
-        </div>
-        {waterPct >= 100 && (
-          <div style={{
-            marginTop: 10, padding: '8px 14px', borderRadius: 10,
-            background: '#D1FAE5', color: '#065F46', fontSize: 13, fontWeight: 700, textAlign: 'center',
-          }}>
-            🎉 {isAr ? 'أحسنتِ! وصلتِ لهدف الماء اليوم' : "Great! You've reached your water goal today!"}
-          </div>
-        )}
-      </div>
-
-      {/* ── Weekly Calories Chart ── */}
-      {weekData && weekData.trend.length > 0 && (
-        <div style={{
-          background: 'white', borderRadius: 20, padding: '18px 16px', marginBottom: 14,
-          boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-        }}>
-          <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-            📈 {isAr ? 'الاتجاه الأسبوعي' : 'Weekly Trend'}
-          </h3>
-          <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={weekData.trend} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF7" />
-              <XAxis dataKey="dayLabel" tick={{ fontSize: 10, fill: '#7A9BB5' }} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#7A9BB5' }} tickLine={false} axisLine={false} />
-              <Tooltip
-                formatter={(v: number) => [`${Math.round(v)} kcal`, isAr ? 'سعرات' : 'Calories']}
-                contentStyle={{ borderRadius: 10, border: `1px solid ${SKY}`, fontSize: 12 }}
-              />
-              {weekData.trend.map((entry, i) => (
-                <Cell key={i} fill={entry.calories >= (weekData.goals?.calories ?? 2000) ? GREEN : SKY} />
-              ))}
-              <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
-                {weekData.trend.map((entry, i) => (
-                  <Cell key={i} fill={entry.calories >= (weekData.goals?.calories ?? 2000) ? GREEN : SKY} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, background: GREEN, borderRadius: 2 }} />
-              <span style={{ fontSize: 10, color: '#3D5A80' }}>{isAr ? 'وصل الهدف' : 'Goal met'}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 10, height: 10, background: SKY, borderRadius: 2 }} />
-              <span style={{ fontSize: 10, color: '#3D5A80' }}>{isAr ? 'دون الهدف' : 'Below goal'}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <div style={{ color, fontSize: 14, fontWeight: 900 }}>{Math.round(value)}</div>
+      <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{unit === "kcal" ? "kcal" : `${unit}`}</div>
+      <div style={{ color: MUTED, fontSize: 9 }}>{label}</div>
     </div>
   );
 }
 
-// ── Meal Tracking Tab ───────────────────────────────────────
-function MealsTab({ isAr }: { isAr: boolean }) {
-  const utils = trpc.useUtils();
-  const { data: todayData, isLoading } = trpc.nutrition.getTodayLog.useQuery({ date: undefined });
-  const logMeal = trpc.nutrition.logMeal.useMutation({
-    onSuccess: () => {
-      utils.nutrition.getTodayLog.invalidate();
-      setShowAdd(null);
-      setForm({ foodName: '', calories: '', proteinG: '', carbsG: '', fatG: '', servingSize: '' });
-    },
-  });
-  const deleteMeal = trpc.nutrition.deleteMeal.useMutation({
-    onSuccess: () => utils.nutrition.getTodayLog.invalidate(),
-  });
-
-  const [showAdd, setShowAdd] = useState<MealType | null>(null);
-  const [form, setForm] = useState({ foodName: '', calories: '', proteinG: '', carbsG: '', fatG: '', servingSize: '' });
-
-  const mealSections: { type: MealType; icon: string; labelEn: string; labelAr: string; color: string }[] = [
-    { type: 'breakfast', icon: '🌅', labelEn: 'Breakfast', labelAr: 'الفطور', color: ORANGE },
-    { type: 'lunch',     icon: '☀️', labelEn: 'Lunch',     labelAr: 'الغداء',  color: GREEN },
-    { type: 'dinner',    icon: '🌙', labelEn: 'Dinner',    labelAr: 'العشاء',  color: NAVY },
-    { type: 'snack',     icon: '🍎', labelEn: 'Snacks',    labelAr: 'وجبات خفيفة', color: PURPLE },
-  ];
-
-  const handleSubmit = (type: MealType) => {
-    if (!form.foodName || !form.calories) return;
-    logMeal.mutate({
-      mealType: type,
-      foodName: form.foodName,
-      calories: parseInt(form.calories) || 0,
-      proteinG: parseFloat(form.proteinG) || 0,
-      carbsG:   parseFloat(form.carbsG)   || 0,
-      fatG:     parseFloat(form.fatG)     || 0,
-      servingSize: form.servingSize || undefined,
-    });
-  };
-
-  if (isLoading) {
-    return <div style={{ textAlign: 'center', padding: 40, color: '#7A9BB5' }}>
-      {isAr ? 'جاري التحميل...' : 'Loading...'}
-    </div>;
-  }
-
+// ── Circular progress ─────────────────────────────────────────────────────────
+function CircleProgress({ value, max, color, label, size = 72 }: {
+  value: number; max: number; color: string; label: string; size?: number;
+}) {
+  const pct  = Math.min(value / Math.max(max, 1), 1);
+  const r    = (size / 2) - 6;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * (1 - pct);
   return (
-    <div>
-      {mealSections.map(section => {
-        const entries = (todayData?.meals ?? []).filter(m => m.mealType === section.type);
-        const sectionCalories = entries.reduce((s, m) => s + m.calories, 0);
-        const isExpanded = showAdd === section.type;
-
-        return (
-          <div key={section.type} style={{
-            background: 'white', borderRadius: 20, padding: '16px', marginBottom: 12,
-            boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-          }}>
-            {/* Section header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 22 }}>{section.icon}</span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 900, color: NAVY }}>
-                    {isAr ? section.labelAr : section.labelEn}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#7A9BB5' }}>
-                    {sectionCalories} {isAr ? 'سعرة' : 'kcal'} • {entries.length} {isAr ? 'عنصر' : 'items'}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAdd(isExpanded ? null : section.type)}
-                style={{
-                  width: 32, height: 32, borderRadius: '50%', border: 'none',
-                  background: isExpanded ? '#FEE2E2' : `${section.color}22`,
-                  color: isExpanded ? RED : section.color,
-                  fontSize: 18, fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                {isExpanded ? '×' : '+'}
-              </button>
-            </div>
-
-            {/* Entries list */}
-            {entries.map(entry => (
-              <div key={entry.id} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '8px 10px', borderRadius: 10, marginBottom: 4,
-                background: '#F8FAFC', border: '1px solid #EEF2F7',
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>
-                    {isAr && entry.foodNameAr ? entry.foodNameAr : entry.foodName}
-                    {entry.addedByAI && <span style={{ fontSize: 10, color: PURPLE, marginLeft: 4 }}>✨ AI</span>}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#7A9BB5' }}>
-                    {entry.servingSize && `${entry.servingSize} • `}
-                    P:{Math.round(Number(entry.proteinG))}g C:{Math.round(Number(entry.carbsG))}g F:{Math.round(Number(entry.fatG))}g
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 900, color: section.color }}>{entry.calories}</span>
-                  <span style={{ fontSize: 10, color: '#7A9BB5' }}>{isAr ? 'سعرة' : 'kcal'}</span>
-                  <button
-                    onClick={() => deleteMeal.mutate({ id: entry.id })}
-                    style={{
-                      width: 24, height: 24, borderRadius: '50%', border: 'none',
-                      background: '#FEE2E2', color: RED, fontSize: 12, cursor: 'pointer',
-                    }}
-                  >×</button>
-                </div>
-              </div>
-            ))}
-
-            {/* Add form */}
-            {isExpanded && (
-              <div style={{
-                marginTop: 10, padding: '14px', borderRadius: 14,
-                background: `${section.color}08`, border: `1px solid ${section.color}33`,
-              }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 10 }}>
-                  {isAr ? '+ إضافة وجبة' : '+ Add Food'}
-                </div>
-                <input
-                  placeholder={isAr ? 'اسم الطعام...' : 'Food name...'}
-                  value={form.foodName}
-                  onChange={e => setForm(f => ({ ...f, foodName: e.target.value }))}
-                  style={inputStyle}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-                  <input placeholder={isAr ? 'سعرات حرارية' : 'Calories'} type="number" value={form.calories}
-                    onChange={e => setForm(f => ({ ...f, calories: e.target.value }))} style={inputStyle} />
-                  <input placeholder={isAr ? 'بروتين (ج)' : 'Protein (g)'} type="number" value={form.proteinG}
-                    onChange={e => setForm(f => ({ ...f, proteinG: e.target.value }))} style={inputStyle} />
-                  <input placeholder={isAr ? 'كارب (ج)' : 'Carbs (g)'} type="number" value={form.carbsG}
-                    onChange={e => setForm(f => ({ ...f, carbsG: e.target.value }))} style={inputStyle} />
-                  <input placeholder={isAr ? 'دهون (ج)' : 'Fat (g)'} type="number" value={form.fatG}
-                    onChange={e => setForm(f => ({ ...f, fatG: e.target.value }))} style={inputStyle} />
-                </div>
-                <input
-                  placeholder={isAr ? 'حجم الحصة (اختياري)' : 'Serving size (optional)'}
-                  value={form.servingSize}
-                  onChange={e => setForm(f => ({ ...f, servingSize: e.target.value }))}
-                  style={{ ...inputStyle, marginTop: 8 }}
-                />
-                <button
-                  onClick={() => handleSubmit(section.type)}
-                  disabled={logMeal.isPending}
-                  style={{
-                    width: '100%', marginTop: 10, padding: '11px', borderRadius: 12,
-                    background: `linear-gradient(135deg, ${section.color}, ${section.color}CC)`,
-                    color: 'white', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                  }}
-                >
-                  {logMeal.isPending ? '...' : (isAr ? '✓ إضافة' : '✓ Add')}
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })}
+    <div style={{ textAlign: "center" }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`${color}22`} strokeWidth={5} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={5}
+          strokeDasharray={circ} strokeDashoffset={dash}
+          strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease" }} />
+      </svg>
+      <div style={{ marginTop: -size/2 - 10, fontSize: 13, fontWeight: 900, color: TEXT }}>{Math.round(value)}</div>
+      <div style={{ fontSize: 9, color: MUTED, marginTop: size/2 - 6 }}>{label}</div>
     </div>
   );
 }
 
-// ── AI Food Scanner Tab ─────────────────────────────────────
-function ScannerTab({ isAr }: { isAr: boolean }) {
-  const utils = trpc.useUtils();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<{
-    foodName: string; foodNameAr: string; servingSize: string;
-    calories: number; proteinG: number; carbsG: number; fatG: number;
-    confidence: string; notes: string;
-  } | null>(null);
-  const [editedResult, setEditedResult] = useState<typeof scanResult>(null);
-  const [mealType, setMealType] = useState<MealType>('lunch');
-  const [addMsg, setAddMsg] = useState('');
-
-  const scanFood = trpc.nutrition.scanFood.useMutation();
-  const logMeal  = trpc.nutrition.logMeal.useMutation({
-    onSuccess: () => {
-      utils.nutrition.getTodayLog.invalidate();
-      setAddMsg(isAr ? '✅ تمت الإضافة للسجل' : '✅ Added to diary');
-      setTimeout(() => setAddMsg(''), 3000);
-    },
-  });
-
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => setPreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
-
-    // Upload to storage
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const resp = await fetch('/api/upload', { method: 'POST', body: formData, credentials: 'include' });
-      if (resp.ok) {
-        const { url } = await resp.json();
-        setUploadedUrl(url);
-      }
-    } catch {
-      // Use data URL as fallback for scanning
-      setUploadedUrl(reader.result as string);
-    }
-  }, []);
-
-  const handleScan = async () => {
-    const url = uploadedUrl || preview;
-    if (!url) return;
-    setScanning(true);
-    setScanResult(null);
-    try {
-      const result = await scanFood.mutateAsync({ imageUrl: url, lang: isAr ? 'ar' : 'en' });
-      setScanResult(result);
-      setEditedResult({ ...result });
-    } catch {
-      // error handled by tRPC
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  const handleAddToDiary = () => {
-    if (!editedResult) return;
-    logMeal.mutate({
-      mealType,
-      foodName:    editedResult.foodName,
-      foodNameAr:  editedResult.foodNameAr,
-      calories:    Math.round(editedResult.calories),
-      proteinG:    editedResult.proteinG,
-      carbsG:      editedResult.carbsG,
-      fatG:        editedResult.fatG,
-      servingSize: editedResult.servingSize,
-      imageUrl:    uploadedUrl ?? undefined,
-      addedByAI:   true,
-    });
-  };
-
-  const confidenceColor = (c: string) => c === 'high' ? GREEN : c === 'medium' ? ORANGE : RED;
-
-  return (
-    <div>
-      <div style={{
-        background: 'white', borderRadius: 20, padding: '20px 16px', marginBottom: 14,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-      }}>
-        <h3 style={{ margin: '0 0 6px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-          📸 {isAr ? 'مسح الطعام بالذكاء الاصطناعي' : 'AI Food Scanner'}
-        </h3>
-        <p style={{ fontSize: 12, color: '#7A9BB5', margin: '0 0 16px' }}>
-          {isAr
-            ? 'صوّري طعامك وسيحلل الذكاء الاصطناعي السعرات والمغذيات تلقائياً'
-            : 'Take a photo of your food and AI will automatically analyze calories and nutrients'}
-        </p>
-
-        {/* Upload area */}
-        <div
-          onClick={() => fileRef.current?.click()}
-          style={{
-            border: `2px dashed ${SKY}`,
-            borderRadius: 16, padding: '24px 16px',
-            textAlign: 'center', cursor: 'pointer',
-            background: preview ? 'transparent' : `${SKY}08`,
-            marginBottom: 14, position: 'relative', overflow: 'hidden',
-          }}
-        >
-          {preview ? (
-            <img src={preview} alt="food" style={{
-              width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 12,
-            }} />
-          ) : (
-            <>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>📷</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>
-                {isAr ? 'اضغطي لرفع صورة الطعام' : 'Tap to upload food photo'}
-              </div>
-              <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 4 }}>
-                {isAr ? 'JPG, PNG, HEIC مدعومة' : 'JPG, PNG, HEIC supported'}
-              </div>
-            </>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
-
-        {preview && (
-          <button
-            onClick={handleScan}
-            disabled={scanning}
-            style={{
-              width: '100%', padding: '13px', borderRadius: 14,
-              background: scanning
-                ? '#E8EFF7'
-                : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-              color: scanning ? '#7A9BB5' : 'white',
-              border: 'none', fontWeight: 700, fontSize: 14, cursor: scanning ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {scanning
-              ? (isAr ? '🔍 جاري التحليل...' : '🔍 Analyzing...')
-              : (isAr ? '✨ تحليل بالذكاء الاصطناعي' : '✨ Analyze with AI')}
-          </button>
-        )}
-      </div>
-
-      {/* Scan Result */}
-      {editedResult && (
-        <div style={{
-          background: 'white', borderRadius: 20, padding: '20px 16px', marginBottom: 14,
-          boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-          border: `2px solid ${GREEN}44`,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h3 style={{ margin: 0, color: NAVY, fontSize: 15, fontWeight: 900 }}>
-              🎯 {isAr ? 'نتيجة التحليل' : 'Analysis Result'}
-            </h3>
-            <span style={{
-              fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8,
-              background: `${confidenceColor(scanResult?.confidence ?? 'low')}22`,
-              color: confidenceColor(scanResult?.confidence ?? 'low'),
-            }}>
-              {scanResult?.confidence === 'high' ? (isAr ? 'دقة عالية' : 'High') :
-               scanResult?.confidence === 'medium' ? (isAr ? 'دقة متوسطة' : 'Medium') :
-               (isAr ? 'دقة منخفضة' : 'Low')}
-            </span>
-          </div>
-
-          {/* Editable fields */}
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 11, color: '#7A9BB5', display: 'block', marginBottom: 4 }}>
-              {isAr ? 'اسم الطعام' : 'Food Name'}
-            </label>
-            <input
-              value={isAr ? editedResult.foodNameAr : editedResult.foodName}
-              onChange={e => setEditedResult(r => r ? {
-                ...r,
-                [isAr ? 'foodNameAr' : 'foodName']: e.target.value,
-              } : r)}
-              style={inputStyle}
-            />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[
-              { key: 'calories', label: isAr ? 'سعرات' : 'Calories', unit: 'kcal', color: NAVY },
-              { key: 'proteinG', label: isAr ? 'بروتين' : 'Protein', unit: 'g', color: RED },
-              { key: 'carbsG',   label: isAr ? 'كارب' : 'Carbs',     unit: 'g', color: ORANGE },
-              { key: 'fatG',     label: isAr ? 'دهون' : 'Fat',       unit: 'g', color: PURPLE },
-            ].map(f => (
-              <div key={f.key} style={{
-                background: `${f.color}08`, borderRadius: 12, padding: '10px',
-                border: `1px solid ${f.color}22`,
-              }}>
-                <div style={{ fontSize: 10, color: '#7A9BB5', marginBottom: 4 }}>{f.label} ({f.unit})</div>
-                <input
-                  type="number"
-                  value={editedResult[f.key as keyof typeof editedResult] as number}
-                  onChange={e => setEditedResult(r => r ? { ...r, [f.key]: parseFloat(e.target.value) || 0 } : r)}
-                  style={{ ...inputStyle, fontWeight: 900, color: f.color, fontSize: 16, textAlign: 'center' }}
-                />
-              </div>
-            ))}
-          </div>
-          {scanResult?.notes && (
-            <div style={{
-              marginTop: 10, padding: '8px 12px', borderRadius: 10,
-              background: '#F0F9FF', color: '#0369A1', fontSize: 12,
-            }}>
-              💡 {scanResult.notes}
-            </div>
-          )}
-
-          {/* Meal type selector */}
-          <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 12, color: '#7A9BB5', marginBottom: 6 }}>
-              {isAr ? 'أضف إلى:' : 'Add to:'}
-            </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setMealType(t)}
-                  style={{
-                    flex: 1, padding: '7px 4px', borderRadius: 10, border: 'none',
-                    background: mealType === t ? NAVY : '#F0F4F8',
-                    color: mealType === t ? 'white' : '#7A9BB5',
-                    fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                  }}
-                >
-                  {t === 'breakfast' ? (isAr ? 'فطور' : 'Breakfast') :
-                   t === 'lunch'     ? (isAr ? 'غداء' : 'Lunch') :
-                   t === 'dinner'    ? (isAr ? 'عشاء' : 'Dinner') :
-                   (isAr ? 'خفيف' : 'Snack')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={handleAddToDiary}
-            disabled={logMeal.isPending}
-            style={{
-              width: '100%', marginTop: 12, padding: '13px', borderRadius: 14,
-              background: `linear-gradient(135deg, ${GREEN}, #059669)`,
-              color: 'white', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer',
-            }}
-          >
-            {logMeal.isPending ? '...' : (isAr ? '✓ إضافة للسجل' : '✓ Add to Diary')}
-          </button>
-          {addMsg && (
-            <div style={{
-              marginTop: 8, padding: '8px', borderRadius: 10,
-              background: '#D1FAE5', color: '#065F46', fontSize: 13, fontWeight: 700, textAlign: 'center',
-            }}>
-              {addMsg}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Future ready note */}
-      <div style={{
-        background: `${PURPLE}08`, borderRadius: 16, padding: '14px 16px',
-        border: `1px solid ${PURPLE}22`,
-      }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: PURPLE, marginBottom: 6 }}>
-          🚀 {isAr ? 'قريباً' : 'Coming Soon'}
-        </div>
-        <div style={{ fontSize: 12, color: '#7A9BB5', lineHeight: 1.5 }}>
-          {isAr
-            ? '• مسح الباركود للمنتجات المعبأة\n• مزامنة مع الساعة الذكية\n• خطط وجبات مخصصة'
-            : '• Barcode scanner for packaged foods\n• Smartwatch calorie sync\n• Personalized meal plans'}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── AI Insights Tab ─────────────────────────────────────────
-function InsightsTab({ isAr }: { isAr: boolean }) {
-  const utils = trpc.useUtils();
-  const { data: insights, isLoading } = trpc.nutrition.getInsights.useQuery();
-  const generateInsights = trpc.nutrition.generateInsights.useMutation({
-    onSuccess: () => utils.nutrition.getInsights.invalidate(),
-  });
-
-  const typeIcon: Record<string, string> = {
-    protein:    '🥩',
-    hydration:  '💧',
-    calories:   '🔥',
-    macros:     '⚖️',
-    recovery:   '🔄',
-    general:    '💡',
-  };
-
-  const priorityColor = (p: string) =>
-    p === 'high' ? RED : p === 'medium' ? ORANGE : GREEN;
-
-  return (
-    <div>
-      <div style={{
-        background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-        borderRadius: 20, padding: '20px 16px', marginBottom: 14,
-        boxShadow: '0 4px 20px rgba(27,46,94,0.3)',
-      }}>
-        <h3 style={{ margin: '0 0 6px', color: 'white', fontSize: 15, fontWeight: 900 }}>
-          🤖 {isAr ? 'تحليل التغذية بالذكاء الاصطناعي' : 'AI Nutrition Analysis'}
-        </h3>
-        <p style={{ fontSize: 12, color: SKY_LIGHT, margin: '0 0 14px' }}>
-          {isAr
-            ? 'يحلل الذكاء الاصطناعي نمطك الغذائي وتمارينك ليعطيك توصيات مخصصة'
-            : 'AI analyzes your eating patterns and workouts to give personalized recommendations'}
-        </p>
-        <button
-          onClick={() => generateInsights.mutate({ lang: isAr ? 'ar' : 'en' })}
-          disabled={generateInsights.isPending}
-          style={{
-            width: '100%', padding: '12px', borderRadius: 12,
-            background: generateInsights.isPending ? 'rgba(255,255,255,0.2)' : SKY,
-            color: generateInsights.isPending ? 'rgba(255,255,255,0.6)' : NAVY,
-            border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer',
-          }}
-        >
-          {generateInsights.isPending
-            ? (isAr ? '🔍 جاري التحليل...' : '🔍 Analyzing...')
-            : (isAr ? '✨ توليد تحليل جديد' : '✨ Generate New Analysis')}
-        </button>
-      </div>
-
-      {isLoading && (
-        <div style={{ textAlign: 'center', padding: 30, color: '#7A9BB5' }}>
-          {isAr ? 'جاري التحميل...' : 'Loading...'}
-        </div>
-      )}
-
-      {!isLoading && (!insights || insights.length === 0) && (
-        <div style={{
-          background: 'white', borderRadius: 20, padding: '30px 20px',
-          textAlign: 'center', boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>🥗</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
-            {isAr ? 'لا توجد تحليلات بعد' : 'No insights yet'}
-          </div>
-          <div style={{ fontSize: 12, color: '#7A9BB5' }}>
-            {isAr
-              ? 'سجّلي وجباتك لعدة أيام ثم اضغطي على "توليد تحليل جديد"'
-              : 'Log your meals for a few days, then tap "Generate New Analysis"'}
-          </div>
-        </div>
-      )}
-
-      {insights?.map(insight => (
-        <div key={insight.id} style={{
-          background: 'white', borderRadius: 16, padding: '16px', marginBottom: 10,
-          boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
-          borderLeft: `4px solid ${priorityColor(insight.priority)}`,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 20 }}>{typeIcon[insight.type] ?? '💡'}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: 'capitalize' }}>
-                {insight.type}
-              </span>
-            </div>
-            <span style={{
-              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 8,
-              background: `${priorityColor(insight.priority)}22`,
-              color: priorityColor(insight.priority),
-            }}>
-              {insight.priority === 'high' ? (isAr ? 'مهم' : 'High') :
-               insight.priority === 'medium' ? (isAr ? 'متوسط' : 'Medium') :
-               (isAr ? 'عادي' : 'Low')}
-            </span>
-          </div>
-          <p style={{ margin: 0, fontSize: 13, color: '#3D5A80', lineHeight: 1.5 }}>
-            {isAr && insight.contentAr ? insight.contentAr : insight.content}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Goals Settings ──────────────────────────────────────────
-function GoalsModal({ isAr, onClose }: { isAr: boolean; onClose: () => void }) {
-  const utils = trpc.useUtils();
-  const { data: goals } = trpc.nutrition.getGoals.useQuery();
-  const setGoals = trpc.nutrition.setGoals.useMutation({
-    onSuccess: () => {
-      utils.nutrition.getGoals.invalidate();
-      utils.nutrition.getTodayLog.invalidate();
-      onClose();
-    },
-  });
-  const [form, setForm] = useState({
-    calories: String(goals?.calories ?? 2000),
-    proteinG: String(goals?.proteinG ?? 150),
-    carbsG:   String(goals?.carbsG   ?? 200),
-    fatG:     String(goals?.fatG     ?? 65),
-    waterMl:  String(goals?.waterMl  ?? 2500),
-  });
+// ── Editable food item row ────────────────────────────────────────────────────
+function FoodItemRow({ item, lang, onUpdate, onRemove }: {
+  item: any; lang: string;
+  onUpdate: (field: string, val: number) => void;
+  onRemove: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const conf = item.confidence === "high" ? GREEN : item.confidence === "medium" ? GOLD : MUTED;
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end',
+      background: CARD2, borderRadius: 14, padding: "12px 14px",
+      marginBottom: 8, border: `1px solid ${CARD2}`,
     }}>
-      <div style={{
-        background: 'white', borderRadius: '24px 24px 0 0',
-        padding: '24px 20px', width: '100%', maxHeight: '80vh', overflowY: 'auto',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 900 }}>
-            🎯 {isAr ? 'أهداف التغذية' : 'Nutrition Goals'}
-          </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#7A9BB5' }}>×</button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+        <div>
+          <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>
+            {lang === "ar" && item.nameAr ? item.nameAr : item.name}
+          </span>
+          <span style={{ color: conf, fontSize: 10, marginRight: 6, marginLeft: 6 }}>●</span>
+          <span style={{ color: MUTED, fontSize: 11 }}>
+            {lang === "ar" ? item.portionDescAr || item.portionDesc : item.portionDesc}
+          </span>
         </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button onClick={() => setEditing(!editing)} style={{
+            background: `${CYAN}22`, border: `1px solid ${CYAN}44`, color: CYAN,
+            borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
+          }}>{t("edit", lang)}</button>
+          <button onClick={onRemove} style={{
+            background: `${RED}22`, border: `1px solid ${RED}44`, color: RED,
+            borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
+          }}>✕</button>
+        </div>
+      </div>
+
+      {/* Macros */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {[
-          { key: 'calories', label: isAr ? 'السعرات اليومية' : 'Daily Calories', unit: 'kcal' },
-          { key: 'proteinG', label: isAr ? 'البروتين' : 'Protein', unit: 'g' },
-          { key: 'carbsG',   label: isAr ? 'الكربوهيدرات' : 'Carbs', unit: 'g' },
-          { key: 'fatG',     label: isAr ? 'الدهون' : 'Fat', unit: 'g' },
-          { key: 'waterMl',  label: isAr ? 'الماء' : 'Water', unit: 'ml' },
-        ].map(f => (
-          <div key={f.key} style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: NAVY, display: 'block', marginBottom: 6 }}>
-              {f.label} ({f.unit})
-            </label>
+          { k: "calories", label: t("calories", lang), unit: "kcal", color: ORANGE },
+          { k: "protein",  label: t("protein",  lang), unit: "g",    color: CYAN },
+          { k: "carbs",    label: t("carbs",    lang), unit: "g",    color: GOLD },
+          { k: "fat",      label: t("fat",      lang), unit: "g",    color: "#A78BFA" },
+        ].map(m => (
+          editing ? (
+            <div key={m.k} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <input
+                type="number"
+                value={item[m.k] ?? 0}
+                onChange={e => onUpdate(m.k, parseFloat(e.target.value) || 0)}
+                style={{
+                  width: 52, background: NAVY, border: `1px solid ${m.color}44`,
+                  borderRadius: 6, padding: "4px 6px", color: m.color,
+                  fontSize: 13, fontWeight: 700, textAlign: "center",
+                }}
+              />
+              <span style={{ color: MUTED, fontSize: 9 }}>{m.label} ({m.unit})</span>
+            </div>
+          ) : (
+            <MacroPill key={m.k} label={m.label} value={item[m.k] ?? 0} unit={m.unit} color={m.color} />
+          )
+        ))}
+        {editing && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
             <input
               type="number"
-              value={form[f.key as keyof typeof form]}
-              onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-              style={inputStyle}
+              value={item.estimatedGrams}
+              onChange={e => onUpdate("estimatedGrams", parseFloat(e.target.value) || 0)}
+              style={{
+                width: 52, background: NAVY, border: `1px solid ${MUTED}44`,
+                borderRadius: 6, padding: "4px 6px", color: MUTED,
+                fontSize: 13, fontWeight: 700, textAlign: "center",
+              }}
             />
+            <span style={{ color: MUTED, fontSize: 9 }}>{t("grams", lang)}</span>
           </div>
-        ))}
-        <button
-          onClick={() => setGoals.mutate({
-            calories: parseInt(form.calories) || 2000,
-            proteinG: parseInt(form.proteinG) || 150,
-            carbsG:   parseInt(form.carbsG)   || 200,
-            fatG:     parseInt(form.fatG)     || 65,
-            waterMl:  parseInt(form.waterMl)  || 2500,
-          })}
-          disabled={setGoals.isPending}
-          style={{
-            width: '100%', padding: '13px', borderRadius: 14,
-            background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-            color: 'white', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer',
-          }}
-        >
-          {setGoals.isPending ? '...' : (isAr ? '✓ حفظ الأهداف' : '✓ Save Goals')}
-        </button>
+        )}
       </div>
     </div>
   );
 }
 
-// ── Shared input style ──────────────────────────────────────
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #D0DFF0', fontSize: 13, outline: 'none',
-  fontFamily: 'inherit', boxSizing: 'border-box',
-  background: '#FAFBFC', color: '#1B2E5E',
-};
+// ── Today's summary bar ───────────────────────────────────────────────────────
+function TodaySummary({ lang }: { lang: string }) {
+  const { data: today } = trpc.nutrition.getToday.useQuery();
+  const GOALS = { calories: 2000, protein: 120, carbs: 250, fat: 65 };
 
-// ── Main Nutrition Component ────────────────────────────────
-export default function Nutrition() {
-  const { lang } = useLanguage();
-  const isAr = lang === 'ar';
-  const [activeTab, setActiveTab] = useState<NutritionTab>('dashboard');
-  const [showGoals, setShowGoals] = useState(false);
-
-  const tabs: { id: NutritionTab; icon: string; labelEn: string; labelAr: string }[] = [
-    { id: 'dashboard', icon: '📊', labelEn: 'Dashboard', labelAr: 'لوحة التحكم' },
-    { id: 'meals',     icon: '🍽️', labelEn: 'Meals',     labelAr: 'الوجبات' },
-    { id: 'scanner',   icon: '📸', labelEn: 'Scanner',   labelAr: 'المسح' },
-    { id: 'insights',  icon: '🤖', labelEn: 'Insights',  labelAr: 'التحليل' },
-  ];
+  if (!today || today.meal_count === 0) return null;
 
   return (
-    <div dir={isAr ? 'rtl' : 'ltr'} style={{
-      fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+    <div style={{
+      background: CARD, borderRadius: 16, padding: "14px 16px", marginBottom: 16,
+      border: `1px solid ${CYAN}22`,
     }}>
-      {/* Page header */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16,
-      }}>
-        <div>
-          <h2 style={{ margin: 0, color: NAVY, fontSize: 20, fontWeight: 900 }}>
-            🥗 {isAr ? 'التغذية' : 'Nutrition'}
-          </h2>
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#7A9BB5' }}>
-            {isAr ? new Date().toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' })
-                   : new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+        <span style={{ color: TEXT, fontSize: 13, fontWeight: 800 }}>
+          📊 {t("today", lang)}
+        </span>
+        <span style={{ color: MUTED, fontSize: 11 }}>
+          {today.meal_count} {lang === "ar" ? "وجبات" : "meals"}
+        </span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-around", gap: 8 }}>
+        <CircleProgress value={today.calories} max={GOALS.calories} color={ORANGE} label={t("calories", lang)} size={64} />
+        <CircleProgress value={today.protein}  max={GOALS.protein}  color={CYAN}   label={t("protein",  lang)} size={64} />
+        <CircleProgress value={today.carbs}    max={GOALS.carbs}    color={GOLD}   label={t("carbs",    lang)} size={64} />
+        <CircleProgress value={today.fat}      max={GOALS.fat}      color="#A78BFA" label={t("fat",    lang)} size={64} />
+      </div>
+    </div>
+  );
+}
+
+// ── Meal history card ─────────────────────────────────────────────────────────
+function MealHistoryCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const time = new Date(meal.logged_at).toLocaleTimeString(lang === "ar" ? "ar-KW" : "en-US", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div style={{ background: CARD2, borderRadius: 14, marginBottom: 8, overflow: "hidden" }}>
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{ padding: "12px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 20 }}>{MEAL_ICONS[meal.meal_type] ?? "🍽️"}</span>
+          <div>
+            <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: 0 }}>
+              {t(meal.meal_type, lang)}
+            </p>
+            <p style={{ color: MUTED, fontSize: 10, margin: 0 }}>{time}</p>
+          </div>
         </div>
-        <button
-          onClick={() => setShowGoals(true)}
-          style={{
-            padding: '8px 14px', borderRadius: 12, border: 'none',
-            background: `${NAVY}12`, color: NAVY, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-          }}
-        >
-          🎯 {isAr ? 'الأهداف' : 'Goals'}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ color: ORANGE, fontSize: 14, fontWeight: 900 }}>{Math.round(meal.total_calories)} kcal</span>
+          <span style={{ color: MUTED, fontSize: 12 }}>{expanded ? "▲" : "▼"}</span>
+        </div>
       </div>
 
-      {/* Sub-tab switcher */}
+      {expanded && (
+        <div style={{ padding: "0 14px 14px" }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            <MacroPill label={t("protein", lang)} value={meal.total_protein} color={CYAN} />
+            <MacroPill label={t("carbs",   lang)} value={meal.total_carbs}   color={GOLD} />
+            <MacroPill label={t("fat",     lang)} value={meal.total_fat}     color="#A78BFA" />
+            <MacroPill label={t("fiber",   lang)} value={meal.total_fiber}   color={GREEN} />
+          </div>
+          {meal.insight_ar && (
+            <div style={{ background: `${CYAN}11`, borderRadius: 10, padding: "8px 12px", marginBottom: 8 }}>
+              <p style={{ color: CYAN, fontSize: 11, margin: 0, lineHeight: 1.5 }}>
+                💡 {lang === "ar" ? meal.insight_ar : meal.insight_en}
+              </p>
+            </div>
+          )}
+          {meal.items?.map((item: any) => (
+            <div key={item.id} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: `1px solid ${CARD}` }}>
+              <span style={{ color: TEXT, fontSize: 12 }}>{lang === "ar" && item.name_ar ? item.name_ar : item.name}</span>
+              <span style={{ color: MUTED, fontSize: 11 }}>{item.estimated_grams}g · {Math.round(item.calories)} kcal</span>
+            </div>
+          ))}
+          <button onClick={onDelete} style={{
+            marginTop: 10, background: `${RED}22`, border: `1px solid ${RED}44`, color: RED,
+            borderRadius: 8, padding: "6px 14px", fontSize: 11, cursor: "pointer", width: "100%",
+          }}>🗑️ {t("delete", lang)}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Nutrition Page ───────────────────────────────────────────────────────
+export default function Nutrition() {
+  const { lang, isRTL } = useLanguage();
+  const utils           = trpc.useUtils();
+  const fileInputRef    = useRef<HTMLInputElement>(null);
+  const cameraInputRef  = useRef<HTMLInputElement>(null);
+
+  const [tab, setTab]               = useState<"scan" | "history">("scan");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [analysis, setAnalysis]     = useState<any | null>(null);
+  const [editItems, setEditItems]   = useState<any[]>([]);
+  const [mealType, setMealType]     = useState<"breakfast"|"lunch"|"dinner"|"snack">("lunch");
+  const [notes, setNotes]           = useState("");
+  const [status, setStatus]         = useState<string>("idle");
+  const [saveStatus, setSaveStatus] = useState<string>("idle");
+  const [error, setError]           = useState("");
+  const [searchQ, setSearchQ]       = useState("");
+
+  const { data: history, refetch: refetchHistory } = trpc.nutrition.getMealHistory.useQuery({ limit: 30 });
+  const analyzeFood = trpc.nutrition.analyzeFood.useMutation();
+  const saveMeal    = trpc.nutrition.saveMeal.useMutation();
+  const deleteMeal  = trpc.nutrition.deleteMeal.useMutation({ onSuccess: () => { refetchHistory(); utils.nutrition.getToday.invalidate(); } });
+  const searchFood  = trpc.nutrition.searchFood.useQuery({ query: searchQ, grams: 100 }, { enabled: searchQ.length > 2 });
+
+  const processImage = useCallback(async (file: File) => {
+    setError(""); setAnalysis(null); setEditItems([]); setStatus("analyzing");
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl  = e.target?.result as string;
+      const base64   = dataUrl.split(",")[1];
+      const mimeType = file.type || "image/jpeg";
+
+      try {
+        const res = await analyzeFood.mutateAsync({ imageBase64: base64, mimeType });
+        if (res.analysis.imageQuality === "unclear" || !res.analysis.items.length) {
+          setError(t("noFood", lang));
+          setStatus("idle");
+          return;
+        }
+        setAnalysis(res.analysis);
+        setMealType(res.analysis.mealType);
+        setEditItems(res.analysis.items.map((item: any) => ({
+          ...item,
+          calories: item.portion.calories,
+          protein:  item.portion.protein,
+          carbs:    item.portion.carbs,
+          fat:      item.portion.fat,
+          fiber:    item.portion.fiber ?? 0,
+          sugar:    item.portion.sugar ?? 0,
+          sodium:   item.portion.sodium ?? 0,
+          per100gCalories: item.per100g.calories,
+          per100gProtein:  item.per100g.protein,
+          per100gCarbs:    item.per100g.carbs,
+          per100gFat:      item.per100g.fat,
+        })));
+        setStatus("ready");
+      } catch (err: any) {
+        setError(err.message ?? "Analysis failed");
+        setStatus("idle");
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [lang]);
+
+  const handleSave = async () => {
+    if (!editItems.length || saveStatus === "saving") return;
+    setSaveStatus("saving");
+    const totals = editItems.reduce((acc, i) => ({
+      calories: acc.calories + (i.calories ?? 0),
+      protein:  acc.protein  + (i.protein  ?? 0),
+      carbs:    acc.carbs    + (i.carbs    ?? 0),
+      fat:      acc.fat      + (i.fat      ?? 0),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+    await saveMeal.mutateAsync({
+      mealType,
+      notes: notes || undefined,
+      insightAr: analysis?.insightAr,
+      insightEn: analysis?.insightEn,
+      items: editItems,
+    });
+    setSaveStatus("saved");
+    refetchHistory();
+    utils.nutrition.getToday.invalidate();
+    setTimeout(() => {
+      setStatus("idle"); setSaveStatus("idle"); setAnalysis(null); setEditItems([]);
+      setPreviewUrl(null); setNotes(""); setTab("history");
+    }, 1500);
+  };
+
+  const updateItem = (idx: number, field: string, val: number) => {
+    setEditItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: val } : item));
+  };
+
+  const removeItem = (idx: number) => setEditItems(prev => prev.filter((_, i) => i !== idx));
+
+  const totals = editItems.reduce((acc, i) => ({
+    calories: acc.calories + (i.calories ?? 0),
+    protein:  acc.protein  + (i.protein  ?? 0),
+    carbs:    acc.carbs    + (i.carbs    ?? 0),
+    fat:      acc.fat      + (i.fat      ?? 0),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  return (
+    <div dir={isRTL ? "rtl" : "ltr"} style={{
+      background: NAVY, minHeight: "100vh",
+      fontFamily: "Cairo, Tajawal, system-ui, sans-serif",
+      padding: "0 0 80px",
+    }}>
+      {/* Header */}
       <div style={{
-        display: 'flex', gap: 4, marginBottom: 16,
-        background: 'white', borderRadius: 14, padding: 4,
-        boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
+        background: `linear-gradient(135deg, ${NAVY2}, ${NAVY})`,
+        padding: "16px 16px 0",
+        borderBottom: `1px solid ${CYAN}22`,
+        position: "sticky", top: 0, zIndex: 50,
       }}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              flex: 1, padding: '9px 4px', borderRadius: 10, border: 'none',
-              background: activeTab === tab.id ? NAVY : 'transparent',
-              color: activeTab === tab.id ? 'white' : '#7A9BB5',
-              fontWeight: 700, fontSize: 11, cursor: 'pointer',
-              transition: 'all 0.2s',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            }}
-          >
-            <span style={{ fontSize: 16 }}>{tab.icon}</span>
-            <span>{isAr ? tab.labelAr : tab.labelEn}</span>
-          </button>
-        ))}
+        <h2 style={{ margin: "0 0 12px", fontSize: 18, fontWeight: 900, color: TEXT }}>
+          🍽️ <span style={{ color: CYAN }}>Prime</span> {t("title", lang)}
+        </h2>
+        <div style={{ display: "flex", gap: 0 }}>
+          {(["scan", "history"] as const).map(tb => (
+            <button key={tb} onClick={() => setTab(tb)} style={{
+              flex: 1, padding: "10px 0", background: "none", border: "none",
+              borderBottom: `2px solid ${tab === tb ? CYAN : "transparent"}`,
+              color: tab === tb ? CYAN : MUTED, fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+            }}>
+              {tb === "scan" ? `📷 ${t("scan", lang)}` : `📋 ${t("history", lang)}`}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tab content */}
-      {activeTab === 'dashboard' && <DashboardTab isAr={isAr} />}
-      {activeTab === 'meals'     && <MealsTab     isAr={isAr} />}
-      {activeTab === 'scanner'   && <ScannerTab   isAr={isAr} />}
-      {activeTab === 'insights'  && <InsightsTab  isAr={isAr} />}
+      <div style={{ padding: "16px" }}>
 
-      {/* Goals modal */}
-      {showGoals && <GoalsModal isAr={isAr} onClose={() => setShowGoals(false)} />}
+        {tab === "scan" && (
+          <>
+            <TodaySummary lang={lang} />
+
+            {/* Upload / Camera buttons */}
+            {status === "idle" && !editItems.length && (
+              <>
+                <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                  {/* Camera */}
+                  <button onClick={() => cameraInputRef.current?.click()} style={{
+                    flex: 1, background: `linear-gradient(135deg, ${CYAN}CC, #00B8CCCC)`,
+                    border: "none", borderRadius: 14, padding: "16px 0", cursor: "pointer",
+                    color: NAVY, fontWeight: 900, fontSize: 14, fontFamily: "inherit",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                  }}>
+                    <span style={{ fontSize: 28 }}>📷</span>
+                    {t("scan", lang)}
+                  </button>
+                  {/* Upload */}
+                  <button onClick={() => fileInputRef.current?.click()} style={{
+                    flex: 1, background: CARD2, border: `1px solid ${CYAN}44`,
+                    borderRadius: 14, padding: "16px 0", cursor: "pointer",
+                    color: TEXT, fontWeight: 700, fontSize: 14, fontFamily: "inherit",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                  }}>
+                    <span style={{ fontSize: 28 }}>🖼️</span>
+                    {t("upload", lang)}
+                  </button>
+                </div>
+
+                {/* Barcode future */}
+                <div style={{
+                  background: `${GOLD}11`, border: `1px dashed ${GOLD}44`,
+                  borderRadius: 12, padding: "10px 14px", marginBottom: 16,
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <span style={{ fontSize: 20 }}>📊</span>
+                  <span style={{ color: GOLD, fontSize: 12, fontWeight: 600 }}>
+                    {t("barcodeHint", lang)}
+                  </span>
+                </div>
+
+                {/* Manual search */}
+                <div style={{ marginBottom: 16 }}>
+                  <input
+                    type="text"
+                    placeholder={t("searchFood", lang)}
+                    value={searchQ}
+                    onChange={e => setSearchQ(e.target.value)}
+                    style={{
+                      width: "100%", boxSizing: "border-box",
+                      background: CARD2, border: `1px solid ${CARD2}`,
+                      borderRadius: 12, padding: "12px 14px",
+                      color: TEXT, fontSize: 13, fontFamily: "inherit",
+                      outline: "none",
+                    }}
+                  />
+                  {searchFood.data && searchQ.length > 2 && (
+                    <div style={{ background: CARD, borderRadius: 12, padding: "12px 14px", marginTop: 8 }}>
+                      <p style={{ color: CYAN, fontSize: 12, fontWeight: 700, margin: "0 0 8px" }}>
+                        {searchFood.data.food.description}
+                      </p>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                        <MacroPill label={t("calories", lang)} value={searchFood.data.portion.calories} unit="kcal" color={ORANGE} />
+                        <MacroPill label={t("protein",  lang)} value={searchFood.data.portion.protein}  color={CYAN} />
+                        <MacroPill label={t("carbs",    lang)} value={searchFood.data.portion.carbs}    color={GOLD} />
+                        <MacroPill label={t("fat",      lang)} value={searchFood.data.portion.fat}      color="#A78BFA" />
+                      </div>
+                      <button
+                        onClick={() => {
+                          const d = searchFood.data!;
+                          setEditItems([{
+                            name: d.food.description, nameAr: d.food.description,
+                            estimatedGrams: 100, portionDesc: "100g", portionDescAr: "١٠٠غ",
+                            confidence: "high",
+                            calories: d.portion.calories, protein: d.portion.protein,
+                            carbs: d.portion.carbs, fat: d.portion.fat,
+                            fiber: d.portion.fiber, sugar: d.portion.sugar, sodium: d.portion.sodium,
+                            per100gCalories: d.per100g.calories, per100gProtein: d.per100g.protein,
+                            per100gCarbs: d.per100g.carbs, per100gFat: d.per100g.fat,
+                          }]);
+                          setStatus("ready"); setSearchQ("");
+                        }}
+                        style={{
+                          width: "100%", background: `${CYAN}22`, border: `1px solid ${CYAN}44`,
+                          color: CYAN, borderRadius: 10, padding: "8px", fontSize: 12,
+                          fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                        }}
+                      >
+                        + {t("addFood", lang)}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Analyzing state */}
+            {status === "analyzing" && (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                {previewUrl && (
+                  <img src={previewUrl} alt="food" style={{
+                    width: "100%", maxHeight: 200, objectFit: "cover",
+                    borderRadius: 16, marginBottom: 16, opacity: 0.7,
+                  }} />
+                )}
+                <div style={{ fontSize: 32, marginBottom: 12, animation: "spin 1s linear infinite" }}>🔍</div>
+                <p style={{ color: CYAN, fontSize: 14, fontWeight: 700 }}>{t("analyzing", lang)}</p>
+                <p style={{ color: MUTED, fontSize: 11 }}>
+                  {lang === "ar" ? "يتم تحليل الطعام بالذكاء الاصطناعي..." : "AI is identifying food items..."}
+                </p>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div style={{
+                background: `${RED}22`, border: `1px solid ${RED}44`, borderRadius: 14,
+                padding: "14px 16px", marginBottom: 16, textAlign: "center",
+              }}>
+                <p style={{ color: RED, fontSize: 13, margin: "0 0 10px" }}>{error}</p>
+                <button onClick={() => { setError(""); setPreviewUrl(null); }} style={{
+                  background: `${RED}33`, border: "none", color: RED, borderRadius: 8,
+                  padding: "6px 16px", fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                }}>{t("tryAgain", lang)}</button>
+              </div>
+            )}
+
+            {/* Analysis results */}
+            {status === "ready" && editItems.length > 0 && (
+              <>
+                {previewUrl && (
+                  <img src={previewUrl} alt="food" style={{
+                    width: "100%", maxHeight: 180, objectFit: "cover",
+                    borderRadius: 14, marginBottom: 14,
+                  }} />
+                )}
+
+                {/* AI insight */}
+                {analysis?.insightAr && (
+                  <div style={{
+                    background: `${CYAN}11`, border: `1px solid ${CYAN}22`,
+                    borderRadius: 12, padding: "10px 14px", marginBottom: 12,
+                  }}>
+                    <p style={{ color: CYAN, fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+                      💡 {lang === "ar" ? analysis.insightAr : analysis.insightEn}
+                    </p>
+                  </div>
+                )}
+
+                {/* Meal type selector */}
+                <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+                  {(["breakfast","lunch","dinner","snack"] as const).map(mt => (
+                    <button key={mt} onClick={() => setMealType(mt)} style={{
+                      padding: "6px 12px", borderRadius: 20, border: "none",
+                      background: mealType === mt ? CYAN : CARD2,
+                      color: mealType === mt ? NAVY : MUTED,
+                      fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    }}>
+                      {MEAL_ICONS[mt]} {t(mt, lang)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Food items */}
+                {editItems.map((item, idx) => (
+                  <FoodItemRow
+                    key={idx} item={item} lang={lang}
+                    onUpdate={(f, v) => updateItem(idx, f, v)}
+                    onRemove={() => removeItem(idx)}
+                  />
+                ))}
+
+                {/* Totals */}
+                <div style={{
+                  background: NAVY2, borderRadius: 14, padding: "14px 16px", marginBottom: 14,
+                  border: `1px solid ${CYAN}33`,
+                }}>
+                  <p style={{ color: MUTED, fontSize: 11, margin: "0 0 10px", fontWeight: 700 }}>
+                    {t("total", lang)}
+                  </p>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "space-around" }}>
+                    <MacroPill label={t("calories", lang)} value={totals.calories} unit="kcal" color={ORANGE} />
+                    <MacroPill label={t("protein",  lang)} value={totals.protein}  color={CYAN} />
+                    <MacroPill label={t("carbs",    lang)} value={totals.carbs}    color={GOLD} />
+                    <MacroPill label={t("fat",      lang)} value={totals.fat}      color="#A78BFA" />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <textarea
+                  placeholder={lang === "ar" ? "ملاحظات اختيارية..." : "Optional notes..."}
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  rows={2}
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    background: CARD2, border: `1px solid ${CARD2}`,
+                    borderRadius: 12, padding: "10px 14px", color: MUTED,
+                    fontSize: 12, fontFamily: "inherit", marginBottom: 14,
+                    resize: "none", outline: "none",
+                  }}
+                />
+
+                {/* Save button */}
+                <button onClick={handleSave} disabled={saveStatus === "saving" || saveStatus === "saved"} style={{
+                  width: "100%",
+                  background: saveStatus === "saved"
+                    ? `linear-gradient(135deg, ${GREEN}, #16A34A)`
+                    : `linear-gradient(135deg, ${CYAN}CC, #00B8CCCC)`,
+                  color: NAVY, border: "none", borderRadius: 14,
+                  padding: "14px", fontSize: 15, fontWeight: 900,
+                  cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                  opacity: saveStatus === "saving" ? 0.7 : 1,
+                }}>
+                  {saveStatus === "saved" ? t("saved", lang) : saveStatus === "saving" ? t("saving", lang) : `💾 ${t("save", lang)}`}
+                </button>
+              </>
+            )}
+          </>
+        )}
+
+        {tab === "history" && (
+          <>
+            <TodaySummary lang={lang} />
+            {!history?.length ? (
+              <div style={{ textAlign: "center", padding: "40px 0" }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🍽️</div>
+                <p style={{ color: MUTED, fontSize: 14 }}>{t("noMeals", lang)}</p>
+              </div>
+            ) : (
+              history.map((meal: any) => (
+                <MealHistoryCard
+                  key={meal.id} meal={meal} lang={lang}
+                  onDelete={() => deleteMeal.mutate({ mealId: meal.id })}
+                />
+              ))
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Hidden inputs */}
+      <input ref={fileInputRef}   type="file" accept="image/*"            style={{ display: "none" }} onChange={e => e.target.files?.[0] && processImage(e.target.files[0])} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={e => e.target.files?.[0] && processImage(e.target.files[0])} />
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
