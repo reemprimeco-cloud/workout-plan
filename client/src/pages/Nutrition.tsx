@@ -373,6 +373,55 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
   const [water, setWater] = useState(String(goals?.waterMl  ?? 2500));
   const [status, setStatus] = useState<"idle"|"saving"|"saved"|"error">("idle");
   const [errMsg, setErrMsg] = useState("");
+  const [showTDEE, setShowTDEE] = useState(false);
+  const [activityLevel, setActivityLevel] = useState("moderate");
+  const [fitnessGoal, setFitnessGoal] = useState("maintain");
+
+  // Read profile from localStorage (set by useGymTracker)
+  const profile = (() => {
+    try {
+      const stored = localStorage.getItem("primefit_data");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.profile ?? {};
+      }
+    } catch {}
+    return {};
+  })();
+
+  const calculateTDEE = () => {
+    const weight = Number(profile.currentWeight) || 0;
+    const height = Number(profile.height) || 0;
+    const age    = Number(profile.age)    || 0;
+    const gender = profile.gender ?? "female";
+    if (!weight || !height || !age) return null;
+    // Mifflin-St Jeor BMR
+    const bmr = gender === "male"
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+    const activityMultipliers: Record<string, number> = {
+      sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, veryActive: 1.9,
+    };
+    const tdee = Math.round(bmr * (activityMultipliers[activityLevel] ?? 1.55));
+    // Adjust for goal
+    const goalAdjust: Record<string, number> = { lose: -500, maintain: 0, gain: 300 };
+    const finalCal = Math.max(1200, tdee + (goalAdjust[fitnessGoal] ?? 0));
+    // Macros: protein 30%, carbs 40%, fat 30%
+    const protG  = Math.round((finalCal * 0.30) / 4);
+    const carbsG = Math.round((finalCal * 0.40) / 4);
+    const fatG   = Math.round((finalCal * 0.30) / 9);
+    return { cal: finalCal, prot: protG, carbs: carbsG, fat: fatG };
+  };
+
+  const applyTDEE = () => {
+    const result = calculateTDEE();
+    if (!result) return;
+    setCal(String(result.cal));
+    setProt(String(result.prot));
+    setCarbs(String(result.carbs));
+    setFat(String(result.fat));
+    setShowTDEE(false);
+  };
 
   const setGoalsMutation = trpc.nutrition.setGoals.useMutation({
     onSuccess: () => {
@@ -451,6 +500,151 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
             width: 32, height: 32, fontSize: 16, cursor: "pointer", color: TEXT2,
           }}>✕</button>
         </div>
+
+        {/* TDEE Auto-Calculator */}
+        <button
+          onClick={() => setShowTDEE(!showTDEE)}
+          style={{
+            width: "100%", background: showTDEE ? `${NAVY}15` : `${SKY_LIGHT}`,
+            border: `1.5px dashed ${NAVY}44`, borderRadius: 12, padding: "10px 14px",
+            color: NAVY, fontSize: 13, fontWeight: 700, cursor: "pointer",
+            fontFamily: "inherit", marginBottom: 14,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          }}
+        >
+          🧮 {lang === "ar" ? "احسب أهدافك تلقائياً (TDEE)" : "Auto-Calculate Goals (TDEE)"}
+          <span style={{ fontSize: 10, opacity: 0.7 }}>{showTDEE ? "▲" : "▼"}</span>
+        </button>
+
+        {showTDEE && (() => {
+          const hasProfile = profile.currentWeight && profile.height && profile.age;
+          const preview = calculateTDEE();
+          const activityOptions = [
+            { value: "sedentary",  labelEn: "Sedentary (desk job)",       labelAr: "خامل (عمل مكتبي)" },
+            { value: "light",     labelEn: "Light (1-3 days/week)",      labelAr: "خفيف (1-3 أيام)" },
+            { value: "moderate",  labelEn: "Moderate (3-5 days/week)",   labelAr: "متوسط (3-5 أيام)" },
+            { value: "active",    labelEn: "Active (6-7 days/week)",     labelAr: "نشيط (6-7 أيام)" },
+            { value: "veryActive",labelEn: "Very Active (athlete)",       labelAr: "رياضي محترف" },
+          ];
+          const goalOptions = [
+            { value: "lose",     labelEn: "Lose weight (-500 kcal)",   labelAr: "خسارة وزن (-500)" },
+            { value: "maintain", labelEn: "Maintain weight",            labelAr: "الحفاظ على الوزن" },
+            { value: "gain",     labelEn: "Gain muscle (+300 kcal)",   labelAr: "بناء عضلات (+300)" },
+          ];
+          return (
+            <div style={{
+              background: `${NAVY}08`, borderRadius: 14, padding: "14px",
+              marginBottom: 14, border: `1px solid ${BORDER}`,
+            }}>
+              {!hasProfile ? (
+                <p style={{ color: "#F59E0B", fontSize: 12, margin: 0, textAlign: "center" }}>
+                  ⚠️ {lang === "ar"
+                    ? "أكمل بيانات ملفك الشخصي (الوزن، الطول، العمر) أولاً"
+                    : "Complete your profile (weight, height, age) first"}
+                </p>
+              ) : (
+                <>
+                  {/* Profile summary */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                    {[
+                      { label: lang === "ar" ? "الوزن" : "Weight", value: `${profile.currentWeight} kg` },
+                      { label: lang === "ar" ? "الطول" : "Height", value: `${profile.height} cm` },
+                      { label: lang === "ar" ? "العمر" : "Age",    value: `${profile.age} ${lang === "ar" ? "سنة" : "yrs"}` },
+                      { label: lang === "ar" ? "الجنس" : "Gender",  value: profile.gender === "male" ? (lang === "ar" ? "ذكر" : "Male") : (lang === "ar" ? "أنثى" : "Female") },
+                    ].map(item => (
+                      <div key={item.label} style={{
+                        background: WHITE, borderRadius: 8, padding: "4px 10px",
+                        fontSize: 11, color: TEXT2, border: `1px solid ${BORDER}`,
+                      }}>
+                        <span style={{ color: MUTED }}>{item.label}: </span>
+                        <strong style={{ color: TEXT }}>{item.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Activity level */}
+                  <div style={{ marginBottom: 10 }}>
+                    <p style={{ color: TEXT2, fontSize: 12, fontWeight: 700, margin: "0 0 6px" }}>
+                      {lang === "ar" ? "مستوى النشاط" : "Activity Level"}
+                    </p>
+                    <select
+                      value={activityLevel}
+                      onChange={e => setActivityLevel(e.target.value)}
+                      style={{
+                        width: "100%", background: WHITE, border: `1.5px solid ${BORDER}`,
+                        borderRadius: 10, padding: "9px 12px", color: TEXT,
+                        fontSize: 13, fontFamily: "inherit", outline: "none",
+                      }}
+                    >
+                      {activityOptions.map(o => (
+                        <option key={o.value} value={o.value}>
+                          {lang === "ar" ? o.labelAr : o.labelEn}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Fitness goal */}
+                  <div style={{ marginBottom: 12 }}>
+                    <p style={{ color: TEXT2, fontSize: 12, fontWeight: 700, margin: "0 0 6px" }}>
+                      {lang === "ar" ? "هدفك" : "Your Goal"}
+                    </p>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {goalOptions.map(o => (
+                        <button
+                          key={o.value}
+                          onClick={() => setFitnessGoal(o.value)}
+                          style={{
+                            flex: 1, padding: "8px 4px",
+                            background: fitnessGoal === o.value ? NAVY : WHITE,
+                            color: fitnessGoal === o.value ? WHITE : TEXT2,
+                            border: `1.5px solid ${fitnessGoal === o.value ? NAVY : BORDER}`,
+                            borderRadius: 10, fontSize: 11, fontWeight: 700,
+                            cursor: "pointer", fontFamily: "inherit",
+                          }}
+                        >
+                          {lang === "ar" ? o.labelAr.split(" ")[0] : o.labelEn.split(" ")[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Preview result */}
+                  {preview && (
+                    <div style={{
+                      background: `${NAVY}10`, borderRadius: 10, padding: "10px 12px",
+                      marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap",
+                    }}>
+                      {[
+                        { label: lang === "ar" ? "سعرات" : "Calories", value: `${preview.cal} kcal`, color: "#EF4444" },
+                        { label: lang === "ar" ? "بروتين" : "Protein",  value: `${preview.prot}g`,    color: "#3B82F6" },
+                        { label: lang === "ar" ? "كارب" : "Carbs",     value: `${preview.carbs}g`,   color: "#F59E0B" },
+                        { label: lang === "ar" ? "دهون" : "Fat",       value: `${preview.fat}g`,     color: "#8B5CF6" },
+                      ].map(item => (
+                        <div key={item.label} style={{ textAlign: "center", flex: 1 }}>
+                          <div style={{ color: item.color, fontSize: 14, fontWeight: 900 }}>{item.value}</div>
+                          <div style={{ color: MUTED, fontSize: 10 }}>{item.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={applyTDEE}
+                    style={{
+                      width: "100%", background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+                      color: WHITE, border: "none", borderRadius: 10,
+                      padding: "10px", fontSize: 13, fontWeight: 900,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    ✅ {lang === "ar" ? "تطبيق هذه الأهداف" : "Apply These Goals"}
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         <Field label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   unit="kcal" />
         <Field label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  unit="g" />

@@ -305,3 +305,8 @@
 - [x] Community router: add missing procedures (deletePost, editPost, deleteComment, editComment, completeChallenge, getMentionSuggestions, createChallenge)
 - [x] Fix createChallenge procedure to match schema (description/descriptionAr required, correct type enum)
 - [x] Remove orange expiry banner and plan label badge from LicenseGate
+
+## Feature Batch 17 — 3 Nutrition Improvements
+- [ ] TDEE auto-calculator button in Goals modal
+- [ ] Fix getWeeklyTrends to read from mealLogs (v2)
+- [ ] Link daily nutrition context to Coach AI
