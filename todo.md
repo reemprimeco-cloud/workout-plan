@@ -292,4 +292,5 @@
 - [x] Add analyzeFood, saveMeal, getToday, getMealHistory, deleteMeal, searchFood procedures to nutrition router
 
 ## Nutrition UX Fix
-- [ ] Merge Nutrition pages: unified page with Dashboard/Meals/Scanner/Insights tabs; Scanner "Add to Diary" saves meal to correct meal type in Meals tab using v2 backend (saveMeal + getMealHistory)
+- [x] Merge Nutrition pages: unified page with Dashboard/Meals/Scanner/Insights tabs; Scanner "Add to Diary" saves meal to correct meal type in Meals tab using v2 backend (saveMeal + getMealHistory)
+- [x] Fix all Arabic dates to display Gregorian calendar (DD/MM/YYYY) instead of Hijri — LicenseGate, ProfilePanel, SessionHistory, AdminPanel, Nutrition, Home

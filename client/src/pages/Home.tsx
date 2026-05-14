@@ -355,8 +355,8 @@ function CheckInPanel({ onStart, stats, profile }: {
   const greeting = hour < 12 ? t('greetingMorning') : hour < 17 ? t('greetingAfternoon') : t('greetingEvening');
   // Gregorian date display
   const locale = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US';
-  const dayName = now.toLocaleDateString(locale, { weekday: 'long' });
-  const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+  const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
+  const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
   // Icon URLs for each session type
