@@ -228,7 +228,7 @@ export const socialNotifications = mysqlTable("social_notifications", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),        // recipient
   actorId: int("actorId").notNull(),       // who triggered it
-  type: mysqlEnum("type", ["like", "cheer", "fire", "comment", "achievement"]).notNull(),
+  type: mysqlEnum("type", ["like", "cheer", "fire", "comment", "achievement", "mention"]).notNull(),
   postId: int("postId"),                   // related post (if any)
   message: text("message").notNull(),
   messageEn: text("messageEn"),
@@ -313,3 +313,87 @@ export const billingHistory = mysqlTable("billing_history", {
 });
 export type BillingHistory = typeof billingHistory.$inferSelect;
 export type InsertBillingHistory = typeof billingHistory.$inferInsert;
+
+// ── Post Mentions ─────────────────────────────────────────────────────────────
+// Tracks every @mention in a post or comment so we can send notifications
+export const postMentions = mysqlTable("post_mentions", {
+  id:          int("id").autoincrement().primaryKey(),
+  mentionedId: int("mentionedId").notNull(),   // user who was mentioned
+  actorId:     int("actorId").notNull(),        // user who wrote the post/comment
+  postId:      int("postId").notNull(),         // the post (or the post containing the comment)
+  commentId:   int("commentId"),               // null if mention is in the post body
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+});
+export type PostMention = typeof postMentions.$inferSelect;
+export type InsertPostMention = typeof postMentions.$inferInsert;
+
+// ── Spin Wheel System ─────────────────────────────────────────────────────────
+
+// Reward catalog with probabilities (admin-configurable)
+export const rewardProbabilities = mysqlTable("reward_probabilities", {
+  id:          int("id").autoincrement().primaryKey(),
+  name:        varchar("name", { length: 128 }).notNull(),
+  nameAr:      varchar("nameAr", { length: 128 }).notNull(),
+  type:        mysqlEnum("type", ["premium_days", "xp_bonus", "badge", "ai_boost", "streak_protection", "workout_unlock", "ai_insights", "upgrade"]).notNull(),
+  rarity:      mysqlEnum("rarity", ["common", "uncommon", "rare", "jackpot"]).notNull(),
+  weight:      int("weight").notNull().default(100),
+  value:       int("value").default(0),
+  icon:        varchar("icon", { length: 64 }).default("🎁"),
+  color:       varchar("color", { length: 16 }).default("#7BB8D4"),
+  isEnabled:   boolean("isEnabled").default(true).notNull(),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:   timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type RewardProbability = typeof rewardProbabilities.$inferSelect;
+export type InsertRewardProbability = typeof rewardProbabilities.$inferInsert;
+
+// One spin record per challenge completion
+export const rewardSpins = mysqlTable("reward_spins", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      int("userId").notNull(),
+  challengeId: int("challengeId").notNull(),
+  rewardId:    int("rewardId"),
+  status:      mysqlEnum("status", ["pending", "spun", "claimed"]).default("pending").notNull(),
+  spinToken:   varchar("spinToken", { length: 64 }).notNull(),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+  spunAt:      timestamp("spunAt"),
+  claimedAt:   timestamp("claimedAt"),
+});
+export type RewardSpin = typeof rewardSpins.$inferSelect;
+export type InsertRewardSpin = typeof rewardSpins.$inferInsert;
+
+// Full history of all rewards granted
+export const rewardHistory = mysqlTable("reward_history", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      int("userId").notNull(),
+  spinId:      int("spinId").notNull(),
+  rewardId:    int("rewardId").notNull(),
+  rewardName:  varchar("rewardName", { length: 128 }).notNull(),
+  rarity:      mysqlEnum("rarity", ["common", "uncommon", "rare", "jackpot"]).notNull(),
+  value:       int("value").default(0),
+  appliedAt:   timestamp("appliedAt").defaultNow().notNull(),
+});
+export type RewardHistory = typeof rewardHistory.$inferSelect;
+export type InsertRewardHistory = typeof rewardHistory.$inferInsert;
+
+// Challenge-specific reward overrides
+export const challengeRewards = mysqlTable("challenge_rewards", {
+  id:             int("id").autoincrement().primaryKey(),
+  challengeId:    int("challengeId").notNull(),
+  rewardId:       int("rewardId").notNull(),
+  weightOverride: int("weightOverride"),
+  createdAt:      timestamp("createdAt").defaultNow().notNull(),
+});
+export type ChallengeReward = typeof challengeRewards.$inferSelect;
+
+// Jackpot winners log
+export const jackpotWinners = mysqlTable("jackpot_winners", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull(),
+  spinId:         int("spinId").notNull(),
+  rewardId:       int("rewardId").notNull(),
+  rewardName:     varchar("rewardName", { length: 128 }).notNull(),
+  wonAt:          timestamp("wonAt").defaultNow().notNull(),
+  notifiedAdmin:  boolean("notifiedAdmin").default(false).notNull(),
+});
+export type JackpotWinner = typeof jackpotWinners.$inferSelect;

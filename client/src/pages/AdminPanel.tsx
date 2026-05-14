@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'profile';
+type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'rewards' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -110,9 +110,216 @@ const T: Record<string, Record<Lang, string>> = {
   planFree: { ar: 'مجاني', en: 'Free' },
   planPrimePlus: { ar: 'برايم بلس', en: 'Prime Plus' },
   planPrimePro: { ar: 'برايم برو', en: 'Prime Pro' },
+  // Rewards tab
+  tabRewards: { ar: '🎰 المكافآت', en: '🎰 Rewards' },
+  rewardName: { ar: 'اسم المكافأة', en: 'Reward Name' },
+  rewardProbability: { ar: 'الاحتمالية %', en: 'Probability %' },
+  rewardTier: { ar: 'المستوى', en: 'Tier' },
+  rewardActive: { ar: 'نشط', en: 'Active' },
+  rewardSave: { ar: 'حفظ', en: 'Save' },
+  rewardHistory: { ar: 'سجل المكافآت', en: 'Reward History' },
+  jackpotWinners: { ar: 'الفائزون بالجائزة الكبرى', en: 'Jackpot Winners' },
+  noRewards: { ar: 'لا توجد مكافآت', en: 'No rewards yet' },
 };
 
 const t = (key: string, lang: Lang) => T[key]?.[lang] ?? key;
+
+
+// ── Admin Rewards Tab ─────────────────────────────────────────────────────────
+function AdminRewardsTab({ lang }: { lang: string }) {
+  const isRTL = lang === 'ar';
+  const utils = trpc.useUtils();
+  const rewardsQuery = trpc.spinWheel.adminGetRewards.useQuery();
+  const historyQuery = trpc.spinWheel.adminGetHistory.useQuery({ limit: 20 });
+  const jackpotQuery = trpc.spinWheel.adminGetJackpotWinners.useQuery();
+  const statsQuery = trpc.spinWheel.adminGetStats.useQuery();
+  const updateRewardMutation = trpc.spinWheel.adminUpdateReward.useMutation({
+    onSuccess: () => utils.spinWheel.adminGetRewards.invalidate(),
+  });
+  const deleteRewardMutation = trpc.spinWheel.adminDeleteReward.useMutation({
+    onSuccess: () => utils.spinWheel.adminGetRewards.invalidate(),
+  });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{ name: string; nameAr: string; probability: number; tier: string; isActive: boolean }>({
+    name: '', nameAr: '', probability: 0, tier: 'common', isActive: true,
+  });
+  const TIER_COLORS: Record<string, string> = {
+    common: '#6B7280', uncommon: '#3B82F6', rare: '#8B5CF6', jackpot: '#F59E0B',
+  };
+  const cardStyle: React.CSSProperties = {
+    background: 'white', borderRadius: 16, padding: '20px 24px',
+    boxShadow: '0 2px 12px rgba(27,46,94,0.08)', marginBottom: 20,
+  };
+  const stats = statsQuery.data;
+  return (
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Stats row */}
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 20 }}>
+          {[
+            { label: lang === 'ar' ? 'إجمالي الدورات' : 'Total Spins', value: stats.totalSpins },
+            { label: lang === 'ar' ? 'الجوائز الكبرى' : 'Jackpots', value: stats.jackpotWins },
+            { label: lang === 'ar' ? 'الفوز النادر' : 'Rare Wins', value: stats.rareWins },
+          ].map(s => (
+            <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '14px 16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(27,46,94,0.08)' }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#1B2E5E' }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Rewards list */}
+      <div style={cardStyle}>
+        <h3 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
+          {lang === 'ar' ? '🎰 قائمة المكافآت' : '🎰 Reward List'}
+        </h3>
+        {rewardsQuery.isLoading ? (
+          <div style={{ color: '#7A9BB5' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
+        ) : (rewardsQuery.data ?? []).map((r: any) => (
+          <div key={r.id} style={{
+            border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10,
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          }}>
+            {editingId === r.id ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <input
+                    value={editForm.name}
+                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Name (EN)"
+                    style={{ padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: 8, fontSize: 13 }}
+                  />
+                  <input
+                    value={editForm.nameAr}
+                    onChange={e => setEditForm(f => ({ ...f, nameAr: e.target.value }))}
+                    placeholder="الاسم (AR)"
+                    style={{ padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: 8, fontSize: 13, direction: 'rtl' }}
+                  />
+                  <input
+                    type="number" min="0" max="100" step="0.1"
+                    value={editForm.probability}
+                    onChange={e => setEditForm(f => ({ ...f, probability: parseFloat(e.target.value) }))}
+                    placeholder="Probability %"
+                    style={{ padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: 8, fontSize: 13 }}
+                  />
+                  <select
+                    value={editForm.tier}
+                    onChange={e => setEditForm(f => ({ ...f, tier: e.target.value }))}
+                    style={{ padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: 8, fontSize: 13 }}
+                  >
+                    <option value="common">Common</option>
+                    <option value="uncommon">Uncommon</option>
+                    <option value="rare">Rare</option>
+                    <option value="jackpot">Jackpot</option>
+                  </select>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editForm.isActive} onChange={e => setEditForm(f => ({ ...f, isActive: e.target.checked }))} />
+                  {lang === 'ar' ? 'نشط' : 'Active'}
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => {
+                      updateRewardMutation.mutate({ id: r.id, ...editForm });
+                      setEditingId(null);
+                    }}
+                    style={{ background: '#1B2E5E', color: 'white', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                    {lang === 'ar' ? 'حفظ' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    style={{ background: '#F1F5F9', color: '#64748B', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 13, cursor: 'pointer' }}>
+                    {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      background: TIER_COLORS[r.tier] + '22', color: TIER_COLORS[r.tier],
+                      fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 20,
+                      textTransform: 'uppercase', letterSpacing: '0.05em',
+                    }}>{r.tier}</span>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: '#1B2E5E' }}>
+                      {lang === 'ar' ? r.nameAr : r.name}
+                    </span>
+                    {!r.isActive && <span style={{ color: '#DC2626', fontSize: 11 }}>⛔ Disabled</span>}
+                  </div>
+                  <div style={{ color: '#7A9BB5', fontSize: 12, marginTop: 2 }}>
+                    {lang === 'ar' ? 'الاحتمالية:' : 'Probability:'} <strong>{r.probability}%</strong>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={() => {
+                      setEditingId(r.id);
+                      setEditForm({ name: r.name, nameAr: r.nameAr, probability: r.probability, tier: r.tier, isActive: r.isActive });
+                    }}
+                    style={{ background: '#EFF6FF', color: '#1B2E5E', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>
+                    ✏️ {lang === 'ar' ? 'تعديل' : 'Edit'}
+                  </button>
+                  <button
+                    onClick={() => deleteRewardMutation.mutate({ id: r.id })}
+                    style={{ background: '#FEF2F2', color: '#DC2626', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>
+                    🗑️
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Jackpot Winners */}
+      {(jackpotQuery.data ?? []).length > 0 && (
+        <div style={cardStyle}>
+          <h3 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
+            🏆 {lang === 'ar' ? 'الفائزون بالجائزة الكبرى' : 'Jackpot Winners'}
+          </h3>
+          {(jackpotQuery.data ?? []).map((w: any) => (
+            <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #F1F5F9' }}>
+              <div>
+                <div style={{ fontWeight: 700, color: '#1B2E5E', fontSize: 13 }}>{w.userName ?? w.userId}</div>
+                <div style={{ color: '#7A9BB5', fontSize: 11 }}>{lang === 'ar' ? w.rewardNameAr : w.rewardName}</div>
+              </div>
+              <div style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700 }}>
+                {new Date(w.wonAt).toLocaleDateString()}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Recent spin history */}
+      <div style={cardStyle}>
+        <h3 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
+          📋 {lang === 'ar' ? 'سجل الدورات الأخيرة' : 'Recent Spin History'}
+        </h3>
+        {(historyQuery.data ?? []).length === 0 ? (
+          <div style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد دورات بعد' : 'No spins yet'}</div>
+        ) : (historyQuery.data ?? []).map((h: any) => (
+          <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+            <div>
+              <div style={{ fontWeight: 700, color: '#1B2E5E', fontSize: 13 }}>{h.userName ?? h.userId}</div>
+              <div style={{ color: '#7A9BB5', fontSize: 11 }}>{lang === 'ar' ? h.rewardNameAr : h.rewardName}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+              <span style={{
+                background: TIER_COLORS[h.tier] + '22', color: TIER_COLORS[h.tier],
+                fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 20,
+                textTransform: 'uppercase',
+              }}>{h.tier}</span>
+              <span style={{ color: '#94A3B8', fontSize: 10 }}>{new Date(h.spunAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPanel() {
   const { user, loading } = useAuth();
@@ -313,6 +520,7 @@ export default function AdminPanel() {
           ['licenses', t('tabLicenses', lang)],
           ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
+          ['rewards', t('tabRewards', lang)],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
           <button
@@ -671,6 +879,9 @@ export default function AdminPanel() {
             )}
           </div>
         )}
+
+        {/* ── REWARDS TAB ── */}
+        {activeTab === 'rewards' && <AdminRewardsTab lang={lang} />}
 
         {/* ── PROFILE TAB ── */}
         {activeTab === 'profile' && (
