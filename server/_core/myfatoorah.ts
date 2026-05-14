@@ -1,6 +1,6 @@
 import { ENV } from "./env";
 
-const BASE = ENV.myFatoorahApiUrl.replace(/\/+$/, "");
+const BASE = ENV.myfatoorahApiUrl.replace(/\/+$/, "");
 
 // Plan prices in KWD
 export const PLAN_PRICES = {
@@ -83,7 +83,7 @@ export async function createInvoice(params: CreateInvoiceParams): Promise<{
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${ENV.myFatoorahApiKey}`,
+      Authorization: `Bearer ${ENV.myfatoorahApiKey}`,
     },
     body: JSON.stringify(body),
   });
@@ -110,7 +110,7 @@ export async function getPaymentStatus(invoiceId: string): Promise<{
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${ENV.myFatoorahApiKey}`,
+      Authorization: `Bearer ${ENV.myfatoorahApiKey}`,
     },
     body: JSON.stringify({ Key: invoiceId, KeyType: "InvoiceId" }),
   });
@@ -137,7 +137,7 @@ export function verifyWebhookSignature(
 ): boolean {
   try {
     const crypto = require("crypto") as typeof import("crypto");
-    const secret = ENV.myFatoorahWebhookSecret;
+    const secret = ENV.myfatoorahWebhookKey;
     const hmac = crypto.createHmac("sha256", Buffer.from(secret, "base64"));
     hmac.update(typeof rawBody === "string" ? rawBody : rawBody);
     const computed = hmac.digest("base64");

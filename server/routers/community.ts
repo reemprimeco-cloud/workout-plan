@@ -3,7 +3,7 @@
  * leaderboard, challenges, XP/levels, and AI insights.
  */
 import { z } from "zod";
-import { router, protectedProcedure, publicProcedure, adminProcedure } from "../_core/trpc";
+import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "../_core/llm";
 import { storagePut } from "../storage";
@@ -22,8 +22,8 @@ import {
   getUnreadNotificationCount,
 } from "../db";
 import { getDb } from "../db";
-import { users, communityPosts, communityComments, postMentions, communityChallenges } from "../../drizzle/schema";
-import { eq, like, sql, desc } from "drizzle-orm";
+import { users, communityPosts, communityComments, communityChallenges, challengeParticipants } from "../../drizzle/schema";
+import { eq, like, or } from "drizzle-orm";
 import { getIO } from "../_core/index";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
 import { sendPushToSubscription } from "./notifications";
@@ -96,12 +96,12 @@ export const communityRouter = router({
       if (!db) return { posts: allPosts, trending };
       const userIds = Array.from(new Set(allPosts.map(p => p.userId)));
       const userRows = userIds.length > 0
-        ? await db.select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl }).from(users)
+        ? await db.select({ id: users.id, name: users.name }).from(users)
         : [];
-      const userMap = Object.fromEntries(userRows.map(u => [u.id, { name: u.name ?? "User", avatarUrl: u.avatarUrl ?? null }]));
+      const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
       return {
-        posts: allPosts.map(p => ({ ...p, userName: userMap[p.userId]?.name ?? "User", userAvatar: userMap[p.userId]?.avatarUrl ?? null })),
-        trending: trending.map(p => ({ ...p, userName: userMap[p.userId]?.name ?? "User", userAvatar: userMap[p.userId]?.avatarUrl ?? null })),
+        posts: allPosts.map(p => ({ ...p, userName: userMap[p.userId] ?? "User" })),
+        trending: trending.map(p => ({ ...p, userName: userMap[p.userId] ?? "User" })),
       };
     }),
 
@@ -144,13 +144,7 @@ export const communityRouter = router({
       });
       await addXp({ userId: ctx.user.id, event: "post", points: xpAward });
 
-      // ── Process @mentions in post content ──────────────────────────────────────
-      if (post.id) {
-        processMentions({ content: input.content, actorId: ctx.user.id, postId: post.id })
-          .catch(() => { /* non-fatal */ });
-      }
-
-      // ── Broadcast new post to all connected users ─────────────────────
+      // ── Broadcast new post to all connected users ─────────────────────────
       try {
         const db = await getDb();
         const actor = db ? await db.select({ name: users.name })
@@ -218,7 +212,7 @@ export const communityRouter = router({
             // Web Push (if subscribed)
             const sub = await getPushSubscriptionByUser(postAuthorId);
             const settings = await getNotificationSettings(postAuthorId);
-            if (sub) {
+            if (sub && settings?.communityNotifs !== false) {
               const lang = settings?.language ?? "ar";
               await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
                 title: "Prime Fit",
@@ -256,9 +250,9 @@ export const communityRouter = router({
       const db = await getDb();
       if (!db || comments.length === 0) return comments;
       const userIds = Array.from(new Set(comments.map(c => c.userId)));
-      const userRows = await db.select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl }).from(users);
-      const userMap = Object.fromEntries(userRows.map(u => [u.id, { name: u.name ?? "User", avatarUrl: u.avatarUrl ?? null }]));
-      return comments.map(c => ({ ...c, userName: userMap[c.userId]?.name ?? "User", userAvatar: userMap[c.userId]?.avatarUrl ?? null }));
+      const userRows = await db.select({ id: users.id, name: users.name }).from(users);
+      const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
+      return comments.map(c => ({ ...c, userName: userMap[c.userId] ?? "User" }));
     }),
 
   /** Add a comment */
@@ -300,7 +294,7 @@ export const communityRouter = router({
 
             const sub = await getPushSubscriptionByUser(postAuthorId);
             const settings = await getNotificationSettings(postAuthorId);
-            if (sub) {
+            if (sub && settings?.communityNotifs !== false) {
               const lang = settings?.language ?? "ar";
               await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
                 title: "Prime Fit",
@@ -312,10 +306,6 @@ export const communityRouter = router({
           }
         }
       } catch (e) { /* non-fatal */ }
-
-      // ── Process @mentions in comment ─────────────────────────────────────────
-      processMentions({ content: input.content, actorId: ctx.user.id, postId: input.postId })
-        .catch(() => { /* non-fatal */ });
 
       return { success: true };
     }),
@@ -365,7 +355,6 @@ export const communityRouter = router({
       const db = await getDb();
       let postCount = 0;
       if (db) {
-        const { communityPosts } = await import("../../drizzle/schema");
         const { count } = await import("drizzle-orm");
         const rows = await db.select({ c: count() }).from(communityPosts)
           .where(eq(communityPosts.userId, ctx.user.id));
@@ -484,254 +473,129 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
       return post;
     }),
 
-  /** Delete own post (owner or admin) */
+  /** Delete a post (owner or admin only) */
   deletePost: protectedProcedure
     .input(z.object({ postId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const rows = await db.select({ userId: communityPosts.userId })
-        .from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
-      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not your post" });
-      }
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [post] = await db.select().from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
+      if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+      if (post.userId !== ctx.user.id && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
       await db.delete(communityPosts).where(eq(communityPosts.id, input.postId));
       return { success: true };
     }),
 
-  /** Edit own post text (owner or admin) */
+  /** Edit a post (owner only) */
   editPost: protectedProcedure
     .input(z.object({ postId: z.number(), content: z.string().min(1).max(2000) }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const rows = await db.select({ userId: communityPosts.userId })
-        .from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
-      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not your post" });
-      }
-      await db.update(communityPosts)
-        .set({ content: input.content })
-        .where(eq(communityPosts.id, input.postId));
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [post] = await db.select().from(communityPosts).where(eq(communityPosts.id, input.postId)).limit(1);
+      if (!post) throw new TRPCError({ code: "NOT_FOUND" });
+      if (post.userId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+      await db.update(communityPosts).set({ content: input.content }).where(eq(communityPosts.id, input.postId));
       return { success: true };
     }),
 
-  /** Delete own comment (owner or admin) */
+  /** Delete a comment (owner or admin only) */
   deleteComment: protectedProcedure
     .input(z.object({ commentId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const rows = await db.select({ userId: communityComments.userId, postId: communityComments.postId })
-        .from(communityComments).where(eq(communityComments.id, input.commentId)).limit(1);
-      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
-      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not your comment" });
-      }
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [comment] = await db.select().from(communityComments).where(eq(communityComments.id, input.commentId)).limit(1);
+      if (!comment) throw new TRPCError({ code: "NOT_FOUND" });
+      if (comment.userId !== ctx.user.id && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
       await db.delete(communityComments).where(eq(communityComments.id, input.commentId));
-      await db.update(communityPosts)
-        .set({ commentsCount: sql`GREATEST(${communityPosts.commentsCount} - 1, 0)` })
-        .where(eq(communityPosts.id, rows[0].postId));
       return { success: true };
     }),
 
-  /** Edit own comment text (owner or admin) */
+  /** Edit a comment (owner only) */
   editComment: protectedProcedure
-    .input(z.object({ commentId: z.number(), content: z.string().min(1).max(500) }))
+    .input(z.object({ commentId: z.number(), content: z.string().min(1).max(1000) }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const rows = await db.select({ userId: communityComments.userId })
-        .from(communityComments).where(eq(communityComments.id, input.commentId)).limit(1);
-      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found" });
-      if (rows[0].userId !== ctx.user.id && ctx.user.role !== "admin") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not your comment" });
-      }
-      await db.update(communityComments)
-        .set({ content: input.content })
-        .where(eq(communityComments.id, input.commentId));
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [comment] = await db.select().from(communityComments).where(eq(communityComments.id, input.commentId)).limit(1);
+      if (!comment) throw new TRPCError({ code: "NOT_FOUND" });
+      if (comment.userId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+      await db.update(communityComments).set({ content: input.content }).where(eq(communityComments.id, input.commentId));
       return { success: true };
     }),
 
-  /** Get @mention suggestions — fuzzy search by any position in name (Arabic + English) */
-  getMentionSuggestions: protectedProcedure
-    .input(z.object({ query: z.string().min(0).max(50) }))
-    .query(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) return [];
-      const q = input.query.trim();
-      if (!q) {
-        // No query — return suggested users (most recently active, excluding self)
-        const rows = await db
-          .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
-          .from(users)
-          .orderBy(desc(users.lastSignedIn))
-          .limit(8);
-        return rows.filter(r => r.name && r.id !== ctx.user.id);
-      }
-      // Fuzzy: prefix match first, then contains match
-      const prefixRows = await db
-        .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
-        .from(users)
-        .where(like(users.name, `${q}%`))
-        .limit(8);
-      const containsRows = await db
-        .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
-        .from(users)
-        .where(like(users.name, `%${q}%`))
-        .limit(12);
-      // Merge: prefix first, then contains (dedup by id, exclude self)
-      const seen = new Set<number>();
-      const merged: { id: number; name: string | null; avatarUrl: string | null }[] = [];
-      for (const r of [...prefixRows, ...containsRows]) {
-        if (r.name && r.id !== ctx.user.id && !seen.has(r.id)) {
-          seen.add(r.id);
-          merged.push(r);
-        }
-        if (merged.length >= 8) break;
-      }
-      return merged;
-    }),
-
-  /** Complete a challenge and mark completedAt for spin wheel eligibility */
+  /** Mark a challenge as completed for the current user */
   completeChallenge: protectedProcedure
     .input(z.object({ challengeId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const { challengeParticipants } = await import("../../drizzle/schema");
-      const { and } = await import("drizzle-orm");
-      const [participation] = await db
-        .select()
-        .from(challengeParticipants)
-        .where(and(
-          eq(challengeParticipants.challengeId, input.challengeId),
-          eq(challengeParticipants.userId, ctx.user.id),
-        ))
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [existing] = await db.select().from(challengeParticipants)
+        .where(eq(challengeParticipants.challengeId, input.challengeId))
         .limit(1);
-      if (!participation) throw new TRPCError({ code: "NOT_FOUND", message: "Not joined" });
-      if (participation.completedAt) return { alreadyCompleted: true };
-      await db.update(challengeParticipants)
-        .set({ completedAt: new Date() })
-        .where(and(
-          eq(challengeParticipants.challengeId, input.challengeId),
-          eq(challengeParticipants.userId, ctx.user.id),
-        ));
-      return { alreadyCompleted: false };
+      if (existing?.completedAt) return { success: true, alreadyCompleted: true };
+      if (existing) {
+        await db.update(challengeParticipants)
+          .set({ completedAt: new Date(), progress: 100 })
+          .where(eq(challengeParticipants.id, existing.id));
+      } else {
+        await db.insert(challengeParticipants).values({
+          challengeId: input.challengeId,
+          userId: ctx.user.id,
+          progress: 100,
+          completedAt: new Date(),
+        });
+      }
+      await addXp({ userId: ctx.user.id, event: "joinChallenge", points: 50, refId: input.challengeId });
+      return { success: true, alreadyCompleted: false };
     }),
 
-  /** Get suggested users to mention (recent active users, excluding self) */
-  getSuggestedMentions: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
-    const rows = await db
-      .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
-      .from(users)
-      .orderBy(desc(users.lastSignedIn))
-      .limit(6);
-    return rows.filter(r => r.name && r.id !== ctx.user.id);
-  }),
-  /** Admin: create a new challenge */
-  createChallenge: adminProcedure
-    .input(z.object({
-      title: z.string().min(1),
-      titleAr: z.string().min(1),
-      description: z.string().default(""),
-      descriptionAr: z.string().default(""),
-      xpReward: z.number().int().min(1).default(100),
-      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      type: z.enum(["streak", "sessions", "cardio", "weight", "custom"]).default("custom"),
-      targetValue: z.number().int().min(1).default(1),
-    }))
-    .mutation(async ({ input }) => {
+  /** Get mention suggestions for @username autocomplete */
+  getMentionSuggestions: protectedProcedure
+    .input(z.object({ query: z.string().max(50) }))
+    .query(async ({ input }) => {
+      if (!input.query.trim()) return [];
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      if (!db) return [];
+      const rows = await db.select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+        .from(users)
+        .where(like(users.name, `%${input.query}%`))
+        .limit(8);
+      return rows.map(u => ({ id: u.id, name: u.name ?? "User", avatarUrl: u.avatarUrl }));
+    }),
+
+  /** Create a new challenge (admin only) */
+  createChallenge: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1).max(200),
+      titleAr: z.string().min(1).max(200),
+      description: z.string().max(1000).default(""),
+      descriptionAr: z.string().max(1000).default(""),
+      xpReward: z.number().min(0).max(1000).default(100),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      type: z.enum(["streak", "sessions", "cardio", "weight", "custom"]).default("custom"),
+      targetValue: z.number().min(1).default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const today = new Date().toISOString().slice(0, 10);
-      await db.insert(communityChallenges).values({
+      const [challenge] = await db.insert(communityChallenges).values({
         title: input.title,
         titleAr: input.titleAr,
         description: input.description,
         descriptionAr: input.descriptionAr,
         xpReward: input.xpReward,
-        startDate: today,
-        endDate: input.endDate,
+        startDate: input.startDate ?? today,
+        endDate: input.endDate ?? today,
         type: input.type,
         targetValue: input.targetValue,
         isActive: true,
         participantsCount: 0,
-      });
-      return { success: true };
+      }).$returningId();
+      return { success: true, id: challenge.id };
     }),
 });
-
-// ── Helper: extract @mentions from text and send notifications ────────────────
-export async function processMentions({
-  content, actorId, postId, commentId,
-}: { content: string; actorId: number; postId: number; commentId?: number }) {
-  const db = await getDb();
-  if (!db) return;
-  // Extract all @name tokens (supports Arabic Unicode names)
-  const mentionRegex = /@([\w\u0600-\u06FF]+)/g;
-  const tokens: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = mentionRegex.exec(content)) !== null) {
-    tokens.push(m[1]);
-  }
-  if (tokens.length === 0) return;
-  // Look up actor name once
-  const actorRows = await db.select({ name: users.name }).from(users).where(eq(users.id, actorId)).limit(1);
-  const actorName = actorRows[0]?.name ?? "Someone";
-  for (const token of tokens) {
-    // Exact match first, then prefix
-    const matched = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(like(users.name, token))
-      .limit(1);
-    const mentionedUser = matched[0];
-    if (!mentionedUser || mentionedUser.id === actorId) continue;
-    // Save mention record (ignore duplicate)
-    try {
-      await db.insert(postMentions).values({
-        mentionedId: mentionedUser.id,
-        actorId,
-        postId,
-        commentId: commentId ?? null,
-      });
-    } catch { /* ignore duplicate */ }
-    // Send in-app notification
-    try {
-      await createSocialNotification({
-        userId: mentionedUser.id,
-        actorId,
-        type: "mention",
-        postId,
-        message: `🔔 ${actorName} ذكرك في ${commentId ? "تعليق" : "منشور"}`,
-        messageEn: `🔔 ${actorName} mentioned you in a ${commentId ? "comment" : "post"}`,
-      });
-      // Real-time socket
-      const io = getIO();
-      io?.to(`user:${mentionedUser.id}`).emit("notification", {
-        type: "mention",
-        message: `🔔 ${actorName} mentioned you`,
-        postId,
-      });
-      // Web push
-      const sub = await getPushSubscriptionByUser(mentionedUser.id);
-      const settings = await getNotificationSettings(mentionedUser.id);
-      if (sub) {
-        const lang = settings?.language ?? "ar";
-        await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
-          title: "Prime Fit",
-          body: lang === "ar"
-            ? `🔔 ${actorName} ذكرك في ${commentId ? "تعليق" : "منشور"}`
-            : `🔔 ${actorName} mentioned you in a ${commentId ? "comment" : "post"}`,
-          icon: "/icons/icon-192.png",
-          url: "/community",
-        });
-      }
-    } catch { /* non-fatal */ }
-  }
-}

@@ -515,8 +515,6 @@ export default function NotificationSettings() {
                   : "#D0DFF0",
                 cursor: "pointer", position: "relative",
                 transition: "background 0.3s", flexShrink: 0,
-                marginRight: isRTL ? 0 : 0,
-                marginLeft: isRTL ? 0 : 0,
               }}
             >
               <div style={{

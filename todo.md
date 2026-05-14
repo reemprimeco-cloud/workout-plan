@@ -294,3 +294,14 @@
 ## Nutrition UX Fix
 - [x] Merge Nutrition pages: unified page with Dashboard/Meals/Scanner/Insights tabs; Scanner "Add to Diary" saves meal to correct meal type in Meals tab using v2 backend (saveMeal + getMealHistory)
 - [x] Fix all Arabic dates to display Gregorian calendar (DD/MM/YYYY) instead of Hijri — LicenseGate, ProfilePanel, SessionHistory, AdminPanel, Nutrition, Home
+
+## Feature Batch 16 — Nutrition Fixes & Profile Patches
+- [x] Goals modal: fix typing issue (string-based inputs instead of type=number)
+- [x] Goals modal: fix saving issue (try/catch + proper error handling)
+- [x] Dashboard: fix macro sync — getTodayLog refetches with staleTime=0 + refetchOnWindowFocus
+- [x] Dashboard: add ExceedWarning banner — shows when any macro/calorie exceeds daily goal, with AI advice and Adjust Goals button
+- [x] Apply primefit-fixes.zip: env.ts, myfatoorah.ts, myfatoorahWebhook.ts, wooCommerceWebhook.ts, wooPoller.ts, community.ts, NotificationSettings.tsx
+- [x] Apply primefit-profile-fix.zip + primefit-profile-fixrec.zip: new ProfilePanel.tsx
+- [x] Community router: add missing procedures (deletePost, editPost, deleteComment, editComment, completeChallenge, getMentionSuggestions, createChallenge)
+- [x] Fix createChallenge procedure to match schema (description/descriptionAr required, correct type enum)
+- [x] Remove orange expiry banner and plan label badge from LicenseGate

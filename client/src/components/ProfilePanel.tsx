@@ -1,15 +1,11 @@
 // ProfilePanel - Smart editable profile with BMI, personalized plan, language switcher
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGymTracker } from '@/hooks/useGymTracker';
-import type { UserProfile } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { trpc } from '@/lib/trpc';
-import { useLocation } from 'wouter';
-import { useAuth } from '@/_core/hooks/useAuth';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -107,7 +103,7 @@ function WeightLogSection() {
             return (
               <div key={entry.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                 <span className="text-sm text-gray-500">
-                  {new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  {new Date(entry.date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US', { month: 'short', day: 'numeric' })}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-800">{entry.weight} kg</span>
@@ -155,225 +151,10 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
-
-// ── My Subscription Card ──────────────────────────────────────────────────
-function MySubscriptionCard() {
-  const { lang } = useLanguage();
-  const [, navigate] = useLocation();
-  const subQuery = trpc.subscription.getStatus.useQuery(undefined, { retry: false });
-  const activateMutation = trpc.subscription.activateFreeTrial.useMutation({
-    onSuccess: () => subQuery.refetch(),
-  });
-  const [keyInput, setKeyInput] = useState('');
-  const [showInput, setShowInput] = useState(false);
-  const [errMsg, setErrMsg] = useState('');
-   const [copied, setCopied] = useState(false);
-  const sub = subQuery.data;
-  // Read license key from localStorage as fallback
-  const localKey = (() => { try { const s = localStorage.getItem('primefit_license'); return s ? JSON.parse(s).key : null; } catch { return null; } })();
-  const displayKey = sub?.licenseKey ?? localKey ?? null;
-  const isTrialing = sub?.status === 'trialing';
-  const isActive = sub?.status === 'active' && sub?.plan !== 'free';
-  const isExpired = sub?.status === 'expired';
-
-  const planLabel: Record<string, Record<'ar'|'en', string>> = {
-    free: { ar: 'مجاني', en: 'Free' },
-    prime_plus: { ar: 'برايم بلس', en: 'Prime Plus' },
-    prime_pro: { ar: 'برايم برو', en: 'Prime Pro' },
-  };
-  const statusLabel: Record<string, Record<'ar'|'en', string>> = {
-    active: { ar: '✅ نشط', en: '✅ Active' },
-    trialing: { ar: '🔵 تجريبي', en: '🔵 Free Trial' },
-    expired: { ar: '⏰ منتهي', en: '⏰ Expired' },
-    cancelled: { ar: '❌ ملغي', en: '❌ Cancelled' },
-    pending: { ar: '⏳ معلق', en: '⏳ Pending' },
-  };
-  const statusColor: Record<string, string> = {
-    active: '#16A34A', trialing: '#2563EB', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706',
-  };
-
-  const handleActivate = () => {
-    setErrMsg('');
-    if (!keyInput.trim()) { setErrMsg(lang === 'ar' ? 'يرجى إدخال مفتاح الترخيص' : 'Please enter a license key'); return; }
-    activateMutation.mutate(
-      { licenseKey: keyInput.trim() },
-      {
-        onError: (err: any) => setErrMsg(err.message),
-        onSuccess: () => { setShowInput(false); setKeyInput(''); },
-      }
-    );
-  };
-
-  return (
-    <div className="bg-white rounded-2xl shadow-md p-5">
-      <h3 className="font-bold text-gray-800 mb-3">💳 {lang === 'ar' ? 'اشتراكي' : 'My Subscription'}</h3>
-      {subQuery.isLoading ? (
-        <p className="text-sm text-gray-400">⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
-      ) : (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">{lang === 'ar' ? 'الخطة' : 'Plan'}</span>
-            <span className="font-bold text-gray-800">
-              {planLabel[sub?.plan ?? 'free']?.[lang] ?? (sub?.plan ?? 'Free')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">{lang === 'ar' ? 'الحالة' : 'Status'}</span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold"
-              style={{ background: `${statusColor[sub?.status ?? 'active']}18`, color: statusColor[sub?.status ?? 'active'] }}>
-              {statusLabel[sub?.status ?? 'active']?.[lang] ?? sub?.status ?? 'Active'}
-            </span>
-          </div>
-          {sub?.expiresAt && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</span>
-              <span className="text-sm font-semibold text-gray-700">
-                {new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-              </span>
-            </div>
-          )}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</span>
-            {displayKey ? (
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono text-xs text-gray-700 tracking-wide">{displayKey}</span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(displayKey);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  title={lang === 'ar' ? 'نسخ' : 'Copy'}
-                  className="text-gray-400 hover:text-gray-700 transition-colors"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', fontSize: 13 }}
-                >
-                  {copied ? '✅' : '📋'}
-                </button>
-              </div>
-            ) : (
-              <span className="text-xs text-gray-400 italic">{lang === 'ar' ? 'لا يوجد مفتاح' : 'No key linked'}</span>
-            )}
-          </div>
-          {/* Activate free trial section */}
-          {!isActive && !isTrialing && (
-            <div className="pt-2 border-t border-gray-100">
-              {!showInput ? (
-                <button
-                  onClick={() => setShowInput(true)}
-                  className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
-                  style={{ background: '#1B2E5E', color: 'white' }}
-                >
-                  🔑 {lang === 'ar' ? 'تفعيل بمفتاح ترخيص مجاني' : 'Activate with Free License Key'}
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={keyInput}
-                    onChange={e => setKeyInput(e.target.value.toUpperCase())}
-                    placeholder="PRIME-XXXX-XXXX"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:border-[#1B2E5E] outline-none"
-                    style={{ direction: 'ltr' }}
-                  />
-                  {errMsg && <p className="text-xs text-red-500">{errMsg}</p>}
-                  <div className="flex gap-2">
-                    <button onClick={() => { setShowInput(false); setKeyInput(''); setErrMsg(''); }}
-                      className="flex-1 py-2 rounded-xl border-2 border-gray-200 text-gray-600 text-sm font-semibold">
-                      {lang === 'ar' ? 'إلغاء' : 'Cancel'}
-                    </button>
-                    <button onClick={handleActivate} disabled={activateMutation.isPending}
-                      className="flex-1 py-2 rounded-xl text-sm font-bold text-white"
-                      style={{ background: activateMutation.isPending ? '#94A3B8' : '#1B2E5E' }}>
-                      {activateMutation.isPending ? '⏳' : (lang === 'ar' ? '✅ تفعيل' : '✅ Activate')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          {isExpired && (
-            <p className="text-xs text-orange-500 pt-1">
-              {lang === 'ar' ? '⚠️ انتهت صلاحية اشتراكك. يمكنك إعادة استخدام مفتاح الترخيص بعد الشراء.' : '⚠️ Your subscription has expired. You can reuse your license key after purchasing a plan.'}
-            </p>
-          )}
-          {/* Renew / Upgrade CTA */}
-          {(isExpired || (!isActive && !isTrialing)) && (
-            <button
-              onClick={() => navigate('/pricing')}
-              className="w-full py-2.5 rounded-xl text-sm font-bold mt-2 transition-all"
-              style={{ background: 'linear-gradient(135deg, #E05A00, #FF8C42)', color: 'white' }}
-            >
-              💎 {lang === 'ar' ? 'عرض خطط الاشتراك' : 'View Subscription Plans'}
-            </button>
-          )}
-          {isActive && (
-            <div className="pt-2 border-t border-gray-100">
-              <button
-                onClick={() => navigate('/pricing')}
-                className="w-full py-2 rounded-xl text-xs font-semibold transition-all"
-                style={{ background: '#F0F4F8', color: '#1B2E5E' }}
-              >
-                🔄 {lang === 'ar' ? 'تجديد أو ترقية الاشتراك' : 'Renew or Upgrade Plan'}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-// ── Profile Completion Bar ────────────────────────────────────────────────────
-function ProfileCompletionBar({ profile, hasAvatar, lang }: { profile: UserProfile; hasAvatar: boolean; lang: 'ar' | 'en' }) {
-  const fields = [
-    { key: 'name', done: !!profile.name, label: lang === 'ar' ? 'الاسم' : 'Name' },
-    { key: 'weight', done: profile.currentWeight > 0, label: lang === 'ar' ? 'الوزن' : 'Weight' },
-    { key: 'height', done: profile.height > 0, label: lang === 'ar' ? 'الطول' : 'Height' },
-    { key: 'age', done: profile.age > 0, label: lang === 'ar' ? 'العمر' : 'Age' },
-    { key: 'goal', done: profile.targetWeight > 0, label: lang === 'ar' ? 'الهدف' : 'Goal' },
-    { key: 'avatar', done: hasAvatar, label: lang === 'ar' ? 'الصورة' : 'Photo' },
-  ];
-  const completed = fields.filter(f => f.done).length;
-  const percent = Math.round((completed / fields.length) * 100);
-  if (percent === 100) return null; // Hide when complete
-  return (
-    <div className="bg-white rounded-2xl shadow-md p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-bold text-gray-700">
-          {lang === 'ar' ? '📋 اكتمال الملف الشخصي' : '📋 Profile Completion'}
-        </span>
-        <span className="text-sm font-black" style={{ color: percent >= 80 ? '#16A34A' : percent >= 50 ? '#D97706' : '#DC2626' }}>
-          {percent}%
-        </span>
-      </div>
-      <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
-        <div
-          className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
-          style={{ width: `${percent}%`, background: percent >= 80 ? '#16A34A' : percent >= 50 ? '#D97706' : '#E05A00' }}
-        />
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {fields.map(f => (
-          <span key={f.key} className="text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{
-              background: f.done ? '#16A34A18' : '#F3F4F6',
-              color: f.done ? '#16A34A' : '#9CA3AF',
-              border: `1px solid ${f.done ? '#16A34A40' : '#E5E7EB'}`,
-            }}>
-            {f.done ? '✓' : '○'} {f.label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
   const { lang, setLang, t, isRTL } = useLanguage();
-  const { isAuthenticated } = useAuth();
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ ...profile });
@@ -383,64 +164,6 @@ export function ProfilePanel() {
   // Inline target weight editing
   const [editingTarget, setEditingTarget] = useState(false);
   const [inlineTarget, setInlineTarget] = useState(profile.targetWeight.toString());
-  // Avatar upload
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarUploading, setAvatarUploading] = useState(false);
-  const profileQuery = trpc.userProfile.getProfile.useQuery(undefined, { enabled: isAuthenticated, retry: false });
-  const uploadAvatarMutation = trpc.userProfile.uploadAvatar.useMutation({
-    onSuccess: (data) => {
-      setAvatarPreview(data.url);
-      profileQuery.refetch();
-    },
-  });
-  const updateNameMutation = trpc.userProfile.updateDisplayName.useMutation();
-  // Sync avatar from DB on load
-  useEffect(() => {
-    if (profileQuery.data?.avatarUrl) {
-      setAvatarPreview(profileQuery.data.avatarUrl);
-    }
-  }, [profileQuery.data?.avatarUrl]);
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert(lang === 'ar' ? 'حجم الصورة كبير جداً (الحد 5 ميجابايت)' : 'Image too large (max 5 MB)');
-      return;
-    }
-    setAvatarUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target?.result as string;
-      // Canvas-based square crop + resize to 256×256
-      const cropAndResize = (): Promise<string> => new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          const size = Math.min(img.width, img.height);
-          const sx = (img.width - size) / 2;
-          const sy = (img.height - size) / 2;
-          const canvas = document.createElement('canvas');
-          canvas.width = 256;
-          canvas.height = 256;
-          const ctx = canvas.getContext('2d')!;
-          ctx.drawImage(img, sx, sy, size, size, 0, 0, 256, 256);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
-        };
-        img.src = dataUrl;
-      });
-      const croppedBase64 = await cropAndResize();
-      setAvatarPreview(croppedBase64); // optimistic preview
-      try {
-        await uploadAvatarMutation.mutateAsync({ base64: croppedBase64, mimeType: 'image/jpeg' });
-      } catch (err: any) {
-        alert(err.message ?? 'Upload failed');
-        setAvatarPreview(profileQuery.data?.avatarUrl ?? null);
-      } finally {
-        setAvatarUploading(false);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
 
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
   const bmiCat = getBMICategory(plan.bmi, lang);
@@ -460,10 +183,6 @@ export function ProfilePanel() {
       startWeight: Number(form.startWeight) || profile.startWeight,
       gender: form.gender,
     });
-    // Sync name to DB if authenticated
-    if (isAuthenticated && form.name) {
-      updateNameMutation.mutate({ name: form.name });
-    }
     setEditing(false);
   };
 
@@ -473,146 +192,137 @@ export function ProfilePanel() {
       <div className="flex gap-2 pt-4 justify-end">
         {(['ar', 'en'] as const).map(l => (
           <button key={l} onClick={() => setLang(l)}
-            className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${lang === l ? 'bg-[#E05A00] text-white border-[#E05A00]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#E05A00]'}`}>
-            {l === 'ar' ? '🇸🇦 العربية' : '🇬🇧 English'}
+            className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${lang === l ? 'bg-[#1B2E5E] text-white border-[#1B2E5E]' : 'bg-white text-gray-500 border-gray-200'}`}>
+            {l === 'ar' ? 'العربية' : 'English'}
           </button>
         ))}
       </div>
 
-      {/* Profile Completion Bar */}
-      <ProfileCompletionBar profile={profile} hasAvatar={!!avatarPreview} lang={lang as 'ar' | 'en'} />
-      {/* Profile Card */}
-      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-        <div className="bg-gradient-to-r from-[#E05A00] to-[#FF8C42] p-5 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Avatar circle — tap to upload */}
-              <div className="relative flex-shrink-0">
-                <div
-                  onClick={() => isAuthenticated && avatarInputRef.current?.click()}
-                  className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/60 shadow-md flex items-center justify-center cursor-pointer"
-                  style={{ background: 'rgba(255,255,255,0.2)' }}
-                  title={lang === 'ar' ? 'انقر لتغيير الصورة' : 'Tap to change photo'}
-                >
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl font-black text-white">
-                      {(profile.name || '?').charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                  {avatarUploading && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
-                      <span className="text-white text-xs">⏳</span>
-                    </div>
-                  )}
-                </div>
-                {isAuthenticated && (
-                  <div
-                    onClick={() => avatarInputRef.current?.click()}
-                    className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow cursor-pointer"
-                    style={{ border: '1.5px solid #E05A00' }}
-                  >
-                    <span style={{ fontSize: 10 }}>📷</span>
-                  </div>
-                )}
-                <input
-                  ref={avatarInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-black">{profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</h2>
-                <p className="text-orange-100 text-sm mt-0.5">
-                  {lang === 'ar' ? `${profile.age} سنة • ${profile.height} سم` : `${profile.age} yrs • ${profile.height} cm`}
-                </p>
+      {/* ── Instagram-style profile header ── */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+        {/* Top row: avatar + stats */}
+        <div className="flex items-center gap-5 px-5 pt-6 pb-3">
+
+          {/* Avatar */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{
+              width: 82, height: 82, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 34, fontWeight: 900, color: 'white',
+              boxShadow: '0 0 0 3px white, 0 0 0 4.5px #1B2E5E22',
+              userSelect: 'none',
+            }}>
+              {profile.name ? profile.name.trim()[0].toUpperCase() : '?'}
+            </div>
+            <button
+              onClick={() => { setForm({ ...profile }); setEditing(true); }}
+              style={{
+                position: 'absolute', bottom: 0,
+                ...(isRTL ? { left: 0 } : { right: 0 }),
+                width: 26, height: 26, borderRadius: '50%',
+                background: '#1B2E5E', border: '2.5px solid white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', fontSize: 11, color: 'white',
+              }}
+              aria-label="Edit profile"
+            >+</button>
+          </div>
+
+          {/* Stats columns */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+
+            {/* Current Weight */}
+            <div onClick={() => { setInlineWeight(profile.currentWeight.toString()); setEditingWeight(true); }}
+              style={{ cursor: 'pointer', minWidth: 52 }}>
+              {editingWeight ? (
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  const w = parseFloat(inlineWeight);
+                  if (w >= 30 && w <= 250) updateProfile({ ...profile, currentWeight: w });
+                  setEditingWeight(false);
+                }}>
+                  <input type="number" step="0.1" min="30" max="250"
+                    value={inlineWeight} autoFocus
+                    onChange={e => setInlineWeight(e.target.value)}
+                    onBlur={() => { const w = parseFloat(inlineWeight); if (w >= 30 && w <= 250) updateProfile({ ...profile, currentWeight: w }); setEditingWeight(false); }}
+                    style={{ width: 52, textAlign: 'center', fontSize: 17, fontWeight: 900, color: '#1B2E5E', borderBottom: '2px solid #1B2E5E', outline: 'none', background: 'transparent' }}
+                  />
+                </form>
+              ) : (
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#111827' }}>{profile.currentWeight}</div>
+              )}
+              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>{lang === 'ar' ? 'الوزن' : 'Weight'}</div>
+              <div style={{ fontSize: 10, color: '#D1D5DB' }}>kg</div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ width: 1, background: '#F3F4F6', alignSelf: 'stretch', margin: '4px 0' }} />
+
+            {/* Target Weight */}
+            <div onClick={() => { setInlineTarget(profile.targetWeight.toString()); setEditingTarget(true); }}
+              style={{ cursor: 'pointer', minWidth: 52 }}>
+              {editingTarget ? (
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  const w = parseFloat(inlineTarget);
+                  if (w >= 30 && w <= 250) updateProfile({ ...profile, targetWeight: w });
+                  setEditingTarget(false);
+                }}>
+                  <input type="number" step="0.1" min="30" max="250"
+                    value={inlineTarget} autoFocus
+                    onChange={e => setInlineTarget(e.target.value)}
+                    onBlur={() => { const w = parseFloat(inlineTarget); if (w >= 30 && w <= 250) updateProfile({ ...profile, targetWeight: w }); setEditingTarget(false); }}
+                    style={{ width: 52, textAlign: 'center', fontSize: 17, fontWeight: 900, color: '#1B2E5E', borderBottom: '2px solid #1B2E5E', outline: 'none', background: 'transparent' }}
+                  />
+                </form>
+              ) : (
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#111827' }}>{profile.targetWeight}</div>
+              )}
+              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>{lang === 'ar' ? 'الهدف' : 'Target'}</div>
+              <div style={{ fontSize: 10, color: '#D1D5DB' }}>kg</div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ width: 1, background: '#F3F4F6', alignSelf: 'stretch', margin: '4px 0' }} />
+
+            {/* BMI */}
+            <div style={{ minWidth: 52 }}>
+              <div style={{ fontSize: 17, fontWeight: 900, color: bmiCat.color }}>{plan.bmi}</div>
+              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>BMI</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'white', background: bmiCat.color, borderRadius: 20, padding: '1px 7px', marginTop: 2, display: 'inline-block' }}>
+                {bmiCat.label}
               </div>
             </div>
-            <button onClick={() => { setForm({ ...profile }); setEditing(true); }}
-              className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition-all">
-              ✏️ {t('edit')}
-            </button>
           </div>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-gray-100">
-          {/* Current Weight - inline editable */}
-          <div className="p-4 text-center cursor-pointer group" onClick={() => { setInlineWeight(profile.currentWeight.toString()); setEditingWeight(true); }}>
-            {editingWeight ? (
-              <form onSubmit={e => {
-                e.preventDefault();
-                const w = parseFloat(inlineWeight);
-                if (w >= 30 && w <= 250) {
-                  updateProfile({ ...profile, currentWeight: w });
-                }
-                setEditingWeight(false);
-              }}>
-                <input
-                  type="number" step="0.1" min="30" max="250"
-                  value={inlineWeight}
-                  onChange={e => setInlineWeight(e.target.value)}
-                  onBlur={() => {
-                    const w = parseFloat(inlineWeight);
-                    if (w >= 30 && w <= 250) updateProfile({ ...profile, currentWeight: w });
-                    setEditingWeight(false);
-                  }}
-                  autoFocus
-                  className="w-full text-center text-lg font-black text-[#E05A00] border-b-2 border-[#E05A00] outline-none bg-transparent"
-                />
-                <div className="text-xs text-[#E05A00] mt-0.5">{lang === 'ar' ? '✓ حفظ' : '✓ Save'}</div>
-              </form>
-            ) : (
-              <>
-                <div className="text-xl font-black text-gray-800 group-hover:text-[#E05A00] transition-colors">
-                  {profile.currentWeight} kg
-                  <span className="text-xs text-gray-400 block font-normal group-hover:text-[#E05A00]">✏️</span>
-                </div>
-                <div className="text-xs text-gray-500 mt-0.5">{lang === 'ar' ? 'الوزن الحالي' : 'Current'}</div>
-              </>
-            )}
-          </div>
-          {/* Target Weight - inline editable */}
-          <div className="p-4 text-center cursor-pointer group" onClick={() => { setInlineTarget(profile.targetWeight.toString()); setEditingTarget(true); }}>
-            {editingTarget ? (
-              <form onSubmit={e => {
-                e.preventDefault();
-                const w = parseFloat(inlineTarget);
-                if (w >= 30 && w <= 250) {
-                  updateProfile({ ...profile, targetWeight: w });
-                }
-                setEditingTarget(false);
-              }}>
-                <input
-                  type="number" step="0.1" min="30" max="250"
-                  value={inlineTarget}
-                  onChange={e => setInlineTarget(e.target.value)}
-                  onBlur={() => {
-                    const w = parseFloat(inlineTarget);
-                    if (w >= 30 && w <= 250) updateProfile({ ...profile, targetWeight: w });
-                    setEditingTarget(false);
-                  }}
-                  autoFocus
-                  className="w-full text-center text-lg font-black text-[#E05A00] border-b-2 border-[#E05A00] outline-none bg-transparent"
-                />
-                <div className="text-xs text-[#E05A00] mt-0.5">{lang === 'ar' ? '✓ حفظ' : '✓ Save'}</div>
-              </form>
-            ) : (
-              <>
-                <div className="text-xl font-black text-gray-800 group-hover:text-[#E05A00] transition-colors">
-                  {profile.targetWeight} kg
-                  <span className="text-xs text-gray-400 block font-normal group-hover:text-[#E05A00]">✏️</span>
-                </div>
-                <div className="text-xs text-gray-500 mt-0.5">{lang === 'ar' ? 'الهدف' : 'Target'}</div>
-              </>
-            )}
-          </div>
-          {/* BMI */}
-          <div className="p-4 text-center">
-            <div className="text-xl font-black text-gray-800">{plan.bmi}</div>
-            <div className="text-xs text-gray-500 mt-0.5">BMI</div>
-          </div>
+
+        {/* Name + meta */}
+        <div style={{ padding: '0 20px 4px' }}>
+          <p style={{ fontSize: 15, fontWeight: 900, color: '#111827', margin: 0 }}>
+            {profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}
+          </p>
+          <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0', lineHeight: 1.5 }}>
+            {lang === 'ar'
+              ? `${profile.age} سنة · ${profile.height} سم · ${profile.gender === 'female' ? 'أنثى' : 'ذكر'}`
+              : `${profile.age} yrs · ${profile.height} cm · ${profile.gender === 'female' ? 'Female' : 'Male'}`}
+          </p>
+        </div>
+
+        {/* Edit Profile button */}
+        <div style={{ padding: '12px 20px 16px' }}>
+          <button
+            onClick={() => { setForm({ ...profile }); setEditing(true); }}
+            style={{
+              width: '100%', padding: '7px 0',
+              background: 'white', border: '1.5px solid #E5E7EB',
+              borderRadius: 10, fontSize: 13, fontWeight: 700,
+              color: '#374151', cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            {lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+          </button>
         </div>
       </div>
 
@@ -635,46 +345,105 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      {/* Personalized Plan */}
-      <div className="rounded-2xl shadow-md p-5" style={{ background: 'linear-gradient(135deg, #F0FAF5, #E4F5EC)', border: '2px solid #B8DFC9' }}>
-        <h3 className="font-bold mb-1 text-sm" style={{ color: '#2D7A50' }}>{t('recommendedPlan')}</h3>
-        <h4 className="text-lg font-black mb-2" style={{ color: '#1A5C3A' }}>{lang === 'ar' ? plan.planName : plan.planNameEn}</h4>
-        <p className="text-sm mb-4" style={{ color: '#3D7A5A' }}>{lang === 'ar' ? plan.planDesc : plan.planDescEn}</p>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { icon: '📅', label: t('planDuration'), value: plan.weeks > 0 ? `${plan.weeks} ${t('weeks')}` : (lang === 'ar' ? 'في الوزن المثالي' : 'At ideal weight') },
-            { icon: '⚖️', label: t('weeklyLoss'), value: `${plan.weeklyLoss} ${t('kg')} / ${lang === 'ar' ? 'أسبوع' : 'week'}` },
-            { icon: '🔥', label: t('dailyCalories'), value: `${plan.dailyCals} ${t('calories')}` },
-            { icon: '🏋️', label: lang === 'ar' ? 'جلسات أسبوعياً' : 'Sessions/week', value: `${plan.sessionsPerWeek} ${lang === 'ar' ? 'جلسات' : 'sessions'}` },
-          ].map((item, i) => (
-            <div key={i} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid #C5E5D3' }}>
-              <div className="text-lg mb-1">{item.icon}</div>
-              <div className="text-xs" style={{ color: '#4A8A6A' }}>{item.label}</div>
-              <div className="font-bold text-sm" style={{ color: '#1A5C3A' }}>{item.value}</div>
-            </div>
-          ))}
+      {/* ── Personalized Plan — modern minimalist ── */}
+      <div style={{
+        background: 'white',
+        borderRadius: 18,
+        overflow: 'hidden',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+      }}>
+        {/* Header strip */}
+        <div style={{
+          background: '#1B2E5E',
+          padding: '14px 18px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div>
+            <p style={{ color: '#7BB8D4', fontSize: 10, fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>
+              {t('recommendedPlan')}
+            </p>
+            <p style={{ color: 'white', fontSize: 15, fontWeight: 900, margin: '3px 0 0' }}>
+              {lang === 'ar' ? plan.planName : plan.planNameEn}
+            </p>
+          </div>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, flexShrink: 0,
+          }}>🎯</div>
         </div>
+
+        {/* Description */}
+        <div style={{ padding: '12px 18px 4px', borderBottom: '1px solid #F3F4F6' }}>
+          <p style={{ color: '#6B7280', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+            {lang === 'ar' ? plan.planDesc : plan.planDescEn}
+          </p>
+        </div>
+
+        {/* Stats rows */}
+        {[
+          {
+            svgPath: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+            label: t('planDuration'),
+            value: plan.weeks > 0 ? `${plan.weeks}` : '—',
+            unit: plan.weeks > 0 ? t('weeks') : (lang === 'ar' ? 'في الوزن المثالي' : 'At ideal weight'),
+            accent: '#1B2E5E',
+          },
+          {
+            svgPath: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3',
+            label: t('weeklyLoss'),
+            value: `${plan.weeklyLoss}`,
+            unit: `${t('kg')} / ${lang === 'ar' ? 'أسبوع' : 'week'}`,
+            accent: '#7BB8D4',
+          },
+          {
+            svgPath: 'M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z',
+            label: t('dailyCalories'),
+            value: `${plan.dailyCals}`,
+            unit: t('calories'),
+            accent: '#E05A00',
+          },
+          {
+            svgPath: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064',
+            label: lang === 'ar' ? 'جلسات أسبوعياً' : 'Sessions / week',
+            value: `${plan.sessionsPerWeek}`,
+            unit: lang === 'ar' ? 'جلسات' : 'sessions',
+            accent: '#10B981',
+          },
+        ].map((row, i, arr) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center',
+            padding: '13px 18px',
+            borderBottom: i < arr.length - 1 ? '1px solid #F9FAFB' : 'none',
+            gap: 14,
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+              background: `${row.accent}12`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke={row.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d={row.svgPath} />
+              </svg>
+            </div>
+            {/* Label */}
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#9CA3AF', fontSize: 11, margin: 0, fontWeight: 600 }}>{row.label}</p>
+            </div>
+            {/* Value */}
+            <div style={{ textAlign: 'end' }}>
+              <span style={{ color: '#111827', fontSize: 16, fontWeight: 900 }}>{row.value}</span>
+              <span style={{ color: '#9CA3AF', fontSize: 11, marginRight: 4, marginLeft: 4 }}>{row.unit}</span>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* My Subscription Card */}
-      <MySubscriptionCard />
       {/* Notification Settings */}
       <NotificationSettings />
-      {/* WhatsApp Contact Button */}
-      <div className="pb-2">
-        <a
-          href="https://wa.me/96565068000"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all"
-          style={{ background: '#25D366', color: 'white', textDecoration: 'none' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-          {lang === 'ar' ? '📞 تواصل عبر واتسآب — 65068000' : '📞 Contact Us via WhatsApp — 65068000'}
-        </a>
-      </div>
       {/* Change License Button */}
       <div className="pb-2">
         <button
@@ -824,17 +593,63 @@ export function ProfilePanel() {
         </div>
       , document.body)}
 
-      {/* Reset Confirm Modal - rendered via Portal */}
+      {/* Reset Confirm Modal - inline styles only, no Tailwind dependency */}
       {showReset && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-black text-red-600 mb-2">⚠️ {t('resetData')}</h3>
-            <p className="text-gray-600 text-sm mb-6">{t('resetWarning')}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowReset(false)}
-                className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold">{t('cancel')}</button>
-              <button onClick={() => { resetAll(); setShowReset(false); }}
-                className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-sm">{t('resetConfirm')}</button>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.65)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px',
+          fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+        }}>
+          <div dir={isRTL ? 'rtl' : 'ltr'} style={{
+            background: 'white', borderRadius: 20,
+            width: '100%', maxWidth: 360,
+            padding: '28px 24px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 48, marginBottom: 8 }}>⚠️</div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: '#DC2626' }}>
+                {t('resetData')}
+              </h3>
+              <p style={{ margin: 0, color: '#6B7280', fontSize: 13, lineHeight: 1.6 }}>
+                {t('resetWarning')}
+              </p>
+            </div>
+            <div style={{
+              background: '#FEF2F2', border: '1px solid #FECACA',
+              borderRadius: 12, padding: '12px 14px', marginBottom: 20,
+            }}>
+              <p style={{ margin: 0, fontSize: 12, color: '#991B1B', lineHeight: 1.6 }}>
+                {lang === 'ar'
+                  ? '🗑️ سيتم حذف: جميع جلسات التمرين، سجل الوزن، بيانات الملف الشخصي. لا يمكن التراجع عن هذا الإجراء.'
+                  : '🗑️ This will delete: all workout sessions, weight log, and profile data. This cannot be undone.'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowReset(false)}
+                style={{
+                  flex: 1, padding: '12px 0', borderRadius: 12,
+                  border: '2px solid #E5E7EB', background: 'white',
+                  color: '#6B7280', fontSize: 14, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {t('cancel')}
+              </button>
+              <button
+                onClick={() => { resetAll(); setShowReset(false); }}
+                style={{
+                  flex: 1, padding: '12px 0', borderRadius: 12,
+                  border: 'none', background: '#EF4444',
+                  color: 'white', fontSize: 14, fontWeight: 900,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {t('resetConfirm')}
+              </button>
             </div>
           </div>
         </div>
