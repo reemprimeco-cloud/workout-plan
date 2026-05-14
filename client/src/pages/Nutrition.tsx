@@ -1042,7 +1042,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
         items: editItems.map(item => ({
           name: item.name, nameAr: item.nameAr ?? "",
           estimatedGrams: item.estimatedGrams ?? 100,
-          portionDesc: item.portionDesc ?? "", portionDescAr: item.portionDescAr ?? "",
+          portionDesc: (item.portionDesc ?? "").slice(0, 64), portionDescAr: (item.portionDescAr ?? "").slice(0, 64),
           fdcId: item.fdcId, confidence: item.confidence ?? "medium",
           calories: item.calories ?? 0, protein: item.protein ?? 0,
           carbs: item.carbs ?? 0, fat: item.fat ?? 0,
@@ -1058,7 +1058,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
           proteinG: Math.round((item.protein ?? 0) * 10) / 10,
           carbsG:   Math.round((item.carbs   ?? 0) * 10) / 10,
           fatG:     Math.round((item.fat     ?? 0) * 10) / 10,
-          servingSize: item.portionDesc, imageUrl: analysis?.imageUrl, addedByAI: true,
+          servingSize: item.portionDesc ? item.portionDesc.slice(0, 64) : undefined, imageUrl: analysis?.imageUrl, addedByAI: true,
         });
       }
       await utils.nutrition.getTodayLog.invalidate();
