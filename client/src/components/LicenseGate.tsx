@@ -37,6 +37,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
   const [loading, setLoading]         = useState(true);
   const [autoVerifying, setAutoVerifying] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState<boolean>(false);
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(false);
   const verifyMutation = trpc.license.verify.useMutation();
 
   const doVerify = async (key: string): Promise<boolean> => {
@@ -235,7 +236,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
         )}
 
         {/* Expiry banner — shown after popup dismissed */}
-        {showBanner && popupDismissed && (
+        {showBanner && popupDismissed && !bannerDismissed && (
           <div dir="rtl" style={{
             position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
             background: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#F59E0B',
@@ -244,16 +245,35 @@ export function LicenseGate({ children }: LicenseGateProps) {
             fontFamily: 'Cairo, sans-serif', fontSize: 13, fontWeight: 700,
           }}>
             <span>⚠️ ينتهي اشتراكك خلال {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'}</span>
-            <a href={PRODUCT_URL} target="_blank" rel="noopener noreferrer" style={{
-              background: 'white',
-              color: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#D97706',
-              borderRadius: 8, padding: '5px 14px',
-              fontSize: 12, fontWeight: 900, textDecoration: 'none',
-            }}>🔄 جدد</a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => { window.location.href = '/pricing'; }}
+                style={{
+                  background: 'white',
+                  color: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#D97706',
+                  borderRadius: 8, padding: '5px 14px',
+                  fontSize: 12, fontWeight: 900, border: 'none',
+                  cursor: 'pointer', fontFamily: 'Cairo, sans-serif',
+                }}>🔄 جدد</button>
+              <button
+                onClick={() => setBannerDismissed(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.25)',
+                  border: '1.5px solid rgba(255,255,255,0.5)',
+                  color: 'white', borderRadius: 8,
+                  width: 30, height: 30,
+                  fontSize: 18, fontWeight: 900,
+                  cursor: 'pointer', lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, padding: 0,
+                }}
+                aria-label="إغلاق"
+              >×</button>
+            </div>
           </div>
         )}
 
-        <div style={{ paddingTop: showBanner && popupDismissed ? 44 : 0 }}>
+        <div style={{ paddingTop: showBanner && popupDismissed && !bannerDismissed ? 44 : 0 }}>
           {children}
         </div>
 

@@ -290,3 +290,6 @@
 - [x] Apply primefit-svg-icons.zip: SVG icons for Nutrition and Pricing tabs in bottom nav
 - [x] Add meal_logs and meal_log_items tables to DB schema (nutrition v2)
 - [x] Add analyzeFood, saveMeal, getToday, getMealHistory, deleteMeal, searchFood procedures to nutrition router
+
+## Nutrition UX Fix
+- [ ] Merge Nutrition pages: unified page with Dashboard/Meals/Scanner/Insights tabs; Scanner "Add to Diary" saves meal to correct meal type in Meals tab using v2 backend (saveMeal + getMealHistory)
