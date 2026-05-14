@@ -212,7 +212,7 @@ function TodaySummary({ lang }: { lang: string }) {
 // ── Meal history card ─────────────────────────────────────────────────────────
 function MealHistoryCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const time = new Date(meal.logged_at).toLocaleTimeString(lang === "ar" ? "ar-KW" : "en-US", { hour: "2-digit", minute: "2-digit" });
+  const time = new Date(meal.logged_at).toLocaleTimeString('en-GB', { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div style={{ background: CARD2, borderRadius: 14, marginBottom: 8, overflow: "hidden" }}>

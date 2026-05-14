@@ -732,7 +732,7 @@ export default function AdminPanel() {
                         <div>
                           <div style={{ fontWeight: 700, color: NAVY, fontSize: 13 }}>{b.subject}</div>
                           <div style={{ color: '#64748b', fontSize: 11, marginTop: 3 }}>
-                            {new Date(b.createdAt).toLocaleString(lang === 'ar' ? 'ar-KW' : 'en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'}
+                            {new Date(b.createdAt).toLocaleString('en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'}
                           </div>
                         </div>
                         <span style={{ background: '#E0F2FE', color: '#0369A1', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -840,15 +840,15 @@ export default function AdminPanel() {
                           <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
                             {(c as any).expiresAt ? (
                               <span style={{ color: new Date((c as any).expiresAt) < new Date() ? '#DC2626' : '#0369A1', fontSize: 11, fontWeight: 700 }}>
-                                {new Date((c as any).expiresAt) < new Date() ? t('expired', lang) : new Date((c as any).expiresAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB')}
+                                {new Date((c as any).expiresAt) < new Date() ? t('expired', lang) : new Date((c as any).expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                               </span>
                             ) : <span style={{ color: '#94A3B8', fontSize: 11 }}>{t('neverExpires', lang)}</span>}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
-                            {c.usedAt ? new Date(c.usedAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB') : '—'}
+                            {c.usedAt ? new Date(c.usedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
-                            {new Date(c.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB')}
+                            {new Date(c.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
                             <div style={{ display: 'flex', gap: 6 }}>
@@ -962,7 +962,7 @@ export default function AdminPanel() {
                       </div>
                       <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6, marginBottom: 8, whiteSpace: 'pre-wrap' }}>{b.body.slice(0, 120)}{b.body.length > 120 ? '...' : ''}</div>
                       <div style={{ color: '#94A3B8', fontSize: 11 }}>
-                        {new Date(b.createdAt).toLocaleString(lang === 'ar' ? 'ar-KW' : 'en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'} · {b.sentBy}
+                        {new Date(b.createdAt).toLocaleString('en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'} · {b.sentBy}
                       </div>
                     </div>
                   ))}
@@ -1024,7 +1024,7 @@ export default function AdminPanel() {
                             </span>
                           </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap' }}>
-                            {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB') : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
+                            {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
                           </td>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: sub.licenseKey ? '#1B2E5E' : '#CBD5E1' }}>
                             {sub.licenseKey ?? '—'}

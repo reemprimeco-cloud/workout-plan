@@ -193,8 +193,8 @@ export function LicenseGate({ children }: LicenseGateProps) {
               <p style={{ color: '#9CA3AF', fontSize: 12, margin: '0 0 4px', lineHeight: 1.6 }}>
                 تنتهي تجربتك في{' '}
                 <strong style={{ color: '#F9FAFB' }}>
-                  {expiresAt?.toLocaleDateString('ar-KW', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                  {expiresAt?.toLocaleDateString('en-GB', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
                   })}
                 </strong>
               </p>
@@ -285,7 +285,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             fontSize: 10, fontWeight: 700, color: '#A8D4E8',
             fontFamily: 'Cairo, sans-serif', direction: 'rtl', pointerEvents: 'none',
           }}>
-            {planLabel} {expiresAt ? `· ${expiresAt.toLocaleDateString('ar-SA')}` : '· ∞'}
+            {planLabel} {expiresAt ? `· ${expiresAt.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : '· ∞'}
           </div>
         )}
       </>

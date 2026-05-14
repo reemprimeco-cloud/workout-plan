@@ -107,7 +107,7 @@ function WeightLogSection() {
             return (
               <div key={entry.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                 <span className="text-sm text-gray-500">
-                  {new Date(entry.date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US', { month: 'short', day: 'numeric' })}
+                  {new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-800">{entry.weight} kg</span>
@@ -228,7 +228,7 @@ function MySubscriptionCard() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</span>
               <span className="text-sm font-semibold text-gray-700">
-                {new Date(sub.expiresAt).toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-GB')}
+                {new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
               </span>
             </div>
           )}

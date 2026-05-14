@@ -21,8 +21,7 @@ export function SessionHistory({ sessions, onDelete }: Props) {
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    const locale = isAr ? 'ar-SA' : 'en-US';
-    return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   };
 
   const getDuration = (s: GymSession) => {
