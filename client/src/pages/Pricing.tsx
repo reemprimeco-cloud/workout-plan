@@ -43,6 +43,7 @@ const T = {
   processing:     { en: "Processing...",                             ar: "جاري المعالجة..." },
   billingNote:    { en: "Prices in Kuwaiti Dinar (KWD). Secure payment via MyFatoorah.", ar: "الأسعار بالدينار الكويتي. دفع آمن عبر MyFatoorah." },
   startTrial:     { en: "Start Free Trial",                          ar: "ابدأ التجربة المجانية" },
+  getFreeKey:     { en: "Get My Free Key",                            ar: "احصل على مفتاحي المجاني" },
   trialDays:      { en: "7 days free",                               ar: "7 أيام مجاناً" },
   trialNote:      { en: "No credit card required",                   ar: "لا حاجة لبطاقة ائتمان" },
   yourKey:        { en: "Your License Key",                          ar: "مفتاح الترخيص الخاص بك" },
@@ -54,6 +55,9 @@ const T = {
   // Customer info modal
   orderDetails:   { en: "Complete Your Order",                       ar: "أكمل طلبك" },
   orderSubtitle:  { en: "Please fill in your details before proceeding to payment", ar: "يرجى إدخال بياناتك قبل الانتقال للدفع" },
+  trialDetails:   { en: "Start Your Free Trial",                      ar: "ابدأ تجربتك المجانية" },
+  trialSubtitle:  { en: "Enter your details to receive your 7-day access key",   ar: "أدخل بياناتك لاستلام مفتاح الوصول لمدة ٧ أيام" },
+
   fullName:       { en: "Full Name",                                 ar: "الاسم الكامل" },
   emailAddr:      { en: "Email Address",                             ar: "البريد الإلكتروني" },
   phoneNum:       { en: "Phone Number",                              ar: "رقم الهاتف" },
@@ -330,10 +334,10 @@ export default function Pricing() {
             {/* Header */}
             <div style={{ marginBottom: 24 }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 900, color: NAVY }}>
-                {t("orderDetails")}
+                {(selectedPlan as string) === "free" ? t("trialDetails") : t("orderDetails")}
               </h2>
               <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-                {t("orderSubtitle")}
+                {(selectedPlan as string) === "free" ? t("trialSubtitle") : t("orderSubtitle")}
               </p>
             </div>
 
@@ -350,10 +354,19 @@ export default function Pricing() {
                   Prime Fit {getPlanName(selectedPlan)}
                 </span>
                 <span style={{ fontWeight: 900, color: NAVY, fontSize: 16 }}>
-                  {(selectedPlan as string) === "free" ? lang === "ar" ? "مجاناً" : "Free" : `${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
-                  <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
-                    {period === "monthly" ? t("perMonth") : t("perYear")}
-                  </span>
+                  {(selectedPlan as string) === "free" ? (
+                    <span>
+                      {lang === "ar" ? "مجاناً" : "Free"}
+                      <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}> — {lang === "ar" ? "٧ أيام" : "7 days"}</span>
+                    </span>
+                  ) : (
+                    <span>
+                      {`${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
+                      <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
+                        {period === "monthly" ? t("perMonth") : t("perYear")}
+                      </span>
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
@@ -372,6 +385,10 @@ export default function Pricing() {
               value={custPhone} onChange={setCustPhone} type="tel" error={custPhoneErr} isRTL={isRTL}
             />
 
+            {/* Error display */}
+            {trialError && (selectedPlan as string) === "free" && (
+              <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+            )}
             {/* Submit */}
             <Button
               onClick={handleProceedToPayment}
@@ -384,7 +401,9 @@ export default function Pricing() {
             >
               {checkoutLoading
                 ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
-                : `🔒 ${t("proceedPayment")}`}
+                : (selectedPlan as string) === "free"
+                  ? `🎁 ${t("getFreeKey")}`
+                  : `🔒 ${t("proceedPayment")}`}
             </Button>
 
             <button
