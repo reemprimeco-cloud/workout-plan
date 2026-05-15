@@ -225,6 +225,9 @@ export const subscriptionRouter = router({
         plan: z.enum(["prime_plus", "prime_pro"]),
         period: z.enum(["monthly", "yearly"]),
         origin: z.string().url(),
+        customerName: z.string().min(1).max(100).optional(),
+        customerEmail: z.string().email().optional(),
+        customerPhone: z.string().max(30).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -240,9 +243,10 @@ export const subscriptionRouter = router({
         userId: ctx.user.openId,
         plan: input.plan as PlanId,
         period: input.period as Period,
-        customerName: ctx.user.name ?? "Prime Fit User",
-        // MyFatoorah requires a valid email — generate a placeholder if user has none
-        customerEmail: ctx.user.email?.trim() || `user-${ctx.user.openId.slice(-8)}@primefit.app`,
+        customerName: input.customerName?.trim() || ctx.user.name || "Prime Fit User",
+        // Use form-provided email, then user email, then a placeholder (MyFatoorah requires valid email)
+        customerEmail: input.customerEmail?.trim() || ctx.user.email?.trim() || `user-${ctx.user.openId.slice(-8)}@primefit.app`,
+        customerPhone: input.customerPhone?.trim() || undefined,
         successUrl: `${input.origin}/subscription/success`,
         errorUrl: `${input.origin}/subscription/error`,
       });

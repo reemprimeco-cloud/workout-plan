@@ -23,6 +23,7 @@ interface CreateInvoiceParams {
   period: Period;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   successUrl: string;
   errorUrl: string;
 }
@@ -66,6 +67,7 @@ export async function createInvoice(params: CreateInvoiceParams): Promise<{
     DisplayCurrencyIso: "KWD",
     CustomerName: params.customerName,
     CustomerEmail: params.customerEmail,
+    ...(params.customerPhone ? { CustomerMobile: params.customerPhone } : {}),
     CallBackUrl: params.successUrl,
     ErrorUrl: params.errorUrl,
     Language: "EN",

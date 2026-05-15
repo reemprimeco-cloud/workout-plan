@@ -3,7 +3,7 @@
  * Arabic RTL + English · MyFatoorah checkout · 7-day free trial
  *
  * Free plan  → generates PRIME-XXXX-XXXX key immediately (no payment)
- * Plus / Pro → redirects to MyFatoorah payment page
+ * Plus / Pro → shows customer info form (name, email, phone) → redirects to MyFatoorah
  * Renewal    → same key extended automatically via Webhook
  */
 import { useState } from "react";
@@ -11,7 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Crown, Zap, Star, Copy, CheckCheck } from "lucide-react";
+import { Check, Loader2, Crown, Zap, Star, Copy, CheckCheck, X, User, Mail, Phone } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
@@ -28,29 +28,44 @@ type Period  = "monthly" | "yearly";
 
 // ── Translations ─────────────────────────────────────────────────────────────
 const T = {
-  title:        { en: "Choose Your Plan",                          ar: "اختر خطتك" },
-  subtitle:     { en: "Unlock the full Prime Fit experience",      ar: "افتح تجربة Prime Fit الكاملة" },
-  monthly:      { en: "Monthly",                                   ar: "شهري" },
-  yearly:       { en: "Yearly",                                    ar: "سنوي" },
-  save:         { en: "Save 17%",                                  ar: "وفر 17%" },
-  current:      { en: "Current Plan",                              ar: "خطتك الحالية" },
-  upgrade:      { en: "Upgrade Now",                               ar: "ترقية الآن" },
-  loginFirst:   { en: "Login to Subscribe",                        ar: "سجل دخول للاشتراك" },
-  perMonth:     { en: "/mo",                                       ar: "/شهر" },
-  perYear:      { en: "/yr",                                       ar: "/سنة" },
-  free:         { en: "Free",                                      ar: "مجاني" },
-  backToApp:    { en: "← Back to App",                             ar: "← العودة للتطبيق" },
-  processing:   { en: "Processing...",                             ar: "جاري المعالجة..." },
-  billingNote:  { en: "Prices in Kuwaiti Dinar (KWD). Secure payment via MyFatoorah.", ar: "الأسعار بالدينار الكويتي. دفع آمن عبر MyFatoorah." },
-  startTrial:   { en: "Start Free Trial",                          ar: "ابدأ التجربة المجانية" },
-  trialDays:    { en: "7 days free",                               ar: "7 أيام مجاناً" },
-  trialNote:    { en: "No credit card required",                   ar: "لا حاجة لبطاقة ائتمان" },
-  yourKey:      { en: "Your License Key",                          ar: "مفتاح الترخيص الخاص بك" },
-  keyNote:      { en: "Copy this key and paste it in the app to activate your 7-day trial.", ar: "انسخ هذا المفتاح والصقه في التطبيق لتفعيل تجربتك المجانية لمدة 7 أيام." },
-  copyKey:      { en: "Copy Key",                                  ar: "نسخ المفتاح" },
-  copied:       { en: "Copied!",                                   ar: "تم النسخ!" },
-  goToApp:      { en: "Go to App & Activate",                      ar: "اذهب للتطبيق وفعّل" },
-  renewNote:    { en: "Renewing? Pay again with the same email to extend your existing key automatically.", ar: "تجديد؟ ادفع مرة أخرى بنفس البريد الإلكتروني لتمديد مفتاحك الحالي تلقائياً." },
+  title:          { en: "Choose Your Plan",                          ar: "اختر خطتك" },
+  subtitle:       { en: "Unlock the full Prime Fit experience",      ar: "افتح تجربة Prime Fit الكاملة" },
+  monthly:        { en: "Monthly",                                   ar: "شهري" },
+  yearly:         { en: "Yearly",                                    ar: "سنوي" },
+  save:           { en: "Save 17%",                                  ar: "وفر 17%" },
+  current:        { en: "Current Plan",                              ar: "خطتك الحالية" },
+  upgrade:        { en: "Upgrade Now",                               ar: "ترقية الآن" },
+  loginFirst:     { en: "Login to Subscribe",                        ar: "سجل دخول للاشتراك" },
+  perMonth:       { en: "/mo",                                       ar: "/شهر" },
+  perYear:        { en: "/yr",                                       ar: "/سنة" },
+  free:           { en: "Free",                                      ar: "مجاني" },
+  backToApp:      { en: "← Back to App",                             ar: "← العودة للتطبيق" },
+  processing:     { en: "Processing...",                             ar: "جاري المعالجة..." },
+  billingNote:    { en: "Prices in Kuwaiti Dinar (KWD). Secure payment via MyFatoorah.", ar: "الأسعار بالدينار الكويتي. دفع آمن عبر MyFatoorah." },
+  startTrial:     { en: "Start Free Trial",                          ar: "ابدأ التجربة المجانية" },
+  trialDays:      { en: "7 days free",                               ar: "7 أيام مجاناً" },
+  trialNote:      { en: "No credit card required",                   ar: "لا حاجة لبطاقة ائتمان" },
+  yourKey:        { en: "Your License Key",                          ar: "مفتاح الترخيص الخاص بك" },
+  keyNote:        { en: "Copy this key and paste it in the app to activate your 7-day trial.", ar: "انسخ هذا المفتاح والصقه في التطبيق لتفعيل تجربتك المجانية لمدة 7 أيام." },
+  copyKey:        { en: "Copy Key",                                  ar: "نسخ المفتاح" },
+  copied:         { en: "Copied!",                                   ar: "تم النسخ!" },
+  goToApp:        { en: "Go to App & Activate",                      ar: "اذهب للتطبيق وفعّل" },
+  renewNote:      { en: "Renewing? Pay again with the same email to extend your existing key automatically.", ar: "تجديد؟ ادفع مرة أخرى بنفس البريد الإلكتروني لتمديد مفتاحك الحالي تلقائياً." },
+  // Customer info modal
+  orderDetails:   { en: "Complete Your Order",                       ar: "أكمل طلبك" },
+  orderSubtitle:  { en: "Please fill in your details before proceeding to payment", ar: "يرجى إدخال بياناتك قبل الانتقال للدفع" },
+  fullName:       { en: "Full Name",                                 ar: "الاسم الكامل" },
+  emailAddr:      { en: "Email Address",                             ar: "البريد الإلكتروني" },
+  phoneNum:       { en: "Phone Number",                              ar: "رقم الهاتف" },
+  namePlaceholder:{ en: "Your full name",                            ar: "اسمك الكامل" },
+  emailPlaceholder:{ en: "your@email.com",                           ar: "بريدك@الإلكتروني.com" },
+  phonePlaceholder:{ en: "+965 XXXX XXXX",                           ar: "+965 XXXX XXXX" },
+  proceedPayment: { en: "Proceed to Payment",                        ar: "المتابعة للدفع" },
+  cancel:         { en: "Cancel",                                    ar: "إلغاء" },
+  nameRequired:   { en: "Name is required",                          ar: "الاسم مطلوب" },
+  emailRequired:  { en: "Valid email is required",                   ar: "البريد الإلكتروني مطلوب" },
+  phoneRequired:  { en: "Phone number is required",                  ar: "رقم الهاتف مطلوب" },
+  orderSummary:   { en: "Order Summary",                             ar: "ملخص الطلب" },
 };
 
 // ── Plans data ────────────────────────────────────────────────────────────────
@@ -111,21 +126,72 @@ const PLANS = [
   },
 ];
 
+// ── Input field component ─────────────────────────────────────────────────────
+function InfoField({
+  icon: Icon, label, placeholder, value, onChange, type = "text", error, isRTL,
+}: {
+  icon: React.ElementType; label: string; placeholder: string;
+  value: string; onChange: (v: string) => void; type?: string;
+  error?: string; isRTL: boolean;
+}) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
+        {label} <span style={{ color: "#EF4444" }}>*</span>
+      </label>
+      <div style={{ position: "relative" }}>
+        <div style={{
+          position: "absolute", top: "50%", transform: "translateY(-50%)",
+          [isRTL ? "right" : "left"]: 12, color: "#94a3b8", pointerEvents: "none",
+        }}>
+          <Icon size={16} />
+        </div>
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{
+            width: "100%", boxSizing: "border-box",
+            border: `1.5px solid ${error ? "#EF4444" : "#CBD5E1"}`,
+            borderRadius: 10, padding: isRTL ? "11px 40px 11px 12px" : "11px 12px 11px 40px",
+            fontSize: 14, fontFamily: "inherit", color: NAVY, outline: "none",
+            transition: "border-color 0.2s",
+          }}
+          onFocus={e => { e.target.style.borderColor = NAVY; }}
+          onBlur={e => { e.target.style.borderColor = error ? "#EF4444" : "#CBD5E1"; }}
+        />
+      </div>
+      {error && <p style={{ color: "#EF4444", fontSize: 11, margin: "4px 0 0", fontWeight: 600 }}>{error}</p>}
+    </div>
+  );
+}
+
 export default function Pricing() {
   const [lang, setLang] = useState<Lang>("ar");
   const [period, setPeriod] = useState<Period>("monthly");
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Free trial form state
-  const [trialName, setTrialName]       = useState("");
-  const [trialEmail, setTrialEmail]     = useState("");
-  const [trialKey, setTrialKey]         = useState<string | null>(null);
-  const [trialExpiry, setTrialExpiry]   = useState<Date | null>(null);
-  const [trialError, setTrialError]     = useState("");
+  const [trialName, setTrialName]         = useState("");
+  const [trialEmail, setTrialEmail]       = useState("");
+  const [trialKey, setTrialKey]           = useState<string | null>(null);
+  const [trialExpiry, setTrialExpiry]     = useState<Date | null>(null);
+  const [trialError, setTrialError]       = useState("");
   const [showTrialForm, setShowTrialForm] = useState(false);
 
-  const { isAuthenticated } = useAuth();
+  // Customer info modal state (for paid plans)
+  const [showInfoModal, setShowInfoModal]   = useState(false);
+  const [selectedPlan, setSelectedPlan]     = useState<"prime_plus" | "prime_pro" | null>(null);
+  const [custName, setCustName]             = useState("");
+  const [custEmail, setCustEmail]           = useState("");
+  const [custPhone, setCustPhone]           = useState("");
+  const [custNameErr, setCustNameErr]       = useState("");
+  const [custEmailErr, setCustEmailErr]     = useState("");
+  const [custPhoneErr, setCustPhoneErr]     = useState("");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const { isAuthenticated, user } = useAuth();
   const { plan: currentPlan } = useSubscription();
 
   const t = (key: keyof typeof T) => T[key][lang];
@@ -133,15 +199,44 @@ export default function Pricing() {
 
   const createCheckout = trpc.subscription.createCheckout.useMutation({
     onSuccess: (data) => { window.location.href = data.invoiceUrl; },
-    onError: (err) => { alert(err.message); setLoadingPlan(null); },
+    onError: (err) => {
+      alert(err.message);
+      setCheckoutLoading(false);
+    },
   });
 
   const startFreeTrial = trpc.subscription.startFreeTrial.useMutation();
 
-  const handleUpgrade = (planId: "prime_plus" | "prime_pro") => {
+  // Open the customer info modal for paid plans
+  const handleUpgradeClick = (planId: "prime_plus" | "prime_pro") => {
     if (!isAuthenticated) { window.location.href = getLoginUrl(); return; }
-    setLoadingPlan(planId);
-    createCheckout.mutate({ plan: planId, period, origin: window.location.origin });
+    setSelectedPlan(planId);
+    // Pre-fill with user data if available
+    setCustName(user?.name ?? "");
+    setCustEmail(user?.email ?? "");
+    setCustPhone("");
+    setCustNameErr(""); setCustEmailErr(""); setCustPhoneErr("");
+    setShowInfoModal(true);
+  };
+
+  // Validate and submit the customer info form
+  const handleProceedToPayment = async () => {
+    let valid = true;
+    if (!custName.trim()) { setCustNameErr(t("nameRequired")); valid = false; } else setCustNameErr("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!custEmail.trim() || !emailRegex.test(custEmail.trim())) { setCustEmailErr(t("emailRequired")); valid = false; } else setCustEmailErr("");
+    if (!custPhone.trim()) { setCustPhoneErr(t("phoneRequired")); valid = false; } else setCustPhoneErr("");
+    if (!valid || !selectedPlan) return;
+
+    setCheckoutLoading(true);
+    createCheckout.mutate({
+      plan: selectedPlan,
+      period,
+      origin: window.location.origin,
+      customerName: custName.trim(),
+      customerEmail: custEmail.trim(),
+      customerPhone: custPhone.trim(),
+    });
   };
 
   const handleStartTrial = async () => {
@@ -165,6 +260,16 @@ export default function Pricing() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Get plan display name
+  const getPlanName = (planId: "prime_plus" | "prime_pro") => {
+    const plan = PLANS.find(p => p.id === planId);
+    return lang === "ar" ? plan?.nameAr : plan?.nameEn;
+  };
+  const getPlanPrice = (planId: "prime_plus" | "prime_pro") => {
+    const plan = PLANS.find(p => p.id === planId);
+    return plan ? (period === "monthly" ? plan.monthly : plan.yearly) : 0;
+  };
+
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
@@ -175,6 +280,107 @@ export default function Pricing() {
         padding: "24px 16px 48px",
       }}
     >
+      {/* ── Customer Info Modal ───────────────────────────────────────────── */}
+      {showInfoModal && selectedPlan && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 1000,
+          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16,
+        }}>
+          <div style={{
+            background: "white", borderRadius: 24, padding: "32px 28px",
+            width: "100%", maxWidth: 440, position: "relative",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.3)",
+            animation: "slideUp 0.25s ease",
+          }}>
+            {/* Close button */}
+            <button
+              onClick={() => { setShowInfoModal(false); setCheckoutLoading(false); }}
+              style={{
+                position: "absolute", top: 16, [isRTL ? "left" : "right"]: 16,
+                background: "#F1F5F9", border: "none", borderRadius: 8,
+                width: 32, height: 32, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <X size={16} color="#64748b" />
+            </button>
+
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 900, color: NAVY }}>
+                {t("orderDetails")}
+              </h2>
+              <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+                {t("orderSubtitle")}
+              </p>
+            </div>
+
+            {/* Order summary */}
+            <div style={{
+              background: `${NAVY}08`, border: `1.5px solid ${SKY_LIGHT}`,
+              borderRadius: 12, padding: "12px 16px", marginBottom: 20,
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: 12, color: "#64748b", fontWeight: 600 }}>
+                {t("orderSummary")}
+              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 800, color: NAVY, fontSize: 15 }}>
+                  Prime Fit {getPlanName(selectedPlan)}
+                </span>
+                <span style={{ fontWeight: 900, color: NAVY, fontSize: 16 }}>
+                  {getPlanPrice(selectedPlan).toFixed(2)} KWD
+                  <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
+                    {period === "monthly" ? t("perMonth") : t("perYear")}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Form fields */}
+            <InfoField
+              icon={User} label={t("fullName")} placeholder={t("namePlaceholder")}
+              value={custName} onChange={setCustName} error={custNameErr} isRTL={isRTL}
+            />
+            <InfoField
+              icon={Mail} label={t("emailAddr")} placeholder={t("emailPlaceholder")}
+              value={custEmail} onChange={setCustEmail} type="email" error={custEmailErr} isRTL={isRTL}
+            />
+            <InfoField
+              icon={Phone} label={t("phoneNum")} placeholder={t("phonePlaceholder")}
+              value={custPhone} onChange={setCustPhone} type="tel" error={custPhoneErr} isRTL={isRTL}
+            />
+
+            {/* Submit */}
+            <Button
+              onClick={handleProceedToPayment}
+              disabled={checkoutLoading}
+              style={{
+                width: "100%", background: NAVY, color: "white",
+                fontWeight: 700, borderRadius: 12, padding: "13px",
+                fontSize: 15, fontFamily: "inherit", marginTop: 4,
+              }}
+            >
+              {checkoutLoading
+                ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
+                : `🔒 ${t("proceedPayment")}`}
+            </Button>
+
+            <button
+              onClick={() => { setShowInfoModal(false); setCheckoutLoading(false); }}
+              style={{
+                width: "100%", background: "none", border: "none",
+                color: "#94a3b8", fontSize: 13, cursor: "pointer",
+                fontFamily: "inherit", marginTop: 10, padding: "6px",
+              }}
+            >
+              {t("cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
 
         {/* Top bar */}
@@ -415,13 +621,10 @@ export default function Pricing() {
                 /* ── CTA: Paid plans ── */
                 ) : (
                   <Button
-                    onClick={() => handleUpgrade(plan.id as "prime_plus" | "prime_pro")}
-                    disabled={loadingPlan === plan.id}
+                    onClick={() => handleUpgradeClick(plan.id as "prime_plus" | "prime_pro")}
                     style={{ width: "100%", background: plan.color, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
                   >
-                    {loadingPlan === plan.id
-                      ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
-                      : isAuthenticated ? t("upgrade") : t("loginFirst")}
+                    {isAuthenticated ? t("upgrade") : t("loginFirst")}
                   </Button>
                 )}
               </div>
@@ -441,6 +644,13 @@ export default function Pricing() {
           {t("billingNote")}
         </p>
       </div>
+
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
