@@ -179,6 +179,8 @@ export default function Pricing() {
   const [trialExpiry, setTrialExpiry]     = useState<Date | null>(null);
   const [trialError, setTrialError]       = useState("");
   const [showTrialForm, setShowTrialForm] = useState(false);
+  const [showKeyPopup, setShowKeyPopup]   = useState(false);
+  const [keyCopied, setKeyCopied]         = useState(false);
 
   // Customer info modal state (for paid plans)
   const [showInfoModal, setShowInfoModal]   = useState(false);
@@ -239,6 +241,7 @@ export default function Pricing() {
         setTrialKey(result.licenseKey);
         setTrialExpiry(result.expiresAt);
         setShowInfoModal(false);
+        setShowKeyPopup(true);
       } catch (err: any) {
         setTrialError(err?.message ?? "حدث خطأ. يرجى المحاولة مرة أخرى.");
       } finally {
@@ -393,6 +396,80 @@ export default function Pricing() {
               }}
             >
               {t("cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Key Success Popup ─────────────────────────────────────────────── */}
+      {showKeyPopup && trialKey && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, padding: 20,
+        }}>
+          <div style={{
+            background: "white", borderRadius: 24, padding: "32px 28px",
+            width: "100%", maxWidth: 400, textAlign: "center",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
+            animation: "slideUp 0.25s ease",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+            <h2 style={{ color: "#1B2E5E", fontWeight: 900, fontSize: 20, margin: "0 0 6px" }}>
+              {lang === "ar" ? "مفتاحك جاهز!" : "Your Key is Ready!"}
+            </h2>
+            <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 20px" }}>
+              {lang === "ar"
+                ? "احفظ هذا المفتاح واستخدمه لتفعيل البرنامج. تم إرساله على بريدك أيضاً."
+                : "Save this key and use it to activate the app. It was also sent to your email."}
+            </p>
+
+            {/* Key display with copy button */}
+            <div style={{
+              background: "#F0F9FF", borderRadius: 14, padding: "16px 18px",
+              border: "2px solid #7BB8D4", marginBottom: 18,
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+              direction: "ltr",
+            }}>
+              <span style={{
+                fontFamily: "monospace", fontSize: 18, fontWeight: 900,
+                color: "#1B2E5E", letterSpacing: "0.1em", flex: 1, textAlign: "center",
+              }}>
+                {trialKey}
+              </span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(trialKey).catch(() => {});
+                  setKeyCopied(true);
+                  setTimeout(() => setKeyCopied(false), 2000);
+                }}
+                style={{
+                  background: keyCopied ? "#DCFCE7" : "#1B2E5E",
+                  color: keyCopied ? "#16A34A" : "white",
+                  border: "none", borderRadius: 10, padding: "8px 14px",
+                  cursor: "pointer", fontWeight: 700, fontSize: 13,
+                  transition: "all 0.2s", flexShrink: 0, fontFamily: "inherit",
+                }}
+              >
+                {keyCopied ? (lang === "ar" ? "✓ تم النسخ" : "✓ Copied!") : (lang === "ar" ? "نسخ" : "Copy")}
+              </button>
+            </div>
+
+            {trialExpiry && (
+              <p style={{ color: "#F59E0B", fontSize: 12, fontWeight: 600, margin: "0 0 20px" }}>
+                ⏳ {lang === "ar" ? "ينتهي في:" : "Expires:"} {new Date(trialExpiry).toLocaleDateString(lang === "ar" ? "ar-KW" : "en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+              </p>
+            )}
+
+            <button
+              onClick={() => setShowKeyPopup(false)}
+              style={{
+                width: "100%", background: "#1B2E5E", color: "white",
+                border: "none", borderRadius: 12, padding: "12px",
+                fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              {lang === "ar" ? "حسناً، شكراً!" : "Got it, thanks!"}
             </button>
           </div>
         </div>
