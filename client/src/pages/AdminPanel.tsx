@@ -3,10 +3,37 @@
 // Tabs: Dashboard | License Keys | Broadcast | Profile
 // Language: Arabic / English toggle
 // ============================================================
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
+import { Copy, Check } from 'lucide-react';
+
+/** Small inline copy-to-clipboard button */
+function CopyBtn({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    }).catch(() => {});
+  }, [value]);
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy"
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        background: copied ? '#DCFCE7' : '#F1F5F9',
+        color: copied ? '#16A34A' : '#64748b',
+        border: 'none', borderRadius: 6, padding: '3px 6px',
+        cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
+      }}
+    >
+      {copied ? <Check size={13} /> : <Copy size={13} />}
+    </button>
+  );
+}
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -828,7 +855,12 @@ export default function AdminPanel() {
                     <tbody>
                       {codes.map((c, idx) => (
                         <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#FAFBFF', borderBottom: `1px solid ${SKY_LIGHT}33` }}>
-                          <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: NAVY, fontWeight: 700, whiteSpace: 'nowrap', direction: 'ltr' }}>{c.code}</td>
+                          <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: NAVY, fontWeight: 700, whiteSpace: 'nowrap', direction: 'ltr' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              {c.code}
+                              <CopyBtn value={c.code} />
+                            </span>
+                          </td>
                           <td style={{ padding: '10px 12px', color: '#334155' }}>{c.customerName || '—'}</td>
                           <td style={{ padding: '10px 12px', color: '#334155', direction: 'ltr', fontSize: 12 }}>{c.customerEmail || '—'}</td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, maxWidth: 140 }}>{c.note || '—'}</td>
@@ -1027,7 +1059,10 @@ export default function AdminPanel() {
                             {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
                           </td>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: sub.licenseKey ? '#1B2E5E' : '#CBD5E1' }}>
-                            {sub.licenseKey ?? '—'}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              {sub.licenseKey ?? '—'}
+                              {sub.licenseKey && <CopyBtn value={sub.licenseKey} />}
+                            </span>
                           </td>
                         </tr>
                       );
