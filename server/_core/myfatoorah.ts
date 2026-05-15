@@ -131,6 +131,36 @@ export async function getPaymentStatus(invoiceId: string): Promise<{
   };
 }
 
+/** Look up payment status using the paymentId appended by MyFatoorah to the CallBackUrl */
+export async function getPaymentStatusByPaymentId(paymentId: string): Promise<{
+  status: "Paid" | "Pending" | "Failed" | "Expired";
+  invoiceId: string;
+  amount: number;
+  userId: string;
+  transactionId?: string;
+}> {
+  const res = await fetch(`${BASE}/v2/getPaymentStatus`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ENV.myfatoorahApiKey}`,
+    },
+    body: JSON.stringify({ Key: paymentId, KeyType: "PaymentId" }),
+  });
+  const json = (await res.json()) as MyfatoorahPaymentStatusResponse;
+  if (!json.IsSuccess) {
+    throw new Error(`MyFatoorah getPaymentStatus(paymentId) failed: ${json.Message}`);
+  }
+  const txn = json.Data.InvoiceTransactions?.[0];
+  return {
+    status: json.Data.InvoiceStatus,
+    invoiceId: String(json.Data.InvoiceId),
+    amount: json.Data.InvoiceValue,
+    userId: json.Data.CustomerReference,
+    transactionId: txn?.TransactionId,
+  };
+}
+
 export function verifyWebhookSignature(
   rawBody: Buffer | string,
   signature: string

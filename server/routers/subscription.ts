@@ -4,7 +4,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, verifyAccessCode } from "../db";
 import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
-import { createInvoice, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
+import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 
 export const subscriptionRouter = router({
   // Get available plans with prices
@@ -180,13 +180,18 @@ export const subscriptionRouter = router({
       const database = await getDb();
       if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
+      // Create invoice — MyFatoorah appends ?paymentId=xxx to the CallBackUrl automatically.
+      // We embed the invoiceId in successUrl so the success page can look up the license key.
+      // Since invoiceId is returned by createInvoice, we use a two-step approach:
+      // 1) create invoice with a temp URL, 2) return the real invoiceId to the frontend,
+      //    which then navigates to /subscription/success?invoiceId=<id> after payment.
       const { invoiceId, invoiceUrl } = await createInvoice({
         userId: ctx.user.openId,
         plan: input.plan as PlanId,
         period: input.period as Period,
         customerName: ctx.user.name ?? "Prime Fit User",
         customerEmail: ctx.user.email ?? "",
-        successUrl: `${input.origin}/subscription/success?invoiceId=${encodeURIComponent("PENDING")}`,
+        successUrl: `${input.origin}/subscription/success`,
         errorUrl: `${input.origin}/subscription/error`,
       });
 
@@ -202,6 +207,47 @@ export const subscriptionRouter = router({
       });
 
       return { invoiceId, invoiceUrl };
+    }),
+
+  // Get license key after payment — used on the success page to show the key immediately.
+  // Accepts either invoiceId (from our DB) or paymentId (appended by MyFatoorah to CallBackUrl).
+  getKeyByInvoice: publicProcedure
+    .input(z.object({
+      invoiceId: z.string().optional(),
+      paymentId: z.string().optional(),
+    }).refine(d => d.invoiceId || d.paymentId, { message: "invoiceId or paymentId required" }))
+    .query(async ({ input }) => {
+      const database = await getDb();
+      if (!database) return { licenseKey: null };
+
+      // Resolve invoiceId from paymentId if needed
+      let resolvedInvoiceId = input.invoiceId;
+      if (!resolvedInvoiceId && input.paymentId) {
+        try {
+          const status = await getPaymentStatusByPaymentId(input.paymentId);
+          resolvedInvoiceId = status.invoiceId;
+        } catch {
+          return { licenseKey: null };
+        }
+      }
+      if (!resolvedInvoiceId) return { licenseKey: null };
+
+      // Check access codes linked to this invoice via note field
+      const notePattern = `Auto-generated via MyFatoorah payment. Invoice: ${resolvedInvoiceId}`;
+      const codeRows = await database
+        .select()
+        .from(accessCodes)
+        .where(eq(accessCodes.note, notePattern))
+        .limit(1);
+      if (codeRows[0]) return { licenseKey: codeRows[0].code };
+
+      // Fallback: check subscriptions table for this invoiceId
+      const subRows = await database
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.invoiceId, resolvedInvoiceId))
+        .limit(1);
+      return { licenseKey: subRows[0]?.licenseKey ?? null };
     }),
 
   // Get billing history for current user
