@@ -8,6 +8,29 @@
 import React, { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
 
+const MIGRATION_DONE_KEY = 'primefit_migration_done';
+const GYM_STORAGE_KEY = 'gym_tracker_v3';
+
+// Read localStorage data and send to server for migration
+async function migrateLocalDataToServer(
+  importMutation: (data: { sessions: unknown[]; weightLog: unknown[]; profile?: unknown }) => Promise<unknown>
+) {
+  try {
+    const raw = localStorage.getItem(GYM_STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    const wLog = Array.isArray(data.weightLog) ? data.weightLog : [];
+    const profile = data.profile ?? undefined;
+    if (sessions.length === 0 && wLog.length === 0) return;
+    await importMutation({ sessions, weightLog: wLog, profile });
+    localStorage.setItem(MIGRATION_DONE_KEY, 'done');
+    console.log('[PrimeFit] Local data migrated to server:', sessions.length, 'sessions,', wLog.length, 'weight entries');
+  } catch (e) {
+    console.warn('[PrimeFit] Migration failed (non-critical):', e);
+  }
+}
+
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
@@ -38,6 +61,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
   const [autoVerifying, setAutoVerifying] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState<boolean>(false);
   const verifyMutation = trpc.license.verify.useMutation();
+  const importMutation = trpc.workoutMigration.importLocalData.useMutation();
 
   const doVerify = async (key: string): Promise<boolean> => {
     try {
@@ -54,6 +78,10 @@ export function LicenseGate({ children }: LicenseGateProps) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(license));
         setStoredLicense(license);
         setIsVerified(true);
+        // Migrate local data to server on first login
+        if (!localStorage.getItem(MIGRATION_DONE_KEY)) {
+          migrateLocalDataToServer((data) => importMutation.mutateAsync(data as Parameters<typeof importMutation.mutateAsync>[0]));
+        }
         const url = new URL(window.location.href);
         url.searchParams.delete('key');
         window.history.replaceState({}, '', url.toString());

@@ -11,6 +11,7 @@ import { subscriptionRouter } from "./routers/subscription";
 import { userProfileRouter } from "./routers/userProfile";
 import { spinWheelRouter } from "./routers/spinWheel";
 import { nutritionRouter } from "./routers/nutrition";
+import { workoutMigrationRouter } from "./routers/workoutMigration";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -35,6 +36,7 @@ export const appRouter = router({
   userProfile: userProfileRouter,
   spinWheel: spinWheelRouter,
   nutrition: nutritionRouter,
+  workoutMigration: workoutMigrationRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({
