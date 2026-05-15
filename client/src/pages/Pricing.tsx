@@ -521,9 +521,29 @@ export default function Pricing() {
 
                 {/* ── CTA: Current plan ── */}
                 {isCurrent ? (
-                  <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
-                    ✓ {t("current")}
-                  </div>
+                  plan.id === "free" ? (
+                    /* Free plan is current — still allow generating a key */
+                    trialKey ? (
+                      <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
+                        ✓ {t("current")}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleUpgradeClick("free")}
+                        style={{
+                          width: "100%", background: GREEN, color: "white", fontWeight: 700,
+                          borderRadius: 12, padding: "12px", fontFamily: "inherit",
+                          border: "none", cursor: "pointer", fontSize: 14,
+                        }}
+                      >
+                        🎁 {t("startTrial")}
+                      </button>
+                    )
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
+                      ✓ {t("current")}
+                    </div>
+                  )
 
                 /* ── CTA: Free plan ── */
                 ) : plan.id === "free" ? (
