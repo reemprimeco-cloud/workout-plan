@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
-import { getDb, verifyAccessCode } from "../db";
+import { getDb, verifyAccessCode, createAccessCode } from "../db";
 import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
+import { generateLicenseKey } from "../handlers/licenseUtils";
 
 export const subscriptionRouter = router({
   // Get available plans with prices
@@ -41,6 +42,56 @@ export const subscriptionRouter = router({
       ],
     };
   }),
+
+  // Start a free 7-day trial — generates a PRIME-XXXX-XXXX key with no payment required.
+  // One trial per email address to prevent abuse.
+  startFreeTrial: publicProcedure
+    .input(z.object({
+      customerName: z.string().min(1).max(100).default("Prime Fit User"),
+      customerEmail: z.string().email().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // Prevent duplicate free trials by email
+      if (input.customerEmail) {
+        const email = input.customerEmail.toLowerCase().trim();
+        const existing = await database
+          .select()
+          .from(accessCodes)
+          .where(eq(accessCodes.customerEmail, email))
+          .limit(1);
+        if (existing.length > 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "لقد استخدمت تجربتك المجانية مسبقاً — You have already used your free trial",
+          });
+        }
+      }
+
+      // Generate a fresh 7-day license key
+      const newKey = generateLicenseKey();
+      const expiresAt = new Date(Date.now() + 7 * 86400_000); // 7 days
+
+      await createAccessCode({
+        code: newKey,
+        customerName: input.customerName,
+        customerEmail: input.customerEmail?.toLowerCase().trim() ?? null,
+        note: `Free 7-day trial`,
+        isActive: true,
+        expiresAt,
+      });
+
+      console.log(`[FreeTrial] Generated key ${newKey} for ${input.customerEmail ?? "(no email)"}, expires ${expiresAt.toDateString()}`);
+
+      return {
+        success: true,
+        licenseKey: newKey,
+        expiresAt,
+        message: "تم إنشاء مفتاح التجربة المجانية بنجاح",
+      };
+    }),
 
   // Get current user's subscription status
   getStatus: protectedProcedure.query(async ({ ctx }) => {
