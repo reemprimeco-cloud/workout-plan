@@ -711,3 +711,145 @@ export async function getAllLicensedCustomerEmails(): Promise<{ email: string; n
     return true;
   }) as { email: string; name: string | null }[];
 }
+
+// ── App Announcements ─────────────────────────────────────────────────────────
+import { appAnnouncements, InsertAnnouncement } from "../drizzle/schema";
+
+export async function getActiveAnnouncements() {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  const { and, lte, or, isNull, gte } = await import("drizzle-orm");
+  return db.select().from(appAnnouncements)
+    .where(
+      and(
+        eq(appAnnouncements.isActive, true),
+        lte(appAnnouncements.startsAt, now),
+        or(isNull(appAnnouncements.endsAt), gte(appAnnouncements.endsAt, now))
+      )
+    )
+    .orderBy(desc(appAnnouncements.createdAt))
+    .limit(10);
+}
+
+export async function createAnnouncement(data: InsertAnnouncement) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.insert(appAnnouncements).values(data);
+}
+
+export async function updateAnnouncement(id: number, data: Partial<InsertAnnouncement>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.update(appAnnouncements).set(data).where(eq(appAnnouncements.id, id));
+}
+
+export async function deleteAnnouncement(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.delete(appAnnouncements).where(eq(appAnnouncements.id, id));
+}
+
+// ── Subscription helpers (replaces supabase.ts) ──────────────────────────────
+import { subscriptions } from "../drizzle/schema";
+
+export const PLANS = {
+  free: {
+    id: "free" as const,
+    nameAr: "مجاني",
+    nameEn: "Free",
+    priceMonthly: 0,
+    priceYearly: 0,
+    currency: "SAR",
+    features: ["basic_tracking", "workout_guide"],
+  },
+  prime_plus: {
+    id: "prime_plus" as const,
+    nameAr: "برايم بلس",
+    nameEn: "Prime Plus",
+    priceMonthly: 49,
+    priceYearly: 399,
+    currency: "SAR",
+    features: ["basic_tracking", "workout_guide", "ai_coach", "community", "stats"],
+  },
+  prime_pro: {
+    id: "prime_pro" as const,
+    nameAr: "برايم برو",
+    nameEn: "Prime Pro",
+    priceMonthly: 99,
+    priceYearly: 799,
+    currency: "SAR",
+    features: ["basic_tracking", "workout_guide", "ai_coach", "community", "stats", "priority_support", "custom_programs"],
+  },
+};
+
+export async function getSubscription(userId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function upsertSubscription(data: {
+  user_id: string;
+  plan: string;
+  status: string;
+  period: string;
+  starts_at: string | null;
+  expires_at: string | null;
+  invoice_id: string | null;
+  trial_ends_at: string | null;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await db.select({ id: subscriptions.id }).from(subscriptions)
+    .where(eq(subscriptions.userId, data.user_id)).limit(1);
+  const payload: any = {
+    userId: data.user_id,
+    plan: data.plan as any,
+    status: data.status as any,
+    period: data.period as any,
+    startsAt: data.starts_at ? new Date(data.starts_at) : new Date(),
+    expiresAt: data.expires_at ? new Date(data.expires_at) : null,
+    invoiceId: data.invoice_id ?? null,
+    trialEndsAt: data.trial_ends_at ? new Date(data.trial_ends_at) : null,
+  };
+  if (existing.length > 0) {
+    await db.update(subscriptions).set(payload).where(eq(subscriptions.userId, data.user_id));
+  } else {
+    await db.insert(subscriptions).values(payload);
+  }
+}
+
+export async function getBillingHistory(userId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId)).limit(20);
+  return rows.map(r => ({
+    id: r.id,
+    plan: r.plan,
+    status: r.status,
+    period: r.period,
+    startsAt: r.startsAt,
+    expiresAt: r.expiresAt,
+    invoiceId: r.invoiceId,
+  }));
+}
+
+export function isSubscriptionActive(sub: { status: string; expiresAt?: Date | null }): boolean {
+  if (sub.status === "active" || sub.status === "trialing") {
+    if (!sub.expiresAt) return true;
+    return sub.expiresAt.getTime() > Date.now();
+  }
+  return false;
+}
+
+export function planHasFeature(plan: string, feature: string): boolean {
+  const featureMap: Record<string, string[]> = {
+    aiCoach:            ["prime_plus", "prime_pro"],
+    advancedAnalytics:  ["prime_plus", "prime_pro"],
+    challenges:         ["prime_plus", "prime_pro"],
+    premiumCommunity:   ["prime_plus", "prime_pro"],
+  };
+  return (featureMap[feature] ?? []).includes(plan);
+}
