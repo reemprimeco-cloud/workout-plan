@@ -576,6 +576,37 @@ export default function AdminPanel() {
     },
     onError: (err) => setBResult(`❌ ${err.message}`),
   });
+  // ── In-App Notification state ─────────────────────────────────────────────
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifImageUrl, setNotifImageUrl] = useState('');
+  const [notifCtaText, setNotifCtaText] = useState('');
+  const [notifCtaLink, setNotifCtaLink] = useState('');
+  const [notifTargeting, setNotifTargeting] = useState<'all' | 'specific' | 'active_subscribers' | 'new_subscribers'>('all');
+  const [notifTargetUserId, setNotifTargetUserId] = useState('');
+  const [notifResult, setNotifResult] = useState('');
+
+  // Channel: email | popup | both
+  const [bChannel, setBChannel] = useState<'email' | 'popup' | 'both'>('email');
+
+  const inAppQuery = trpc.inAppNotifications.list.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
+  const createInAppMutation = trpc.inAppNotifications.create.useMutation({
+    onSuccess: () => {
+      inAppQuery.refetch();
+      setNotifTitle(''); setNotifMessage(''); setNotifImageUrl('');
+      setNotifCtaText(''); setNotifCtaLink('');
+      setNotifResult(`✅ ${lang === 'ar' ? 'تم إنشاء الإشعار بنجاح!' : 'Notification created!'}`);
+      setTimeout(() => setNotifResult(''), 4000);
+    },
+    onError: (err) => setNotifResult(`❌ ${err.message}`),
+  });
+  const deleteInAppMutation = trpc.inAppNotifications.delete.useMutation({
+    onSuccess: () => inAppQuery.refetch(),
+  });
+  const toggleInAppMutation = trpc.inAppNotifications.toggleActive.useMutation({
+    onSuccess: () => inAppQuery.refetch(),
+  });
+
   const updateProfileMutation = trpc.admin.updateProfile.useMutation({
     onSuccess: () => { utils.admin.getProfile.invalidate(); setPMsg(t('profileSaved', lang)); setTimeout(() => setPMsg(''), 3000); },
     onError: (err) => setPMsg(`❌ ${err.message}`),
@@ -953,71 +984,242 @@ export default function AdminPanel() {
             <div style={cardStyle}>
               <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('broadcastTitle', lang)}</h2>
 
-              {/* Mode toggle */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                {(['all', 'one'] as const).map(mode => (
-                  <button key={mode} onClick={() => { setBMode(mode); setBResult(''); }}
-                    style={{
-                      flex: 1, padding: '10px', border: `2px solid ${bMode === mode ? NAVY : SKY_LIGHT}`,
-                      borderRadius: 10, background: bMode === mode ? NAVY : 'white',
-                      color: bMode === mode ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                      fontFamily: 'Cairo, sans-serif',
-                    }}>
-                    {mode === 'all' ? t('broadcastSend', lang) : t('broadcastSendOne', lang)}
-                  </button>
-                ))}
+              {/* Channel selector: Email / In-App Popup / Both */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ ...labelStyle, marginBottom: 8 }}>{lang === 'ar' ? '📡 قناة الإرسال' : '📡 Send Channel'}</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {([['email', lang === 'ar' ? '📧 بريد إلكتروني' : '📧 Email'],
+                     ['popup', lang === 'ar' ? '🔔 إشعار داخلي' : '🔔 In-App Popup'],
+                     ['both', lang === 'ar' ? '📧+🔔 كلاهما' : '📧+🔔 Both']] as const).map(([ch, label]) => (
+                    <button key={ch} onClick={() => { setBChannel(ch); setBResult(''); setNotifResult(''); }}
+                      style={{
+                        flex: 1, padding: '9px 4px', border: `2px solid ${bChannel === ch ? NAVY : SKY_LIGHT}`,
+                        borderRadius: 10, background: bChannel === ch ? NAVY : 'white',
+                        color: bChannel === ch ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                        fontFamily: 'Cairo, sans-serif',
+                      }}>{label}</button>
+                  ))}
+                </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {/* Target email (only for one mode) */}
-                {bMode === 'one' && (
-                  <div>
-                    <label style={labelStyle}>{t('broadcastTargetEmail', lang)}</label>
-                    <input type="email" value={bTargetEmail} onChange={e => setBTargetEmail(e.target.value)}
-                      placeholder="customer@example.com"
-                      style={{ ...inputStyle, direction: 'ltr' }} />
-                  </div>
-                )}
-                <div>
-                  <label style={labelStyle}>{t('broadcastType', lang)}</label>
-                  <select value={bType} onChange={e => setBType(e.target.value as any)}
-                    style={{ ...inputStyle, background: 'white' }}>
-                    {typeOptions.map(o => (
-                      <option key={o.value} value={o.value}>{t(o.labelKey, lang)}</option>
+              {/* ── EMAIL section ── */}
+              {(bChannel === 'email' || bChannel === 'both') && (
+                <div style={{ background: '#F8FBFF', borderRadius: 14, padding: '16px', marginBottom: 16, border: `1px solid ${SKY_LIGHT}66` }}>
+                  <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 14, fontWeight: 800 }}>📧 {lang === 'ar' ? 'إعدادات البريد الإلكتروني' : 'Email Settings'}</h3>
+
+                  {/* Mode toggle */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                    {(['all', 'one'] as const).map(mode => (
+                      <button key={mode} onClick={() => { setBMode(mode); setBResult(''); }}
+                        style={{
+                          flex: 1, padding: '9px', border: `2px solid ${bMode === mode ? NAVY : SKY_LIGHT}`,
+                          borderRadius: 10, background: bMode === mode ? NAVY : 'white',
+                          color: bMode === mode ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                          fontFamily: 'Cairo, sans-serif',
+                        }}>
+                        {mode === 'all' ? t('broadcastSend', lang) : t('broadcastSendOne', lang)}
+                      </button>
                     ))}
-                  </select>
+                  </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {/* Target email (only for one mode) */}
+                  {bMode === 'one' && (
+                    <div>
+                      <label style={labelStyle}>{t('broadcastTargetEmail', lang)}</label>
+                      <input type="email" value={bTargetEmail} onChange={e => setBTargetEmail(e.target.value)}
+                        placeholder="customer@example.com"
+                        style={{ ...inputStyle, direction: 'ltr' }} />
+                    </div>
+                  )}
+                  <div>
+                    <label style={labelStyle}>{t('broadcastType', lang)}</label>
+                    <select value={bType} onChange={e => setBType(e.target.value as any)}
+                      style={{ ...inputStyle, background: 'white' }}>
+                      {typeOptions.map(o => (
+                        <option key={o.value} value={o.value}>{t(o.labelKey, lang)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>{t('broadcastSubject', lang)}</label>
+                    <input type="text" value={bSubject} onChange={e => setBSubject(e.target.value)}
+                      placeholder={lang === 'ar' ? 'مثال: تحديث جديد في Prime Fit 🎉' : 'e.g. New update in Prime Fit 🎉'}
+                      style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>{t('broadcastBody', lang)}</label>
+                    <textarea value={bBody} onChange={e => setBBody(e.target.value)} rows={5}
+                      placeholder={lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
+                      style={{ ...inputStyle, resize: 'vertical' as const }} />
+                  </div>
+                  {bResult && (
+                    <p style={{ color: bResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult}</p>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
+                      if (bMode === 'one') {
+                        if (!bTargetEmail.trim() || !bTargetEmail.includes('@')) { setBResult(lang === 'ar' ? '❌ يرجى إدخال بريد إلكتروني صحيح' : '❌ Please enter a valid email'); return; }
+                        sendToOneMutation.mutate({ email: bTargetEmail.trim(), subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                      } else {
+                        if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
+                        broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                      }
+                    }}
+                    disabled={broadcastMutation.isPending || sendToOneMutation.isPending}
+                    style={{ background: (broadcastMutation.isPending || sendToOneMutation.isPending) ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 13, fontWeight: 900, cursor: (broadcastMutation.isPending || sendToOneMutation.isPending) ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
+                    {(broadcastMutation.isPending || sendToOneMutation.isPending) ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
+                  </button>
                 </div>
-                <div>
-                  <label style={labelStyle}>{t('broadcastSubject', lang)}</label>
-                  <input type="text" value={bSubject} onChange={e => setBSubject(e.target.value)}
-                    placeholder={lang === 'ar' ? 'مثال: تحديث جديد في Prime Fit 🎉' : 'e.g. New update in Prime Fit 🎉'}
-                    style={inputStyle} />
                 </div>
-                <div>
-                  <label style={labelStyle}>{t('broadcastBody', lang)}</label>
-                  <textarea value={bBody} onChange={e => setBBody(e.target.value)} rows={6}
-                    placeholder={lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
-                    style={{ ...inputStyle, resize: 'vertical' as const }} />
+              )}
+
+              {/* ── IN-APP POPUP section ── */}
+              {(bChannel === 'popup' || bChannel === 'both') && (
+                <div style={{ background: '#FFF8F0', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #FBBF2466' }}>
+                  <h3 style={{ margin: '0 0 14px', color: '#92400E', fontSize: 14, fontWeight: 800 }}>🔔 {lang === 'ar' ? 'إعدادات الإشعار الداخلي' : 'In-App Popup Settings'}</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div>
+                      <label style={labelStyle}>📌 {lang === 'ar' ? 'عنوان الإشعار *' : 'Notification Title *'}</label>
+                      <input type="text" value={notifTitle} onChange={e => setNotifTitle(e.target.value)}
+                        placeholder={lang === 'ar' ? 'مثال: ميزة جديدة متاحة 🎉' : 'e.g. New feature available 🎉'}
+                        style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>✍️ {lang === 'ar' ? 'نص الرسالة *' : 'Message *'}</label>
+                      <textarea value={notifMessage} onChange={e => setNotifMessage(e.target.value)} rows={4}
+                        placeholder={lang === 'ar' ? 'اكتب محتوى الإشعار...' : 'Write notification content...'}
+                        style={{ ...inputStyle, resize: 'vertical' as const }} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>🖼️ {lang === 'ar' ? 'رابط صورة/بانر (اختياري)' : 'Image / Banner URL (optional)'}</label>
+                      <input type="url" value={notifImageUrl} onChange={e => setNotifImageUrl(e.target.value)}
+                        placeholder="https://example.com/banner.jpg"
+                        style={{ ...inputStyle, direction: 'ltr' }} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div>
+                        <label style={labelStyle}>🔗 {lang === 'ar' ? 'نص زر CTA (اختياري)' : 'CTA Button Text (optional)'}</label>
+                        <input type="text" value={notifCtaText} onChange={e => setNotifCtaText(e.target.value)}
+                          placeholder={lang === 'ar' ? 'مثال: اكتشف الآن' : 'e.g. Explore Now'}
+                          style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>🌐 {lang === 'ar' ? 'رابط زر CTA' : 'CTA Button Link'}</label>
+                        <input type="url" value={notifCtaLink} onChange={e => setNotifCtaLink(e.target.value)}
+                          placeholder="https://"
+                          style={{ ...inputStyle, direction: 'ltr' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>🎯 {lang === 'ar' ? 'الفئة المستهدفة' : 'Target Audience'}</label>
+                      <select value={notifTargeting} onChange={e => setNotifTargeting(e.target.value as any)}
+                        style={{ ...inputStyle, background: 'white' }}>
+                        <option value="all">{lang === 'ar' ? '👥 جميع المستخدمين' : '👥 All Users'}</option>
+                        <option value="specific">{lang === 'ar' ? '👤 مستخدم محدد' : '👤 Specific User'}</option>
+                        <option value="active_subscribers">{lang === 'ar' ? '✅ المشتركين النشطين' : '✅ Active Subscribers'}</option>
+                        <option value="new_subscribers">{lang === 'ar' ? '🆕 المشتركين الجدد (7 أيام)' : '🆕 New Subscribers (7 days)'}</option>
+                      </select>
+                    </div>
+                    {notifTargeting === 'specific' && (
+                      <div>
+                        <label style={labelStyle}>🔢 {lang === 'ar' ? 'معرف المستخدم (User ID)' : 'User ID'}</label>
+                        <input type="number" value={notifTargetUserId} onChange={e => setNotifTargetUserId(e.target.value)}
+                          placeholder="123"
+                          style={{ ...inputStyle, direction: 'ltr' }} />
+                      </div>
+                    )}
+                    {notifResult && (
+                      <p style={{ color: notifResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{notifResult}</p>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (!notifTitle.trim() || !notifMessage.trim()) { setNotifResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill title and message'); return; }
+                        createInAppMutation.mutate({
+                          title: notifTitle.trim(),
+                          message: notifMessage.trim(),
+                          imageUrl: notifImageUrl.trim() || null,
+                          ctaText: notifCtaText.trim() || null,
+                          ctaLink: notifCtaLink.trim() || null,
+                          targeting: notifTargeting,
+                          targetUserId: notifTargeting === 'specific' && notifTargetUserId ? parseInt(notifTargetUserId) : null,
+                        });
+                      }}
+                      disabled={createInAppMutation.isPending}
+                      style={{ background: createInAppMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, #F59E0B, #D97706)`, color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 13, fontWeight: 900, cursor: createInAppMutation.isPending ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
+                      {createInAppMutation.isPending ? (lang === 'ar' ? '⏳ جاري...' : '⏳ Creating...') : (lang === 'ar' ? '🔔 إنشاء الإشعار' : '🔔 Create Notification')}
+                    </button>
+                  </div>
                 </div>
-                {bResult && (
-                  <p style={{ color: bResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult}</p>
-                )}
-                <button
-                  onClick={() => {
-                    if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
-                    if (bMode === 'one') {
-                      if (!bTargetEmail.trim() || !bTargetEmail.includes('@')) { setBResult(lang === 'ar' ? '❌ يرجى إدخال بريد إلكتروني صحيح' : '❌ Please enter a valid email'); return; }
-                      sendToOneMutation.mutate({ email: bTargetEmail.trim(), subject: bSubject.trim(), body: bBody.trim(), type: bType });
-                    } else {
-                      if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
-                      broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
-                    }
-                  }}
-                  disabled={broadcastMutation.isPending || sendToOneMutation.isPending}
-                  style={{ background: (broadcastMutation.isPending || sendToOneMutation.isPending) ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '13px 28px', fontSize: 14, fontWeight: 900, cursor: (broadcastMutation.isPending || sendToOneMutation.isPending) ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
-                  {(broadcastMutation.isPending || sendToOneMutation.isPending) ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
-                </button>
-              </div>
+              )}
+
+            </div>
+
+            {/* ── In-App Notifications History ── */}
+            <div style={cardStyle}>
+              <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>🔔 {lang === 'ar' ? 'سجل الإشعارات الداخلية' : 'In-App Notifications'}</h2>
+              {inAppQuery.isLoading ? (
+                <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+              ) : (inAppQuery.data ?? []).length === 0 ? (
+                <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{lang === 'ar' ? 'لا توجد إشعارات داخلية بعد.' : 'No in-app notifications yet.'}</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {(inAppQuery.data ?? []).map(n => (
+                    <div key={n.id} style={{ background: n.isActive ? '#FFFBEB' : '#F8FAFC', borderRadius: 12, padding: '14px 16px', border: `1px solid ${n.isActive ? '#FCD34D66' : '#E2E8F0'}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                        <div style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{n.title}</div>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <span style={{ background: n.isActive ? '#D1FAE5' : '#FEE2E2', color: n.isActive ? '#065F46' : '#991B1B', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
+                            {n.isActive ? (lang === 'ar' ? 'نشط' : 'Active') : (lang === 'ar' ? 'معطل' : 'Inactive')}
+                          </span>
+                          <button onClick={() => toggleInAppMutation.mutate({ id: n.id, isActive: !n.isActive })}
+                            style={{ background: 'none', border: `1px solid ${SKY_LIGHT}`, borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer', color: NAVY }}>
+                            {n.isActive ? (lang === 'ar' ? '⏸ إيقاف' : '⏸ Pause') : (lang === 'ar' ? '▶️ تفعيل' : '▶️ Activate')}
+                          </button>
+                          <button onClick={() => { if (confirm(lang === 'ar' ? 'حذف هذا الإشعار?' : 'Delete this notification?')) deleteInAppMutation.mutate({ id: n.id }); }}
+                            style={{ background: 'none', border: '1px solid #FCA5A5', borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer', color: '#DC2626' }}>
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>{n.message.slice(0, 100)}{n.message.length > 100 ? '...' : ''}</div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
+                        <span style={{ background: '#E0F2FE', color: '#0369A1', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
+                          🎯 {n.targeting === 'all' ? (lang === 'ar' ? 'الجميع' : 'All') : n.targeting === 'specific' ? `User #${n.targetUserId}` : n.targeting}
+                        </span>
+                        {n.ctaText && <span style={{ background: '#F3E8FF', color: '#6B21A8', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>🔗 {n.ctaText}</span>}
+                        <span style={{ color: '#94A3B8', fontSize: 11 }}>{new Date(n.createdAt).toLocaleString('en-GB')}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Broadcast History */}
+            <div style={cardStyle}>
+              <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>{t('broadcastHistory', lang)}</h2>
+              {broadcasts.length === 0 ? (
+                <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{t('noHistory', lang)}</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {broadcasts.map(b => (
+                    <div key={b.id} style={{ background: '#F8FBFF', borderRadius: 12, padding: '14px 16px', border: `1px solid ${SKY_LIGHT}44` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                        <div style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{b.subject}</div>
+                        <span style={{ background: '#E0F2FE', color: '#0369A1', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          {typeOptions.find(o => o.value === b.type) ? t(typeOptions.find(o => o.value === b.type)!.labelKey, lang) : b.type}
+                        </span>
+                      </div>
+                      <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6, marginBottom: 8, whiteSpace: 'pre-wrap' }}>{b.body.slice(0, 120)}{b.body.length > 120 ? '...' : ''}</div>
+                      <div style={{ color: '#94A3B8', fontSize: 11 }}>
+                        {new Date(b.createdAt).toLocaleString('en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'} · {b.sentBy}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Broadcast History */}
