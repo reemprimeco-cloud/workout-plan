@@ -241,7 +241,8 @@ export const subscriptionRouter = router({
         plan: input.plan as PlanId,
         period: input.period as Period,
         customerName: ctx.user.name ?? "Prime Fit User",
-        customerEmail: ctx.user.email ?? "",
+        // MyFatoorah requires a valid email — generate a placeholder if user has none
+        customerEmail: ctx.user.email?.trim() || `user-${ctx.user.openId.slice(-8)}@primefit.app`,
         successUrl: `${input.origin}/subscription/success`,
         errorUrl: `${input.origin}/subscription/error`,
       });
