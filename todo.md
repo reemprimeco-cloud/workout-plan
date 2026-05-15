@@ -246,6 +246,10 @@
 - [x] Wire SpinWheel into Community challenges completion flow
 - [x] Admin Rewards tab in AdminPanel: edit probabilities, add/remove rewards, track history, monitor jackpots
 
+## Bug Fix — Broken Images on Production
+- [x] Fix broken images on production site (exercises, machines, treadmill, aqua, logo, avatar all show ❓ on iPhone)
+- [x] Images work in dev but broken on deployed site — changed storageProxy from 307 redirect to content piping
+
 ## Feature Batch 13 — Challenge Reward Spin Wheel
 
 - [x] Schema: reward_spins, reward_history, reward_probabilities, challenge_rewards, jackpot_winners tables
