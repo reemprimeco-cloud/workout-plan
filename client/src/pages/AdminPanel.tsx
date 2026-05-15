@@ -3,7 +3,7 @@
 // Tabs: Dashboard | License Keys | Broadcast | Profile
 // Language: Arabic / English toggle
 // ============================================================
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
@@ -494,6 +494,8 @@ export default function AdminPanel() {
   const [pMsg, setPMsg] = useState('');
   const [profileLoaded, setProfileLoaded] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   // Queries
   const statsQuery = trpc.admin.getStats.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
@@ -583,7 +585,10 @@ export default function AdminPanel() {
   const [notifCtaText, setNotifCtaText] = useState('');
   const [notifCtaLink, setNotifCtaLink] = useState('');
   const [notifTargeting, setNotifTargeting] = useState<'all' | 'specific' | 'active_subscribers' | 'new_subscribers'>('all');
-  const [notifTargetUserId, setNotifTargetUserId] = useState('');
+  const [notifTargetUserId, setNotifTargetUserId] = useState<number | null>(null);
+  const [notifUserSearch, setNotifUserSearch] = useState('');
+  const [notifUserSearchOpen, setNotifUserSearchOpen] = useState(false);
+  const [notifSelectedUserLabel, setNotifSelectedUserLabel] = useState('');
   const [notifResult, setNotifResult] = useState('');
 
   // Channel: email | popup | both
@@ -1123,11 +1128,37 @@ export default function AdminPanel() {
                       </select>
                     </div>
                     {notifTargeting === 'specific' && (
-                      <div>
-                        <label style={labelStyle}>🔢 {lang === 'ar' ? 'معرف المستخدم (User ID)' : 'User ID'}</label>
-                        <input type="number" value={notifTargetUserId} onChange={e => setNotifTargetUserId(e.target.value)}
-                          placeholder="123"
-                          style={{ ...inputStyle, direction: 'ltr' }} />
+                      <div style={{ position: 'relative' }}>
+                        <label style={labelStyle}>🔍 {lang === 'ar' ? 'ابحث بالاسم أو البريد' : 'Search by Name or Email'}</label>
+                        <input
+                          type="text"
+                          value={notifSelectedUserLabel || notifUserSearch}
+                          onChange={e => {
+                            setNotifUserSearch(e.target.value);
+                            setNotifSelectedUserLabel('');
+                            setNotifTargetUserId(null);
+                            setNotifUserSearchOpen(true);
+                          }}
+                          onFocus={() => setNotifUserSearchOpen(true)}
+                          placeholder={lang === 'ar' ? 'اكتب اسم المستخدم أو بريده...' : 'Type name or email...'}
+                          style={{ ...inputStyle, direction: 'ltr' }}
+                        />
+                        {notifUserSearchOpen && notifUserSearch.length >= 1 && (
+                          <UserSearchDropdown
+                            query={notifUserSearch}
+                            onSelect={(id, label) => {
+                              setNotifTargetUserId(id);
+                              setNotifSelectedUserLabel(label);
+                              setNotifUserSearch('');
+                              setNotifUserSearchOpen(false);
+                            }}
+                          />
+                        )}
+                        {notifSelectedUserLabel && (
+                          <p style={{ color: '#16A34A', fontSize: 12, margin: '4px 0 0', fontWeight: 700 }}>
+                            ✓ {notifSelectedUserLabel}
+                          </p>
+                        )}
                       </div>
                     )}
                     {notifResult && (
@@ -1143,7 +1174,7 @@ export default function AdminPanel() {
                           ctaText: notifCtaText.trim() || null,
                           ctaLink: notifCtaLink.trim() || null,
                           targeting: notifTargeting,
-                          targetUserId: notifTargeting === 'specific' && notifTargetUserId ? parseInt(notifTargetUserId) : null,
+                          targetUserId: notifTargeting === 'specific' ? notifTargetUserId : null,
                         });
                       }}
                       disabled={createInAppMutation.isPending}
@@ -1350,10 +1381,12 @@ export default function AdminPanel() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    // Reset input so same file can be re-selected
+                    e.target.value = '';
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                      const base64 = ev.target?.result as string;
-                      uploadPhotoMutation.mutate({ base64, mimeType: file.type });
+                      setCropSrc(ev.target?.result as string);
+                      setCropFile(file);
                     };
                     reader.readAsDataURL(file);
                   }}
@@ -1398,6 +1431,276 @@ export default function AdminPanel() {
         ::-webkit-scrollbar-track { background: #E8EFF7; }
         ::-webkit-scrollbar-thumb { background: ${SKY}; border-radius: 4px; }
       `}</style>
+
+      {/* ── Image Crop Modal ── */}
+      {cropSrc && cropFile && (
+        <ImageCropModal
+          src={cropSrc}
+          mimeType={cropFile.type}
+          onCancel={() => { setCropSrc(null); setCropFile(null); }}
+          onConfirm={(base64, mimeType) => {
+            setCropSrc(null);
+            setCropFile(null);
+            uploadPhotoMutation.mutate({ base64, mimeType });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── UserSearchDropdown ────────────────────────────────────────────────────────
+function UserSearchDropdown({
+  query,
+  onSelect,
+}: {
+  query: string;
+  onSelect: (id: number, label: string) => void;
+}) {
+  const searchQuery = trpc.inAppNotifications.searchUsers.useQuery(
+    { query },
+    { enabled: query.length >= 1, staleTime: 5000 }
+  );
+
+  const results = searchQuery.data ?? [];
+
+  if (searchQuery.isLoading) {
+    return (
+      <div style={dropdownStyle}>
+        <div style={{ padding: '10px 14px', color: '#64748B', fontSize: 13 }}>⏳ Searching...</div>
+      </div>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <div style={dropdownStyle}>
+        <div style={{ padding: '10px 14px', color: '#64748B', fontSize: 13 }}>No users found</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={dropdownStyle}>
+      {results.map((u) => (
+        <button
+          key={u.id}
+          type="button"
+          onClick={() => onSelect(u.id, `${u.name ?? ''} (${u.email ?? ''})`)}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left',
+            padding: '10px 14px', border: 'none', background: 'none',
+            cursor: 'pointer', fontSize: 13, color: '#1B2E5E',
+            borderBottom: '1px solid #E8EFF7',
+            fontFamily: 'Cairo, sans-serif',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#F0F4F8')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+        >
+          <strong>{u.name ?? 'Unknown'}</strong>
+          {u.email && <span style={{ color: '#64748B', marginLeft: 8 }}>{u.email}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const dropdownStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: '100%',
+  left: 0,
+  right: 0,
+  background: 'white',
+  border: '1px solid #CBD5E1',
+  borderRadius: 10,
+  boxShadow: '0 8px 24px rgba(27,46,94,0.15)',
+  zIndex: 999,
+  maxHeight: 200,
+  overflowY: 'auto',
+  marginTop: 4,
+};
+
+// ── ImageCropModal — 1:1 canvas crop ─────────────────────────────────────────
+function ImageCropModal({
+  src,
+  mimeType,
+  onCancel,
+  onConfirm,
+}: {
+  src: string;
+  mimeType: string;
+  onCancel: () => void;
+  onConfirm: (base64: string, mimeType: string) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Crop box state (in display pixels, relative to the displayed image)
+  const [cropBox, setCropBox] = useState({ x: 0, y: 0, size: 0 });
+  const [dragging, setDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ mx: 0, cx: 0, cy: 0 });
+  const [imgDisplaySize, setImgDisplaySize] = useState({ w: 0, h: 0, offX: 0, offY: 0 });
+
+  const NAVY = '#1B2E5E';
+  const SKY = '#7BB8D4';
+
+  const initCrop = useCallback(() => {
+    const img = imgRef.current;
+    const container = containerRef.current;
+    if (!img || !container) return;
+
+    const containerW = container.clientWidth;
+    const containerH = 320;
+    const scaleX = containerW / img.naturalWidth;
+    const scaleY = containerH / img.naturalHeight;
+    const scale = Math.min(scaleX, scaleY);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    const offX = (containerW - dw) / 2;
+    const offY = (containerH - dh) / 2;
+
+    setImgDisplaySize({ w: dw, h: dh, offX, offY });
+
+    const size = Math.min(dw, dh) * 0.8;
+    setCropBox({ x: offX + (dw - size) / 2, y: offY + (dh - size) / 2, size });
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDragging(true);
+    setDragStart({ mx: e.clientX, cx: cropBox.x, cy: cropBox.y });
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!dragging) return;
+    const dx = e.clientX - dragStart.mx;
+    const newX = Math.max(imgDisplaySize.offX, Math.min(dragStart.cx + dx, imgDisplaySize.offX + imgDisplaySize.w - cropBox.size));
+    const dy = e.clientY - dragStart.mx;
+    const newY = Math.max(imgDisplaySize.offY, Math.min(dragStart.cy + dy, imgDisplaySize.offY + imgDisplaySize.h - cropBox.size));
+    setCropBox(prev => ({ ...prev, x: newX, y: newY }));
+  }, [dragging, dragStart, imgDisplaySize, cropBox.size]);
+
+  const handleMouseUp = useCallback(() => setDragging(false), []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  const handleConfirm = () => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (!img || !canvas || imgDisplaySize.w === 0) return;
+
+    const scaleX = img.naturalWidth / imgDisplaySize.w;
+    const scaleY = img.naturalHeight / imgDisplaySize.h;
+
+    const srcX = (cropBox.x - imgDisplaySize.offX) * scaleX;
+    const srcY = (cropBox.y - imgDisplaySize.offY) * scaleY;
+    const srcSize = cropBox.size * Math.min(scaleX, scaleY);
+
+    const OUTPUT = 400;
+    canvas.width = OUTPUT;
+    canvas.height = OUTPUT;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT, OUTPUT);
+
+    const base64 = canvas.toDataURL('image/jpeg', 0.9);
+    onConfirm(base64, 'image/jpeg');
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10000,
+      background: 'rgba(15,30,61,0.85)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+    }}>
+      <div style={{
+        background: 'white', borderRadius: 20, overflow: 'hidden',
+        width: '100%', maxWidth: 420,
+        boxShadow: '0 24px 64px rgba(27,46,94,0.4)',
+      }}>
+        {/* Header */}
+        <div style={{ background: `linear-gradient(135deg, #0F1E3D, ${NAVY})`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 20 }}>✂️</span>
+          <span style={{ color: 'white', fontWeight: 800, fontSize: 15, fontFamily: 'Cairo, sans-serif' }}>
+            Crop Profile Photo (1:1)
+          </span>
+        </div>
+
+        {/* Image container */}
+        <div
+          ref={containerRef}
+          style={{ position: 'relative', height: 320, background: '#0F1E3D', overflow: 'hidden', userSelect: 'none' }}
+        >
+          <img
+            ref={imgRef}
+            src={src}
+            alt="crop"
+            onLoad={initCrop}
+            style={{
+              position: 'absolute',
+              left: imgDisplaySize.offX,
+              top: imgDisplaySize.offY,
+              width: imgDisplaySize.w,
+              height: imgDisplaySize.h,
+              display: 'block',
+            }}
+          />
+          {/* Dark overlay */}
+          {cropBox.size > 0 && (
+            <>
+              {/* Overlay: top */}
+              <div style={{ position: 'absolute', left: 0, top: 0, right: 0, height: cropBox.y, background: 'rgba(0,0,0,0.55)' }} />
+              {/* Overlay: bottom */}
+              <div style={{ position: 'absolute', left: 0, top: cropBox.y + cropBox.size, right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)' }} />
+              {/* Overlay: left */}
+              <div style={{ position: 'absolute', left: 0, top: cropBox.y, width: cropBox.x, height: cropBox.size, background: 'rgba(0,0,0,0.55)' }} />
+              {/* Overlay: right */}
+              <div style={{ position: 'absolute', left: cropBox.x + cropBox.size, top: cropBox.y, right: 0, height: cropBox.size, background: 'rgba(0,0,0,0.55)' }} />
+              {/* Crop box */}
+              <div
+                onMouseDown={handleMouseDown}
+                style={{
+                  position: 'absolute',
+                  left: cropBox.x, top: cropBox.y,
+                  width: cropBox.size, height: cropBox.size,
+                  border: `2px solid ${SKY}`,
+                  borderRadius: '50%',
+                  cursor: 'move',
+                  boxShadow: `0 0 0 1px rgba(123,184,212,0.4)`,
+                }}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Hidden canvas for cropping */}
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+        {/* Actions */}
+        <div style={{ padding: '16px 20px', display: 'flex', gap: 12 }}>
+          <button
+            onClick={onCancel}
+            style={{ flex: 1, background: 'none', border: `2px solid ${SKY}`, borderRadius: 12, padding: '11px', color: NAVY, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            style={{ flex: 2, background: `linear-gradient(135deg, ${NAVY}, #0F1E3D)`, border: 'none', borderRadius: 12, padding: '11px', color: 'white', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}
+          >
+            ✓ Use This Photo
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

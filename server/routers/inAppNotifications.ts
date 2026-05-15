@@ -4,7 +4,7 @@
  * User:  getUnread / markRead
  */
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import {
@@ -169,10 +169,32 @@ export const inAppNotificationsRouter = router({
       return { readCount: Number(rows[0]?.count ?? 0) };
     }),
 
-  // ── User: get unread notifications ────────────────────────────────────────
-  getUnread: protectedProcedure.query(async ({ ctx }) => {
+   // ── Admin: search users by name or email ───────────────────────────────
+  searchUsers: protectedProcedure
+    .input(z.object({ query: z.string().min(1).max(100) }))
+    .query(async ({ input, ctx }) => {
+      requireAdmin(ctx.user.role);
+      const db = await getDb();
+      if (!db) return [];
+
+      const q = `%${input.query.toLowerCase()}%`;
+      const rows = await db
+        .select({ id: users.id, name: users.name, email: users.email })
+        .from(users)
+        .where(sql`(LOWER(${users.name}) LIKE ${q} OR LOWER(${users.email}) LIKE ${q})`)
+        .limit(10);
+
+      return rows;
+    }),
+
+  // ── User: get unread notifications ────────────────────────────────────
+  // Uses publicProcedure so it works without re-login (session cookie is still sent)
+  getUnread: publicProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
+
+    // If user is not authenticated, return empty (no popup for guests)
+    if (!ctx.user) return [];
 
     const userId = ctx.user.id;
     const now = new Date();
