@@ -57,7 +57,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
   const hasStartedWorkout = session.exercises.some(e => e.completed) || session.notes.trim().length > 0;
   const handleCancelSession = () => {
     if (hasStartedWorkout) {
-      if (!window.confirm(isAr ? (gender === 'female' ? 'تم البدء بالتمرين. هل تريدين حفظ الجلسة قبل الخروج؟' : 'تم البدء بالتمرين. هل تريد حفظ الجلسة قبل الخروج؟') : 'Workout started. Save session before leaving?')) return;
+      if (!window.confirm(isAr ? 'تم البدء بالتمرين. هل تريدين حفظ الجلسة قبل الخروج؟' : 'Workout started. Save session before leaving?')) return;
       handleCheckOut();
     } else {
       tracker.cancelSession(session.id);
@@ -89,7 +89,7 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
             </div>
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>{isAr ? typeDef.nameAr : typeDef.nameEn}</h2>
             <p style={{ margin: '4px 0 0', opacity: 0.85, fontSize: 12 }}>
-              ⏰ {isAr ? (gender === 'female' ? 'بدأتِ' : 'بدأت') : 'Started'}: {session.checkInTime} • {isAr ? 'مضى' : 'Elapsed'}: {formatElapsed(elapsed)}
+              ⏰ {isAr ? 'بدأتِ' : 'Started'}: {session.checkInTime} • {isAr ? 'مضى' : 'Elapsed'}: {formatElapsed(elapsed)}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -145,7 +145,6 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
         <AquaSessionPanel
           aqua={session.aqua}
           isAr={isAr}
-          gender={gender}
           onUpdate={u => tracker.updateAqua(session.id, u)}
         />
       )}
@@ -154,7 +153,6 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
       {session.sessionType === 'sauna' && session.sauna && (
         <SaunaSessionPanel
           sauna={session.sauna}
-          gender={gender}
           onUpdate={u => tracker.updateSauna(session.id, u)}
         />
       )}
@@ -176,7 +174,6 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
                 isEditing={editingIdx === idx}
                 youtubeUrl={exData?.youtubeUrl}
                 isAr={isAr}
-                gender={gender}
                 onToggle={() => tracker.toggleExercise(session.id, idx)}
                 onEdit={() => setEditingIdx(editingIdx === idx ? null : idx)}
                 onUpdate={u => tracker.updateExercise(session.id, idx, u)}
@@ -312,12 +309,11 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
 }
 
 // ── Exercise Card ──────────────────────────────────────────
-function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpdate, onRemove, youtubeUrl, isAr, gender = 'female' }: {
+function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpdate, onRemove, youtubeUrl, isAr }: {
   exercise: import('../hooks/useGymTracker').ExerciseLog;
   idx: number; color: string; isEditing: boolean;
   youtubeUrl?: string;
   isAr?: boolean;
-  gender?: 'male' | 'female';
   onToggle: () => void; onEdit: () => void;
   onUpdate: (u: Partial<import('../hooks/useGymTracker').ExerciseLog>) => void;
   onRemove: () => void;
@@ -363,7 +359,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
         <div style={{ display: 'flex', gap: 4 }}>
           {youtubeUrl && (
             <a href={youtubeUrl} target="_blank" rel="noopener noreferrer"
-              title={isAr ? (gender === 'female' ? 'شاهدي شرح التمرين' : 'شاهد شرح التمرين') : 'Watch exercise tutorial'}
+              title={isAr ? 'شاهدي شرح التمرين' : 'Watch exercise tutorial'}
               style={{
                 padding: '4px 8px', borderRadius: 8,
                 border: '1px solid #FFD0D0', background: '#FFF0F0',
@@ -941,10 +937,9 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
 }
 
 // ── Aqua Session Panel ─────────────────────────────────────
-function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
+function AquaSessionPanel({ aqua, onUpdate, isAr }: {
   aqua: import('../hooks/useGymTracker').AquaLog;
   isAr?: boolean;
-  gender?: 'male' | 'female';
   onUpdate: (u: Partial<import('../hooks/useGymTracker').AquaLog>) => void;
 }) {
   return (
@@ -953,7 +948,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
       border: '2px solid #0891B2',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <img src="/manus-storage/aqua_690009c3.jpg" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
+        <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=640&q=80" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
         <div>
           <h3 style={{ margin: 0, color: '#0891B2', fontSize: 15, fontWeight: 900 }}>🏊‍♀️ كلاس الأكوا</h3>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#0891B2' }}>تمارين مائية لحرق الدهون</p>
@@ -982,7 +977,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
           border: '1px solid #B2EBF2',
         }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: '#0891B2' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>{ex.duration} • {gender === 'male' && (ex as any).tipMale ? (ex as any).tipMale : ex.tip}</div>
+          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>{ex.duration} • {ex.tip}</div>
         </div>
       ))}
       <button
@@ -995,16 +990,15 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
           fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}
       >
-        {aqua.completed ? '✅ مكتمل' : 'تحديد كمكتمل'}
+        {aqua.completed ? '✅ مكتملة' : 'تحديد كمكتملة'}
       </button>
     </div>
   );
 }
 
 // ── Sauna Session Panel ────────────────────────────────────
-function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
+function SaunaSessionPanel({ sauna, onUpdate }: {
   sauna: import('../hooks/useGymTracker').SaunaLog;
-  gender?: 'male' | 'female';
   onUpdate: (u: Partial<import('../hooks/useGymTracker').SaunaLog>) => void;
 }) {
   return (
@@ -1013,7 +1007,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
       border: '2px solid #B45309',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <img src="/manus-storage/sauna_b9935cdb.jpg" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
+        <img src="https://images.unsplash.com/photo-1554488383-03f54e78a87c?w=640&q=80" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
         <div>
           <h3 style={{ margin: 0, color: '#B45309', fontSize: 15, fontWeight: 900 }}>🧖‍♀️ جلسة السونا</h3>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#B45309' }}>تعافٍ وحرق سعرات وإزالة سموم</p>
@@ -1042,7 +1036,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
           border: '1px solid #FDE68A',
         }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: '#B45309' }}>{p.phase} ({p.duration})</div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>🌡 {p.temp} • {gender === 'male' && (p as any).tipMale ? (p as any).tipMale : p.tip}</div>
+          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>🌡 {p.temp} • {p.tip}</div>
         </div>
       ))}
       <textarea value={sauna.notes} onChange={e => onUpdate({ notes: e.target.value })}
@@ -1063,7 +1057,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
           fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}
       >
-        {sauna.completed ? '✅ مكتمل' : 'تحديد كمكتمل'}
+        {sauna.completed ? '✅ مكتملة' : 'تحديد كمكتملة'}
       </button>
     </div>
   );

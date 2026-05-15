@@ -249,6 +249,11 @@
 ## Bug Fix — Broken Images on Production
 - [x] Fix broken images on production site (exercises, machines, treadmill, aqua, logo, avatar all show ❓ on iPhone)
 - [x] Images work in dev but broken on deployed site — changed storageProxy from 307 redirect to content piping
+- [x] Replace manus-storage image URLs with Unsplash URLs in exercises.ts
+- [x] Replace manus-storage image URLs with Unsplash URLs in exerciseData.ts
+- [x] Add youtubeUtils.ts helper for YouTube thumbnails and Unsplash fallbacks
+- [x] Add workoutData.ts with full 8-week workout plan data
+- [x] Update WorkoutGuide.tsx, ExerciseLibrary.tsx, ActiveSession.tsx, LicenseGate.tsx, Home.tsx from ZIP
 
 ## Feature Batch 13 — Challenge Reward Spin Wheel
 
