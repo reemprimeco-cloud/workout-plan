@@ -1,51 +1,76 @@
+/**
+ * Pricing — Prime Fit subscription plans
+ * Arabic RTL + English · MyFatoorah checkout · 7-day free trial
+ *
+ * Free plan  → generates PRIME-XXXX-XXXX key immediately (no payment)
+ * Plus / Pro → redirects to MyFatoorah payment page
+ * Renewal    → same key extended automatically via Webhook
+ */
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, Loader2, Crown, Zap, Star } from "lucide-react";
+import { Check, Loader2, Crown, Zap, Star, Copy, CheckCheck } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
-const NAVY = "#1B2E5E";
-const SKY = "#7BB8D4";
+// ── Design tokens ──────────────────────────────────────────────────────────
+const NAVY      = "#1B2E5E";
+const NAVY_DARK = "#0F1E3D";
+const SKY       = "#7BB8D4";
+const SKY_LIGHT = "#A8D4E8";
+const GREEN     = "#22C55E";
+const GOLD      = "#F59E0B";
 
-type Lang = "en" | "ar";
+type Lang   = "en" | "ar";
+type Period  = "monthly" | "yearly";
 
+// ── Translations ─────────────────────────────────────────────────────────────
 const T = {
-  title:        { en: "Choose Your Plan", ar: "اختر خطتك" },
-  subtitle:     { en: "Unlock the full Prime Fit experience", ar: "افتح تجربة Prime Fit الكاملة" },
-  monthly:      { en: "Monthly", ar: "شهري" },
-  yearly:       { en: "Yearly", ar: "سنوي" },
-  save:         { en: "Save 17%", ar: "وفر 17%" },
-  current:      { en: "Current Plan", ar: "خطتك الحالية" },
-  upgrade:      { en: "Upgrade Now", ar: "ترقية الآن" },
-  loginFirst:   { en: "Login to Subscribe", ar: "سجل دخول للاشتراك" },
-  perMonth:     { en: "/mo", ar: "/شهر" },
-  perYear:      { en: "/yr", ar: "/سنة" },
-  free:         { en: "Free", ar: "مجاني" },
-  backToApp:    { en: "← Back to App", ar: "← العودة للتطبيق" },
-  processing:   { en: "Processing...", ar: "جاري المعالجة..." },
+  title:        { en: "Choose Your Plan",                          ar: "اختر خطتك" },
+  subtitle:     { en: "Unlock the full Prime Fit experience",      ar: "افتح تجربة Prime Fit الكاملة" },
+  monthly:      { en: "Monthly",                                   ar: "شهري" },
+  yearly:       { en: "Yearly",                                    ar: "سنوي" },
+  save:         { en: "Save 17%",                                  ar: "وفر 17%" },
+  current:      { en: "Current Plan",                              ar: "خطتك الحالية" },
+  upgrade:      { en: "Upgrade Now",                               ar: "ترقية الآن" },
+  loginFirst:   { en: "Login to Subscribe",                        ar: "سجل دخول للاشتراك" },
+  perMonth:     { en: "/mo",                                       ar: "/شهر" },
+  perYear:      { en: "/yr",                                       ar: "/سنة" },
+  free:         { en: "Free",                                      ar: "مجاني" },
+  backToApp:    { en: "← Back to App",                             ar: "← العودة للتطبيق" },
+  processing:   { en: "Processing...",                             ar: "جاري المعالجة..." },
   billingNote:  { en: "Prices in Kuwaiti Dinar (KWD). Secure payment via MyFatoorah.", ar: "الأسعار بالدينار الكويتي. دفع آمن عبر MyFatoorah." },
+  startTrial:   { en: "Start Free Trial",                          ar: "ابدأ التجربة المجانية" },
+  trialDays:    { en: "7 days free",                               ar: "7 أيام مجاناً" },
+  trialNote:    { en: "No credit card required",                   ar: "لا حاجة لبطاقة ائتمان" },
+  yourKey:      { en: "Your License Key",                          ar: "مفتاح الترخيص الخاص بك" },
+  keyNote:      { en: "Copy this key and paste it in the app to activate your 7-day trial.", ar: "انسخ هذا المفتاح والصقه في التطبيق لتفعيل تجربتك المجانية لمدة 7 أيام." },
+  copyKey:      { en: "Copy Key",                                  ar: "نسخ المفتاح" },
+  copied:       { en: "Copied!",                                   ar: "تم النسخ!" },
+  goToApp:      { en: "Go to App & Activate",                      ar: "اذهب للتطبيق وفعّل" },
+  renewNote:    { en: "Renewing? Pay again with the same email to extend your existing key automatically.", ar: "تجديد؟ ادفع مرة أخرى بنفس البريد الإلكتروني لتمديد مفتاحك الحالي تلقائياً." },
 };
 
+// ── Plans data ────────────────────────────────────────────────────────────────
 const PLANS = [
   {
     id: "free" as const,
     icon: Star,
-    nameEn: "Free",
-    nameAr: "مجاني",
-    descEn: "Get started with basic fitness tracking",
-    descAr: "ابدأ بتتبع اللياقة الأساسية",
+    nameEn: "Free Trial",
+    nameAr: "تجربة مجانية",
+    descEn: "7 days full access — no payment needed",
+    descAr: "7 أيام وصول كامل — بدون دفع",
     monthly: 0,
     yearly: 0,
     color: "#64748b",
     features: [
-      { en: "Workout tracking", ar: "تتبع التمارين" },
-      { en: "Exercise library", ar: "مكتبة التمارين" },
-      { en: "Workout guide", ar: "دليل التمارين" },
-      { en: "Session history", ar: "سجل الجلسات" },
+      { en: "Workout tracking",          ar: "تتبع التمارين" },
+      { en: "Exercise library",          ar: "مكتبة التمارين" },
+      { en: "Workout guide",             ar: "دليل التمارين" },
+      { en: "Session history",           ar: "سجل الجلسات" },
+      { en: "7 days full access",        ar: "7 أيام وصول كامل" },
     ],
   },
   {
@@ -60,11 +85,11 @@ const PLANS = [
     color: NAVY,
     popular: true,
     features: [
-      { en: "Everything in Free", ar: "كل شيء في المجاني" },
-      { en: "AI personal coach", ar: "مدرب شخصي بالذكاء الاصطناعي" },
-      { en: "Community access", ar: "الوصول للمجتمع" },
-      { en: "Advanced stats", ar: "إحصائيات متقدمة" },
-      { en: "Daily check-ins", ar: "تسجيل يومي" },
+      { en: "Everything in Free",        ar: "كل شيء في المجاني" },
+      { en: "AI personal coach",         ar: "مدرب شخصي بالذكاء الاصطناعي" },
+      { en: "Community access",          ar: "الوصول للمجتمع" },
+      { en: "Advanced stats",            ar: "إحصائيات متقدمة" },
+      { en: "Daily check-ins",           ar: "تسجيل يومي" },
     ],
   },
   {
@@ -76,91 +101,118 @@ const PLANS = [
     descAr: "كل شيء + دعم أولوية",
     monthly: 4.5,
     yearly: 45,
-    color: "#B8860B",
+    color: GOLD,
     features: [
-      { en: "Everything in Plus", ar: "كل شيء في بلس" },
-      { en: "Priority support", ar: "دعم أولوية" },
-      { en: "Custom programs", ar: "برامج مخصصة" },
-      { en: "Early access to new features", ar: "وصول مبكر للميزات الجديدة" },
+      { en: "Everything in Plus",        ar: "كل شيء في بلس" },
+      { en: "Priority support",          ar: "دعم أولوية" },
+      { en: "Custom programs",           ar: "برامج مخصصة" },
+      { en: "Early access to features",  ar: "وصول مبكر للميزات الجديدة" },
     ],
   },
 ];
 
 export default function Pricing() {
-  const [lang, setLang] = useState<Lang>("en");
-  const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [lang, setLang] = useState<Lang>("ar");
+  const [period, setPeriod] = useState<Period>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const { user, isAuthenticated } = useAuth();
+  // Free trial form state
+  const [trialName, setTrialName]       = useState("");
+  const [trialEmail, setTrialEmail]     = useState("");
+  const [trialKey, setTrialKey]         = useState<string | null>(null);
+  const [trialExpiry, setTrialExpiry]   = useState<Date | null>(null);
+  const [trialError, setTrialError]     = useState("");
+  const [showTrialForm, setShowTrialForm] = useState(false);
+
+  const { isAuthenticated } = useAuth();
   const { plan: currentPlan } = useSubscription();
 
   const t = (key: keyof typeof T) => T[key][lang];
+  const isRTL = lang === "ar";
 
   const createCheckout = trpc.subscription.createCheckout.useMutation({
-    onSuccess: (data) => {
-      window.location.href = data.invoiceUrl;
-    },
-    onError: (err) => {
-      alert(err.message);
-      setLoadingPlan(null);
-    },
+    onSuccess: (data) => { window.location.href = data.invoiceUrl; },
+    onError: (err) => { alert(err.message); setLoadingPlan(null); },
   });
 
-  const handleUpgrade = async (planId: "prime_plus" | "prime_pro") => {
-    if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
-      return;
-    }
+  const startFreeTrial = trpc.subscription.startFreeTrial.useMutation();
+
+  const handleUpgrade = (planId: "prime_plus" | "prime_pro") => {
+    if (!isAuthenticated) { window.location.href = getLoginUrl(); return; }
     setLoadingPlan(planId);
-    createCheckout.mutate({
-      plan: planId,
-      period,
-      origin: window.location.origin,
-    });
+    createCheckout.mutate({ plan: planId, period, origin: window.location.origin });
   };
 
-  const isRTL = lang === "ar";
+  const handleStartTrial = async () => {
+    setTrialError("");
+    try {
+      const result = await startFreeTrial.mutateAsync({
+        customerName:  trialName.trim() || "Prime Fit User",
+        customerEmail: trialEmail.trim() || undefined,
+      });
+      setTrialKey(result.licenseKey);
+      setTrialExpiry(result.expiresAt);
+    } catch (err: any) {
+      setTrialError(err?.message ?? "حدث خطأ. يرجى المحاولة مرة أخرى.");
+    }
+  };
+
+  const handleCopy = () => {
+    if (!trialKey) return;
+    navigator.clipboard.writeText(trialKey).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      style={{ minHeight: "100vh", background: "#F0F4F8", fontFamily: isRTL ? "Cairo, sans-serif" : "Inter, sans-serif" }}
+      style={{
+        minHeight: "100vh",
+        background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
+        fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
+        padding: "24px 16px 48px",
+      }}
     >
-      {/* Header */}
-      <header style={{ background: `linear-gradient(135deg, #0F1E3D 0%, ${NAVY} 100%)`, padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/">
-          <span style={{ color: SKY, fontSize: 14, cursor: "pointer" }}>{t("backToApp")}</span>
-        </Link>
-        <button
-          onClick={() => setLang(lang === "en" ? "ar" : "en")}
-          style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, padding: "6px 14px", color: "white", cursor: "pointer", fontSize: 13 }}
-        >
-          {lang === "en" ? "العربية" : "English"}
-        </button>
-      </header>
+      <div style={{ maxWidth: 960, margin: "0 auto" }}>
 
-      <main style={{ maxWidth: 960, margin: "0 auto", padding: "40px 20px" }}>
+        {/* Top bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+          <Link href="/">
+            <span style={{ color: SKY_LIGHT, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>{t("backToApp")}</span>
+          </Link>
+          <button
+            onClick={() => setLang(l => l === "ar" ? "en" : "ar")}
+            style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, padding: "6px 14px", color: "white", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
+          >
+            {lang === "ar" ? "English" : "عربي"}
+          </button>
+        </div>
+
         {/* Title */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <h1 style={{ fontSize: 32, fontWeight: 900, color: NAVY, margin: 0 }}>{t("title")}</h1>
-          <p style={{ color: "#64748b", marginTop: 8, fontSize: 16 }}>{t("subtitle")}</p>
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <h1 style={{ color: "white", fontSize: 30, fontWeight: 900, margin: "0 0 8px" }}>{t("title")}</h1>
+          <p style={{ color: SKY_LIGHT, fontSize: 15, margin: 0 }}>{t("subtitle")}</p>
+        </div>
 
-          {/* Period toggle */}
-          <div style={{ display: "inline-flex", background: "white", borderRadius: 12, padding: 4, marginTop: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-            {(["monthly", "yearly"] as const).map((p) => (
+        {/* Period toggle */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 4, display: "flex", gap: 4 }}>
+            {(["monthly", "yearly"] as Period[]).map(p => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
                 style={{
-                  padding: "8px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-                  background: period === p ? NAVY : "transparent",
-                  color: period === p ? "white" : "#64748b",
-                  fontWeight: 600, fontSize: 14, transition: "all 0.2s",
+                  border: "none", borderRadius: 10, padding: "8px 20px", cursor: "pointer",
+                  background: period === p ? "white" : "transparent",
+                  color: period === p ? NAVY : "white",
+                  fontWeight: 700, fontSize: 14, transition: "all 0.2s", fontFamily: "inherit",
                 }}
               >
                 {t(p)}
                 {p === "yearly" && (
-                  <span style={{ marginLeft: 6, background: "#22c55e", color: "white", borderRadius: 6, padding: "2px 6px", fontSize: 11 }}>
+                  <span style={{ marginInlineStart: 6, background: GREEN, color: "white", borderRadius: 6, padding: "2px 6px", fontSize: 10 }}>
                     {t("save")}
                   </span>
                 )}
@@ -170,10 +222,10 @@ export default function Pricing() {
         </div>
 
         {/* Plan cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: 20 }}>
           {PLANS.map((plan) => {
-            const Icon = plan.icon;
-            const price = period === "monthly" ? plan.monthly : plan.yearly;
+            const Icon    = plan.icon;
+            const price   = period === "monthly" ? plan.monthly : plan.yearly;
             const isCurrent = currentPlan === plan.id;
             const isPopular = plan.popular;
 
@@ -184,23 +236,25 @@ export default function Pricing() {
                   background: "white",
                   borderRadius: 20,
                   padding: "28px 24px",
-                  boxShadow: isPopular ? `0 8px 32px ${NAVY}22` : "0 2px 12px rgba(0,0,0,0.06)",
-                  border: isPopular ? `2px solid ${NAVY}` : "2px solid transparent",
+                  boxShadow: isPopular ? `0 12px 40px rgba(27,46,94,0.35)` : "0 4px 16px rgba(0,0,0,0.12)",
+                  border: isPopular ? `2.5px solid ${NAVY}` : "2px solid transparent",
                   position: "relative",
                   transition: "transform 0.2s",
                 }}
               >
                 {isPopular && (
                   <div style={{
-                    position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
-                    background: NAVY, color: "white", borderRadius: 20, padding: "4px 16px", fontSize: 12, fontWeight: 700,
+                    position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)",
+                    background: NAVY, color: "white", borderRadius: 20, padding: "4px 18px",
+                    fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
                   }}>
-                    ⭐ Most Popular
+                    ⭐ {lang === "ar" ? "الأكثر شيوعاً" : "Most Popular"}
                   </div>
                 )}
 
+                {/* Plan header */}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${plan.color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${plan.color}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Icon size={22} color={plan.color} />
                   </div>
                   <div>
@@ -216,11 +270,18 @@ export default function Pricing() {
                 {/* Price */}
                 <div style={{ marginBottom: 20 }}>
                   {price === 0 ? (
-                    <span style={{ fontSize: 32, fontWeight: 900, color: NAVY }}>{t("free")}</span>
+                    <div>
+                      <span style={{ fontSize: 30, fontWeight: 900, color: NAVY }}>{t("free")}</span>
+                      <span style={{ marginInlineStart: 8, background: `${GREEN}18`, color: "#16a34a", borderRadius: 8, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>
+                        {t("trialDays")}
+                      </span>
+                    </div>
                   ) : (
                     <>
-                      <span style={{ fontSize: 32, fontWeight: 900, color: NAVY }}>{price.toFixed(2)}</span>
-                      <span style={{ fontSize: 14, color: "#64748b", marginLeft: 4 }}>KWD{period === "monthly" ? t("perMonth") : t("perYear")}</span>
+                      <span style={{ fontSize: 30, fontWeight: 900, color: NAVY }}>{price.toFixed(2)}</span>
+                      <span style={{ fontSize: 14, color: "#64748b", marginInlineStart: 4 }}>
+                        KWD{period === "monthly" ? t("perMonth") : t("perYear")}
+                      </span>
                     </>
                   )}
                 </div>
@@ -229,28 +290,138 @@ export default function Pricing() {
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 8 }}>
                   {plan.features.map((f, i) => (
                     <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#374151" }}>
-                      <Check size={16} color="#22c55e" strokeWidth={3} />
+                      <Check size={16} color={GREEN} strokeWidth={3} />
                       {lang === "en" ? f.en : f.ar}
                     </li>
                   ))}
                 </ul>
 
-                {/* CTA */}
+                {/* ── CTA: Current plan ── */}
                 {isCurrent ? (
                   <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
                     ✓ {t("current")}
                   </div>
-                ) : plan.id === "free" ? null : (
-                  <Button
-                    onClick={() => handleUpgrade(plan.id)}
-                    disabled={loadingPlan === plan.id}
-                    style={{ width: "100%", background: plan.color, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px" }}
-                  >
-                    {loadingPlan === plan.id ? (
-                      <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
+
+                /* ── CTA: Free plan ── */
+                ) : plan.id === "free" ? (
+                  <>
+                    {trialKey ? (
+                      /* Key display */
+                      <div style={{ background: "#F0FDF4", borderRadius: 14, padding: 16, border: `1.5px solid ${GREEN}44` }}>
+                        <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#166534", fontSize: 13 }}>
+                          🎉 {t("yourKey")}
+                        </p>
+                        <div style={{
+                          background: "white", borderRadius: 10, padding: "10px 14px",
+                          fontFamily: "monospace", fontSize: 16, fontWeight: 800, color: NAVY,
+                          letterSpacing: "0.08em", textAlign: "center", marginBottom: 10,
+                          border: `1.5px solid ${SKY_LIGHT}`,
+                        }}>
+                          {trialKey}
+                        </div>
+                        <p style={{ margin: "0 0 10px", color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>
+                          {t("keyNote")}
+                          {trialExpiry && (
+                            <> · {lang === "ar" ? "ينتهي في" : "Expires"}: <strong>{new Date(trialExpiry).toLocaleDateString()}</strong></>
+                          )}
+                        </p>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            onClick={handleCopy}
+                            style={{
+                              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                              background: copied ? GREEN : NAVY, color: "white", border: "none",
+                              borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700,
+                              cursor: "pointer", fontFamily: "inherit", transition: "background 0.2s",
+                            }}
+                          >
+                            {copied ? <CheckCheck size={15} /> : <Copy size={15} />}
+                            {copied ? t("copied") : t("copyKey")}
+                          </button>
+                          <Link href="/">
+                            <span style={{
+                              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                              background: SKY, color: "white", textDecoration: "none",
+                              borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700,
+                              fontFamily: "inherit", cursor: "pointer",
+                            }}>
+                              {t("goToApp")}
+                            </span>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : showTrialForm ? (
+                      /* Trial form */
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <input
+                          type="text"
+                          placeholder={lang === "ar" ? "اسمك (اختياري)" : "Your name (optional)"}
+                          value={trialName}
+                          onChange={e => setTrialName(e.target.value)}
+                          style={{
+                            width: "100%", boxSizing: "border-box", border: `1.5px solid ${SKY_LIGHT}`,
+                            borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
+                            color: NAVY, outline: "none",
+                          }}
+                        />
+                        <input
+                          type="email"
+                          placeholder={lang === "ar" ? "بريدك الإلكتروني (اختياري)" : "Your email (optional)"}
+                          value={trialEmail}
+                          onChange={e => setTrialEmail(e.target.value)}
+                          style={{
+                            width: "100%", boxSizing: "border-box", border: `1.5px solid ${SKY_LIGHT}`,
+                            borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
+                            color: NAVY, outline: "none",
+                          }}
+                        />
+                        {trialError && (
+                          <p style={{ color: "#EF4444", fontSize: 12, margin: 0, fontWeight: 600 }}>
+                            ⚠️ {trialError}
+                          </p>
+                        )}
+                        <Button
+                          onClick={handleStartTrial}
+                          disabled={startFreeTrial.isPending}
+                          style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
+                        >
+                          {startFreeTrial.isPending
+                            ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
+                            : `🎁 ${t("startTrial")}`}
+                        </Button>
+                        <button
+                          onClick={() => setShowTrialForm(false)}
+                          style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+                        >
+                          {lang === "ar" ? "إلغاء" : "Cancel"}
+                        </button>
+                      </div>
                     ) : (
-                      isAuthenticated ? t("upgrade") : t("loginFirst")
+                      /* Start trial button */
+                      <div>
+                        <Button
+                          onClick={() => setShowTrialForm(true)}
+                          style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
+                        >
+                          🎁 {t("startTrial")}
+                        </Button>
+                        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
+                          {t("trialNote")}
+                        </p>
+                      </div>
                     )}
+                  </>
+
+                /* ── CTA: Paid plans ── */
+                ) : (
+                  <Button
+                    onClick={() => handleUpgrade(plan.id as "prime_plus" | "prime_pro")}
+                    disabled={loadingPlan === plan.id}
+                    style={{ width: "100%", background: plan.color, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
+                  >
+                    {loadingPlan === plan.id
+                      ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
+                      : isAuthenticated ? t("upgrade") : t("loginFirst")}
                   </Button>
                 )}
               </div>
@@ -258,11 +429,18 @@ export default function Pricing() {
           })}
         </div>
 
+        {/* Renewal note */}
+        <div style={{ marginTop: 28, background: "rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 20px", textAlign: "center" }}>
+          <p style={{ color: SKY_LIGHT, fontSize: 13, margin: 0 }}>
+            🔄 {t("renewNote")}
+          </p>
+        </div>
+
         {/* Billing note */}
-        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 13, marginTop: 32 }}>
+        <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 20 }}>
           {t("billingNote")}
         </p>
-      </main>
+      </div>
     </div>
   );
 }
