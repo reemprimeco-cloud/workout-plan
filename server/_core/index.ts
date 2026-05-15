@@ -11,13 +11,11 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { wooCommerceWebhookHandler } from "../handlers/wooCommerceWebhook";
-import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
+import { myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
 import { startWooPoller } from "../handlers/wooPoller";
+import { setIO } from "./socketio";
 
-// ── Socket.IO singleton — import this in routers to emit events ───────────────
-let _io: SocketIOServer | null = null;
-export function getIO(): SocketIOServer | null { return _io; }
-export function setIO(io: SocketIOServer) { _io = io; }
+// ── Socket.IO singleton — imported from socketio.ts ──────────────────────────
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {

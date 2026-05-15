@@ -638,3 +638,24 @@ export const notificationReads = mysqlTable("notification_reads", {
 });
 export type NotificationRead = typeof notificationReads.$inferSelect;
 export type InsertNotificationRead = typeof notificationReads.$inferInsert;
+
+// ── App-wide broadcast announcements ─────────────────────────────────────────
+// Shown to ALL users on app open. No sign-in required. Dismissed via localStorage.
+export const appAnnouncements = mysqlTable("app_announcements", {
+  id:         int("id").autoincrement().primaryKey(),
+  titleAr:    varchar("titleAr",    { length: 200 }).notNull(),
+  titleEn:    varchar("titleEn",    { length: 200 }).notNull(),
+  bodyAr:     text("bodyAr").notNull(),
+  bodyEn:     text("bodyEn").notNull(),
+  emoji:      varchar("emoji",      { length: 8 }).default("📢").notNull(),
+  ctaLabelAr: varchar("ctaLabelAr", { length: 100 }),
+  ctaLabelEn: varchar("ctaLabelEn", { length: 100 }),
+  ctaUrl:     varchar("ctaUrl",     { length: 500 }),
+  isActive:   boolean("isActive").default(true).notNull(),
+  startsAt:   timestamp("startsAt").defaultNow().notNull(),
+  endsAt:     timestamp("endsAt"),            // null = never expires
+  createdAt:  timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AppAnnouncement    = typeof appAnnouncements.$inferSelect;
+export type InsertAnnouncement = typeof appAnnouncements.$inferInsert;

@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
+type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'announcements' | 'rewards' | 'challenges' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -741,6 +741,7 @@ export default function AdminPanel() {
           ['licenses', t('tabLicenses', lang)],
           ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
+          ['announcements', lang === 'ar' ? '📣 الإعلانات' : '📣 Announcements'],
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
           ['profile', t('tabProfile', lang)],
@@ -1347,6 +1348,9 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* ── ANNOUNCEMENTS TAB ── */}
+        {activeTab === 'announcements' && <AdminAnnouncementsTab lang={lang} />}
+
         {/* ── REWARDS TAB ── */}
         {activeTab === 'rewards' && <AdminRewardsTab lang={lang} />}
 
@@ -1700,6 +1704,185 @@ function ImageCropModal({
             ✓ Use This Photo
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ── Admin Announcements Tab ───────────────────────────────────────────────────
+function AdminAnnouncementsTab({ lang }: { lang: 'ar' | 'en' }) {
+  const isRTL = lang === 'ar';
+  const utils = trpc.useUtils();
+
+  const { data: list = [], isLoading } = trpc.announcements.list.useQuery();
+  const createMutation = trpc.announcements.create.useMutation({
+    onSuccess: () => { utils.announcements.list.invalidate(); resetForm(); },
+  });
+  const toggleMutation = trpc.announcements.toggle.useMutation({
+    onSuccess: () => utils.announcements.list.invalidate(),
+  });
+  const deleteMutation = trpc.announcements.delete.useMutation({
+    onSuccess: () => utils.announcements.list.invalidate(),
+  });
+
+  const [titleAr, setTitleAr] = React.useState('');
+  const [titleEn, setTitleEn] = React.useState('');
+  const [bodyAr, setBodyAr] = React.useState('');
+  const [bodyEn, setBodyEn] = React.useState('');
+  const [emoji, setEmoji] = React.useState('📢');
+  const [ctaLabelAr, setCtaLabelAr] = React.useState('');
+  const [ctaLabelEn, setCtaLabelEn] = React.useState('');
+  const [ctaUrl, setCtaUrl] = React.useState('');
+  const [endsAt, setEndsAt] = React.useState('');
+
+  const resetForm = () => {
+    setTitleAr(''); setTitleEn(''); setBodyAr(''); setBodyEn('');
+    setEmoji('📢'); setCtaLabelAr(''); setCtaLabelEn(''); setCtaUrl(''); setEndsAt('');
+  };
+
+  const NAVY = '#1B2E5E';
+  const SKY_LIGHT = '#A8D4E8';
+  const cardStyle: React.CSSProperties = {
+    background: 'white', borderRadius: 18, padding: '20px 18px',
+    boxShadow: '0 4px 20px rgba(27,46,94,0.08)', marginBottom: 16,
+  };
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 14px', borderRadius: 10,
+    border: `1.5px solid ${SKY_LIGHT}`, fontSize: 13,
+    fontFamily: 'Cairo, sans-serif', boxSizing: 'border-box',
+  };
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 4,
+  };
+
+  return (
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Create Form */}
+      <div style={cardStyle}>
+        <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+          {lang === 'ar' ? '📣 إنشاء إعلان جديد' : '📣 Create New Announcement'}
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'}</label>
+            <input style={inputStyle} value={titleAr} onChange={e => setTitleAr(e.target.value)} placeholder="العنوان بالعربية" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'العنوان (إنجليزي)' : 'Title (English)'}</label>
+            <input style={inputStyle} value={titleEn} onChange={e => setTitleEn(e.target.value)} placeholder="Title in English" />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'النص (عربي)' : 'Body (Arabic)'}</label>
+            <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={bodyAr} onChange={e => setBodyAr(e.target.value)} placeholder="نص الإعلان بالعربية" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'النص (إنجليزي)' : 'Body (English)'}</label>
+            <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={bodyEn} onChange={e => setBodyEn(e.target.value)} placeholder="Announcement body in English" />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'إيموجي' : 'Emoji'}</label>
+            <input style={inputStyle} value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={4} />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'نص زر CTA (عربي)' : 'CTA Button (Arabic)'}</label>
+            <input style={inputStyle} value={ctaLabelAr} onChange={e => setCtaLabelAr(e.target.value)} placeholder="اضغط هنا" />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'نص زر CTA (إنجليزي)' : 'CTA Button (English)'}</label>
+            <input style={inputStyle} value={ctaLabelEn} onChange={e => setCtaLabelEn(e.target.value)} placeholder="Click here" />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'رابط CTA' : 'CTA URL'}</label>
+            <input style={inputStyle} value={ctaUrl} onChange={e => setCtaUrl(e.target.value)} placeholder="https://..." />
+          </div>
+          <div>
+            <label style={labelStyle}>{lang === 'ar' ? 'تاريخ الانتهاء (اختياري)' : 'Ends At (optional)'}</label>
+            <input type="date" style={inputStyle} value={endsAt} onChange={e => setEndsAt(e.target.value)} />
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            if (!titleAr || !titleEn || !bodyAr || !bodyEn) return;
+            createMutation.mutate({
+              titleAr, titleEn, bodyAr, bodyEn, emoji,
+              ctaLabelAr: ctaLabelAr || undefined,
+              ctaLabelEn: ctaLabelEn || undefined,
+              ctaUrl: ctaUrl || undefined,
+              endsAt: endsAt || undefined,
+              isActive: true,
+            });
+          }}
+          disabled={createMutation.isPending}
+          style={{
+            background: createMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, ${NAVY}, #0F1E3D)`,
+            color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px',
+            fontSize: 13, fontWeight: 900, cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
+            fontFamily: 'Cairo, sans-serif',
+          }}
+        >
+          {createMutation.isPending ? '⏳...' : (lang === 'ar' ? '📣 نشر الإعلان' : '📣 Publish Announcement')}
+        </button>
+      </div>
+
+      {/* List */}
+      <div style={cardStyle}>
+        <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+          {lang === 'ar' ? '📋 الإعلانات الحالية' : '📋 Current Announcements'}
+        </h2>
+        {isLoading ? <p style={{ color: '#7A9BB5', fontSize: 13 }}>Loading...</p> : list.length === 0 ? (
+          <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{lang === 'ar' ? 'لا توجد إعلانات بعد.' : 'No announcements yet.'}</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {list.map((a: any) => (
+              <div key={a.id} style={{
+                background: '#F8FBFF', borderRadius: 12, padding: '14px 16px',
+                border: `1px solid ${SKY_LIGHT}44`,
+                opacity: a.isActive ? 1 : 0.55,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 900, fontSize: 14, color: NAVY, marginBottom: 2 }}>
+                      {a.emoji} {lang === 'ar' ? a.titleAr : a.titleEn}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                      {lang === 'ar' ? a.bodyAr : a.bodyEn}
+                    </div>
+                    {a.ctaUrl && (
+                      <div style={{ fontSize: 11, color: '#0369A1' }}>
+                        🔗 {lang === 'ar' ? a.ctaLabelAr : a.ctaLabelEn} → {a.ctaUrl}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
+                      {a.isActive ? '🟢 Active' : '🔴 Inactive'}
+                      {a.endsAt && ` · Ends: ${new Date(a.endsAt).toLocaleDateString()}`}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button
+                      onClick={() => toggleMutation.mutate({ id: a.id, isActive: !a.isActive })}
+                      style={{ background: a.isActive ? '#FEF3C7' : '#D1FAE5', color: a.isActive ? '#92400E' : '#065F46', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {a.isActive ? '⏸ Pause' : '▶ Activate'}
+                    </button>
+                    <button
+                      onClick={() => { if (confirm('Delete?')) deleteMutation.mutate({ id: a.id }); }}
+                      style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

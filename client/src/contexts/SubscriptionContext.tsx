@@ -20,6 +20,8 @@ interface SubscriptionContextValue {
   isLoading: boolean;
   hasFeature: (feature: string) => boolean;
   isPremium: boolean;
+  isTrial: boolean;
+  daysLeft: number | null;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue>({
@@ -29,6 +31,8 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   isLoading: false,
   hasFeature: () => false,
   isPremium: false,
+  isTrial: false,
+  daysLeft: null,
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
@@ -48,9 +52,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   const isPremium = plan !== "free" && status === "active";
+  const isTrial = (data as any)?.isTrial ?? false;
+  const daysLeft = expiresAt
+    ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
 
   return (
-    <SubscriptionContext.Provider value={{ plan, status, expiresAt, isLoading, hasFeature, isPremium }}>
+    <SubscriptionContext.Provider value={{ plan, status, expiresAt, isLoading, hasFeature, isPremium, isTrial, daysLeft }}>
       {children}
     </SubscriptionContext.Provider>
   );

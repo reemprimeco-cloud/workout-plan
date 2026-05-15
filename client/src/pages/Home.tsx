@@ -23,6 +23,7 @@ import MyCoach from './MyCoach';
 import Community from './Community';
 import Nutrition from './Nutrition';
 import InAppNotificationPopup from '../components/InAppNotificationPopup';
+import { AppAnnouncementPopup } from '../components/AppAnnouncementPopup';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -375,6 +376,7 @@ export default function Home() {
 
       {/* ── In-App Notification Popup ── */}
       <InAppNotificationPopup />
+      <AppAnnouncementPopup />
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
