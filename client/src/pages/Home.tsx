@@ -178,7 +178,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: streak + active indicator */}
+        {/* Right: streak + active indicator + admin link */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeSession && (
             <div style={{
@@ -195,6 +195,25 @@ export default function Home() {
           }}>
             🔥 {stats.streak} {t('streak')}
           </div>
+          {currentUser?.role === 'admin' && (
+            <a
+              href="/admin"
+              style={{
+                background: 'rgba(0,229,255,0.18)',
+                border: '1.5px solid rgba(0,229,255,0.5)',
+                color: '#00E5FF',
+                textDecoration: 'none',
+                borderRadius: 8,
+                padding: '5px 12px',
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '0.02em',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              🛡️ {isRTL ? 'الإدارة' : 'Admin'}
+            </a>
+          )}
         </div>
       </header>
 
