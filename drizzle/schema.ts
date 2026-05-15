@@ -607,3 +607,34 @@ export const fitnessProfile = mysqlTable("fitness_profile", {
 });
 export type FitnessProfile = typeof fitnessProfile.$inferSelect;
 export type InsertFitnessProfile = typeof fitnessProfile.$inferInsert;
+
+// ── In-App Popup Notification System ─────────────────────────────────────────
+
+// Admin-created in-app notifications (popups shown to users on app open)
+export const inAppNotifications = mysqlTable("in_app_notifications", {
+  id:           int("id").autoincrement().primaryKey(),
+  title:        varchar("title", { length: 255 }).notNull(),
+  message:      text("message").notNull(),
+  imageUrl:     varchar("imageUrl", { length: 512 }),    // optional banner image
+  ctaText:      varchar("ctaText", { length: 128 }),     // optional CTA button text
+  ctaLink:      varchar("ctaLink", { length: 512 }),     // optional CTA button URL
+  targeting:    mysqlEnum("targeting", ["all", "specific", "active_subscribers", "new_subscribers"]).default("all").notNull(),
+  targetUserId: int("targetUserId"),                     // only used when targeting = 'specific'
+  isActive:     boolean("isActive").default(true).notNull(),
+  createdBy:    int("createdBy").notNull(),               // admin user id
+  createdAt:    timestamp("createdAt").defaultNow().notNull(),
+  expiresAt:    timestamp("expiresAt"),                   // null = never expires
+});
+export type InAppNotification = typeof inAppNotifications.$inferSelect;
+export type InsertInAppNotification = typeof inAppNotifications.$inferInsert;
+
+// Tracks which users have read/dismissed which notifications
+export const notificationReads = mysqlTable("notification_reads", {
+  id:             int("id").autoincrement().primaryKey(),
+  notificationId: int("notificationId").notNull(),
+  userId:         int("userId").notNull(),
+  isRead:         boolean("isRead").default(true).notNull(),
+  readAt:         timestamp("readAt").defaultNow().notNull(),
+});
+export type NotificationRead = typeof notificationReads.$inferSelect;
+export type InsertNotificationRead = typeof notificationReads.$inferInsert;
