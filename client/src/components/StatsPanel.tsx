@@ -201,6 +201,35 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
         ))}
       </div>
 
+      {/* ── Weight Progress Bar (above tracker) ── */}
+      <div style={{
+        background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 12,
+        boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
+        border: `1px solid ${SKY_LIGHT}55`,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>⚖️ {isAr ? 'تقدم الوزن' : 'Weight Progress'}</span>
+          <span style={{ fontSize: 12, color: '#7A9BB5' }}>
+            {profile.currentWeight} kg {isAr ? '←' : '→'} {profile.targetWeight} kg
+          </span>
+        </div>
+        <div style={{ height: 10, background: '#D0DFF0', borderRadius: 5, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${stats.progressPercent}%`,
+            background: `linear-gradient(90deg, ${SKY}, ${NAVY})`,
+            borderRadius: 5,
+            transition: 'width 0.8s ease',
+          }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+          <span style={{ fontSize: 11, color: '#7A9BB5' }}>{isAr ? 'بداية' : 'Start'}: {profile.startWeight} kg</span>
+          <span style={{ fontSize: 11, color: NAVY, fontWeight: 700 }}>
+            {stats.progressPercent}% • {isAr ? 'خسرت' : 'Lost'} {stats.weightLost.toFixed(1)} kg 🎉
+          </span>
+        </div>
+      </div>
+
       {/* ── Weight Progress Card ── */}
       <div style={{
         background: 'white', borderRadius: 16, padding: '18px', marginBottom: 16,
