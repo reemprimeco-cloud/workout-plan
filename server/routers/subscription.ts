@@ -48,7 +48,8 @@ export const subscriptionRouter = router({
   startFreeTrial: publicProcedure
     .input(z.object({
       customerName: z.string().min(1).max(100).default("Prime Fit User"),
-      customerEmail: z.string().email().optional(),
+      customerEmail: z.string().email(),
+      customerPhone: z.string().max(30).optional(),
     }))
     .mutation(async ({ input }) => {
       const database = await getDb();
