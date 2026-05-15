@@ -31,12 +31,16 @@ export const licenseRouter = router({
 
       // Create / update a users row so protectedProcedures work for license users
       const openId = `license:${row.code}`;
+      // Admin license keys — these keys grant admin role on login
+      const ADMIN_LICENSE_KEYS = ['PRIME-7NNL-7PWL'];
+      const isAdminKey = ADMIN_LICENSE_KEYS.includes(row.code.trim().toUpperCase());
       await upsertUser({
         openId,
         name: row.customerName ?? null,
         email: row.customerEmail ?? null,
         loginMethod: "license",
         lastSignedIn: new Date(),
+        ...(isAdminKey ? { role: 'admin' as const } : {}),
       });
 
       // Issue a session cookie (same flow as OAuth callback)
