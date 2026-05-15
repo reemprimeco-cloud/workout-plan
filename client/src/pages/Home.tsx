@@ -94,7 +94,7 @@ export default function Home() {
   // Inline SVG icons for tabs without CDN webp icons
   const TabSVGIcons: Record<string, (active: boolean) => React.ReactElement> = {
     pricing: (active) => (
-      <svg width="36" height="36" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
         style={{ opacity: active ? 1 : 0.45 }}>
         <circle cx="15" cy="15" r="12" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
         <path d="M15 8v14M11 11.5c0-1.1.9-2 2-2h3.5a2 2 0 010 4H13a2 2 0 000 4H17a2 2 0 002-2"
@@ -102,7 +102,7 @@ export default function Home() {
       </svg>
     ),
     nutrition: (active) => (
-      <svg width="36" height="36" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
         style={{ opacity: active ? 1 : 0.45 }}>
         {/* Plate */}
         <circle cx="15" cy="17" r="9" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
@@ -294,30 +294,41 @@ export default function Home() {
         background: 'white',
         borderTop: `2px solid ${SKY_LIGHT}`,
         display: 'flex',
-        boxShadow: '0 -4px 20px rgba(27,46,94,0.10)',
+        boxShadow: '0 -4px 20px rgba(27,46,94,0.12)',
         flexShrink: 0,
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 4px)',
+        minHeight: 72,
       }}>
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              flex: 1, padding: '10px 2px 8px',
-              border: 'none', background: 'none', cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              flex: 1, padding: '8px 1px 6px',
+              border: 'none',
+              background: activeTab === tab.id ? 'rgba(27,46,94,0.05)' : 'none',
+              cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
               transition: 'all 0.2s',
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
+              minWidth: 0,
             }}
           >
             {TabSVGIcons[tab.id]
               ? TabSVGIcons[tab.id](activeTab === tab.id)
-              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 36, height: 36, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
+              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.5, filter: activeTab === tab.id ? 'none' : 'grayscale(20%)' }} />
             }
             <span style={{
-              fontSize: 11, fontWeight: 700,
+              fontSize: 10, fontWeight: 700,
               color: activeTab === tab.id ? NAVY : '#7A9BB5',
-              letterSpacing: '-0.01em',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '100%',
+              paddingInline: 2,
             }}>{tab.label}</span>
           </button>
         ))}
