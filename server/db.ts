@@ -166,6 +166,15 @@ export async function deleteAccessCode(id: number) {
   await db.delete(accessCodes).where(eq(accessCodes.id, id));
 }
 
+export async function updateAccessCodeEmail(id: number, customerEmail: string) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.update(accessCodes).set({ customerEmail: customerEmail.toLowerCase().trim() }).where(eq(accessCodes.id, id));
+  // Return updated row
+  const rows = await db.select().from(accessCodes).where(eq(accessCodes.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
 // ── Access Code Renewal Helpers ─────────────────────────────────────────────
 
 export async function getAccessCodeByEmail(email: string) {

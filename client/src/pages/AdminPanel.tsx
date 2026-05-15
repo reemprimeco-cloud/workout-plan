@@ -528,6 +528,33 @@ export default function AdminPanel() {
   });
   const toggleMutation = trpc.license.toggle.useMutation({ onSuccess: () => { utils.license.list.invalidate(); utils.admin.getStats.invalidate(); } });
   const deleteMutation = trpc.license.delete.useMutation({ onSuccess: () => { utils.license.list.invalidate(); utils.admin.getStats.invalidate(); } });
+
+  // Email edit state
+  const [editingEmailId, setEditingEmailId] = useState<number | null>(null);
+  const [editEmailValue, setEditEmailValue] = useState('');
+  const [emailActionMsg, setEmailActionMsg] = useState<Record<number, string>>({});
+  const updateEmailMutation = trpc.license.updateEmail.useMutation({
+    onSuccess: (_, vars) => {
+      utils.license.list.invalidate();
+      setEditingEmailId(null);
+      setEmailActionMsg(prev => ({ ...prev, [vars.id]: lang === 'ar' ? '✅ تم تحديث البريد' : '✅ Email updated' }));
+      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
+    },
+    onError: (err, vars) => {
+      setEmailActionMsg(prev => ({ ...prev, [vars.id]: `❌ ${err.message}` }));
+      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
+    },
+  });
+  const resendEmailMutation = trpc.license.resendEmail.useMutation({
+    onSuccess: (_, vars) => {
+      setEmailActionMsg(prev => ({ ...prev, [vars.id]: lang === 'ar' ? '✅ تم إرسال الكود بنجاح' : '✅ Email sent!' }));
+      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
+    },
+    onError: (err, vars) => {
+      setEmailActionMsg(prev => ({ ...prev, [vars.id]: `❌ ${err.message}` }));
+      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
+    },
+  });
   const sendToOneMutation = trpc.admin.sendToOne.useMutation({
     onSuccess: () => {
       utils.admin.listBroadcasts.invalidate();
@@ -830,7 +857,46 @@ export default function AdminPanel() {
                         <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#FAFBFF', borderBottom: `1px solid ${SKY_LIGHT}33` }}>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: NAVY, fontWeight: 700, whiteSpace: 'nowrap', direction: 'ltr' }}>{c.code}</td>
                           <td style={{ padding: '10px 12px', color: '#334155' }}>{c.customerName || '—'}</td>
-                          <td style={{ padding: '10px 12px', color: '#334155', direction: 'ltr', fontSize: 12 }}>{c.customerEmail || '—'}</td>
+                          <td style={{ padding: '10px 12px', direction: 'ltr', fontSize: 12, minWidth: 180 }}>
+                            {editingEmailId === c.id ? (
+                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                <input
+                                  type="email"
+                                  value={editEmailValue}
+                                  onChange={e => setEditEmailValue(e.target.value)}
+                                  autoFocus
+                                  style={{ flex: 1, padding: '4px 8px', border: '1.5px solid #7BB8D4', borderRadius: 6, fontSize: 12, outline: 'none', minWidth: 0 }}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') updateEmailMutation.mutate({ id: c.id, email: editEmailValue });
+                                    if (e.key === 'Escape') setEditingEmailId(null);
+                                  }}
+                                />
+                                <button
+                                  onClick={() => updateEmailMutation.mutate({ id: c.id, email: editEmailValue })}
+                                  disabled={updateEmailMutation.isPending}
+                                  style={{ background: '#1B2E5E', color: 'white', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                >✓</button>
+                                <button
+                                  onClick={() => setEditingEmailId(null)}
+                                  style={{ background: '#F1F5F9', color: '#64748b', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}
+                                >✕</button>
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                <span style={{ color: '#334155', flex: 1 }}>{c.customerEmail || '—'}</span>
+                                <button
+                                  onClick={() => { setEditingEmailId(c.id); setEditEmailValue(c.customerEmail || ''); }}
+                                  title={lang === 'ar' ? 'تعديل البريد' : 'Edit email'}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7BB8D4', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+                                >✏️</button>
+                              </div>
+                            )}
+                            {emailActionMsg[c.id] && (
+                              <div style={{ fontSize: 10, marginTop: 2, color: emailActionMsg[c.id].startsWith('✅') ? '#16A34A' : '#DC2626', fontWeight: 700 }}>
+                                {emailActionMsg[c.id]}
+                              </div>
+                            )}
+                          </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, maxWidth: 140 }}>{c.note || '—'}</td>
                           <td style={{ padding: '10px 12px' }}>
                             <span style={{ background: c.isActive ? '#DCFCE7' : '#FEE2E2', color: c.isActive ? '#16A34A' : '#DC2626', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
@@ -851,11 +917,20 @@ export default function AdminPanel() {
                             {new Date(c.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <div style={{ display: 'flex', gap: 6 }}>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                               <button onClick={() => toggleMutation.mutate({ id: c.id, isActive: !c.isActive })} disabled={toggleMutation.isPending}
                                 style={{ background: c.isActive ? '#FEF9C3' : '#DCFCE7', border: `1px solid ${c.isActive ? '#EAB308' : '#22C55E'}`, color: c.isActive ? '#92400E' : '#166534', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                 {c.isActive ? t('disable', lang) : t('enable', lang)}
                               </button>
+                              {c.customerEmail && (
+                                <button
+                                  onClick={() => resendEmailMutation.mutate({ id: c.id })}
+                                  disabled={resendEmailMutation.isPending}
+                                  title={lang === 'ar' ? 'إعادة إرسال الكود بالبريد' : 'Resend code by email'}
+                                  style={{ background: '#EFF6FF', border: '1px solid #3B82F6', color: '#1D4ED8', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                  📧 {lang === 'ar' ? 'إرسال' : 'Send'}
+                                </button>
+                              )}
                               <button onClick={() => { if (confirm(`${t('confirmDelete', lang)} "${c.code}"?`)) deleteMutation.mutate({ id: c.id }); }} disabled={deleteMutation.isPending}
                                 style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#DC2626', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                                 {t('delete', lang)}
