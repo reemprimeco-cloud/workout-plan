@@ -34,7 +34,7 @@ export const licenseRouter = router({
       // Create / update a users row so protectedProcedures work for license users
       const openId = `license:${row.code}`;
       // Admin license keys — these keys grant admin role on login
-      const ADMIN_LICENSE_KEYS = ['PRIME-ADMIN_REEM'];
+      const ADMIN_LICENSE_KEYS = ['PRIME-ADMIN-REEM'];
       const isAdminKey = ADMIN_LICENSE_KEYS.includes(row.code.trim().toUpperCase());
       await upsertUser({
         openId,
