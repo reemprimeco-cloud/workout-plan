@@ -534,44 +534,50 @@ export default function Pricing() {
                         <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#166534", fontSize: 13 }}>
                           🎉 {t("yourKey")}
                         </p>
+                        {/* Key row with inline copy button */}
                         <div style={{
-                          background: "white", borderRadius: 10, padding: "10px 14px",
-                          fontFamily: "monospace", fontSize: 16, fontWeight: 800, color: NAVY,
-                          letterSpacing: "0.08em", textAlign: "center", marginBottom: 10,
+                          display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+                          background: "white", borderRadius: 10, padding: "10px 12px",
                           border: `1.5px solid ${SKY_LIGHT}`,
                         }}>
-                          {trialKey}
+                          <span style={{
+                            flex: 1, fontFamily: "monospace", fontSize: 15, fontWeight: 800,
+                            color: NAVY, letterSpacing: "0.08em", textAlign: "center",
+                          }}>
+                            {trialKey}
+                          </span>
+                          <button
+                            onClick={handleCopy}
+                            title={t("copyKey")}
+                            style={{
+                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                              background: copied ? GREEN : "#E8F4FB", color: copied ? "white" : NAVY,
+                              border: "none", borderRadius: 8, padding: "7px", cursor: "pointer",
+                              transition: "background 0.2s",
+                            }}
+                          >
+                            {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
+                          </button>
                         </div>
                         <p style={{ margin: "0 0 10px", color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>
-                          {t("keyNote")}
+                          {copied
+                            ? <span style={{ color: GREEN, fontWeight: 700 }}>✓ {t("copied")}</span>
+                            : t("keyNote")
+                          }
                           {trialExpiry && (
                             <> · {lang === "ar" ? "ينتهي في" : "Expires"}: <strong>{new Date(trialExpiry).toLocaleDateString()}</strong></>
                           )}
                         </p>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button
-                            onClick={handleCopy}
-                            style={{
-                              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                              background: copied ? GREEN : NAVY, color: "white", border: "none",
-                              borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700,
-                              cursor: "pointer", fontFamily: "inherit", transition: "background 0.2s",
-                            }}
-                          >
-                            {copied ? <CheckCheck size={15} /> : <Copy size={15} />}
-                            {copied ? t("copied") : t("copyKey")}
-                          </button>
-                          <Link href="/">
-                            <span style={{
-                              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                              background: SKY, color: "white", textDecoration: "none",
-                              borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700,
-                              fontFamily: "inherit", cursor: "pointer",
-                            }}>
-                              {t("goToApp")}
-                            </span>
-                          </Link>
-                        </div>
+                        <Link href="/">
+                          <span style={{
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            background: SKY, color: "white", textDecoration: "none",
+                            borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700,
+                            fontFamily: "inherit", cursor: "pointer",
+                          }}>
+                            {t("goToApp")}
+                          </span>
+                        </Link>
                       </div>
                     ) : (
                       /* Start trial button — opens same info modal as paid plans */
