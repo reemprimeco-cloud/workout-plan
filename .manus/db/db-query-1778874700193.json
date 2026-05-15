@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, code, customerName, customerEmail, isActive FROM access_codes WHERE code = 'PRIME-ADMIN_REEM';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SELECT id, code, customerName, customerEmail, isActive FROM access_codes WHERE code = 'PRIME-ADMIN_REEM';",
+  "rows": [
+    {
+      "id": "2",
+      "code": "PRIME-ADMIN_REEM",
+      "customerName": "Reem",
+      "customerEmail": "r.bhck@live.com",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tcustomerName\tcustomerEmail\tisActive\n2\tPRIME-ADMIN_REEM\tReem\tr.bhck@live.com\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1942
+}

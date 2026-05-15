@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE access_codes SET code = 'PRIME-ADMIN_REEM' WHERE code = 'PRIME-7NNL-7PWL';\nUPDATE users SET openId = 'license:PRIME-ADMIN_REEM' WHERE openId = 'license:PRIME-7NNL-7PWL';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute \nUPDATE access_codes SET code = 'PRIME-ADMIN_REEM' WHERE code = 'PRIME-7NNL-7PWL';\nUPDATE users SET openId = 'license:PRIME-ADMIN_REEM' WHERE openId = 'license:PRIME-7NNL-7PWL';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2126
+}
