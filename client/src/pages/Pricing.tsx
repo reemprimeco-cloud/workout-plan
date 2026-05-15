@@ -182,7 +182,7 @@ export default function Pricing() {
 
   // Customer info modal state (for paid plans)
   const [showInfoModal, setShowInfoModal]   = useState(false);
-  const [selectedPlan, setSelectedPlan]     = useState<"prime_plus" | "prime_pro" | null>(null);
+  const [selectedPlan, setSelectedPlan]     = useState<"prime_plus" | "prime_pro" | "free" | null>(null);
   const [custName, setCustName]             = useState("");
   const [custEmail, setCustEmail]           = useState("");
   const [custPhone, setCustPhone]           = useState("");
@@ -207,10 +207,9 @@ export default function Pricing() {
 
   const startFreeTrial = trpc.subscription.startFreeTrial.useMutation();
 
-  // Open the customer info modal for paid plans
-  const handleUpgradeClick = (planId: "prime_plus" | "prime_pro") => {
-    if (!isAuthenticated) { window.location.href = getLoginUrl(); return; }
-    setSelectedPlan(planId);
+  // Open the customer info modal — used for both free trial and paid plans
+  const handleUpgradeClick = (planId: "prime_plus" | "prime_pro" | "free") => {
+    setSelectedPlan(planId as any);
     // Pre-fill with user data if available
     setCustName(user?.name ?? "");
     setCustEmail(user?.email ?? "");
@@ -219,7 +218,7 @@ export default function Pricing() {
     setShowInfoModal(true);
   };
 
-  // Validate and submit the customer info form
+  // Validate and submit the customer info form (free trial or paid plan)
   const handleProceedToPayment = async () => {
     let valid = true;
     if (!custName.trim()) { setCustNameErr(t("nameRequired")); valid = false; } else setCustNameErr("");
@@ -229,14 +228,32 @@ export default function Pricing() {
     if (!valid || !selectedPlan) return;
 
     setCheckoutLoading(true);
-    createCheckout.mutate({
-      plan: selectedPlan,
-      period,
-      origin: window.location.origin,
-      customerName: custName.trim(),
-      customerEmail: custEmail.trim(),
-      customerPhone: custPhone.trim(),
-    });
+    if ((selectedPlan as string) === "free") {
+      // Free trial — generate key immediately
+      try {
+        const result = await startFreeTrial.mutateAsync({
+          customerName: custName.trim(),
+          customerEmail: custEmail.trim(),
+          customerPhone: custPhone.trim(),
+        });
+        setTrialKey(result.licenseKey);
+        setTrialExpiry(result.expiresAt);
+        setShowInfoModal(false);
+      } catch (err: any) {
+        setTrialError(err?.message ?? "حدث خطأ. يرجى المحاولة مرة أخرى.");
+      } finally {
+        setCheckoutLoading(false);
+      }
+    } else {
+      createCheckout.mutate({
+        plan: selectedPlan! as "prime_plus" | "prime_pro",
+        period,
+        origin: window.location.origin,
+        customerName: custName.trim(),
+        customerEmail: custEmail.trim(),
+        customerPhone: custPhone.trim(),
+      });
+    }
   };
 
   const handleStartTrial = async () => {
@@ -244,7 +261,7 @@ export default function Pricing() {
     try {
       const result = await startFreeTrial.mutateAsync({
         customerName:  trialName.trim() || "Prime Fit User",
-        customerEmail: trialEmail.trim() || undefined,
+        customerEmail: trialEmail.trim() || "trial@primefit.app",
       });
       setTrialKey(result.licenseKey);
       setTrialExpiry(result.expiresAt);
@@ -261,11 +278,11 @@ export default function Pricing() {
   };
 
   // Get plan display name
-  const getPlanName = (planId: "prime_plus" | "prime_pro") => {
+  const getPlanName = (planId: "prime_plus" | "prime_pro" | "free" | null) => {
     const plan = PLANS.find(p => p.id === planId);
     return lang === "ar" ? plan?.nameAr : plan?.nameEn;
   };
-  const getPlanPrice = (planId: "prime_plus" | "prime_pro") => {
+  const getPlanPrice = (planId: "prime_plus" | "prime_pro" | "free" | null) => {
     const plan = PLANS.find(p => p.id === planId);
     return plan ? (period === "monthly" ? plan.monthly : plan.yearly) : 0;
   };
@@ -330,7 +347,7 @@ export default function Pricing() {
                   Prime Fit {getPlanName(selectedPlan)}
                 </span>
                 <span style={{ fontWeight: 900, color: NAVY, fontSize: 16 }}>
-                  {getPlanPrice(selectedPlan).toFixed(2)} KWD
+                  {(selectedPlan as string) === "free" ? lang === "ar" ? "مجاناً" : "Free" : `${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
                   <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
                     {period === "monthly" ? t("perMonth") : t("perYear")}
                   </span>
@@ -512,7 +529,7 @@ export default function Pricing() {
                 ) : plan.id === "free" ? (
                   <>
                     {trialKey ? (
-                      /* Key display */
+                      /* Key display after successful trial generation */
                       <div style={{ background: "#F0FDF4", borderRadius: 14, padding: 16, border: `1.5px solid ${GREEN}44` }}>
                         <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#166534", fontSize: 13 }}>
                           🎉 {t("yourKey")}
@@ -556,57 +573,14 @@ export default function Pricing() {
                           </Link>
                         </div>
                       </div>
-                    ) : showTrialForm ? (
-                      /* Trial form */
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        <input
-                          type="text"
-                          placeholder={lang === "ar" ? "اسمك (اختياري)" : "Your name (optional)"}
-                          value={trialName}
-                          onChange={e => setTrialName(e.target.value)}
-                          style={{
-                            width: "100%", boxSizing: "border-box", border: `1.5px solid ${SKY_LIGHT}`,
-                            borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
-                            color: NAVY, outline: "none",
-                          }}
-                        />
-                        <input
-                          type="email"
-                          placeholder={lang === "ar" ? "بريدك الإلكتروني (اختياري)" : "Your email (optional)"}
-                          value={trialEmail}
-                          onChange={e => setTrialEmail(e.target.value)}
-                          style={{
-                            width: "100%", boxSizing: "border-box", border: `1.5px solid ${SKY_LIGHT}`,
-                            borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
-                            color: NAVY, outline: "none",
-                          }}
-                        />
+                    ) : (
+                      /* Start trial button — opens same info modal as paid plans */
+                      <div>
                         {trialError && (
-                          <p style={{ color: "#EF4444", fontSize: 12, margin: 0, fontWeight: 600 }}>
-                            ⚠️ {trialError}
-                          </p>
+                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
                         )}
                         <Button
-                          onClick={handleStartTrial}
-                          disabled={startFreeTrial.isPending}
-                          style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
-                        >
-                          {startFreeTrial.isPending
-                            ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
-                            : `🎁 ${t("startTrial")}`}
-                        </Button>
-                        <button
-                          onClick={() => setShowTrialForm(false)}
-                          style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
-                        >
-                          {lang === "ar" ? "إلغاء" : "Cancel"}
-                        </button>
-                      </div>
-                    ) : (
-                      /* Start trial button */
-                      <div>
-                        <Button
-                          onClick={() => setShowTrialForm(true)}
+                          onClick={() => handleUpgradeClick("free")}
                           style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
                         >
                           🎁 {t("startTrial")}
