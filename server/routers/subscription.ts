@@ -6,6 +6,7 @@ import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema
 import { eq, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
+import { sendLicenseEmail } from "../_core/email";
 
 export const subscriptionRouter = router({
   // Get available plans with prices
@@ -85,6 +86,16 @@ export const subscriptionRouter = router({
       });
 
       console.log(`[FreeTrial] Generated key ${newKey} for ${input.customerEmail ?? "(no email)"}, expires ${expiresAt.toDateString()}`);
+
+      // Send license key email to customer
+      if (input.customerEmail) {
+        sendLicenseEmail({
+          to: input.customerEmail,
+          customerName: input.customerName,
+          licenseKey: newKey,
+          orderNumber: `FREE-TRIAL-${Date.now()}`,
+        }).catch(err => console.error("[FreeTrial] Email send failed:", err));
+      }
 
       return {
         success: true,
