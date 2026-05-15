@@ -554,3 +554,56 @@ export const personalizedPrograms = mysqlTable("personalized_programs", {
 });
 export type PersonalizedProgram = typeof personalizedPrograms.$inferSelect;
 export type InsertPersonalizedProgram = typeof personalizedPrograms.$inferInsert;
+
+// ── Local Data Migration Tables ───────────────────────────────────────────────
+// These tables store migrated localStorage data (gym sessions + weight log)
+// so users don't lose their data when switching devices or clearing browser storage.
+
+// Gym sessions migrated from localStorage gym_tracker_v3
+export const gymSessions = mysqlTable("gym_sessions", {
+  id:            int("id").autoincrement().primaryKey(),
+  userId:        int("userId").notNull(),
+  localId:       varchar("localId", { length: 64 }).notNull(),   // original localStorage session id
+  date:          varchar("date", { length: 10 }).notNull(),      // YYYY-MM-DD
+  checkInTime:   varchar("checkInTime", { length: 8 }).notNull(), // HH:MM
+  checkOutTime:  varchar("checkOutTime", { length: 8 }),
+  sessionType:   varchar("sessionType", { length: 64 }).notNull(),
+  mood:          varchar("mood", { length: 8 }),
+  energyLevel:   int("energyLevel"),
+  notes:         text("notes"),
+  bodyWeight:    double("bodyWeight"),
+  payload:       text("payload").notNull(),  // full JSON of exercises/cardio/aqua/sauna
+  createdAt:     timestamp("createdAt").defaultNow().notNull(),
+});
+export type GymSession = typeof gymSessions.$inferSelect;
+export type InsertGymSession = typeof gymSessions.$inferInsert;
+
+// Weight log migrated from localStorage gym_tracker_v3.weightLog
+export const weightLog = mysqlTable("weight_log", {
+  id:        int("id").autoincrement().primaryKey(),
+  userId:    int("userId").notNull(),
+  date:      varchar("date", { length: 10 }).notNull(),   // YYYY-MM-DD
+  weight:    double("weight").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type WeightLogEntry = typeof weightLog.$inferSelect;
+export type InsertWeightLogEntry = typeof weightLog.$inferInsert;
+
+// User fitness profile migrated from localStorage gym_tracker_v3.profile
+export const fitnessProfile = mysqlTable("fitness_profile", {
+  id:            int("id").autoincrement().primaryKey(),
+  userId:        int("userId").notNull().unique(),
+  name:          varchar("name", { length: 255 }),
+  currentWeight: double("currentWeight"),
+  targetWeight:  double("targetWeight"),
+  startWeight:   double("startWeight"),
+  age:           int("age"),
+  height:        double("height"),
+  bmi:           double("bmi"),
+  gender:        varchar("gender", { length: 16 }),
+  startDate:     varchar("startDate", { length: 10 }),
+  avatarUrl:     text("avatarUrl"),
+  updatedAt:     timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type FitnessProfile = typeof fitnessProfile.$inferSelect;
+export type InsertFitnessProfile = typeof fitnessProfile.$inferInsert;
