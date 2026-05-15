@@ -30,7 +30,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 
-type Tab = 'home' | 'nutrition' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
+type Tab = 'home' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
 
 export default function Home() {
   const tracker = useGymTracker();
@@ -39,6 +39,7 @@ export default function Home() {
   const profileQuery = trpc.userProfile.getProfile.useQuery(undefined, { enabled: isAuthenticated, retry: false });
   const headerAvatar = profileQuery.data?.avatarUrl ?? null;
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [showNutrition, setShowNutrition] = useState(false);
   const [startingSession, setStartingSession] = useState(false);
   const { activeSession, startSession, stats, data } = tracker;
   const { data: currentUser } = trpc.auth.me.useQuery();
@@ -115,9 +116,8 @@ export default function Home() {
   };
   const tabs: { id: Tab; iconUrl: string; label: string }[] = [
     { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
-    { id: 'nutrition', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: isRTL ? 'التغذية' : 'Nutrition' },
     { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
-    { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: t('navGuide') },
+    { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: isRTL ? 'الجدول' : 'Schedule' },
     { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'coach', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp', label: isRTL ? 'مدربي' : 'Coach' },
     { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
@@ -178,7 +178,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: streak + active indicator + admin link */}
+        {/* Right: active indicator + admin link */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeSession && (
             <div style={{
@@ -189,12 +189,6 @@ export default function Home() {
               🔴 {t('activeSession')}
             </div>
           )}
-          <div style={{
-            background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '6px 12px',
-            color: SKY_LIGHT, fontSize: 12,
-          }}>
-            🔥 {stats.streak} {t('streak')}
-          </div>
           {currentUser?.role === 'admin' && (
             <a
               href="/admin"
@@ -255,12 +249,11 @@ export default function Home() {
             {activeSession ? (
               <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} />
             ) : (
-              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
+              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} onOpenNutrition={() => setShowNutrition(true)} />
             )}
           </>
         )}
 
-        {activeTab === 'nutrition' && <Nutrition />}
         {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} />}
         {activeTab === 'guide' && <WorkoutGuide gender={(data.profile.gender as 'male' | 'female') || 'female'} />}
         {activeTab === 'exercises' && (
@@ -331,6 +324,43 @@ export default function Home() {
       </nav>
 
 
+      {/* ── Nutrition Full-Screen Overlay ── */}
+      {showNutrition && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: '#F0F4F8',
+          display: 'flex', flexDirection: 'column',
+          fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+        }}>
+          {/* Back header */}
+          <div style={{
+            background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
+            padding: '12px 20px',
+            display: 'flex', alignItems: 'center', gap: 12,
+            boxShadow: '0 4px 20px rgba(27,46,94,0.35)',
+          }}>
+            <button
+              onClick={() => setShowNutrition(false)}
+              style={{
+                background: 'rgba(255,255,255,0.15)', border: 'none',
+                borderRadius: 10, padding: '6px 14px',
+                color: 'white', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {isRTL ? '▶ رجوع' : '← Back'}
+            </button>
+            <span style={{ color: 'white', fontSize: 16, fontWeight: 900 }}>
+              🥗 {lang === 'ar' ? 'التغذية' : 'Nutrition'}
+            </span>
+          </div>
+          {/* Scrollable nutrition content */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <Nutrition />
+          </div>
+        </div>
+      )}
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
@@ -341,6 +371,97 @@ export default function Home() {
         ::-webkit-scrollbar-track { background: #E8EFF7; }
         ::-webkit-scrollbar-thumb { background: ${SKY}; border-radius: 4px; }
       `}</style>
+    </div>
+  );
+}
+
+// ── Nutrition Card (Home page summary) ──────────────────────
+function NutritionCard({ lang, isRTL, onOpenNutrition }: {
+  lang: string;
+  isRTL: boolean;
+  onOpenNutrition: () => void;
+}) {
+  const { data: todayLog, isLoading } = trpc.nutrition.getTodayLog.useQuery(
+    { date: undefined },
+    { staleTime: 60_000 }
+  );
+
+  const consumed = todayLog?.totals?.calories ?? 0;
+  const goal = todayLog?.goals?.calories ?? 2000;
+  const waterMl = todayLog?.totalWaterMl ?? 0;
+  const waterGoal = todayLog?.goals?.waterMl ?? 2500;
+  const pct = Math.min(Math.round((consumed / Math.max(goal, 1)) * 100), 100);
+  const waterPct = Math.min(Math.round((waterMl / Math.max(waterGoal, 1)) * 100), 100);
+
+  return (
+    <div
+      onClick={onOpenNutrition}
+      style={{
+        background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 16,
+        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
+        border: `1px solid ${SKY_LIGHT}55`,
+        cursor: 'pointer',
+        direction: isRTL ? 'rtl' : 'ltr',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>
+          🥗 {lang === 'ar' ? 'التغذية اليومية' : "Today's Nutrition"}
+        </span>
+        <span style={{ fontSize: 11, color: SKY, fontWeight: 700 }}>
+          {lang === 'ar' ? 'افتح ←' : 'Open →'}
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div style={{ color: '#7A9BB5', fontSize: 12, textAlign: 'center', padding: '8px 0' }}>
+          {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+        </div>
+      ) : (
+        <>
+          {/* Calories row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ fontSize: 12, color: '#3D5A80' }}>🔥 {lang === 'ar' ? 'السعرات' : 'Calories'}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>{Math.round(consumed)} / {goal} kcal</span>
+          </div>
+          <div style={{ height: 8, background: '#D0DFF0', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
+            <div style={{
+              height: '100%', width: `${pct}%`,
+              background: pct >= 100 ? '#EF4444' : `linear-gradient(90deg, ${SKY}, ${NAVY})`,
+              borderRadius: 4, transition: 'width 0.6s ease',
+            }} />
+          </div>
+
+          {/* Macros row */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            {[
+              { label: lang === 'ar' ? 'بروتين' : 'Protein', value: todayLog?.totals?.proteinG ?? 0, unit: 'g', color: '#EF4444' },
+              { label: lang === 'ar' ? 'كربو' : 'Carbs', value: todayLog?.totals?.carbsG ?? 0, unit: 'g', color: '#F59E0B' },
+              { label: lang === 'ar' ? 'دهون' : 'Fat', value: todayLog?.totals?.fatG ?? 0, unit: 'g', color: '#8B5CF6' },
+            ].map(m => (
+              <div key={m.label} style={{
+                flex: 1, background: `${m.color}12`, borderRadius: 8,
+                padding: '6px 8px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: m.color }}>{Math.round(m.value)}{m.unit}</div>
+                <div style={{ fontSize: 9, color: '#7A9BB5', marginTop: 2 }}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Water row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ fontSize: 12, color: '#3D5A80' }}>💧 {lang === 'ar' ? 'الماء' : 'Water'}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#38BDF8' }}>{waterMl} / {waterGoal} ml</span>
+          </div>
+          <div style={{ height: 6, background: '#E0F2FE', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${waterPct}%`,
+              background: '#38BDF8', borderRadius: 3, transition: 'width 0.6s ease',
+            }} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -364,10 +485,11 @@ const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
 // Glutes included in lower_body for all genders
 const GLUTES_SESSION: SessionType = 'lower_body';
 
-function CheckInPanel({ onStart, stats, profile }: {
+function CheckInPanel({ onStart, stats, profile, onOpenNutrition }: {
   onStart: (type: SessionType) => void;
   stats: ReturnType<typeof useGymTracker>['stats'];
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
+  onOpenNutrition: () => void;
 }) {
   const { lang, t, isRTL } = useLanguage();
   const now = new Date();
@@ -424,12 +546,30 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
-          <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
-            {profile.name}
-          </h2>
-          <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
+              <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
+                {profile.name}
+              </h2>
+              <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
+            </div>
+            {/* Streak badge — moved from header */}
+            <div style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: `1.5px solid ${SKY}55`,
+              borderRadius: 14,
+              padding: '8px 14px',
+              textAlign: 'center',
+              minWidth: 64,
+              flexShrink: 0,
+            }}>
+              <div style={{ fontSize: 20, lineHeight: 1 }}>🔥</div>
+              <div style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1.1 }}>{stats.streak}</div>
+              <div style={{ color: SKY_LIGHT, fontSize: 9, marginTop: 2 }}>{lang === 'ar' ? 'يوم متتالي' : 'day streak'}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
             {[
               { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
               { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: '📆' },
@@ -438,6 +578,7 @@ function CheckInPanel({ onStart, stats, profile }: {
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
                 border: `1px solid ${SKY}33`,
+                flex: 1,
               }}>
                 <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.icon} {s.label}</div>
                 <div style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>{s.value}</div>
@@ -447,34 +588,8 @@ function CheckInPanel({ onStart, stats, profile }: {
         </div>
       </div>
 
-      {/* Weight Progress */}
-      <div style={{
-        background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 16,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-        border: `1px solid ${SKY_LIGHT}55`,
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>⚖️ {t('weightProgress')}</span>
-          <span style={{ fontSize: 12, color: '#7A9BB5' }}>
-            {profile.currentWeight} {t('kg')} {isRTL ? '←' : '→'} {profile.targetWeight} {t('kg')}
-          </span>
-        </div>
-        <div style={{ height: 10, background: '#D0DFF0', borderRadius: 5, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: `${stats.progressPercent}%`,
-            background: `linear-gradient(90deg, ${SKY}, ${NAVY})`,
-            borderRadius: 5,
-            transition: 'width 0.8s ease',
-          }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-          <span style={{ fontSize: 11, color: '#7A9BB5' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
-          <span style={{ fontSize: 11, color: NAVY, fontWeight: 700 }}>
-            {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 🎉
-          </span>
-        </div>
-      </div>
+      {/* Nutrition Card — quick access to nutrition page */}
+      <NutritionCard lang={lang} isRTL={isRTL} onOpenNutrition={onOpenNutrition} />
 
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
