@@ -93,7 +93,7 @@ export default function Home() {
   // Inline SVG icons for tabs without CDN webp icons
   const TabSVGIcons: Record<string, (active: boolean) => React.ReactElement> = {
     pricing: (active) => (
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <svg width="36" height="36" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
         style={{ opacity: active ? 1 : 0.45 }}>
         <circle cx="15" cy="15" r="12" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
         <path d="M15 8v14M11 11.5c0-1.1.9-2 2-2h3.5a2 2 0 010 4H13a2 2 0 000 4H17a2 2 0 002-2"
@@ -101,7 +101,7 @@ export default function Home() {
       </svg>
     ),
     nutrition: (active) => (
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <svg width="36" height="36" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
         style={{ opacity: active ? 1 : 0.45 }}>
         {/* Plate */}
         <circle cx="15" cy="17" r="9" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
@@ -291,20 +291,21 @@ export default function Home() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              flex: 1, padding: '10px 4px 8px',
+              flex: 1, padding: '10px 2px 8px',
               border: 'none', background: 'none', cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
               transition: 'all 0.2s',
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
             }}
           >
             {TabSVGIcons[tab.id]
               ? TabSVGIcons[tab.id](activeTab === tab.id)
-              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
+              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 36, height: 36, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
             }
             <span style={{
-              fontSize: 10, fontWeight: 700,
+              fontSize: 11, fontWeight: 700,
               color: activeTab === tab.id ? NAVY : '#7A9BB5',
+              letterSpacing: '-0.01em',
             }}>{tab.label}</span>
           </button>
         ))}
