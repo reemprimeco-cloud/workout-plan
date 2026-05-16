@@ -1413,8 +1413,9 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
   const [category, setCategory] = useState<QuickMealCategory>("meals");
   const [addedId, setAddedId]   = useState<string | null>(null);
 
-  const logMeal = trpc.nutrition.logMeal.useMutation({
+  const saveMeal = trpc.nutrition.saveMeal.useMutation({
     onSuccess: () => {
+      utils.nutrition.getMealHistory.invalidate();
       utils.nutrition.getTodayLog.invalidate();
       utils.nutrition.getToday.invalidate();
     },
@@ -1423,16 +1424,19 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
   const handleQuickAdd = async (item: QuickMealItem) => {
     const id = `${category}-${item.nameEn}`;
     setAddedId(id);
-    await logMeal.mutateAsync({
+    await saveMeal.mutateAsync({
       mealType,
-      foodName: item.nameEn,
-      foodNameAr: item.nameAr,
-      calories: item.calories,
-      proteinG: item.protein,
-      carbsG:   item.carbs,
-      fatG:     item.fat,
-      servingSize: item.serving,
-      addedByAI: false,
+      items: [{
+        name:           item.nameEn,
+        nameAr:         item.nameAr,
+        estimatedGrams: 0,
+        portionDesc:    item.serving,
+        portionDescAr:  item.serving,
+        calories:       item.calories,
+        protein:        item.protein,
+        carbs:          item.carbs,
+        fat:            item.fat,
+      }],
     });
     setTimeout(() => setAddedId(null), 1500);
   };
@@ -1491,7 +1495,7 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
             <button
               key={id}
               onClick={() => !isAdded && handleQuickAdd(item)}
-              disabled={isAdded || logMeal.isPending}
+              disabled={isAdded || saveMeal.isPending}
               style={{
                 background: isAdded ? "#F0FDF4" : WHITE,
                 border: `1.5px solid ${isAdded ? "#22C55E" : BORDER}`,
