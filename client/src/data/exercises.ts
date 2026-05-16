@@ -263,7 +263,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'stretch_child_pose', nameAr: 'وضعية الطفل', nameEn: "Child's Pose",
     muscleGroup: 'الظهر والورك', defaultSets: 1, defaultReps: '60 ثانية', defaultWeight: 'وزن الجسم',
-    restSeconds: 0, image: IMG.plank, tip: 'اركعي ومدي ذراعيك للأمام، تنفسي بعمق.',
+    restSeconds: 0, image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=640&q=80', tip: 'اركعي ومدي ذراعيك للأمام، تنفسي بعمق.',
     tipEn: 'Kneel and reach arms forward, breathe deeply.',
     youtubeUrl: 'https://www.youtube.com/watch?v=eqVMAPM00DM',
     category: 'cardio', sessionTypes: ['stretching'],
@@ -405,7 +405,7 @@ export const masterExercises: ExerciseTemplate[] = [
   {
     id: 'mob_world_greatest', nameAr: 'أعظم إطالة في العالم', nameEn: "World's Greatest Stretch",
     muscleGroup: 'الجسم كله', defaultSets: 2, defaultReps: '5 لكل جهة', defaultWeight: 'وزن الجسم',
-    restSeconds: 20, image: IMG.lunges, tip: 'يجمع إطالة الورك والصدر والفخذ الخلفي.',
+    restSeconds: 20, image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=640&q=80', tip: 'يجمع إطالة الورك والصدر والفخذ الخلفي.',
     tipEn: 'Combines hip flexor, thoracic, and hamstring stretch.',
     youtubeUrl: 'https://www.youtube.com/watch?v=-CiWQ2IvY34',
     category: 'cardio', sessionTypes: ['mobility'],
