@@ -1,11 +1,20 @@
 // ============================================================
 // calorieCalc.ts — Estimated Calories Burned Utility
 // All values are ESTIMATES only. Not medically exact.
-// Formula: Calories = MET × Weight(kg) × Duration(hours)
+//
+// Primary formula (preferred):
+//   Calories = MET × Weight(kg) × ActualDuration(hours)
+//   where ActualDuration = checkOut - checkIn (real clock time)
+//
+// Fallback formula (when no checkOut time):
+//   Calories = (workTime × MET + restTime × REST_MET) × Weight / 3600
+//   REST_MET = 1.3 (light standing/walking between sets)
 // ============================================================
 
 import type { SessionType } from '../data/exercises';
 import type { ExerciseLog, CardioLog } from '../hooks/useGymTracker';
+
+const REST_MET = 1.3; // MET during rest between sets
 
 // ── MET values per exercise ID ─────────────────────────────
 // Source: Compendium of Physical Activities (Ainsworth et al.)
@@ -100,44 +109,63 @@ export const EXERCISE_MET: Record<string, number> = {
 export const SESSION_TYPE_MET: Record<SessionType, number> = {
   lower_body: 5.0,
   upper_arms: 4.5,
-  core_cardio: 7.0,
+  core_cardio: 6.5,
   chest_shoulders: 5.0,
   full_body: 5.5,
-  aqua: 5.5,      // Aqua aerobics
-  sauna: 1.5,     // Passive rest
+  aqua: 5.5,
+  sauna: 1.5,
   active_rest: 4.0,
   warm_up: 3.5,
   stretching: 2.5,
   home_workouts: 5.0,
   pilates: 3.5,
   mobility: 2.8,
-  quick_workouts: 8.0,
+  quick_workouts: 7.5,
 };
 
 // ── MET values per cardio machine ─────────────────────────
 export const CARDIO_MET: Record<string, number> = {
-  treadmill: 8.5,      // moderate running/walking on incline
+  treadmill: 7.5,      // moderate jogging/walking
   elliptical: 5.0,
-  bike: 7.0,
-  rower: 7.0,
-  precor_bike: 7.0,
-  climbmill: 9.0,
+  bike: 6.0,
+  rower: 6.5,
+  precor_bike: 6.0,
+  climbmill: 8.0,
 };
 
-// ── Estimate duration for a single exercise (seconds) ─────
-// Formula: (reps × 4s) + (sets × restSeconds)
-export function estimateExerciseDurationSec(
-  sets: number,
-  reps: string,
-  restSeconds: number,
-): number {
-  const repCount = parseInt(reps.split('-')[0], 10) || 10;
-  const workTime = sets * repCount * 4; // 4 seconds per rep
-  const restTime = sets * restSeconds;
-  return workTime + restTime;
+// ── Parse HH:MM time string to minutes since midnight ─────
+function timeToMinutes(t: string): number {
+  const parts = t.split(':');
+  if (parts.length < 2) return 0;
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
-// ── Calories burned for a single exercise ─────────────────
+// ── Get actual session duration in minutes ────────────────
+export function getSessionDurationMin(
+  checkInTime: string,
+  checkOutTime?: string,
+): number | null {
+  if (!checkOutTime) return null;
+  const inMin  = timeToMinutes(checkInTime);
+  const outMin = timeToMinutes(checkOutTime);
+  // Handle midnight crossover
+  const diff = outMin >= inMin ? outMin - inMin : (24 * 60 - inMin) + outMin;
+  if (diff <= 0 || diff > 300) return null; // sanity: 0-5 hours
+  return diff;
+}
+
+// ── Estimate work duration for a single exercise (seconds) ─
+// Only counts active work time (not rest), used as fallback
+export function estimateExerciseWorkSec(
+  sets: number,
+  reps: string,
+): number {
+  const repCount = parseInt(reps.split('-')[0], 10) || 10;
+  return sets * repCount * 4; // 4 seconds per rep
+}
+
+// ── Calories burned for a single exercise (work + rest) ───
+// Correctly applies REST_MET during rest periods
 export function calcExerciseCalories(
   exerciseId: string,
   sets: number,
@@ -146,9 +174,11 @@ export function calcExerciseCalories(
   weightKg: number,
 ): number {
   const met = EXERCISE_MET[exerciseId] ?? 4.0;
-  const durationHours = estimateExerciseDurationSec(sets, reps, restSeconds) / 3600;
-  const calories = met * weightKg * durationHours;
-  return Math.round(calories);
+  const workSec = estimateExerciseWorkSec(sets, reps);
+  const restSec = sets * restSeconds;
+  const workCal = met * weightKg * (workSec / 3600);
+  const restCal = REST_MET * weightKg * (restSec / 3600);
+  return Math.round(workCal + restCal);
 }
 
 // ── Calories burned for a cardio block ────────────────────
@@ -159,20 +189,34 @@ export function calcCardioCalories(
 ): number {
   const met = CARDIO_MET[cardioId] ?? 6.0;
   const durationHours = durationMinutes / 60;
-  const calories = met * weightKg * durationHours;
-  return Math.round(calories);
+  return Math.round(met * weightKg * durationHours);
 }
 
-// ── Total session calories (exercises + cardio) ───────────
+// ── Total session calories ─────────────────────────────────
+// Strategy:
+//   1. If actual session duration is known (checkIn + checkOut), use it with session-type MET.
+//      This is the most accurate method.
+//   2. Otherwise fall back to per-exercise estimation (with corrected rest handling).
 export function calcSessionCalories(
   exercises: ExerciseLog[],
   cardio: CardioLog | undefined,
   sessionType: SessionType,
   weightKg: number,
+  checkInTime?: string,
+  checkOutTime?: string,
 ): number {
+  // ── Strategy 1: use actual clock duration ──────────────
+  if (checkInTime && checkOutTime) {
+    const actualMin = getSessionDurationMin(checkInTime, checkOutTime);
+    if (actualMin !== null && actualMin > 0) {
+      const met = SESSION_TYPE_MET[sessionType] ?? 5.0;
+      return Math.round(met * weightKg * (actualMin / 60));
+    }
+  }
+
+  // ── Strategy 2: per-exercise + cardio estimation ───────
   let total = 0;
 
-  // Sum exercise calories
   for (const ex of exercises) {
     total += calcExerciseCalories(
       ex.exerciseId,
@@ -183,16 +227,16 @@ export function calcSessionCalories(
     );
   }
 
-  // Add cardio calories
   if (cardio) {
-    const durationMin = cardio.duration || 20;
+    // Use actual cardio duration if entered, otherwise use a conservative 15 min
+    const durationMin = (cardio.duration && cardio.duration > 0) ? cardio.duration : 15;
     total += calcCardioCalories(cardio.cardioId, durationMin, weightKg);
   }
 
-  // If no exercises logged yet, use session-type MET × 45 min estimate
+  // If nothing logged, use session-type MET × 30 min conservative estimate
   if (exercises.length === 0 && !cardio) {
     const met = SESSION_TYPE_MET[sessionType] ?? 5.0;
-    total = Math.round(met * weightKg * (45 / 60));
+    total = Math.round(met * weightKg * (30 / 60));
   }
 
   return total;
@@ -206,6 +250,8 @@ export function getDailyCaloriesBurned(
     cardio?: CardioLog;
     sessionType: SessionType;
     caloriesBurned?: number;
+    checkInTime?: string;
+    checkOutTime?: string;
   }>,
   date: string,
   weightKg: number,
@@ -213,8 +259,16 @@ export function getDailyCaloriesBurned(
   return sessions
     .filter(s => s.date === date)
     .reduce((sum, s) => {
-      if (s.caloriesBurned) return sum + s.caloriesBurned;
-      return sum + calcSessionCalories(s.exercises, s.cardio, s.sessionType, weightKg);
+      // Use saved caloriesBurned if available (set at checkout)
+      if (s.caloriesBurned && s.caloriesBurned > 0) return sum + s.caloriesBurned;
+      return sum + calcSessionCalories(
+        s.exercises,
+        s.cardio,
+        s.sessionType,
+        weightKg,
+        s.checkInTime,
+        s.checkOutTime,
+      );
     }, 0);
 }
 
@@ -226,6 +280,8 @@ export function getWeeklyCaloriesBurned(
     cardio?: CardioLog;
     sessionType: SessionType;
     caloriesBurned?: number;
+    checkInTime?: string;
+    checkOutTime?: string;
   }>,
   weightKg: number,
 ): { date: string; label: string; calories: number }[] {
@@ -250,6 +306,8 @@ export function getMonthlyCaloriesBurned(
     cardio?: CardioLog;
     sessionType: SessionType;
     caloriesBurned?: number;
+    checkInTime?: string;
+    checkOutTime?: string;
   }>,
   weightKg: number,
 ): { week: string; calories: number }[] {
