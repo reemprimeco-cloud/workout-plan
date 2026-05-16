@@ -53,7 +53,13 @@ const T = {
   renewNote:      { en: "Renewing? Pay again with the same email to extend your existing key automatically.", ar: "تجديد؟ ادفع مرة أخرى بنفس البريد الإلكتروني لتمديد مفتاحك الحالي تلقائياً." },
   // Customer info modal
   orderDetails:   { en: "Complete Your Order",                       ar: "أكمل طلبك" },
+  trialDetails:   { en: "Start Your Free Trial",                    ar: "ابدأ تجربتك المجانية" },
+  trialSubtitle:  { en: "Enter your details to get your free 7-day key", ar: "أدخل بياناتك للحصول على مفتاحك المجاني لمدة ٧ أيام" },
   orderSubtitle:  { en: "Please fill in your details before proceeding to payment", ar: "يرجى إدخال بياناتك قبل الانتقال للدفع" },
+  getMyKey:       { en: "🎁 Get My Free Key",                        ar: "🎁 احصل على مفتاحي المجاني" },
+  keyReady:       { en: "Your Key is Ready!",                        ar: "مفتاحك جاهز!" },
+  keyReadyNote:   { en: "Copy this key and paste it in the app to activate your 7-day trial.", ar: "انسخ هذا المفتاح والصقه في التطبيق لتفعيل تجربتك المجانية لمدة 7 أيام." },
+  okThanks:       { en: "OK, Thanks!",                               ar: "حسناً، شكراً!" },
   fullName:       { en: "Full Name",                                 ar: "الاسم الكامل" },
   emailAddr:      { en: "Email Address",                             ar: "البريد الإلكتروني" },
   phoneNum:       { en: "Phone Number",                              ar: "رقم الهاتف" },
@@ -182,6 +188,7 @@ export default function Pricing() {
 
   // Customer info modal state (for paid plans)
   const [showInfoModal, setShowInfoModal]   = useState(false);
+  const [showKeyPopup, setShowKeyPopup]       = useState(false);
   const [selectedPlan, setSelectedPlan]     = useState<"prime_plus" | "prime_pro" | "free" | null>(null);
   const [custName, setCustName]             = useState("");
   const [custEmail, setCustEmail]           = useState("");
@@ -239,6 +246,7 @@ export default function Pricing() {
         setTrialKey(result.licenseKey);
         setTrialExpiry(result.expiresAt);
         setShowInfoModal(false);
+        setShowKeyPopup(true);
       } catch (err: any) {
         setTrialError(err?.message ?? "حدث خطأ. يرجى المحاولة مرة أخرى.");
       } finally {
@@ -297,6 +305,86 @@ export default function Pricing() {
         padding: "24px 16px 48px",
       }}
     >
+      {/* ── Key Ready Popup (after free trial generation) ─────────────────── */}
+      {showKeyPopup && trialKey && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 1100,
+          background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16,
+        }}>
+          <div style={{
+            background: "white", borderRadius: 24, padding: "32px 28px",
+            width: "100%", maxWidth: 420, textAlign: "center",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+            animation: "slideUp 0.25s ease",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+            <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 900, color: NAVY }}>
+              {t("keyReady")}
+            </h2>
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
+              {t("keyReadyNote")}
+            </p>
+
+            {/* Key display */}
+            <div style={{
+              background: `${NAVY}08`, border: `2px solid ${SKY_LIGHT}`,
+              borderRadius: 14, padding: "16px 20px", marginBottom: 8,
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+            }}>
+              <span style={{
+                fontFamily: "monospace", fontSize: 18, fontWeight: 900, color: NAVY,
+                letterSpacing: "0.08em", flex: 1, textAlign: "center",
+              }}>
+                {trialKey}
+              </span>
+              <button
+                onClick={handleCopy}
+                style={{
+                  background: copied ? GREEN : NAVY, color: "white", border: "none",
+                  borderRadius: 8, padding: "8px 12px", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 700,
+                  transition: "background 0.2s", fontFamily: "inherit", whiteSpace: "nowrap",
+                }}
+              >
+                {copied ? <CheckCheck size={14} /> : <Copy size={14} />}
+                {copied ? t("copied") : t("copyKey")}
+              </button>
+            </div>
+
+            {trialExpiry && (
+              <p style={{ margin: "0 0 20px", color: "#64748b", fontSize: 12 }}>
+                {lang === "ar" ? "تاريخ الانتهاء:" : "Expires:"} <strong>{new Date(trialExpiry).toLocaleDateString()}</strong>
+              </p>
+            )}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowKeyPopup(false)}
+                style={{
+                  flex: 1, background: NAVY, color: "white", border: "none",
+                  borderRadius: 12, padding: "12px", fontSize: 14, fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                {t("okThanks")}
+              </button>
+              <Link href="/">
+                <span style={{
+                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                  background: SKY, color: "white", borderRadius: 12, padding: "12px",
+                  fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  textDecoration: "none",
+                }}>
+                  {t("goToApp")}
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Customer Info Modal ───────────────────────────────────────────── */}
       {showInfoModal && selectedPlan && (
         <div style={{
@@ -327,10 +415,10 @@ export default function Pricing() {
             {/* Header */}
             <div style={{ marginBottom: 24 }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 900, color: NAVY }}>
-                {t("orderDetails")}
+                {(selectedPlan as string) === "free" ? t("trialDetails") : t("orderDetails")}
               </h2>
               <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-                {t("orderSubtitle")}
+                {(selectedPlan as string) === "free" ? t("trialSubtitle") : t("orderSubtitle")}
               </p>
             </div>
 
@@ -347,10 +435,14 @@ export default function Pricing() {
                   Prime Fit {getPlanName(selectedPlan)}
                 </span>
                 <span style={{ fontWeight: 900, color: NAVY, fontSize: 16 }}>
-                  {(selectedPlan as string) === "free" ? lang === "ar" ? "مجاناً" : "Free" : `${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
-                  <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
-                    {period === "monthly" ? t("perMonth") : t("perYear")}
-                  </span>
+                  {(selectedPlan as string) === "free"
+                    ? (lang === "ar" ? "مجاناً — ٧ أيام" : "Free — 7 days")
+                    : `${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
+                  {(selectedPlan as string) !== "free" && (
+                    <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
+                      {period === "monthly" ? t("perMonth") : t("perYear")}
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
@@ -369,19 +461,28 @@ export default function Pricing() {
               value={custPhone} onChange={setCustPhone} type="tel" error={custPhoneErr} isRTL={isRTL}
             />
 
+            {/* Error message for free trial */}
+            {trialError && (selectedPlan as string) === "free" && (
+              <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+            )}
+
             {/* Submit */}
             <Button
               onClick={handleProceedToPayment}
               disabled={checkoutLoading}
               style={{
-                width: "100%", background: NAVY, color: "white",
+                width: "100%",
+                background: (selectedPlan as string) === "free" ? GREEN : NAVY,
+                color: "white",
                 fontWeight: 700, borderRadius: 12, padding: "13px",
                 fontSize: 15, fontFamily: "inherit", marginTop: 4,
               }}
             >
               {checkoutLoading
                 ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
-                : `🔒 ${t("proceedPayment")}`}
+                : (selectedPlan as string) === "free"
+                  ? t("getMyKey")
+                  : `🔒 ${t("proceedPayment")}`}
             </Button>
 
             <button

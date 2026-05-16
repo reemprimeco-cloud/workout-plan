@@ -1,7 +1,7 @@
 // ============================================================
-// LicenseGate — WooCommerce License Key Paywall
-// Wraps the entire app. Users must enter a valid order key
-// purchased from primeprint.com.kw to access Prime Fit.
+// LicenseGate — Prime Fit License Key Paywall
+// Wraps the entire app. Users must enter a valid license key
+// obtained via MyFatoorah checkout at /pricing.
 //
 // Supports auto-verification via URL: ?key=PRIME-XXXX-XXXX
 // ============================================================
@@ -14,7 +14,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 const STORAGE_KEY = 'primefit_license';
-const PRODUCT_URL = 'https://primeprint.com.kw/product/prime-fit-%d8%a8%d8%b1%d9%86%d8%a7%d9%85%d8%ac-%d8%a7%d9%84%d8%aa%d8%af%d8%b1%d9%8a%d8%a8-%d8%a7%d9%84%d8%b4%d8%a7%d9%85%d9%84-8-%d8%a3%d8%b3%d8%a7%d8%a8%d9%8a%d8%b9/';
+const PRODUCT_URL = '/pricing'; // MyFatoorah checkout
 
 interface StoredLicense {
   key: string;
