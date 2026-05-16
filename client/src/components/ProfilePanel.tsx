@@ -510,6 +510,68 @@ export function ProfilePanel() {
         ))}
       </div>
 
+      {/* Subscription Status Card */}
+      {(() => {
+        try {
+          const stored = JSON.parse(localStorage.getItem('primefit_license') ?? 'null') as {
+            key?: string; plan?: string; expiresAt?: string | null;
+            customerName?: string; customerEmail?: string; verifiedAt?: string;
+          } | null;
+          if (!stored?.key) return null;
+          const expiresAt  = stored.expiresAt ? new Date(stored.expiresAt) : null;
+          const daysLeft   = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000) : null;
+          const isExpired  = expiresAt ? expiresAt < new Date() : false;
+          const planLabels: Record<string, string> = {
+            monthly:   lang === 'ar' ? 'تجربة مجانية' : 'Free Trial',
+            quarterly: lang === 'ar' ? 'ربع سنوي'     : 'Quarterly',
+            yearly:    lang === 'ar' ? 'سنوي'          : 'Yearly',
+            lifetime:  lang === 'ar' ? 'دائم'          : 'Lifetime',
+          };
+          const planLabel  = planLabels[stored.plan ?? 'monthly'] ?? (lang === 'ar' ? 'نشط' : 'Active');
+          const statusColor = isExpired ? '#EF4444' : daysLeft !== null && daysLeft <= 3 ? '#F59E0B' : '#22C55E';
+          return (
+            <div style={{
+              background: 'white', borderRadius: 16, padding: '16px 18px',
+              boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
+              border: `1.5px solid ${statusColor}33`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 14 }}>
+                  🔑 {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
+                </span>
+                <span style={{
+                  background: `${statusColor}22`, color: statusColor,
+                  borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 800,
+                }}>
+                  {isExpired ? (lang === 'ar' ? 'منتهي' : 'Expired') : (lang === 'ar' ? 'نشط' : 'Active')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ margin: '0 0 3px', color: '#374151', fontSize: 13, fontWeight: 700 }}>{planLabel}</p>
+                  <p style={{ margin: 0, color: '#9CA3AF', fontSize: 11, fontFamily: 'monospace' }}>{stored.key}</p>
+                </div>
+                <div style={{ textAlign: 'end' }}>
+                  {expiresAt && (
+                    <p style={{ margin: 0, color: statusColor, fontSize: 12, fontWeight: 700 }}>
+                      {isExpired
+                        ? (lang === 'ar' ? 'انتهى' : 'Expired')
+                        : daysLeft === 0 ? (lang === 'ar' ? 'اليوم' : 'Today')
+                        : `${daysLeft} ${lang === 'ar' ? 'يوم' : 'days'}`}
+                    </p>
+                  )}
+                  {expiresAt && (
+                    <p style={{ margin: '2px 0 0', color: '#9CA3AF', fontSize: 10 }}>
+                      {expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        } catch { return null; }
+      })()}
+
       {/* Notification Settings */}
       <NotificationSettings />
       {/* Change License Button */}
