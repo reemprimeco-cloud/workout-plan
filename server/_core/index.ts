@@ -10,9 +10,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
-import { wooCommerceWebhookHandler } from "../handlers/wooCommerceWebhook";
 import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
-import { startWooPoller } from "../handlers/wooPoller";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -57,32 +55,6 @@ async function startServer() {
     socket.on("disconnect", () => {});
   });
   app.post("/api/webhooks/myfatoorah", myfatoorahWebhookHandler);
-
-  // ── WooCommerce webhook — MUST be before express.json() ─────────────────
-  app.post(
-    "/api/webhooks/woocommerce",
-    express.raw({ type: "application/json" }),
-    (req, res, next) => {
-      (req as any).rawBody = req.body as Buffer;
-      try { req.body = JSON.parse((req as any).rawBody.toString()); } catch {}
-      next();
-    },
-    wooCommerceWebhookHandler,
-  );
-
-  // ── Debug endpoint — open in browser to confirm webhook is reachable ─────
-  // GET /api/webhooks/woocommerce/ping → { ok: true, message: "Webhook endpoint is alive" }
-  // Remove this route after confirming everything works in production.
-  app.get("/api/webhooks/woocommerce/ping", (_req, res) => {
-    res.json({
-      ok: true,
-      message: "WooCommerce webhook endpoint is alive ✅",
-      smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
-      wooSecretConfigured: !!process.env.WOO_WEBHOOK_SECRET,
-      dbConfigured: !!process.env.DATABASE_URL,
-      timestamp: new Date().toISOString(),
-    });
-  });
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
@@ -162,8 +134,6 @@ async function startServer() {
     });
   });
 
-  // ── WooCommerce order poller — catches any orders missed by webhook ───────
-  startWooPoller();
 
   // tRPC API
   app.use(

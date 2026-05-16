@@ -336,3 +336,14 @@
 - [ ] WorkoutGuide.tsx: guide text
 - [ ] Nutrition.tsx: nutrition advice text
 - [ ] MyCoach.tsx: coach system prompt
+
+## Feature Restore — Unified Subscription Flow & Admin Copy Buttons
+- [x] Pricing.tsx: unified modal for all 3 plans (name + email + phone input)
+- [x] Pricing.tsx: Free Trial → show key popup with copy button + expiry date after generation
+- [x] Pricing.tsx: Free Trial form labels: "ابدأ تجربتك المجانية", "مجاناً — ٧ أيام", button "🎁 احصل على مفتاحي المجاني"
+- [x] Pricing.tsx: Paid plans → redirect to MyFatoorah checkout after form submission
+- [x] Pricing.tsx: Free plan button shows "ابدأ التجربة المجانية" if no key yet, "✓ خطتك الحالية" after key generated
+- [x] AdminPanel: copy button next to each license key in Licenses tab (turns ✓ for 1.8s)
+- [x] AdminPanel: copy button next to each license key in Subscriptions tab
+- [x] Remove all WooCommerce/primeprint.com.kw links from LicenseGate and Pricing pages
+- [x] Keep only MyFatoorah as payment gateway (removed WooCommerce webhook, ping route, and poller from server)

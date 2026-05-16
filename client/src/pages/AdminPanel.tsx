@@ -467,6 +467,13 @@ export default function AdminPanel() {
   const utils = trpc.useUtils();
   const [lang, setLang] = useState<Lang>('ar');
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const handleCopyKey = (key: string) => {
+    navigator.clipboard.writeText(key).catch(() => {});
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1800);
+  };
   const isRTL = lang === 'ar';
 
   // License state
@@ -828,7 +835,24 @@ export default function AdminPanel() {
                     <tbody>
                       {codes.map((c, idx) => (
                         <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#FAFBFF', borderBottom: `1px solid ${SKY_LIGHT}33` }}>
-                          <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: NAVY, fontWeight: 700, whiteSpace: 'nowrap', direction: 'ltr' }}>{c.code}</td>
+                          <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: NAVY, fontWeight: 700, whiteSpace: 'nowrap', direction: 'ltr' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span>{c.code}</span>
+                              <button
+                                onClick={() => handleCopyKey(c.code)}
+                                title={lang === 'ar' ? 'نسخ' : 'Copy'}
+                                style={{
+                                  background: copiedKey === c.code ? '#22C55E' : '#E2E8F0',
+                                  border: 'none', borderRadius: 5, padding: '3px 7px',
+                                  cursor: 'pointer', fontSize: 11, fontFamily: 'sans-serif',
+                                  color: copiedKey === c.code ? 'white' : '#475569',
+                                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 3,
+                                }}
+                              >
+                                {copiedKey === c.code ? '✓' : '📋'}
+                              </button>
+                            </div>
+                          </td>
                           <td style={{ padding: '10px 12px', color: '#334155' }}>{c.customerName || '—'}</td>
                           <td style={{ padding: '10px 12px', color: '#334155', direction: 'ltr', fontSize: 12 }}>{c.customerEmail || '—'}</td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, maxWidth: 140 }}>{c.note || '—'}</td>
@@ -1027,7 +1051,24 @@ export default function AdminPanel() {
                             {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
                           </td>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: sub.licenseKey ? '#1B2E5E' : '#CBD5E1' }}>
-                            {sub.licenseKey ?? '—'}
+                            {sub.licenseKey ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ direction: 'ltr' }}>{sub.licenseKey}</span>
+                                <button
+                                  onClick={() => handleCopyKey(sub.licenseKey!)}
+                                  title={lang === 'ar' ? 'نسخ' : 'Copy'}
+                                  style={{
+                                    background: copiedKey === sub.licenseKey ? '#22C55E' : '#E2E8F0',
+                                    border: 'none', borderRadius: 5, padding: '3px 7px',
+                                    cursor: 'pointer', fontSize: 11, fontFamily: 'sans-serif',
+                                    color: copiedKey === sub.licenseKey ? 'white' : '#475569',
+                                    transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 3,
+                                  }}
+                                >
+                                  {copiedKey === sub.licenseKey ? '✓' : '📋'}
+                                </button>
+                              </div>
+                            ) : '—'}
                           </td>
                         </tr>
                       );
