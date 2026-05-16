@@ -6,6 +6,8 @@ import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { trpc } from '@/lib/trpc';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -516,6 +518,9 @@ export function ProfilePanel() {
       {/* Help Section */}
       <HelpSection lang={lang} />
 
+      {/* My Subscription Section */}
+      <SubscriptionSection lang={lang} isRTL={isRTL} />
+
       {/* App Info Footer */}
       <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
         <p className="text-xs text-gray-400 leading-relaxed">
@@ -711,6 +716,114 @@ export function ProfilePanel() {
           </div>
         </div>
       , document.body)}
+    </div>
+  );
+}
+
+// ── Subscription Sectionn ─────────────────────────────────────────────────────
+function SubscriptionSection({ lang, isRTL }: { lang: string; isRTL: boolean }) {
+  const { plan, status, expiresAt, isPremium, daysLeft } = useSubscription();
+  const isActive = isPremium || status === 'active';
+  const NAVY = '#1B2E5E';
+  const SKY = '#7BB8D4';
+
+  const planLabel = plan === 'free'
+    ? (lang === 'ar' ? 'الخطة المجانية' : 'Free Plan')
+    : plan === 'prime_plus'
+    ? 'Prime Plus'
+    : plan === 'prime_pro'
+    ? 'Prime Pro'
+    : (lang === 'ar' ? 'خطة مدفوعة' : 'Paid Plan');
+
+  const expiryDate = expiresAt
+    ? expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      })
+    : null;
+
+  return (
+    <div
+      dir={isRTL ? 'rtl' : 'ltr'}
+      style={{
+        background: 'white',
+        borderRadius: 16,
+        padding: '16px 18px',
+        marginBottom: 12,
+        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
+        border: `1px solid ${SKY}44`,
+      }}
+    >
+      <h3 style={{ margin: '0 0 12px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+        🏅 {lang === 'ar' ? 'اشتراكاتي' : 'My Subscription'}
+      </h3>
+
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: isActive ? '#F0FDF4' : '#FFF7ED',
+        border: `1.5px solid ${isActive ? '#86EFAC' : '#FDE68A'}`,
+        borderRadius: 12, padding: '12px 14px', marginBottom: 12,
+      }}>
+        <div>
+          <div style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>{planLabel}</div>
+          {expiryDate && (
+            <div style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>
+              {lang === 'ar' ? `ينتهي: ${expiryDate}` : `Expires: ${expiryDate}`}
+            </div>
+          )}
+          {plan === 'free' && (
+            <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>
+              {lang === 'ar' ? 'اشترك للوصول إلى جميع الميزات' : 'Subscribe to unlock all features'}
+            </div>
+          )}
+        </div>
+        <div style={{
+          background: isActive ? '#22C55E' : '#F59E0B',
+          color: 'white', borderRadius: 20, padding: '4px 12px',
+          fontSize: 11, fontWeight: 700,
+        }}>
+          {isActive
+            ? (lang === 'ar' ? '✅ نشط' : '✅ Active')
+            : (lang === 'ar' ? '⏸ غير نشط' : '⏸ Inactive')}
+        </div>
+      </div>
+
+      {/* Subscription features */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {[
+          { icon: '🏋️', label: lang === 'ar' ? 'برامج التمرين' : 'Workout Programs' },
+          { icon: '🥗', label: lang === 'ar' ? 'خطط التغذية' : 'Nutrition Plans' },
+          { icon: '📊', label: lang === 'ar' ? 'إحصائيات متقدمة' : 'Advanced Stats' },
+          { icon: '🤖', label: lang === 'ar' ? 'مدرب ذكي' : 'AI Coach' },
+        ].map(f => (
+          <div key={f.label} style={{
+            background: '#F8FAFC', borderRadius: 10, padding: '8px 10px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            opacity: isActive ? 1 : 0.5,
+          }}>
+            <span style={{ fontSize: 16 }}>{f.icon}</span>
+            <span style={{ fontSize: 11, color: NAVY, fontWeight: 600 }}>{f.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {plan === 'free' && (
+        <button
+          onClick={() => {
+            // Navigate to pricing tab
+            const event = new CustomEvent('navigate-to-pricing');
+            window.dispatchEvent(event);
+          }}
+          style={{
+            width: '100%', marginTop: 12,
+            background: `linear-gradient(135deg, ${NAVY}, #3D5A80)`,
+            color: 'white', border: 'none',
+            borderRadius: 12, padding: '12px 0',
+            fontSize: 14, fontWeight: 800, cursor: 'pointer',
+          }}
+        >
+          🚀 {lang === 'ar' ? 'اشترك الآن' : 'Subscribe Now'}
+        </button>
+      )}
     </div>
   );
 }

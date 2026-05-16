@@ -358,3 +358,13 @@
 - [ ] WorkoutGuide.tsx: guide text
 - [ ] Nutrition.tsx: nutrition advice text
 - [ ] MyCoach.tsx: coach system prompt
+
+## UI Update — Match Screenshot Design
+- [x] Nav bar: 7 tabs only (Home / Stats / Schedule / Exercises / Coach / Community / Profile) — remove any extra tabs
+- [x] Streak badge: remove from header, show inside welcome card (top-right corner as 🔥 badge with day count)
+- [x] Welcome card: show greeting, user name, date, streak badge top-right, 3 stats (This Week / This Month / Total sessions)
+- [x] Nutrition card: show above "Choose Today's Workout" section on Home page (calories progress bar, macros row, water progress bar)
+- [x] Nutrition card: tapping opens full nutrition overlay with back button
+- [x] Weight progress bar: standalone card above "Weight Tracking" card in StatsPanel (already existed, confirmed)
+- [x] Subscriptions section: added at bottom of Profile page
+- [x] Fix overall design to match screenshot (navy dark header, white cards, clean layout)

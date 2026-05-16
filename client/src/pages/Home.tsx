@@ -47,6 +47,7 @@ export default function Home() {
     return 'home';
   });
   const [startingSession, setStartingSession] = useState(false);
+  const [showNutrition, setShowNutrition] = useState(false);
   const { activeSession, startSession, stats, data } = tracker;
   const { data: currentUser } = trpc.auth.me.useQuery();
 
@@ -121,16 +122,14 @@ export default function Home() {
     ),
   };
 
+  // 7 tabs only — History, Pricing, Nutrition are accessible from within other tabs
   const tabs: { id: Tab; iconUrl: string; label: string }[] = [
     { id: 'home',      iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp',      label: t('navHome') },
-    { id: 'history',   iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp',   label: t('navHistory') },
     { id: 'stats',     iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp',     label: t('navStats') },
     { id: 'guide',     iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp',   label: t('navGuide') },
     { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'coach',     iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp',     label: isRTL ? 'مدربي' : 'Coach' },
     { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
-    { id: 'pricing',   iconUrl: '', label: isRTL ? 'الخطط'  : 'Plans' },
-    { id: 'nutrition', iconUrl: '', label: isRTL ? 'تغذية' : 'Food' },
     { id: 'profile',   iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_profile-4Skb4HPfvUiSWNBfKW6iLX.webp',   label: t('navProfile') },
   ];
 
@@ -175,7 +174,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: streak + active indicator */}
+        {/* Right: admin button + active session indicator */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeSession && (
             <div style={{
@@ -186,12 +185,21 @@ export default function Home() {
               🔴 {t('activeSession')}
             </div>
           )}
-          <div style={{
-            background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '6px 12px',
-            color: SKY_LIGHT, fontSize: 12,
-          }}>
-            🔥 {stats.streak} {t('streak')}
-          </div>
+          {currentUser?.role === 'admin' && (
+            <button
+              onClick={() => window.location.href = '/admin'}
+              style={{
+                background: 'rgba(0,220,255,0.15)',
+                border: '1.5px solid rgba(0,220,255,0.5)',
+                borderRadius: 10, padding: '5px 12px',
+                color: '#00dcff', fontSize: 12, fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 0 8px rgba(0,220,255,0.3)',
+              }}
+            >
+              🛡️ {isRTL ? 'الإدارة' : 'Admin'}
+            </button>
+          )}
         </div>
       </header>
 
@@ -230,10 +238,45 @@ export default function Home() {
         {/* ── TAB: HOME ── */}
         {activeTab === 'home' && (
           <>
+            {/* Nutrition Full-Screen Overlay */}
+            {showNutrition && (
+              <div style={{
+                position: 'fixed', inset: 0, zIndex: 200,
+                background: '#F0F4F8',
+                overflowY: 'auto',
+                fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+              }}>
+                {/* Back Header */}
+                <div style={{
+                  background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
+                  padding: '14px 20px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  position: 'sticky', top: 0, zIndex: 10,
+                  boxShadow: '0 4px 20px rgba(27,46,94,0.35)',
+                }}>
+                  <button
+                    onClick={() => setShowNutrition(false)}
+                    style={{
+                      background: 'rgba(255,255,255,0.15)', border: 'none',
+                      borderRadius: 10, padding: '8px 14px',
+                      color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >
+                    {isRTL ? '▶ رجوع' : '◀ Back'}
+                  </button>
+                  <span style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>
+                    🥗 {isRTL ? 'تغذيتي' : 'Nutrition'}
+                  </span>
+                </div>
+                <div style={{ padding: '16px', maxWidth: 800, margin: '0 auto' }}>
+                  <Nutrition />
+                </div>
+              </div>
+            )}
             {activeSession ? (
               <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} />
             ) : (
-              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
+              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} onOpenNutrition={() => setShowNutrition(true)} />
             )}
           </>
         )}
@@ -348,10 +391,11 @@ const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
 // Glutes included in lower_body for all genders
 const GLUTES_SESSION: SessionType = 'lower_body';
 
-function CheckInPanel({ onStart, stats, profile }: {
+function CheckInPanel({ onStart, stats, profile, onOpenNutrition }: {
   onStart: (type: SessionType) => void;
   stats: ReturnType<typeof useGymTracker>['stats'];
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
+  onOpenNutrition: () => void;
 }) {
   const { lang, t, isRTL } = useLanguage();
   const now = new Date();
@@ -407,26 +451,44 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: '50%', background: `${SKY}18` }} />
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
-          <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
-            {profile.name}
-          </h2>
-          <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
-            {[
-              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
-              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: '📆' },
-              { label: t('total'), value: `${stats.totalSessions} ${t('session')}`, icon: '🏆' },
-            ].map(s => (
-              <div key={s.label} style={{
-                background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
-                border: `1px solid ${SKY}33`,
-              }}>
-                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.icon} {s.label}</div>
-                <div style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>{s.value}</div>
-              </div>
-            ))}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          {/* Left: greeting + name + date + stats */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
+            <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
+              {profile.name}
+            </h2>
+            <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
+            <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+              {[
+                { label: lang === 'ar' ? 'هذا الأسبوع' : 'This Week', value: `${stats.thisWeek}`, icon: '📅' },
+                { label: lang === 'ar' ? 'هذا الشهر' : 'This Month', value: `${stats.thisMonth}`, icon: '📆' },
+                { label: lang === 'ar' ? 'الإجمالي' : 'Total', value: `${stats.totalSessions}`, icon: '🏆' },
+              ].map(s => (
+                <div key={s.label} style={{
+                  background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 12px',
+                  border: `1px solid ${SKY}33`, flex: 1, minWidth: 70,
+                }}>
+                  <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.icon} {s.label}</div>
+                  <div style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>{s.value}</div>
+                  <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{lang === 'ar' ? 'جلسة' : 'session'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Right: Streak Badge */}
+          <div style={{
+            background: 'rgba(255,255,255,0.12)',
+            border: `1.5px solid ${SKY}44`,
+            borderRadius: 14,
+            padding: '12px 14px',
+            textAlign: 'center',
+            minWidth: 72,
+            flexShrink: 0,
+          }}>
+            <div style={{ fontSize: 28, lineHeight: 1 }}>🔥</div>
+            <div style={{ color: 'white', fontWeight: 900, fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{stats.streak}</div>
+            <div style={{ color: SKY_LIGHT, fontSize: 10, marginTop: 2 }}>{lang === 'ar' ? 'يوم توالي' : 'day streak'}</div>
           </div>
         </div>
       </div>
@@ -460,10 +522,13 @@ function CheckInPanel({ onStart, stats, profile }: {
         </div>
       </div>
 
+      {/* Nutrition Summary Card */}
+      <NutritionSummaryCard lang={lang} isRTL={isRTL} onOpenNutrition={onOpenNutrition} />
+
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
         <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 900 }}>
-          🏋️‍♀️ {t('chooseWorkout')}
+          🏗️‍♀️ {t('chooseWorkout')}
         </h3>
         <p style={{ margin: '4px 0 0', color: '#7A9BB5', fontSize: 12 }}>
           {t('autoTime')}
@@ -790,6 +855,81 @@ function CheckInPanel({ onStart, stats, profile }: {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ── Nutrition Summary Card ─────────────────────────────────────
+function NutritionSummaryCard({ lang, isRTL, onOpenNutrition }: { lang: string; isRTL: boolean; onOpenNutrition: () => void }) {
+  // Read today's nutrition from localStorage (set by Nutrition page)
+  const todayKey = `nutrition_${new Date().toISOString().split('T')[0]}`;
+  let calories = 0, protein = 0, carbs = 0, fat = 0, water = 0;
+  try {
+    const stored = localStorage.getItem(todayKey);
+    if (stored) {
+      const d = JSON.parse(stored);
+      calories = d.calories || 0;
+      protein = d.protein || 0;
+      carbs = d.carbs || 0;
+      fat = d.fat || 0;
+      water = d.water || 0;
+    }
+  } catch {}
+  const calGoal = 2000, waterGoal = 2500;
+  const calPct = Math.min(100, Math.round((calories / calGoal) * 100));
+  const waterPct = Math.min(100, Math.round((water / waterGoal) * 100));
+
+  return (
+    <div
+      onClick={onOpenNutrition}
+      style={{
+        background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 16,
+        boxShadow: '0 2px 12px rgba(27,46,94,0.08)', border: '1px solid #E8F0F8',
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 15 }}>
+          🥗 {lang === 'ar' ? 'تغذية اليوم' : "Today's Nutrition"}
+        </span>
+        <span style={{ fontSize: 12, color: '#7BB8D4', fontWeight: 600 }}>
+          {lang === 'ar' ? 'فتح →' : 'Open →'}
+        </span>
+      </div>
+
+      {/* Calories row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ fontSize: 13, color: '#374151', fontWeight: 600 }}>🔥 {lang === 'ar' ? 'سعرات' : 'Calories'}</span>
+        <span style={{ fontSize: 12, color: '#7A9BB5' }}>{calories} / {calGoal} kcal</span>
+      </div>
+      <div style={{ height: 8, background: '#E8F0F8', borderRadius: 4, overflow: 'hidden', marginBottom: 12 }}>
+        <div style={{ height: '100%', width: `${calPct}%`, background: 'linear-gradient(90deg, #7BB8D4, #1B2E5E)', borderRadius: 4, transition: 'width 0.5s' }} />
+      </div>
+
+      {/* Macros row */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        {[
+          { label: lang === 'ar' ? 'بروتين' : 'Protein', value: protein, color: '#EF4444', bg: '#FEF2F2' },
+          { label: lang === 'ar' ? 'كربو' : 'Carbs',   value: carbs,   color: '#F59E0B', bg: '#FFFBEB' },
+          { label: lang === 'ar' ? 'دهون' : 'Fat',     value: fat,     color: '#8B5CF6', bg: '#F5F3FF' },
+        ].map(m => (
+          <div key={m.label} style={{
+            flex: 1, background: m.bg, borderRadius: 10, padding: '8px 6px', textAlign: 'center',
+          }}>
+            <div style={{ color: m.color, fontWeight: 900, fontSize: 15 }}>{m.value}g</div>
+            <div style={{ color: '#6B7280', fontSize: 10, marginTop: 2 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Water row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ fontSize: 13, color: '#374151', fontWeight: 600 }}>💧 {lang === 'ar' ? 'ماء' : 'Water'}</span>
+        <span style={{ fontSize: 12, color: '#7BB8D4', fontWeight: 600 }}>{water} / {waterGoal} ml</span>
+      </div>
+      <div style={{ height: 8, background: '#E8F0F8', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${waterPct}%`, background: 'linear-gradient(90deg, #60A5FA, #2563EB)', borderRadius: 4, transition: 'width 0.5s' }} />
       </div>
     </div>
   );
