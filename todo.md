@@ -246,6 +246,14 @@
 - [x] Wire SpinWheel into Community challenges completion flow
 - [x] Admin Rewards tab in AdminPanel: edit probabilities, add/remove rewards, track history, monitor jackpots
 
+## Feature — Machine-Specific Exercise Images
+- [x] Replace all exercise images with accurate gym machine/equipment-specific photos
+- [x] Each exercise must show the actual machine/equipment used (not generic gym photos)
+- [x] Uploaded 21 gym machine photos to manus-storage
+- [x] Updated all 71 exercises in exercises.ts to use /manus-storage/ machine images
+- [x] Updated all 30 exercises in exerciseData.ts to use /manus-storage/ machine images
+- [x] Fixed iOS Safari broken images: storageProxy now pipes content instead of 307 redirect
+
 ## Bug Fix — Profile Tab Crash
 - [ ] Fix Profile tab crash: "An unexpected error occurred" on iOS
 - [ ] Investigate root cause in ProfilePanel.tsx or related components
@@ -258,6 +266,7 @@
 - [x] Add youtubeUtils.ts helper for YouTube thumbnails and Unsplash fallbacks
 - [x] Add workoutData.ts with full 8-week workout plan data
 - [x] Update WorkoutGuide.tsx, ExerciseLibrary.tsx, ActiveSession.tsx, LicenseGate.tsx, Home.tsx from ZIP
+- [x] Assign correct Unsplash image to each exercise based on standard international name (71 exercises in exercises.ts + 30 in exerciseData.ts)
 
 ## Feature Batch 13 — Challenge Reward Spin Wheel
 
