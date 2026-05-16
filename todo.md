@@ -370,3 +370,7 @@
 - [x] Home.tsx: replace /favicon.ico <img> with inline SVG PrimeFitLogo component in header
 - [x] Home.tsx: fix streak badge overlap in RTL — move streak badge properly inside welcome card (not overlapping name)
 - [x] ProfilePanel.tsx: add subscription status card at bottom reading from localStorage (key, plan, expiry, days left)
+
+## Bug Fix — Streak Badge & Nutrition Tab (May 16 v2)
+- [x] Home.tsx: fix streak badge overlap in LTR (English) — added paddingRight:72 wrapper so name text never goes under badge
+- [x] Home.tsx: restore Nutrition tab in bottom nav — added back between Stats and Exercises using inline SVG nutrition icon
