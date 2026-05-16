@@ -360,3 +360,8 @@
 - [x] Pricing.tsx: free plan "✓ خطتك الحالية" button now opens the info modal when no key generated yet, shows static badge after key generated
 - [x] AdminPanel: copy button already exists next to each license key in Licenses tab (📋 → ✓ for 1.8s)
 - [x] AdminPanel: copy button already exists next to each license key in Subscriptions tab
+
+## UI Restore — Lost After Rollback
+- [x] Home.tsx: 7 tabs only — removed "nutrition" tab from nav bar (home, stats, guide, exercises, coach, community, profile)
+- [x] Home.tsx: streak badge moved from header to inside welcome card (top-right corner as 🔥 badge with day count)
+- [x] Home.tsx: NutritionSummaryCard added above "Choose Today's Workout" section (calories + macros + water)
