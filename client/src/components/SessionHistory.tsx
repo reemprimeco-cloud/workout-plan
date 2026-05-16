@@ -8,9 +8,10 @@ interface Props {
   sessions: GymSession[];
   onDelete: (id: string) => void;
   onDeleteExercise?: (sessionId: string, exerciseIdx: number) => void;
+  onDeleteCardio?: (sessionId: string) => void;
 }
 
-export function SessionHistory({ sessions, onDelete, onDeleteExercise }: Props) {
+export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteCardio }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const { lang } = useLanguage();
@@ -160,15 +161,31 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise }: Props) 
                   <div style={{
                     background: 'white', borderRadius: 10, padding: '10px 12px', marginBottom: 12,
                     border: '1px solid #F0F0F0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1A1A2E' }}>
-                      🏊‍♀️ {isAr ? session.cardio.nameAr : (session.cardio.nameEn || session.cardio.nameAr)}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#1A1A2E' }}>
+                        🏃 {isAr ? session.cardio.nameAr : (session.cardio.nameEn || session.cardio.nameAr)}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 3 }}>
+                        {session.cardio.duration} {isAr ? 'د' : 'min'} • {session.cardio.speed}
+                        {session.cardio.distanceKm && ` • ${session.cardio.distanceKm} ${isAr ? 'كم' : 'km'}`}
+                        {session.cardio.caloriesBurned && ` • ${session.cardio.caloriesBurned} ${isAr ? 'سعرة' : 'kcal'}`}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 3 }}>
-                      {session.cardio.duration} {isAr ? 'د' : 'min'} • {session.cardio.speed}
-                      {session.cardio.distanceKm && ` • ${session.cardio.distanceKm} ${isAr ? 'كم' : 'km'}`}
-                      {session.cardio.caloriesBurned && ` • ${session.cardio.caloriesBurned} ${isAr ? 'سعرة' : 'kcal'}`}
-                    </div>
+                    {onDeleteCardio && (
+                      <button
+                        onClick={() => onDeleteCardio(session.id)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          fontSize: 16, padding: '4px 8px', color: '#aaa',
+                          flexShrink: 0,
+                        }}
+                        title={isAr ? 'حذف الكارديو' : 'Remove cardio'}
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 )}
 

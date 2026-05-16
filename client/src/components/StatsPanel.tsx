@@ -34,6 +34,7 @@ interface Props {
   onLogWeight: (w: number) => void;
   onDelete: (id: string) => void;
   onDeleteExercise?: (sessionId: string, exerciseIdx: number) => void;
+  onDeleteCardio?: (sessionId: string) => void;
 }
 
 // ── CSV Export ─────────────────────────────────────────────
@@ -100,7 +101,7 @@ function WeightTooltip({ active, payload, label }: any) {
   );
 }
 
-export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, onDelete, onDeleteExercise }: Props) {
+export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, onDelete, onDeleteExercise, onDeleteCardio }: Props) {
   const { lang } = useLanguage();
   const [subTab, setSubTab] = useState<'stats' | 'history'>('stats');
   const [newWeight, setNewWeight] = useState('');
@@ -178,7 +179,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
 
       {/* ── History sub-tab ── */}
       {subTab === 'history' && (
-        <SessionHistory sessions={sessions} onDelete={onDelete} onDeleteExercise={onDeleteExercise} />
+        <SessionHistory sessions={sessions} onDelete={onDelete} onDeleteExercise={onDeleteExercise} onDeleteCardio={onDeleteCardio} />
       )}
 
       {/* ── Stats sub-tab ── */}
