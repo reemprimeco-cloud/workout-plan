@@ -7,9 +7,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface Props {
   sessions: GymSession[];
   onDelete: (id: string) => void;
+  onDeleteExercise?: (sessionId: string, exerciseIdx: number) => void;
 }
 
-export function SessionHistory({ sessions, onDelete }: Props) {
+export function SessionHistory({ sessions, onDelete, onDeleteExercise }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const { lang } = useLanguage();
@@ -131,13 +132,24 @@ export function SessionHistory({ sessions, onDelete }: Props) {
                         <div style={{ flex: 1 }}>
                           <span style={{
                             fontSize: 12, fontWeight: 700, color: '#1A1A2E',
-                            textDecoration: ex.completed ? 'none' : 'none',
                           }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</span>
                           <span style={{ fontSize: 11, color: '#8A8AAA', marginRight: 8 }}>
                             {ex.sets}×{ex.reps} • {ex.weight}
                           </span>
                         </div>
                         {ex.notes && <span style={{ fontSize: 10, color: '#8A8AAA' }}>📝 {ex.notes}</span>}
+                        {onDeleteExercise && (
+                          <button
+                            onClick={() => onDeleteExercise(session.id, i)}
+                            title={isAr ? 'حذف التمرين' : 'Delete exercise'}
+                            style={{
+                              background: 'none', border: 'none', cursor: 'pointer',
+                              padding: '2px 4px', borderRadius: 6, fontSize: 14,
+                              color: '#E05A00', opacity: 0.7, flexShrink: 0,
+                              lineHeight: 1,
+                            }}
+                          >🗑️</button>
+                        )}
                       </div>
                     ))}
                   </div>
