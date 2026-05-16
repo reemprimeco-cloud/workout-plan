@@ -327,6 +327,16 @@ export function useGymTracker() {
     }));
   }, []);
 
+  // ── Remove cardio from session ─────────────────────────
+  const removeCardio = useCallback((sessionId: string) => {
+    setData(prev => ({
+      ...prev,
+      sessions: prev.sessions.map(s =>
+        s.id === sessionId ? { ...s, cardio: undefined } : s
+      ),
+    }));
+  }, []);
+
   // ── Update session meta (mood, notes, weight) ─────────
   const updateSessionMeta = useCallback((sessionId: string, updates: Partial<GymSession>) => {
     setData(prev => ({
@@ -430,6 +440,7 @@ export function useGymTracker() {
     toggleExercise,
     addExerciseToSession,
     removeExercise,
+    removeCardio,
     undoRemoveExercise,
     lastRemovedExercise,
     cancelSession,

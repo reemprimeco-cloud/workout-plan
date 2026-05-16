@@ -234,7 +234,7 @@ export default function Home() {
         )}
 
         {activeTab === 'nutrition' && <Nutrition />}
-        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} onDeleteExercise={tracker.removeExercise} />}
+        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} onDeleteExercise={tracker.removeExercise} onDeleteCardio={tracker.removeCardio} />}
         {activeTab === 'guide' && <WorkoutGuide gender={(data.profile.gender as 'male' | 'female') || 'female'} />}
         {activeTab === 'exercises' && (
           <div style={{ padding: '16px' }}>
