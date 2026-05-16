@@ -165,19 +165,7 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {/* Prime Fit Logo (small) — inline SVG, renders on all browsers */}
           <PrimeFitLogo size={40} />
-          {/* User avatar (if uploaded) */}
-          {headerAvatar && (
-            <div
-              onClick={() => setActiveTab('profile')}
-              style={{
-                width: 36, height: 36, borderRadius: '50%',
-                overflow: 'hidden', border: '2px solid rgba(255,255,255,0.6)',
-                cursor: 'pointer', flexShrink: 0,
-              }}
-            >
-              <img src={headerAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-          )}
+
           <div>
             <h1 style={{ margin: 0, color: 'white', fontSize: 17, fontWeight: 900, lineHeight: 1 }}>
               Prime Fit
@@ -408,27 +396,11 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Streak badge — top right (LTR) / top left (RTL) of welcome card */}
-          <div style={{
-            position: 'absolute', top: 0,
-            ...(isRTL ? { left: 0 } : { right: 0 }),
-            background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '8px 12px',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            border: `1px solid ${SKY}44`,
-            minWidth: 60,
-          }}>
-            <span style={{ fontSize: 22 }}>🔥</span>
-            <span style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1 }}>{stats.streak}</span>
-            <span style={{ color: SKY_LIGHT, fontSize: 10 }}>{t('streak')}</span>
-          </div>
-          {/* Text content: add padding on the badge side so text never overlaps */}
-          <div style={isRTL ? { paddingLeft: 72 } : { paddingRight: 72 }}>
-            <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
-            <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
-              {profile.name}
-            </h2>
-            <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
-          </div>
+          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
+          <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
+            {profile.name}
+          </h2>
+          <p style={{ margin: '0 0 0', color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
               { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
@@ -476,8 +448,7 @@ function CheckInPanel({ onStart, stats, profile }: {
         </div>
       </div>
 
-      {/* Nutrition Summary Card — tapping navigates to nutrition tab */}
-      <NutritionSummaryCard />
+
 
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
