@@ -368,3 +368,8 @@
 - [x] Weight progress bar: standalone card above "Weight Tracking" card in StatsPanel (already existed, confirmed)
 - [x] Subscriptions section: added at bottom of Profile page
 - [x] Fix overall design to match screenshot (navy dark header, white cards, clean layout)
+
+## Bug Fix — Admin Full Access
+- [x] Backend: subscription.getStatus returns prime_pro for admin users (role === 'admin')
+- [x] Frontend: SubscriptionContext treats admin role as prime_pro with all features unlocked
+- [x] ProfilePanel: hide "Subscribe Now" button for admin users (plan !== 'free' hides it automatically)

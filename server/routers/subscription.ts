@@ -78,6 +78,20 @@ export const subscriptionRouter = router({
   /** Get current user's subscription status */
   getStatus: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.openId ?? String(ctx.user.id);
+
+    // Admin users get full prime_pro access automatically
+    if (ctx.user.role === 'admin') {
+      return {
+        plan:      "prime_pro" as const,
+        status:    "active" as const,
+        isActive:  true,
+        isTrial:   false,
+        expiresAt: null,
+        features:  PLANS.prime_pro.features,
+        daysLeft:  null,
+      };
+    }
+
     const sub    = await getSubscription(userId);
 
     if (!sub || !isSubscriptionActive(sub)) {

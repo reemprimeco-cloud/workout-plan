@@ -1,5 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export type PlanId = "free" | "prime_plus" | "prime_pro";
 
@@ -36,22 +37,28 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const { data, isLoading } = trpc.subscription.getStatus.useQuery(undefined, {
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const plan = (data?.plan ?? "free") as PlanId;
+  // Admin users always get prime_pro full access
+  const plan = isAdmin ? "prime_pro" as PlanId : (data?.plan ?? "free") as PlanId;
   const status = data?.status ?? "active";
-  const expiresAt = data?.expiresAt ? new Date(data.expiresAt) : null;
+  const expiresAt = isAdmin ? null : (data?.expiresAt ? new Date(data.expiresAt) : null);
 
   const hasFeature = (feature: string): boolean => {
+    // Admin has access to all features
+    if (isAdmin) return true;
     const allowedPlans = PLAN_FEATURES[feature];
     if (!allowedPlans) return false;
     return allowedPlans.includes(plan);
   };
 
-  const isPremium = plan !== "free" && status === "active";
+  const isPremium = isAdmin || (plan !== "free" && status === "active");
   const isTrial = (data as any)?.isTrial ?? false;
   const daysLeft = expiresAt
     ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
