@@ -12,7 +12,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
+const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 const STORAGE_KEY = 'primefit_license';
 const PRODUCT_URL = '/pricing'; // MyFatoorah checkout
 
