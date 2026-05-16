@@ -130,10 +130,10 @@ export default function Home() {
       </svg>
     ),
   };
-  const tabs: { id: Tab; iconUrl: string; label: string }[] = [
+  const tabs: { id: Tab; iconUrl?: string; label: string }[] = [
     { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
     { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
-    { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: t('navGuide') },
+    { id: 'nutrition', label: isRTL ? 'تغذية' : 'Nutrition' },
     { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'coach', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp', label: isRTL ? 'مدربي' : 'Coach' },
     { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
@@ -421,11 +421,14 @@ function CheckInPanel({ onStart, stats, profile }: {
             <span style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1 }}>{stats.streak}</span>
             <span style={{ color: SKY_LIGHT, fontSize: 10 }}>{t('streak')}</span>
           </div>
-          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
-          <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
-            {profile.name}
-          </h2>
-          <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
+          {/* Text content: add padding on the badge side so text never overlaps */}
+          <div style={isRTL ? { paddingLeft: 72 } : { paddingRight: 72 }}>
+            <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
+            <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
+              {profile.name}
+            </h2>
+            <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
+          </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
               { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
