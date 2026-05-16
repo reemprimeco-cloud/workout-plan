@@ -13,6 +13,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
+import { getDailyCaloriesBurned } from "../lib/calorieCalc";
 
 // ── Design tokens (matches main app light theme) ──────────────────────────────
 const PAGE_BG   = "#F0F4F8";
@@ -99,13 +100,15 @@ const card = (extra?: React.CSSProperties): React.CSSProperties => ({
 });
 
 // ── Large calorie ring ────────────────────────────────────────────────────────
-function CalorieRing({ consumed, goal, lang }: { consumed: number; goal: number; lang: string }) {
+function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: number; goal: number; lang: string; workoutCalories?: number }) {
   const size = 180;
   const r = 74;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(consumed / Math.max(goal, 1), 1);
   const dash = circ * (1 - pct);
-  const remaining = Math.max(goal - consumed, 0);
+  // Remaining = Goal - Food + Exercise
+  const remaining = Math.max(goal - consumed + workoutCalories, 0);
+  const ringColor = remaining === 0 ? '#DC2626' : consumed > goal ? '#F97316' : NAVY;
 
   return (
     <div style={card()}>
@@ -118,7 +121,7 @@ function CalorieRing({ consumed, goal, lang }: { consumed: number; goal: number;
         <div style={{ position: "relative", width: size, height: size }}>
           <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
             <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E8EDF4" strokeWidth={12} />
-            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={NAVY} strokeWidth={12}
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={ringColor} strokeWidth={12}
               strokeDasharray={circ} strokeDashoffset={dash}
               strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
           </svg>
@@ -139,33 +142,51 @@ function CalorieRing({ consumed, goal, lang }: { consumed: number; goal: number;
         <div style={{ color: MUTED, fontSize: 12 }}>{tl("of", lang)} {goal}</div>
       </div>
 
-      {/* 3 stat boxes */}
-      <div style={{ display: "flex", gap: 8 }}>
+      {/* 4 stat boxes: Remaining / Consumed / Burned / Goal */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         <div style={{
-          flex: 1, background: "#F0FDF4", borderRadius: 14, padding: "12px 8px", textAlign: "center",
-          border: "1px solid #BBF7D0",
+          flex: 1, minWidth: 60, background: remaining === 0 ? '#FEF2F2' : '#F0FDF4',
+          borderRadius: 14, padding: "10px 6px", textAlign: "center",
+          border: `1px solid ${remaining === 0 ? '#FECACA' : '#BBF7D0'}`,
         }}>
-          <div style={{ color: C_GREEN, fontSize: 20, fontWeight: 900 }}>{Math.round(remaining)}</div>
-          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
+          <div style={{ color: remaining === 0 ? '#DC2626' : C_GREEN, fontSize: 18, fontWeight: 900 }}>{Math.round(remaining)}</div>
+          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
         </div>
         <div style={{
-          flex: 1, background: PAGE_BG, borderRadius: 14, padding: "12px 8px", textAlign: "center",
+          flex: 1, minWidth: 60, background: PAGE_BG, borderRadius: 14, padding: "10px 6px", textAlign: "center",
           border: `1px solid ${BORDER}`,
         }}>
-          <div style={{ color: TEXT, fontSize: 20, fontWeight: 900 }}>{Math.round(consumed)}</div>
-          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
+          <div style={{ color: TEXT, fontSize: 18, fontWeight: 900 }}>{Math.round(consumed)}</div>
+          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
         </div>
+        {workoutCalories > 0 && (
+          <div style={{
+            flex: 1, minWidth: 60, background: '#FFF7ED', borderRadius: 14, padding: "10px 6px", textAlign: "center",
+            border: '1px solid #FED7AA',
+          }}>
+            <div style={{ color: '#C2410C', fontSize: 18, fontWeight: 900 }}>{workoutCalories}</div>
+            <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
+            <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{lang === 'ar' ? 'محروقة' : 'Burned'}</div>
+          </div>
+        )}
         <div style={{
-          flex: 1, background: SKY_LIGHT, borderRadius: 14, padding: "12px 8px", textAlign: "center",
+          flex: 1, minWidth: 60, background: SKY_LIGHT, borderRadius: 14, padding: "10px 6px", textAlign: "center",
           border: `1px solid ${SKY}44`,
         }}>
-          <div style={{ color: SKY, fontSize: 20, fontWeight: 900 }}>{goal}</div>
-          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
+          <div style={{ color: SKY, fontSize: 18, fontWeight: 900 }}>{goal}</div>
+          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
         </div>
       </div>
+      {workoutCalories > 0 && (
+        <p style={{ fontSize: 10, color: MUTED, textAlign: 'center', margin: '8px 0 0' }}>
+          {lang === 'ar'
+            ? `المتبقي = الهدف − الطعام + السعرات المحروقة التقديرية`
+            : 'Remaining = Goal − Food + Est. Calories Burned'}
+        </p>
+      )}
     </div>
   );
 }
@@ -764,6 +785,18 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
   const fatGoal   = goals?.fatG     ?? 65;
   const waterGoal = goals?.waterMl  ?? 2500;
 
+  // Read workout calories burned today from gym tracker localStorage
+  const workoutCaloriesToday = (() => {
+    try {
+      const stored = localStorage.getItem('gym_tracker_v3');
+      if (!stored) return 0;
+      const data = JSON.parse(stored);
+      const weight = data?.profile?.currentWeight || 65;
+      const today = new Date().toISOString().split('T')[0];
+      return getDailyCaloriesBurned(data?.sessions || [], today, weight);
+    } catch { return 0; }
+  })();
+
   const exceeded = {
     calories: totals.calories > calGoal,
     protein:  totals.proteinG > protGoal,
@@ -778,7 +811,7 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
       {anyExceeded && <ExceedWarning lang={lang} exceeded={exceeded} onOpenGoals={onOpenGoals} />}
 
       {/* Calorie ring card */}
-      <CalorieRing consumed={totals.calories} goal={calGoal} lang={lang} />
+      <CalorieRing consumed={totals.calories} goal={calGoal} lang={lang} workoutCalories={workoutCaloriesToday} />
 
       {/* Macronutrients card */}
       <div style={card()}>

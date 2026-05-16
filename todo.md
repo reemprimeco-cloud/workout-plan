@@ -386,3 +386,17 @@
 - [x] Nutrition Goals modal: fixed input losing focus — moved GoalField component outside GoalsModal to prevent remount on each render
 - [x] Nutrition Goals modal: fixed TDEE auto-calculator — was reading wrong localStorage key (primefit_data), fixed to gym_tracker_v3
 - [x] Nutrition Insights tab: fixed AI generation — added onError handler + error message display so button no longer stays stuck in pending state
+
+## Calories Burned & Nutrition Balance System
+- [x] exercises.ts: met values added to all sessionTypes
+- [x] exerciseData.ts: met values added to all individual exercises
+- [x] client/src/lib/calorieCalc.ts: utility created (calcExerciseCalories, calcSessionCalories, estimateDuration, getDailyCaloriesBurned, getWeeklyCaloriesBurned, getMonthlyCaloriesBurned)
+- [x] ActiveSession.tsx: live calorie counter + per-exercise "السعرات المحروقة التقديرية" display added
+- [x] ActiveSession.tsx: total calories burned saved to session data on finish
+- [x] StatsPanel.tsx: daily calories burned card (today) added
+- [x] StatsPanel.tsx: weekly calories burned bar chart added
+- [x] StatsPanel.tsx: monthly calories summary (4 weeks) added
+- [x] Nutrition.tsx: workout calories row added to dashboard (goal / food / burned / remaining)
+- [x] Nutrition.tsx: progress circle color reflects remaining calories (green/orange/red)
+- [x] Nutrition.tsx: remaining = goal - food + estimated exercise calories
+- [x] Nutrition.tsx Goals modal: goal mode selector (fat loss / maintain / muscle gain) already existed in TDEE section

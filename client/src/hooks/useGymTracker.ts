@@ -61,6 +61,7 @@ export interface GymSession {
   notes: string;
   bodyWeight?: number;
   isActive: boolean;
+  caloriesBurned?: number; // estimated calories burned this session
 }
 
 export interface UserProfile {
