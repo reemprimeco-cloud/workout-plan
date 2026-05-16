@@ -362,6 +362,40 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
   );
 }
 
+// ── Goals Modal Field (must be outside GoalsModal to avoid remount on each render) ──
+function GoalField({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit: string }) {
+  const TEXT = "#1B2E5E";
+  const MUTED = "#94A3B8";
+  const BORDER = "#E2E8F0";
+  const PAGE_BG = "#F0F4F8";
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+        <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{label}</span>
+        <span style={{ color: MUTED, fontSize: 12 }}>{unit}</span>
+      </div>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={value}
+        onChange={e => {
+          const v = e.target.value;
+          if (v === "" || /^\d+$/.test(v)) onChange(v);
+        }}
+        onFocus={e => e.target.select()}
+        style={{
+          width: "100%", boxSizing: "border-box",
+          background: PAGE_BG, border: `1.5px solid ${BORDER}`,
+          borderRadius: 12, padding: "12px 14px", color: TEXT,
+          fontSize: 16, fontWeight: 700, fontFamily: "inherit", outline: "none",
+          WebkitAppearance: "none" as any,
+        }}
+      />
+    </div>
+  );
+}
+
 // ── Goals Modal ───────────────────────────────────────────────────────────────
 function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClose: () => void }) {
   const utils = trpc.useUtils();
@@ -380,7 +414,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
   // Read profile from localStorage (set by useGymTracker)
   const profile = (() => {
     try {
-      const stored = localStorage.getItem("primefit_data");
+      const stored = localStorage.getItem("gym_tracker_v3");
       if (stored) {
         const parsed = JSON.parse(stored);
         return parsed.profile ?? {};
@@ -449,34 +483,6 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
       setTimeout(() => setStatus("idle"), 2500);
     }
   };
-
-  const Field = ({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit: string }) => (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{label}</span>
-        <span style={{ color: MUTED, fontSize: 12 }}>{unit}</span>
-      </div>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={value}
-        onChange={e => {
-          const v = e.target.value;
-          // Allow empty string or digits only
-          if (v === "" || /^\d+$/.test(v)) onChange(v);
-        }}
-        onFocus={e => e.target.select()}
-        style={{
-          width: "100%", boxSizing: "border-box",
-          background: PAGE_BG, border: `1.5px solid ${BORDER}`,
-          borderRadius: 12, padding: "12px 14px", color: TEXT,
-          fontSize: 16, fontWeight: 700, fontFamily: "inherit", outline: "none",
-          WebkitAppearance: "none" as any,
-        }}
-      />
-    </div>
-  );
 
   return (
     <div style={{
@@ -646,11 +652,11 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
           );
         })()}
 
-        <Field label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   unit="kcal" />
-        <Field label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  unit="g" />
-        <Field label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} unit="g" />
-        <Field label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   unit="g" />
-        <Field label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} unit="ml" />
+        <GoalField label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   unit="kcal" />
+        <GoalField label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  unit="g" />
+        <GoalField label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} unit="g" />
+        <GoalField label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   unit="g" />
+        <GoalField label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} unit="ml" />
 
         {errMsg ? (
           <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", marginBottom: 8 }}>{errMsg}</div>
@@ -1433,8 +1439,16 @@ function ManualSearch({ lang, mealType, setMealType }: {
 function InsightsTab({ lang }: { lang: string }) {
   const utils = trpc.useUtils();
   const { data: insights, isLoading } = trpc.nutrition.getInsights.useQuery();
+  const [genError, setGenError] = useState<string | null>(null);
   const generateInsights = trpc.nutrition.generateInsights.useMutation({
-    onSuccess: () => utils.nutrition.getInsights.invalidate(),
+    onSuccess: () => {
+      setGenError(null);
+      utils.nutrition.getInsights.invalidate();
+    },
+    onError: (err) => {
+      setGenError(lang === 'ar' ? 'حدث خطأ أثناء التوليد. حاول مرة أخرى.' : 'Generation failed. Please try again.');
+      console.error('[Insights] generation error:', err.message);
+    },
   });
 
   const insightIcons: Record<string, string> = {
@@ -1464,6 +1478,15 @@ function InsightsTab({ lang }: { lang: string }) {
           ? `⏳ ${tl("generating", lang)}`
           : `🤖 ${tl("generateInsights", lang)}`}
       </button>
+
+      {genError && (
+        <div style={{
+          background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12,
+          padding: "10px 14px", marginBottom: 12, color: "#DC2626", fontSize: 13, fontWeight: 600,
+        }}>
+          ⚠️ {genError}
+        </div>
+      )}
 
       {isLoading && (
         <div style={{ textAlign: "center", padding: "20px 0" }}>

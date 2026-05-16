@@ -380,3 +380,9 @@
 - [x] Home.tsx: remove profile image/avatar circle from header
 - [x] ProfilePanel.tsx: remove profile image/avatar upload section (replaced with initials-only circle)
 - [x] Home.tsx: remove NutritionSummaryCard from home page (Nutrition tab stays active)
+
+## Bug Fix — 4 Issues (May 16 v4)
+- [x] ExerciseLibrary: exercise images confirmed working — images show when row is expanded (? is the expand button, not a broken image)
+- [x] Nutrition Goals modal: fixed input losing focus — moved GoalField component outside GoalsModal to prevent remount on each render
+- [x] Nutrition Goals modal: fixed TDEE auto-calculator — was reading wrong localStorage key (primefit_data), fixed to gym_tracker_v3
+- [x] Nutrition Insights tab: fixed AI generation — added onError handler + error message display so button no longer stays stuck in pending state
