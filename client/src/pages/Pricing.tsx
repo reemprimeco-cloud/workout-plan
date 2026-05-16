@@ -622,11 +622,37 @@ export default function Pricing() {
 
                 {/* ── CTA: Current plan ── */}
                 {isCurrent ? (
-                  <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
-                    ✓ {t("current")}
-                  </div>
+                  /* For free plan: show clickable button to generate key; for paid: show static badge */
+                  plan.id === "free" ? (
+                    trialKey ? (
+                      /* Already generated — show static badge */
+                      <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
+                        ✓ {t("current")}
+                      </div>
+                    ) : (
+                      /* Not yet generated — show clickable button */
+                      <div>
+                        {trialError && (
+                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+                        )}
+                        <Button
+                          onClick={() => handleUpgradeClick("free")}
+                          style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
+                        >
+                          🎁 {t("startTrial")}
+                        </Button>
+                        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
+                          {t("trialNote")}
+                        </p>
+                      </div>
+                    )
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
+                      ✓ {t("current")}
+                    </div>
+                  )
 
-                /* ── CTA: Free plan ── */
+                /* ── CTA: Free plan (not current) ── */
                 ) : plan.id === "free" ? (
                   <>
                     {trialKey ? (
