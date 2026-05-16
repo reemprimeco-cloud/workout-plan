@@ -6,14 +6,16 @@ import { sessionTypes, masterExercises, upperBodyExercises, cardioTemplates, aqu
 import { getProgramByGender } from '../lib/exerciseData';
 import { WorkoutTimer } from './WorkoutTimer';
 import { useLanguage } from '../contexts/LanguageContext';
+import { calcSessionCalories } from '../lib/calorieCalc';
 
 interface Props {
   session: GymSession;
   tracker: ReturnType<typeof useGymTracker>;
   gender?: 'male' | 'female';
+  weightKg?: number;
 }
 
-export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
+export function ActiveSession({ session, tracker, gender = 'female', weightKg = 65 }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -45,12 +47,21 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
   const totalCount = session.exercises.length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  // Live calorie estimate
+  const liveCalories = calcSessionCalories(
+    session.exercises,
+    session.cardio,
+    session.sessionType,
+    weightKg,
+  );
+
   const handleCheckOut = () => {
     setCheckingOut(true);
     tracker.checkOut(session.id, {
       mood: session.mood,
       energyLevel: session.energyLevel,
       notes: session.notes,
+      caloriesBurned: liveCalories,
     });
   };
 
@@ -117,6 +128,14 @@ export function ActiveSession({ session, tracker, gender = 'female' }: Props) {
             </div>
             <div style={{ fontSize: 11, marginTop: 4, opacity: 0.85 }}>
               {completedCount} / {totalCount} {isAr ? 'تمرين مكتمل' : 'exercises done'}
+            </div>
+            {/* Live Calorie Counter */}
+            <div style={{
+              marginTop: 10, background: 'rgba(255,255,255,0.18)', borderRadius: 10,
+              padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: 12, opacity: 0.9 }}>🔥 {isAr ? 'السعرات المحروقة التقديرية' : 'Est. Calories Burned'}</span>
+              <span style={{ fontSize: 18, fontWeight: 900 }}>{liveCalories} kcal</span>
             </div>
           </div>
         )}

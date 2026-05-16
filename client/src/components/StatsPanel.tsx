@@ -10,6 +10,8 @@ import { sessionTypes } from '../data/exercises';
 import type { SessionType } from '../data/exercises';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SessionHistory } from './SessionHistory';
+import { BarChart, Bar } from 'recharts';
+import { getDailyCaloriesBurned, getWeeklyCaloriesBurned, getMonthlyCaloriesBurned } from '../lib/calorieCalc';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -464,6 +466,94 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
           </div>
         )}
       </div>
+
+      {/* ── Estimated Calories Burned ── */}
+      {(() => {
+        const today = new Date().toISOString().split('T')[0];
+        const wt = profile.currentWeight || 65;
+        const daily = getDailyCaloriesBurned(sessions, today, wt);
+        const weekly = getWeeklyCaloriesBurned(sessions, wt);
+        const weekTotal = weekly.reduce((s, d) => s + d.calories, 0);
+        const monthly = getMonthlyCaloriesBurned(sessions, wt);
+        const monthTotal = monthly.reduce((s, w) => s + w.calories, 0);
+        const hasData = weekly.some(d => d.calories > 0);
+        return (
+          <div style={{
+            background: 'white', borderRadius: 16, padding: '18px', marginBottom: 16,
+            boxShadow: '0 2px 8px rgba(27,46,94,0.07)', border: '1px solid #FED7AA55',
+          }}>
+            <h3 style={{ margin: '0 0 14px', color: '#C2410C', fontSize: 15, fontWeight: 900 }}>
+              🔥 {isAr ? 'السعرات المحروقة التقديرية' : 'Estimated Calories Burned'}
+            </h3>
+            {/* Summary cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+              {[
+                { label: isAr ? 'اليوم' : 'Today', value: daily, icon: '☀️' },
+                { label: isAr ? 'الأسبوع' : 'This Week', value: weekTotal, icon: '📅' },
+                { label: isAr ? 'الشهر' : 'This Month', value: monthTotal, icon: '📆' },
+              ].map(c => (
+                <div key={c.label} style={{
+                  background: '#FFF7ED', borderRadius: 12, padding: '12px 8px', textAlign: 'center',
+                  border: '1px solid #FED7AA',
+                }}>
+                  <div style={{ fontSize: 20 }}>{c.icon}</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#C2410C', lineHeight: 1.1 }}>{c.value}</div>
+                  <div style={{ fontSize: 9, color: '#9A3412', marginTop: 1 }}>kcal</div>
+                  <div style={{ fontSize: 10, color: '#7A9BB5', marginTop: 2 }}>{c.label}</div>
+                </div>
+              ))}
+            </div>
+            {/* Weekly bar chart */}
+            {hasData && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: '#7A9BB5', marginBottom: 8, fontWeight: 600 }}>
+                  {isAr ? 'آخر 7 أيام' : 'Last 7 Days'}
+                </div>
+                <ResponsiveContainer width="100%" height={110}>
+                  <BarChart data={weekly} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#FED7AA" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#7A9BB5' }} />
+                    <YAxis tick={{ fontSize: 9, fill: '#7A9BB5' }} />
+                    <Tooltip
+                      formatter={(v: number) => [`${v} kcal`, isAr ? 'سعرات' : 'Cal']}
+                      contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                    />
+                    <Bar dataKey="calories" fill="#F97316" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {/* Monthly bar chart */}
+            {monthly.some(w => w.calories > 0) && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: '#7A9BB5', marginBottom: 8, fontWeight: 600 }}>
+                  {isAr ? 'آخر 4 أسابيع' : 'Last 4 Weeks'}
+                </div>
+                <ResponsiveContainer width="100%" height={100}>
+                  <BarChart data={monthly} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#FED7AA" />
+                    <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#7A9BB5' }} />
+                    <YAxis tick={{ fontSize: 9, fill: '#7A9BB5' }} />
+                    <Tooltip
+                      formatter={(v: number) => [`${v} kcal`, isAr ? 'سعرات' : 'Cal']}
+                      contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                    />
+                    <Bar dataKey="calories" fill="#EA580C" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            {!hasData && (
+              <div style={{ textAlign: 'center', padding: '12px 0', color: '#9A3412', fontSize: 13 }}>
+                {isAr ? 'أكملي جلسة تدريب لتظهر بيانات السعرات' : 'Complete a workout to see calorie data'}
+              </div>
+            )}
+            <p style={{ fontSize: 10, color: '#9CA3AF', margin: '8px 0 0', textAlign: 'center' }}>
+              {isAr ? 'جميع القيم تقديرية بناءً على معادلة MET. ليست قيمًا طبية دقيقة.' : 'All values are MET-based estimates. Not medically exact.'}
+            </p>
+          </div>
+        );
+      })()}
     </>}
     </div>
   );
