@@ -3,7 +3,7 @@
 // Tabs: Dashboard | License Keys | Broadcast | Profile
 // Language: Arabic / English toggle
 // ============================================================
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'announcements' | 'rewards' | 'challenges' | 'profile';
+type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -494,8 +494,6 @@ export default function AdminPanel() {
   const [pMsg, setPMsg] = useState('');
   const [profileLoaded, setProfileLoaded] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const [cropFile, setCropFile] = useState<File | null>(null);
 
   // Queries
   const statsQuery = trpc.admin.getStats.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
@@ -530,33 +528,6 @@ export default function AdminPanel() {
   });
   const toggleMutation = trpc.license.toggle.useMutation({ onSuccess: () => { utils.license.list.invalidate(); utils.admin.getStats.invalidate(); } });
   const deleteMutation = trpc.license.delete.useMutation({ onSuccess: () => { utils.license.list.invalidate(); utils.admin.getStats.invalidate(); } });
-
-  // Email edit state
-  const [editingEmailId, setEditingEmailId] = useState<number | null>(null);
-  const [editEmailValue, setEditEmailValue] = useState('');
-  const [emailActionMsg, setEmailActionMsg] = useState<Record<number, string>>({});
-  const updateEmailMutation = trpc.license.updateEmail.useMutation({
-    onSuccess: (_, vars) => {
-      utils.license.list.invalidate();
-      setEditingEmailId(null);
-      setEmailActionMsg(prev => ({ ...prev, [vars.id]: lang === 'ar' ? '✅ تم تحديث البريد' : '✅ Email updated' }));
-      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
-    },
-    onError: (err, vars) => {
-      setEmailActionMsg(prev => ({ ...prev, [vars.id]: `❌ ${err.message}` }));
-      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
-    },
-  });
-  const resendEmailMutation = trpc.license.resendEmail.useMutation({
-    onSuccess: (_, vars) => {
-      setEmailActionMsg(prev => ({ ...prev, [vars.id]: lang === 'ar' ? '✅ تم إرسال الكود بنجاح' : '✅ Email sent!' }));
-      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
-    },
-    onError: (err, vars) => {
-      setEmailActionMsg(prev => ({ ...prev, [vars.id]: `❌ ${err.message}` }));
-      setTimeout(() => setEmailActionMsg(prev => { const n = { ...prev }; delete n[vars.id]; return n; }), 3000);
-    },
-  });
   const sendToOneMutation = trpc.admin.sendToOne.useMutation({
     onSuccess: () => {
       utils.admin.listBroadcasts.invalidate();
@@ -578,40 +549,6 @@ export default function AdminPanel() {
     },
     onError: (err) => setBResult(`❌ ${err.message}`),
   });
-  // ── In-App Notification state ─────────────────────────────────────────────
-  const [notifTitle, setNotifTitle] = useState('');
-  const [notifMessage, setNotifMessage] = useState('');
-  const [notifImageUrl, setNotifImageUrl] = useState('');
-  const [notifCtaText, setNotifCtaText] = useState('');
-  const [notifCtaLink, setNotifCtaLink] = useState('');
-  const [notifTargeting, setNotifTargeting] = useState<'all' | 'specific' | 'active_subscribers' | 'new_subscribers'>('all');
-  const [notifTargetUserId, setNotifTargetUserId] = useState<number | null>(null);
-  const [notifUserSearch, setNotifUserSearch] = useState('');
-  const [notifUserSearchOpen, setNotifUserSearchOpen] = useState(false);
-  const [notifSelectedUserLabel, setNotifSelectedUserLabel] = useState('');
-  const [notifResult, setNotifResult] = useState('');
-
-  // Channel: email | popup | both
-  const [bChannel, setBChannel] = useState<'email' | 'popup' | 'both'>('email');
-
-  const inAppQuery = trpc.inAppNotifications.list.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
-  const createInAppMutation = trpc.inAppNotifications.create.useMutation({
-    onSuccess: () => {
-      inAppQuery.refetch();
-      setNotifTitle(''); setNotifMessage(''); setNotifImageUrl('');
-      setNotifCtaText(''); setNotifCtaLink('');
-      setNotifResult(`✅ ${lang === 'ar' ? 'تم إنشاء الإشعار بنجاح!' : 'Notification created!'}`);
-      setTimeout(() => setNotifResult(''), 4000);
-    },
-    onError: (err) => setNotifResult(`❌ ${err.message}`),
-  });
-  const deleteInAppMutation = trpc.inAppNotifications.delete.useMutation({
-    onSuccess: () => inAppQuery.refetch(),
-  });
-  const toggleInAppMutation = trpc.inAppNotifications.toggleActive.useMutation({
-    onSuccess: () => inAppQuery.refetch(),
-  });
-
   const updateProfileMutation = trpc.admin.updateProfile.useMutation({
     onSuccess: () => { utils.admin.getProfile.invalidate(); setPMsg(t('profileSaved', lang)); setTimeout(() => setPMsg(''), 3000); },
     onError: (err) => setPMsg(`❌ ${err.message}`),
@@ -741,7 +678,6 @@ export default function AdminPanel() {
           ['licenses', t('tabLicenses', lang)],
           ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
-          ['announcements', lang === 'ar' ? '📣 الإعلانات' : '📣 Announcements'],
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
           ['profile', t('tabProfile', lang)],
@@ -894,46 +830,7 @@ export default function AdminPanel() {
                         <tr key={c.id} style={{ background: idx % 2 === 0 ? 'white' : '#FAFBFF', borderBottom: `1px solid ${SKY_LIGHT}33` }}>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: NAVY, fontWeight: 700, whiteSpace: 'nowrap', direction: 'ltr' }}>{c.code}</td>
                           <td style={{ padding: '10px 12px', color: '#334155' }}>{c.customerName || '—'}</td>
-                          <td style={{ padding: '10px 12px', direction: 'ltr', fontSize: 12, minWidth: 180 }}>
-                            {editingEmailId === c.id ? (
-                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input
-                                  type="email"
-                                  value={editEmailValue}
-                                  onChange={e => setEditEmailValue(e.target.value)}
-                                  autoFocus
-                                  style={{ flex: 1, padding: '4px 8px', border: '1.5px solid #7BB8D4', borderRadius: 6, fontSize: 12, outline: 'none', minWidth: 0 }}
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter') updateEmailMutation.mutate({ id: c.id, email: editEmailValue });
-                                    if (e.key === 'Escape') setEditingEmailId(null);
-                                  }}
-                                />
-                                <button
-                                  onClick={() => updateEmailMutation.mutate({ id: c.id, email: editEmailValue })}
-                                  disabled={updateEmailMutation.isPending}
-                                  style={{ background: '#1B2E5E', color: 'white', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                                >✓</button>
-                                <button
-                                  onClick={() => setEditingEmailId(null)}
-                                  style={{ background: '#F1F5F9', color: '#64748b', border: 'none', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}
-                                >✕</button>
-                              </div>
-                            ) : (
-                              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <span style={{ color: '#334155', flex: 1 }}>{c.customerEmail || '—'}</span>
-                                <button
-                                  onClick={() => { setEditingEmailId(c.id); setEditEmailValue(c.customerEmail || ''); }}
-                                  title={lang === 'ar' ? 'تعديل البريد' : 'Edit email'}
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7BB8D4', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
-                                >✏️</button>
-                              </div>
-                            )}
-                            {emailActionMsg[c.id] && (
-                              <div style={{ fontSize: 10, marginTop: 2, color: emailActionMsg[c.id].startsWith('✅') ? '#16A34A' : '#DC2626', fontWeight: 700 }}>
-                                {emailActionMsg[c.id]}
-                              </div>
-                            )}
-                          </td>
+                          <td style={{ padding: '10px 12px', color: '#334155', direction: 'ltr', fontSize: 12 }}>{c.customerEmail || '—'}</td>
                           <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, maxWidth: 140 }}>{c.note || '—'}</td>
                           <td style={{ padding: '10px 12px' }}>
                             <span style={{ background: c.isActive ? '#DCFCE7' : '#FEE2E2', color: c.isActive ? '#16A34A' : '#DC2626', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
@@ -954,20 +851,11 @@ export default function AdminPanel() {
                             {new Date(c.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: 6 }}>
                               <button onClick={() => toggleMutation.mutate({ id: c.id, isActive: !c.isActive })} disabled={toggleMutation.isPending}
                                 style={{ background: c.isActive ? '#FEF9C3' : '#DCFCE7', border: `1px solid ${c.isActive ? '#EAB308' : '#22C55E'}`, color: c.isActive ? '#92400E' : '#166534', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                 {c.isActive ? t('disable', lang) : t('enable', lang)}
                               </button>
-                              {c.customerEmail && (
-                                <button
-                                  onClick={() => resendEmailMutation.mutate({ id: c.id })}
-                                  disabled={resendEmailMutation.isPending}
-                                  title={lang === 'ar' ? 'إعادة إرسال الكود بالبريد' : 'Resend code by email'}
-                                  style={{ background: '#EFF6FF', border: '1px solid #3B82F6', color: '#1D4ED8', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                  📧 {lang === 'ar' ? 'إرسال' : 'Send'}
-                                </button>
-                              )}
                               <button onClick={() => { if (confirm(`${t('confirmDelete', lang)} "${c.code}"?`)) deleteMutation.mutate({ id: c.id }); }} disabled={deleteMutation.isPending}
                                 style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#DC2626', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                                 {t('delete', lang)}
@@ -990,268 +878,71 @@ export default function AdminPanel() {
             <div style={cardStyle}>
               <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('broadcastTitle', lang)}</h2>
 
-              {/* Channel selector: Email / In-App Popup / Both */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ ...labelStyle, marginBottom: 8 }}>{lang === 'ar' ? '📡 قناة الإرسال' : '📡 Send Channel'}</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {([['email', lang === 'ar' ? '📧 بريد إلكتروني' : '📧 Email'],
-                     ['popup', lang === 'ar' ? '🔔 إشعار داخلي' : '🔔 In-App Popup'],
-                     ['both', lang === 'ar' ? '📧+🔔 كلاهما' : '📧+🔔 Both']] as const).map(([ch, label]) => (
-                    <button key={ch} onClick={() => { setBChannel(ch); setBResult(''); setNotifResult(''); }}
-                      style={{
-                        flex: 1, padding: '9px 4px', border: `2px solid ${bChannel === ch ? NAVY : SKY_LIGHT}`,
-                        borderRadius: 10, background: bChannel === ch ? NAVY : 'white',
-                        color: bChannel === ch ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                        fontFamily: 'Cairo, sans-serif',
-                      }}>{label}</button>
-                  ))}
-                </div>
+              {/* Mode toggle */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                {(['all', 'one'] as const).map(mode => (
+                  <button key={mode} onClick={() => { setBMode(mode); setBResult(''); }}
+                    style={{
+                      flex: 1, padding: '10px', border: `2px solid ${bMode === mode ? NAVY : SKY_LIGHT}`,
+                      borderRadius: 10, background: bMode === mode ? NAVY : 'white',
+                      color: bMode === mode ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                      fontFamily: 'Cairo, sans-serif',
+                    }}>
+                    {mode === 'all' ? t('broadcastSend', lang) : t('broadcastSendOne', lang)}
+                  </button>
+                ))}
               </div>
 
-              {/* ── EMAIL section ── */}
-              {(bChannel === 'email' || bChannel === 'both') && (
-                <div style={{ background: '#F8FBFF', borderRadius: 14, padding: '16px', marginBottom: 16, border: `1px solid ${SKY_LIGHT}66` }}>
-                  <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 14, fontWeight: 800 }}>📧 {lang === 'ar' ? 'إعدادات البريد الإلكتروني' : 'Email Settings'}</h3>
-
-                  {/* Mode toggle */}
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                    {(['all', 'one'] as const).map(mode => (
-                      <button key={mode} onClick={() => { setBMode(mode); setBResult(''); }}
-                        style={{
-                          flex: 1, padding: '9px', border: `2px solid ${bMode === mode ? NAVY : SKY_LIGHT}`,
-                          borderRadius: 10, background: bMode === mode ? NAVY : 'white',
-                          color: bMode === mode ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                          fontFamily: 'Cairo, sans-serif',
-                        }}>
-                        {mode === 'all' ? t('broadcastSend', lang) : t('broadcastSendOne', lang)}
-                      </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* Target email (only for one mode) */}
+                {bMode === 'one' && (
+                  <div>
+                    <label style={labelStyle}>{t('broadcastTargetEmail', lang)}</label>
+                    <input type="email" value={bTargetEmail} onChange={e => setBTargetEmail(e.target.value)}
+                      placeholder="customer@example.com"
+                      style={{ ...inputStyle, direction: 'ltr' }} />
+                  </div>
+                )}
+                <div>
+                  <label style={labelStyle}>{t('broadcastType', lang)}</label>
+                  <select value={bType} onChange={e => setBType(e.target.value as any)}
+                    style={{ ...inputStyle, background: 'white' }}>
+                    {typeOptions.map(o => (
+                      <option key={o.value} value={o.value}>{t(o.labelKey, lang)}</option>
                     ))}
-                  </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  {/* Target email (only for one mode) */}
-                  {bMode === 'one' && (
-                    <div>
-                      <label style={labelStyle}>{t('broadcastTargetEmail', lang)}</label>
-                      <input type="email" value={bTargetEmail} onChange={e => setBTargetEmail(e.target.value)}
-                        placeholder="customer@example.com"
-                        style={{ ...inputStyle, direction: 'ltr' }} />
-                    </div>
-                  )}
-                  <div>
-                    <label style={labelStyle}>{t('broadcastType', lang)}</label>
-                    <select value={bType} onChange={e => setBType(e.target.value as any)}
-                      style={{ ...inputStyle, background: 'white' }}>
-                      {typeOptions.map(o => (
-                        <option key={o.value} value={o.value}>{t(o.labelKey, lang)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>{t('broadcastSubject', lang)}</label>
-                    <input type="text" value={bSubject} onChange={e => setBSubject(e.target.value)}
-                      placeholder={lang === 'ar' ? 'مثال: تحديث جديد في Prime Fit 🎉' : 'e.g. New update in Prime Fit 🎉'}
-                      style={inputStyle} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>{t('broadcastBody', lang)}</label>
-                    <textarea value={bBody} onChange={e => setBBody(e.target.value)} rows={5}
-                      placeholder={lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
-                      style={{ ...inputStyle, resize: 'vertical' as const }} />
-                  </div>
-                  {bResult && (
-                    <p style={{ color: bResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult}</p>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
-                      if (bMode === 'one') {
-                        if (!bTargetEmail.trim() || !bTargetEmail.includes('@')) { setBResult(lang === 'ar' ? '❌ يرجى إدخال بريد إلكتروني صحيح' : '❌ Please enter a valid email'); return; }
-                        sendToOneMutation.mutate({ email: bTargetEmail.trim(), subject: bSubject.trim(), body: bBody.trim(), type: bType });
-                      } else {
-                        if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
-                        broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
-                      }
-                    }}
-                    disabled={broadcastMutation.isPending || sendToOneMutation.isPending}
-                    style={{ background: (broadcastMutation.isPending || sendToOneMutation.isPending) ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 13, fontWeight: 900, cursor: (broadcastMutation.isPending || sendToOneMutation.isPending) ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
-                    {(broadcastMutation.isPending || sendToOneMutation.isPending) ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
-                  </button>
+                  </select>
                 </div>
+                <div>
+                  <label style={labelStyle}>{t('broadcastSubject', lang)}</label>
+                  <input type="text" value={bSubject} onChange={e => setBSubject(e.target.value)}
+                    placeholder={lang === 'ar' ? 'مثال: تحديث جديد في Prime Fit 🎉' : 'e.g. New update in Prime Fit 🎉'}
+                    style={inputStyle} />
                 </div>
-              )}
-
-              {/* ── IN-APP POPUP section ── */}
-              {(bChannel === 'popup' || bChannel === 'both') && (
-                <div style={{ background: '#FFF8F0', borderRadius: 14, padding: '16px', marginBottom: 16, border: '1px solid #FBBF2466' }}>
-                  <h3 style={{ margin: '0 0 14px', color: '#92400E', fontSize: 14, fontWeight: 800 }}>🔔 {lang === 'ar' ? 'إعدادات الإشعار الداخلي' : 'In-App Popup Settings'}</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div>
-                      <label style={labelStyle}>📌 {lang === 'ar' ? 'عنوان الإشعار *' : 'Notification Title *'}</label>
-                      <input type="text" value={notifTitle} onChange={e => setNotifTitle(e.target.value)}
-                        placeholder={lang === 'ar' ? 'مثال: ميزة جديدة متاحة 🎉' : 'e.g. New feature available 🎉'}
-                        style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>✍️ {lang === 'ar' ? 'نص الرسالة *' : 'Message *'}</label>
-                      <textarea value={notifMessage} onChange={e => setNotifMessage(e.target.value)} rows={4}
-                        placeholder={lang === 'ar' ? 'اكتب محتوى الإشعار...' : 'Write notification content...'}
-                        style={{ ...inputStyle, resize: 'vertical' as const }} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>🖼️ {lang === 'ar' ? 'رابط صورة/بانر (اختياري)' : 'Image / Banner URL (optional)'}</label>
-                      <input type="url" value={notifImageUrl} onChange={e => setNotifImageUrl(e.target.value)}
-                        placeholder="https://example.com/banner.jpg"
-                        style={{ ...inputStyle, direction: 'ltr' }} />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      <div>
-                        <label style={labelStyle}>🔗 {lang === 'ar' ? 'نص زر CTA (اختياري)' : 'CTA Button Text (optional)'}</label>
-                        <input type="text" value={notifCtaText} onChange={e => setNotifCtaText(e.target.value)}
-                          placeholder={lang === 'ar' ? 'مثال: اكتشف الآن' : 'e.g. Explore Now'}
-                          style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>🌐 {lang === 'ar' ? 'رابط زر CTA' : 'CTA Button Link'}</label>
-                        <input type="url" value={notifCtaLink} onChange={e => setNotifCtaLink(e.target.value)}
-                          placeholder="https://"
-                          style={{ ...inputStyle, direction: 'ltr' }} />
-                      </div>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>🎯 {lang === 'ar' ? 'الفئة المستهدفة' : 'Target Audience'}</label>
-                      <select value={notifTargeting} onChange={e => setNotifTargeting(e.target.value as any)}
-                        style={{ ...inputStyle, background: 'white' }}>
-                        <option value="all">{lang === 'ar' ? '👥 جميع المستخدمين' : '👥 All Users'}</option>
-                        <option value="specific">{lang === 'ar' ? '👤 مستخدم محدد' : '👤 Specific User'}</option>
-                        <option value="active_subscribers">{lang === 'ar' ? '✅ المشتركين النشطين' : '✅ Active Subscribers'}</option>
-                        <option value="new_subscribers">{lang === 'ar' ? '🆕 المشتركين الجدد (7 أيام)' : '🆕 New Subscribers (7 days)'}</option>
-                      </select>
-                    </div>
-                    {notifTargeting === 'specific' && (
-                      <div style={{ position: 'relative' }}>
-                        <label style={labelStyle}>🔍 {lang === 'ar' ? 'ابحث بالاسم أو البريد' : 'Search by Name or Email'}</label>
-                        <input
-                          type="text"
-                          value={notifSelectedUserLabel || notifUserSearch}
-                          onChange={e => {
-                            setNotifUserSearch(e.target.value);
-                            setNotifSelectedUserLabel('');
-                            setNotifTargetUserId(null);
-                            setNotifUserSearchOpen(true);
-                          }}
-                          onFocus={() => setNotifUserSearchOpen(true)}
-                          placeholder={lang === 'ar' ? 'اكتب اسم المستخدم أو بريده...' : 'Type name or email...'}
-                          style={{ ...inputStyle, direction: 'ltr' }}
-                        />
-                        {notifUserSearchOpen && notifUserSearch.length >= 1 && (
-                          <UserSearchDropdown
-                            query={notifUserSearch}
-                            onSelect={(id, label) => {
-                              setNotifTargetUserId(id);
-                              setNotifSelectedUserLabel(label);
-                              setNotifUserSearch('');
-                              setNotifUserSearchOpen(false);
-                            }}
-                          />
-                        )}
-                        {notifSelectedUserLabel && (
-                          <p style={{ color: '#16A34A', fontSize: 12, margin: '4px 0 0', fontWeight: 700 }}>
-                            ✓ {notifSelectedUserLabel}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {notifResult && (
-                      <p style={{ color: notifResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{notifResult}</p>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (!notifTitle.trim() || !notifMessage.trim()) { setNotifResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill title and message'); return; }
-                        createInAppMutation.mutate({
-                          title: notifTitle.trim(),
-                          message: notifMessage.trim(),
-                          imageUrl: notifImageUrl.trim() || null,
-                          ctaText: notifCtaText.trim() || null,
-                          ctaLink: notifCtaLink.trim() || null,
-                          targeting: notifTargeting,
-                          targetUserId: notifTargeting === 'specific' ? notifTargetUserId : null,
-                        });
-                      }}
-                      disabled={createInAppMutation.isPending}
-                      style={{ background: createInAppMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, #F59E0B, #D97706)`, color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 13, fontWeight: 900, cursor: createInAppMutation.isPending ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
-                      {createInAppMutation.isPending ? (lang === 'ar' ? '⏳ جاري...' : '⏳ Creating...') : (lang === 'ar' ? '🔔 إنشاء الإشعار' : '🔔 Create Notification')}
-                    </button>
-                  </div>
+                <div>
+                  <label style={labelStyle}>{t('broadcastBody', lang)}</label>
+                  <textarea value={bBody} onChange={e => setBBody(e.target.value)} rows={6}
+                    placeholder={lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
+                    style={{ ...inputStyle, resize: 'vertical' as const }} />
                 </div>
-              )}
-
-            </div>
-
-            {/* ── In-App Notifications History ── */}
-            <div style={cardStyle}>
-              <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>🔔 {lang === 'ar' ? 'سجل الإشعارات الداخلية' : 'In-App Notifications'}</h2>
-              {inAppQuery.isLoading ? (
-                <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
-              ) : (inAppQuery.data ?? []).length === 0 ? (
-                <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{lang === 'ar' ? 'لا توجد إشعارات داخلية بعد.' : 'No in-app notifications yet.'}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {(inAppQuery.data ?? []).map(n => (
-                    <div key={n.id} style={{ background: n.isActive ? '#FFFBEB' : '#F8FAFC', borderRadius: 12, padding: '14px 16px', border: `1px solid ${n.isActive ? '#FCD34D66' : '#E2E8F0'}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <div style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{n.title}</div>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <span style={{ background: n.isActive ? '#D1FAE5' : '#FEE2E2', color: n.isActive ? '#065F46' : '#991B1B', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>
-                            {n.isActive ? (lang === 'ar' ? 'نشط' : 'Active') : (lang === 'ar' ? 'معطل' : 'Inactive')}
-                          </span>
-                          <button onClick={() => toggleInAppMutation.mutate({ id: n.id, isActive: !n.isActive })}
-                            style={{ background: 'none', border: `1px solid ${SKY_LIGHT}`, borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer', color: NAVY }}>
-                            {n.isActive ? (lang === 'ar' ? '⏸ إيقاف' : '⏸ Pause') : (lang === 'ar' ? '▶️ تفعيل' : '▶️ Activate')}
-                          </button>
-                          <button onClick={() => { if (confirm(lang === 'ar' ? 'حذف هذا الإشعار?' : 'Delete this notification?')) deleteInAppMutation.mutate({ id: n.id }); }}
-                            style={{ background: 'none', border: '1px solid #FCA5A5', borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer', color: '#DC2626' }}>
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                      <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>{n.message.slice(0, 100)}{n.message.length > 100 ? '...' : ''}</div>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
-                        <span style={{ background: '#E0F2FE', color: '#0369A1', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
-                          🎯 {n.targeting === 'all' ? (lang === 'ar' ? 'الجميع' : 'All') : n.targeting === 'specific' ? `User #${n.targetUserId}` : n.targeting}
-                        </span>
-                        {n.ctaText && <span style={{ background: '#F3E8FF', color: '#6B21A8', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>🔗 {n.ctaText}</span>}
-                        <span style={{ color: '#94A3B8', fontSize: 11 }}>{new Date(n.createdAt).toLocaleString('en-GB')}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Broadcast History */}
-            <div style={cardStyle}>
-              <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>{t('broadcastHistory', lang)}</h2>
-              {broadcasts.length === 0 ? (
-                <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{t('noHistory', lang)}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {broadcasts.map(b => (
-                    <div key={b.id} style={{ background: '#F8FBFF', borderRadius: 12, padding: '14px 16px', border: `1px solid ${SKY_LIGHT}44` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <div style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{b.subject}</div>
-                        <span style={{ background: '#E0F2FE', color: '#0369A1', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                          {typeOptions.find(o => o.value === b.type) ? t(typeOptions.find(o => o.value === b.type)!.labelKey, lang) : b.type}
-                        </span>
-                      </div>
-                      <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6, marginBottom: 8, whiteSpace: 'pre-wrap' }}>{b.body.slice(0, 120)}{b.body.length > 120 ? '...' : ''}</div>
-                      <div style={{ color: '#94A3B8', fontSize: 11 }}>
-                        {new Date(b.createdAt).toLocaleString('en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'} · {b.sentBy}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                {bResult && (
+                  <p style={{ color: bResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult}</p>
+                )}
+                <button
+                  onClick={() => {
+                    if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
+                    if (bMode === 'one') {
+                      if (!bTargetEmail.trim() || !bTargetEmail.includes('@')) { setBResult(lang === 'ar' ? '❌ يرجى إدخال بريد إلكتروني صحيح' : '❌ Please enter a valid email'); return; }
+                      sendToOneMutation.mutate({ email: bTargetEmail.trim(), subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                    } else {
+                      if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
+                      broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
+                    }
+                  }}
+                  disabled={broadcastMutation.isPending || sendToOneMutation.isPending}
+                  style={{ background: (broadcastMutation.isPending || sendToOneMutation.isPending) ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '13px 28px', fontSize: 14, fontWeight: 900, cursor: (broadcastMutation.isPending || sendToOneMutation.isPending) ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
+                  {(broadcastMutation.isPending || sendToOneMutation.isPending) ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
+                </button>
+              </div>
             </div>
 
             {/* Broadcast History */}
@@ -1348,9 +1039,6 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* ── ANNOUNCEMENTS TAB ── */}
-        {activeTab === 'announcements' && <AdminAnnouncementsTab lang={lang} />}
-
         {/* ── REWARDS TAB ── */}
         {activeTab === 'rewards' && <AdminRewardsTab lang={lang} />}
 
@@ -1385,12 +1073,10 @@ export default function AdminPanel() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    // Reset input so same file can be re-selected
-                    e.target.value = '';
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                      setCropSrc(ev.target?.result as string);
-                      setCropFile(file);
+                      const base64 = ev.target?.result as string;
+                      uploadPhotoMutation.mutate({ base64, mimeType: file.type });
                     };
                     reader.readAsDataURL(file);
                   }}
@@ -1435,455 +1121,6 @@ export default function AdminPanel() {
         ::-webkit-scrollbar-track { background: #E8EFF7; }
         ::-webkit-scrollbar-thumb { background: ${SKY}; border-radius: 4px; }
       `}</style>
-
-      {/* ── Image Crop Modal ── */}
-      {cropSrc && cropFile && (
-        <ImageCropModal
-          src={cropSrc}
-          mimeType={cropFile.type}
-          onCancel={() => { setCropSrc(null); setCropFile(null); }}
-          onConfirm={(base64, mimeType) => {
-            setCropSrc(null);
-            setCropFile(null);
-            uploadPhotoMutation.mutate({ base64, mimeType });
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-// ── UserSearchDropdown ────────────────────────────────────────────────────────
-function UserSearchDropdown({
-  query,
-  onSelect,
-}: {
-  query: string;
-  onSelect: (id: number, label: string) => void;
-}) {
-  const searchQuery = trpc.inAppNotifications.searchUsers.useQuery(
-    { query },
-    { enabled: query.length >= 1, staleTime: 5000 }
-  );
-
-  const results = searchQuery.data ?? [];
-
-  if (searchQuery.isLoading) {
-    return (
-      <div style={dropdownStyle}>
-        <div style={{ padding: '10px 14px', color: '#64748B', fontSize: 13 }}>⏳ Searching...</div>
-      </div>
-    );
-  }
-
-  if (results.length === 0) {
-    return (
-      <div style={dropdownStyle}>
-        <div style={{ padding: '10px 14px', color: '#64748B', fontSize: 13 }}>No users found</div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={dropdownStyle}>
-      {results.map((u) => (
-        <button
-          key={u.id}
-          type="button"
-          onClick={() => onSelect(u.id, `${u.name ?? ''} (${u.email ?? ''})`)}
-          style={{
-            display: 'block', width: '100%', textAlign: 'left',
-            padding: '10px 14px', border: 'none', background: 'none',
-            cursor: 'pointer', fontSize: 13, color: '#1B2E5E',
-            borderBottom: '1px solid #E8EFF7',
-            fontFamily: 'Cairo, sans-serif',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#F0F4F8')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-        >
-          <strong>{u.name ?? 'Unknown'}</strong>
-          {u.email && <span style={{ color: '#64748B', marginLeft: 8 }}>{u.email}</span>}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-const dropdownStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: '100%',
-  left: 0,
-  right: 0,
-  background: 'white',
-  border: '1px solid #CBD5E1',
-  borderRadius: 10,
-  boxShadow: '0 8px 24px rgba(27,46,94,0.15)',
-  zIndex: 999,
-  maxHeight: 200,
-  overflowY: 'auto',
-  marginTop: 4,
-};
-
-// ── ImageCropModal — 1:1 canvas crop ─────────────────────────────────────────
-function ImageCropModal({
-  src,
-  mimeType,
-  onCancel,
-  onConfirm,
-}: {
-  src: string;
-  mimeType: string;
-  onCancel: () => void;
-  onConfirm: (base64: string, mimeType: string) => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Crop box state (in display pixels, relative to the displayed image)
-  const [cropBox, setCropBox] = useState({ x: 0, y: 0, size: 0 });
-  const [dragging, setDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ mx: 0, cx: 0, cy: 0 });
-  const [imgDisplaySize, setImgDisplaySize] = useState({ w: 0, h: 0, offX: 0, offY: 0 });
-
-  const NAVY = '#1B2E5E';
-  const SKY = '#7BB8D4';
-
-  const initCrop = useCallback(() => {
-    const img = imgRef.current;
-    const container = containerRef.current;
-    if (!img || !container) return;
-
-    const containerW = container.clientWidth;
-    const containerH = 320;
-    const scaleX = containerW / img.naturalWidth;
-    const scaleY = containerH / img.naturalHeight;
-    const scale = Math.min(scaleX, scaleY);
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
-    const offX = (containerW - dw) / 2;
-    const offY = (containerH - dh) / 2;
-
-    setImgDisplaySize({ w: dw, h: dh, offX, offY });
-
-    const size = Math.min(dw, dh) * 0.8;
-    setCropBox({ x: offX + (dw - size) / 2, y: offY + (dh - size) / 2, size });
-  }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setDragging(true);
-    setDragStart({ mx: e.clientX, cx: cropBox.x, cy: cropBox.y });
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!dragging) return;
-    const dx = e.clientX - dragStart.mx;
-    const newX = Math.max(imgDisplaySize.offX, Math.min(dragStart.cx + dx, imgDisplaySize.offX + imgDisplaySize.w - cropBox.size));
-    const dy = e.clientY - dragStart.mx;
-    const newY = Math.max(imgDisplaySize.offY, Math.min(dragStart.cy + dy, imgDisplaySize.offY + imgDisplaySize.h - cropBox.size));
-    setCropBox(prev => ({ ...prev, x: newX, y: newY }));
-  }, [dragging, dragStart, imgDisplaySize, cropBox.size]);
-
-  const handleMouseUp = useCallback(() => setDragging(false), []);
-
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleMouseMove, handleMouseUp]);
-
-  const handleConfirm = () => {
-    const img = imgRef.current;
-    const canvas = canvasRef.current;
-    if (!img || !canvas || imgDisplaySize.w === 0) return;
-
-    const scaleX = img.naturalWidth / imgDisplaySize.w;
-    const scaleY = img.naturalHeight / imgDisplaySize.h;
-
-    const srcX = (cropBox.x - imgDisplaySize.offX) * scaleX;
-    const srcY = (cropBox.y - imgDisplaySize.offY) * scaleY;
-    const srcSize = cropBox.size * Math.min(scaleX, scaleY);
-
-    const OUTPUT = 400;
-    canvas.width = OUTPUT;
-    canvas.height = OUTPUT;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT, OUTPUT);
-
-    const base64 = canvas.toDataURL('image/jpeg', 0.9);
-    onConfirm(base64, 'image/jpeg');
-  };
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 10000,
-      background: 'rgba(15,30,61,0.85)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 20,
-    }}>
-      <div style={{
-        background: 'white', borderRadius: 20, overflow: 'hidden',
-        width: '100%', maxWidth: 420,
-        boxShadow: '0 24px 64px rgba(27,46,94,0.4)',
-      }}>
-        {/* Header */}
-        <div style={{ background: `linear-gradient(135deg, #0F1E3D, ${NAVY})`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 20 }}>✂️</span>
-          <span style={{ color: 'white', fontWeight: 800, fontSize: 15, fontFamily: 'Cairo, sans-serif' }}>
-            Crop Profile Photo (1:1)
-          </span>
-        </div>
-
-        {/* Image container */}
-        <div
-          ref={containerRef}
-          style={{ position: 'relative', height: 320, background: '#0F1E3D', overflow: 'hidden', userSelect: 'none' }}
-        >
-          <img
-            ref={imgRef}
-            src={src}
-            alt="crop"
-            onLoad={initCrop}
-            style={{
-              position: 'absolute',
-              left: imgDisplaySize.offX,
-              top: imgDisplaySize.offY,
-              width: imgDisplaySize.w,
-              height: imgDisplaySize.h,
-              display: 'block',
-            }}
-          />
-          {/* Dark overlay */}
-          {cropBox.size > 0 && (
-            <>
-              {/* Overlay: top */}
-              <div style={{ position: 'absolute', left: 0, top: 0, right: 0, height: cropBox.y, background: 'rgba(0,0,0,0.55)' }} />
-              {/* Overlay: bottom */}
-              <div style={{ position: 'absolute', left: 0, top: cropBox.y + cropBox.size, right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)' }} />
-              {/* Overlay: left */}
-              <div style={{ position: 'absolute', left: 0, top: cropBox.y, width: cropBox.x, height: cropBox.size, background: 'rgba(0,0,0,0.55)' }} />
-              {/* Overlay: right */}
-              <div style={{ position: 'absolute', left: cropBox.x + cropBox.size, top: cropBox.y, right: 0, height: cropBox.size, background: 'rgba(0,0,0,0.55)' }} />
-              {/* Crop box */}
-              <div
-                onMouseDown={handleMouseDown}
-                style={{
-                  position: 'absolute',
-                  left: cropBox.x, top: cropBox.y,
-                  width: cropBox.size, height: cropBox.size,
-                  border: `2px solid ${SKY}`,
-                  borderRadius: '50%',
-                  cursor: 'move',
-                  boxShadow: `0 0 0 1px rgba(123,184,212,0.4)`,
-                }}
-              />
-            </>
-          )}
-        </div>
-
-        {/* Hidden canvas for cropping */}
-        <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-        {/* Actions */}
-        <div style={{ padding: '16px 20px', display: 'flex', gap: 12 }}>
-          <button
-            onClick={onCancel}
-            style={{ flex: 1, background: 'none', border: `2px solid ${SKY}`, borderRadius: 12, padding: '11px', color: NAVY, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
-            style={{ flex: 2, background: `linear-gradient(135deg, ${NAVY}, #0F1E3D)`, border: 'none', borderRadius: 12, padding: '11px', color: 'white', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'Cairo, sans-serif' }}
-          >
-            ✓ Use This Photo
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-// ── Admin Announcements Tab ───────────────────────────────────────────────────
-function AdminAnnouncementsTab({ lang }: { lang: 'ar' | 'en' }) {
-  const isRTL = lang === 'ar';
-  const utils = trpc.useUtils();
-
-  const { data: list = [], isLoading } = trpc.announcements.list.useQuery();
-  const createMutation = trpc.announcements.create.useMutation({
-    onSuccess: () => { utils.announcements.list.invalidate(); resetForm(); },
-  });
-  const toggleMutation = trpc.announcements.toggle.useMutation({
-    onSuccess: () => utils.announcements.list.invalidate(),
-  });
-  const deleteMutation = trpc.announcements.delete.useMutation({
-    onSuccess: () => utils.announcements.list.invalidate(),
-  });
-
-  const [titleAr, setTitleAr] = React.useState('');
-  const [titleEn, setTitleEn] = React.useState('');
-  const [bodyAr, setBodyAr] = React.useState('');
-  const [bodyEn, setBodyEn] = React.useState('');
-  const [emoji, setEmoji] = React.useState('📢');
-  const [ctaLabelAr, setCtaLabelAr] = React.useState('');
-  const [ctaLabelEn, setCtaLabelEn] = React.useState('');
-  const [ctaUrl, setCtaUrl] = React.useState('');
-  const [endsAt, setEndsAt] = React.useState('');
-
-  const resetForm = () => {
-    setTitleAr(''); setTitleEn(''); setBodyAr(''); setBodyEn('');
-    setEmoji('📢'); setCtaLabelAr(''); setCtaLabelEn(''); setCtaUrl(''); setEndsAt('');
-  };
-
-  const NAVY = '#1B2E5E';
-  const SKY_LIGHT = '#A8D4E8';
-  const cardStyle: React.CSSProperties = {
-    background: 'white', borderRadius: 18, padding: '20px 18px',
-    boxShadow: '0 4px 20px rgba(27,46,94,0.08)', marginBottom: 16,
-  };
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', borderRadius: 10,
-    border: `1.5px solid ${SKY_LIGHT}`, fontSize: 13,
-    fontFamily: 'Cairo, sans-serif', boxSizing: 'border-box',
-  };
-  const labelStyle: React.CSSProperties = {
-    display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 4,
-  };
-
-  return (
-    <div dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Create Form */}
-      <div style={cardStyle}>
-        <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-          {lang === 'ar' ? '📣 إنشاء إعلان جديد' : '📣 Create New Announcement'}
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'العنوان (عربي)' : 'Title (Arabic)'}</label>
-            <input style={inputStyle} value={titleAr} onChange={e => setTitleAr(e.target.value)} placeholder="العنوان بالعربية" />
-          </div>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'العنوان (إنجليزي)' : 'Title (English)'}</label>
-            <input style={inputStyle} value={titleEn} onChange={e => setTitleEn(e.target.value)} placeholder="Title in English" />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'النص (عربي)' : 'Body (Arabic)'}</label>
-            <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={bodyAr} onChange={e => setBodyAr(e.target.value)} placeholder="نص الإعلان بالعربية" />
-          </div>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'النص (إنجليزي)' : 'Body (English)'}</label>
-            <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={bodyEn} onChange={e => setBodyEn(e.target.value)} placeholder="Announcement body in English" />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'إيموجي' : 'Emoji'}</label>
-            <input style={inputStyle} value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={4} />
-          </div>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'نص زر CTA (عربي)' : 'CTA Button (Arabic)'}</label>
-            <input style={inputStyle} value={ctaLabelAr} onChange={e => setCtaLabelAr(e.target.value)} placeholder="اضغط هنا" />
-          </div>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'نص زر CTA (إنجليزي)' : 'CTA Button (English)'}</label>
-            <input style={inputStyle} value={ctaLabelEn} onChange={e => setCtaLabelEn(e.target.value)} placeholder="Click here" />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'رابط CTA' : 'CTA URL'}</label>
-            <input style={inputStyle} value={ctaUrl} onChange={e => setCtaUrl(e.target.value)} placeholder="https://..." />
-          </div>
-          <div>
-            <label style={labelStyle}>{lang === 'ar' ? 'تاريخ الانتهاء (اختياري)' : 'Ends At (optional)'}</label>
-            <input type="date" style={inputStyle} value={endsAt} onChange={e => setEndsAt(e.target.value)} />
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            if (!titleAr || !titleEn || !bodyAr || !bodyEn) return;
-            createMutation.mutate({
-              titleAr, titleEn, bodyAr, bodyEn, emoji,
-              ctaLabelAr: ctaLabelAr || undefined,
-              ctaLabelEn: ctaLabelEn || undefined,
-              ctaUrl: ctaUrl || undefined,
-              endsAt: endsAt || undefined,
-              isActive: true,
-            });
-          }}
-          disabled={createMutation.isPending}
-          style={{
-            background: createMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, ${NAVY}, #0F1E3D)`,
-            color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px',
-            fontSize: 13, fontWeight: 900, cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
-            fontFamily: 'Cairo, sans-serif',
-          }}
-        >
-          {createMutation.isPending ? '⏳...' : (lang === 'ar' ? '📣 نشر الإعلان' : '📣 Publish Announcement')}
-        </button>
-      </div>
-
-      {/* List */}
-      <div style={cardStyle}>
-        <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-          {lang === 'ar' ? '📋 الإعلانات الحالية' : '📋 Current Announcements'}
-        </h2>
-        {isLoading ? <p style={{ color: '#7A9BB5', fontSize: 13 }}>Loading...</p> : list.length === 0 ? (
-          <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{lang === 'ar' ? 'لا توجد إعلانات بعد.' : 'No announcements yet.'}</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {list.map((a: any) => (
-              <div key={a.id} style={{
-                background: '#F8FBFF', borderRadius: 12, padding: '14px 16px',
-                border: `1px solid ${SKY_LIGHT}44`,
-                opacity: a.isActive ? 1 : 0.55,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 900, fontSize: 14, color: NAVY, marginBottom: 2 }}>
-                      {a.emoji} {lang === 'ar' ? a.titleAr : a.titleEn}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>
-                      {lang === 'ar' ? a.bodyAr : a.bodyEn}
-                    </div>
-                    {a.ctaUrl && (
-                      <div style={{ fontSize: 11, color: '#0369A1' }}>
-                        🔗 {lang === 'ar' ? a.ctaLabelAr : a.ctaLabelEn} → {a.ctaUrl}
-                      </div>
-                    )}
-                    <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
-                      {a.isActive ? '🟢 Active' : '🔴 Inactive'}
-                      {a.endsAt && ` · Ends: ${new Date(a.endsAt).toLocaleDateString()}`}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                    <button
-                      onClick={() => toggleMutation.mutate({ id: a.id, isActive: !a.isActive })}
-                      style={{ background: a.isActive ? '#FEF3C7' : '#D1FAE5', color: a.isActive ? '#92400E' : '#065F46', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      {a.isActive ? '⏸ Pause' : '▶ Activate'}
-                    </button>
-                    <button
-                      onClick={() => { if (confirm('Delete?')) deleteMutation.mutate({ id: a.id }); }}
-                      style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      🗑
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

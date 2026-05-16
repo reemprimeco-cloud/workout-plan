@@ -46,7 +46,7 @@ const sessionTypeNameEn: Record<string, string> = {
 };
 
 
-export function WorkoutGuide() {
+export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female' }) {
   const { lang, isRTL } = useLanguage();
   const ar = lang === 'ar';
 
@@ -77,23 +77,23 @@ export function WorkoutGuide() {
 
   // Aqua exercises with English
   const aquaData = [
-    { nameAr: 'المشي في الماء',                          nameEn: 'Water Walking',              duration: ar ? '5 دقائق'          : '5 min',          tipAr: 'ابدئي بالمشي للإحماء',                                   tipEn: 'Start with walking to warm up' },
+    { nameAr: 'المشي في الماء',                          nameEn: 'Water Walking',              duration: ar ? '5 دقائق'          : '5 min',          tipAr: gender === 'female' ? 'ابدئي بالمشي للإحماء' : 'ابدأ بالمشي للإحماء',                                   tipEn: 'Start with walking to warm up' },
     { nameAr: 'القفز في الماء (Aqua Jumping Jacks)',     nameEn: 'Aqua Jumping Jacks',         duration: ar ? '3 × دقيقة'        : '3 × 1 min',      tipAr: 'افتحي ذراعيك وساقيك معاً',                              tipEn: 'Open arms and legs simultaneously' },
-    { nameAr: 'ركل الماء للأمام (Flutter Kicks)',        nameEn: 'Flutter Kicks',              duration: ar ? '3 × دقيقة'        : '3 × 1 min',      tipAr: 'أمسكي حافة المسبح وركلي بسرعة',                         tipEn: 'Hold pool edge and kick rapidly' },
+    { nameAr: 'ركل الماء للأمام (Flutter Kicks)',        nameEn: 'Flutter Kicks',              duration: ar ? '3 × دقيقة'        : '3 × 1 min',      tipAr: gender === 'female' ? 'أمسكي حافة المسبح وركلي بسرعة' : 'أمسك حافة المسبح واركل بسرعة',                         tipEn: 'Hold pool edge and kick rapidly' },
     { nameAr: 'تمرين الدمبل المائي (Water Dumbbell Curls)', nameEn: 'Water Dumbbell Curls',   duration: ar ? '3 × 15 تكرار'     : '3 × 15 reps',    tipAr: 'استخدمي الدمبل المائي لمقاومة الماء',                    tipEn: 'Use water dumbbells for resistance' },
     { nameAr: 'الركض في الماء (Aqua Jogging)',           nameEn: 'Aqua Jogging',               duration: ar ? '5 دقائق'          : '5 min',          tipAr: 'الماء يقاوم حركتك ويزيد من حرق السعرات',                tipEn: 'Water resistance increases calorie burn' },
     { nameAr: 'تمرين الأرداف في الماء (Aqua Squats)',   nameEn: 'Aqua Squats',                duration: ar ? '3 × 15 تكرار'     : '3 × 15 reps',    tipAr: 'السكوات في الماء أقل ضغطاً على الركبتين',               tipEn: 'Squats in water are easier on knees' },
-    { nameAr: 'تمرين الجانبين (Side Kicks)',             nameEn: 'Side Kicks',                 duration: ar ? '3 × 12 لكل جهة'  : '3 × 12 each side',tipAr: 'ارفعي ساقك للجانب ضد مقاومة الماء',                    tipEn: 'Lift leg sideways against water resistance' },
+    { nameAr: 'تمرين الجانبين (Side Kicks)',             nameEn: 'Side Kicks',                 duration: ar ? '3 × 12 لكل جهة'  : '3 × 12 each side',tipAr: gender === 'female' ? 'ارفعي ساقك للجانب ضد مقاومة الماء' : 'ارفع ساقك للجانب ضد مقاومة الماء',                    tipEn: 'Lift leg sideways against water resistance' },
     { nameAr: 'التمدد والإطالة المائية',                  nameEn: 'Aqua Stretching',            duration: ar ? '5 دقائق'          : '5 min',          tipAr: 'الماء يساعد على مرونة أفضل',                            tipEn: 'Water helps achieve better flexibility' },
   ];
 
   // Sauna protocol with English
   const saunaData = [
-    { phaseAr: 'الجلسة الأولى',    phaseEn: 'First Session',    duration: ar ? '10 دقائق' : '10 min', temp: '70–80°C', tipAr: 'ادخلي وأنتِ مرتاحة، لا تدخلي مباشرة بعد تمرين مكثف', tipEn: 'Enter relaxed, avoid entering right after intense workout' },
-    { phaseAr: 'استراحة خارجية',   phaseEn: 'Outside Break',    duration: ar ? '5 دقائق'  : '5 min',  temp: ar ? 'درجة حرارة الغرفة' : 'Room temperature', tipAr: 'اشربي ماءً واستريحي خارج السونا', tipEn: 'Drink water and rest outside the sauna' },
+    { phaseAr: 'الجلسة الأولى',    phaseEn: 'First Session',    duration: ar ? '10 دقائق' : '10 min', temp: '70–80°C', tipAr: gender === 'female' ? 'ادخلي وأنتِ مرتاحة، لا تدخلي مباشرة بعد تمرين مكثف' : 'ادخل وأنت مرتاح، لا تدخل مباشرة بعد تمرين مكثف', tipEn: 'Enter relaxed, avoid entering right after intense workout' },
+    { phaseAr: 'استراحة خارجية',   phaseEn: 'Outside Break',    duration: ar ? '5 دقائق'  : '5 min',  temp: ar ? 'درجة حرارة الغرفة' : 'Room temperature', tipAr: gender === 'female' ? 'اشربي ماءً واستريحي خارج السونا' : 'اشرب ماءً واسترح خارج السونا', tipEn: 'Drink water and rest outside the sauna' },
     { phaseAr: 'الجلسة الثانية',   phaseEn: 'Second Session',   duration: ar ? '10 دقائق' : '10 min', temp: '75–85°C', tipAr: 'يمكنك رفع الحرارة قليلاً في الجلسة الثانية', tipEn: 'You can increase the heat slightly in the second session' },
     { phaseAr: 'تبريد',            phaseEn: 'Cool Down',        duration: ar ? '3-5 دقائق': '3–5 min', temp: ar ? 'ماء بارد أو درجة حرارة معتدلة' : 'Cold or cool water', tipAr: 'دش بارد أو بارد معتدل لإغلاق المسام', tipEn: 'Cold or cool shower to close pores' },
-    { phaseAr: 'راحة نهائية',      phaseEn: 'Final Rest',       duration: ar ? '10 دقائق' : '10 min', temp: ar ? 'درجة حرارة الغرفة' : 'Room temperature', tipAr: 'اشربي 500 مل ماء على الأقل واستريحي', tipEn: 'Drink at least 500 ml water and rest' },
+    { phaseAr: 'راحة نهائية',      phaseEn: 'Final Rest',       duration: ar ? '10 دقائق' : '10 min', temp: ar ? 'درجة حرارة الغرفة' : 'Room temperature', tipAr: gender === 'female' ? 'اشربي 500 مل ماء على الأقل واستريحي' : 'اشرب 500 مل ماء على الأقل واسترح', tipEn: 'Drink at least 500 ml water and rest' },
   ];
 
   // Nutrition sections with English
@@ -116,7 +116,7 @@ export function WorkoutGuide() {
       titleAr: '💧 الماء والترطيب',
       titleEn: '💧 Water & Hydration',
       color: '#0891B2', bg: '#E0F7FA',
-      itemsAr: ['2.5-3 لتر ماء يومياً', 'اشربي 500 مل قبل التمرين', 'اشربي كل 15-20 دقيقة أثناء التمرين', '500 مل بعد التمرين لإعادة الترطيب'],
+      itemsAr: gender === 'female' ? ['2.5-3 لتر ماء يومياً', 'اشربي 500 مل قبل التمرين', 'اشربي كل 15-20 دقيقة أثناء التمرين', '500 مل بعد التمرين لإعادة الترطيب'] : ['2.5-3 لتر ماء يومياً', 'اشرب 500 مل قبل التمرين', 'اشرب كل 15-20 دقيقة أثناء التمرين', '500 مل بعد التمرين لإعادة الترطيب'],
       itemsEn: ['2.5–3 liters of water daily', 'Drink 500 ml before workout', 'Drink every 15–20 minutes during workout', '500 ml after workout to rehydrate'],
     },
     {
@@ -282,7 +282,7 @@ export function WorkoutGuide() {
                     style={{ padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
                     onClick={() => setExpandedEx(isExpanded ? null : ex.id)}
                   >
-                    <img src={ex.image} alt={ar ? ex.nameAr : ex.nameEn} onError={(e) => { (e.target as HTMLImageElement).style.display="none"; }} style={{
+                    <img src={ex.image} alt={ar ? ex.nameAr : ex.nameEn} style={{
                       width: 52, height: 52, borderRadius: 10, objectFit: 'cover', flexShrink: 0,
                     }} />
                     <div style={{ flex: 1 }}>
@@ -365,7 +365,7 @@ export function WorkoutGuide() {
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(8,145,178,0.2)',
           }}>
-            <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=640&q=80" alt="Aqua Aerobics" style={{
+            <img src="/manus-storage/aqua_690009c3.jpg" alt="Aqua Aerobics" style={{
               width: '100%', height: 180, objectFit: 'cover',
             }} />
           </div>
@@ -432,7 +432,7 @@ export function WorkoutGuide() {
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(180,83,9,0.2)',
           }}>
-            <img src="https://images.unsplash.com/photo-1554488383-03f54e78a87c?w=640&q=80" alt="Sauna" style={{
+            <img src="/manus-storage/sauna_b9935cdb.jpg" alt="Sauna" style={{
               width: '100%', height: 180, objectFit: 'cover',
             }} />
           </div>
@@ -481,7 +481,7 @@ export function WorkoutGuide() {
               ⚠️ {ar ? 'تحذيرات مهمة:' : 'Important Warnings:'}
             </h4>
             {(ar
-              ? ['اشربي 500 مل ماء قبل الدخول وبعده', 'لا تدخلي مباشرة بعد وجبة كبيرة', 'إذا شعرتِ بدوار اخرجي فوراً', 'لا تتجاوزي 20 دقيقة في جلسة واحدة']
+              ? (gender === 'female' ? ['اشربي 500 مل ماء قبل الدخول وبعده', 'لا تدخلي مباشرة بعد وجبة كبيرة', 'إذا شعرتِ بدوار اخرجي فوراً', 'لا تتجاوزي 20 دقيقة في جلسة واحدة'] : ['اشرب 500 مل ماء قبل الدخول وبعده', 'لا تدخل مباشرة بعد وجبة كبيرة', 'إذا شعرت بدوار اخرج فوراً', 'لا تتجاوز 20 دقيقة في جلسة واحدة'])
               : ['Drink 500 ml water before and after entering', 'Do not enter immediately after a large meal', 'If you feel dizzy, exit immediately', 'Do not exceed 20 minutes in a single session']
             ).map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>

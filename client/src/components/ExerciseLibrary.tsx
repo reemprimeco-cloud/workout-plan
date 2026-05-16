@@ -5,7 +5,6 @@
 import { useState } from "react";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
 import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
-import { getYouTubeThumbnail } from "../lib/youtubeUtils";
 
 interface ExerciseLibraryProps {
   gender: "male" | "female";
@@ -353,11 +352,6 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                         alt={isAr ? ex.nameAr : ex.name}
                         style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }}
                         loading="lazy"
-                        onError={(e) => {
-                          const yt = getYouTubeThumbnail(ex.youtubeUrl ?? "", "hq");
-                          if (yt) (e.target as HTMLImageElement).src = yt;
-                          else (e.target as HTMLImageElement).style.display = "none";
-                        }}
                       />
                     </div>
                   )}
@@ -467,7 +461,6 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
             src={machine.image}
             alt={machine.nameEn}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
           <div style={{
             position: "absolute", bottom: 0, left: 0, right: 0,

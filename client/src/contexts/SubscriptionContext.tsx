@@ -1,6 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
 
 export type PlanId = "free" | "prime_plus" | "prime_pro";
 
@@ -21,8 +20,6 @@ interface SubscriptionContextValue {
   isLoading: boolean;
   hasFeature: (feature: string) => boolean;
   isPremium: boolean;
-  isTrial: boolean;
-  daysLeft: number | null;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue>({
@@ -32,40 +29,28 @@ const SubscriptionContext = createContext<SubscriptionContextValue>({
   isLoading: false,
   hasFeature: () => false,
   isPremium: false,
-  isTrial: false,
-  daysLeft: null,
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
-
   const { data, isLoading } = trpc.subscription.getStatus.useQuery(undefined, {
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Admin users always get prime_pro full access
-  const plan = isAdmin ? "prime_pro" as PlanId : (data?.plan ?? "free") as PlanId;
+  const plan = (data?.plan ?? "free") as PlanId;
   const status = data?.status ?? "active";
-  const expiresAt = isAdmin ? null : (data?.expiresAt ? new Date(data.expiresAt) : null);
+  const expiresAt = data?.expiresAt ? new Date(data.expiresAt) : null;
 
   const hasFeature = (feature: string): boolean => {
-    // Admin has access to all features
-    if (isAdmin) return true;
     const allowedPlans = PLAN_FEATURES[feature];
     if (!allowedPlans) return false;
     return allowedPlans.includes(plan);
   };
 
-  const isPremium = isAdmin || (plan !== "free" && status === "active");
-  const isTrial = (data as any)?.isTrial ?? false;
-  const daysLeft = expiresAt
-    ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
+  const isPremium = plan !== "free" && status === "active";
 
   return (
-    <SubscriptionContext.Provider value={{ plan, status, expiresAt, isLoading, hasFeature, isPremium, isTrial, daysLeft }}>
+    <SubscriptionContext.Provider value={{ plan, status, expiresAt, isLoading, hasFeature, isPremium }}>
       {children}
     </SubscriptionContext.Provider>
   );

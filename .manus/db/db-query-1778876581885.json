@@ -1,9 +1,0 @@
-{
-  "query": "UPDATE access_codes SET code = 'PRIME-ADMIN-REEM' WHERE code = 'PRIME-ADMIN_REEM';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute UPDATE access_codes SET code = 'PRIME-ADMIN-REEM' WHERE code = 'PRIME-ADMIN_REEM';",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1783
-}

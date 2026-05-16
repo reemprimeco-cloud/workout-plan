@@ -2,12 +2,11 @@
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { trpc } from '@/lib/trpc';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { trpc } from '@/lib/trpc';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -40,7 +39,7 @@ function calcPlan(age: number, weight: number, targetWeight: number, height: num
   let sessionsPerWeek = 4;
   if (bmi < 25) {
     planName = 'برنامج بناء العضلات والتنشيط'; planNameEn = 'Muscle Building & Toning';
-    planDesc = 'وزنك في النطاق الطبيعي - ركزي على بناء العضلات وتحسين القوام';
+    planDesc = gender === 'female' ? 'وزنك في النطاق الطبيعي - ركزي على بناء العضلات وتحسين القوام' : 'وزنك في النطاق الطبيعي - ركز على بناء العضلات وتحسين القوام';
     planDescEn = 'Weight is in normal range - focus on muscle building and body toning';
     sessionsPerWeek = 4;
   } else if (bmi < 30) {
@@ -169,41 +168,37 @@ export function ProfilePanel() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(profile.avatarUrl);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const uploadAvatarMutation = trpc.userProfile.uploadAvatar.useMutation();
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-
-    img.onload = () => {
-      // Crop to 1:1 square from center
-      const size   = Math.min(img.width, img.height);
-      const startX = (img.width  - size) / 2;
-      const startY = (img.height - size) / 2;
-
-      const canvas  = document.createElement('canvas');
-      canvas.width  = 300;   // output 300×300 — enough for avatar, small file size
-      canvas.height = 300;
-      const ctx = canvas.getContext('2d')!;
-
-      // Draw circle clip
-      ctx.beginPath();
-      ctx.arc(150, 150, 150, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip();
-
-      ctx.drawImage(img, startX, startY, size, size, 0, 0, 300, 300);
-
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      URL.revokeObjectURL(objectUrl);
-      setAvatarPreview(dataUrl);
-      updateProfile({ ...profile, avatarUrl: dataUrl });
+    if (file.size > 5 * 1024 * 1024) {
+      alert(lang === 'ar' ? 'حجم الصورة كبير جداً (الحد الأقصى 5 ميجابايت)' : 'Image too large (max 5 MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      setAvatarPreview(base64); // Show preview immediately
+      setAvatarUploading(true);
+      try {
+        const { url } = await uploadAvatarMutation.mutateAsync({
+          base64,
+          mimeType: file.type || 'image/jpeg',
+        });
+        // Store S3 URL (not base64) in localStorage profile
+        updateProfile({ ...profile, avatarUrl: url });
+        setAvatarPreview(url);
+      } catch {
+        // Fallback: keep base64 in localStorage if S3 upload fails
+        updateProfile({ ...profile, avatarUrl: base64 });
+      } finally {
+        setAvatarUploading(false);
+      }
     };
-
-    img.onerror = () => URL.revokeObjectURL(objectUrl);
-    img.src = objectUrl;
+    reader.readAsDataURL(file);
   };
 
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
@@ -254,8 +249,33 @@ export function ProfilePanel() {
               fontSize: 34, fontWeight: 900, color: 'white',
               boxShadow: '0 0 0 3px white, 0 0 0 4.5px #1B2E5E22',
               userSelect: 'none',
+              overflow: 'hidden',
+              position: 'relative',
             }}>
-              {profile.name ? profile.name.trim()[0].toUpperCase() : '?'}
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="avatar"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
+              ) : (
+                profile.name ? profile.name.trim()[0].toUpperCase() : '?'
+              )}
+              {/* Loading overlay while uploading to S3 */}
+              {avatarUploading && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(27,46,94,0.6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    border: '3px solid rgba(255,255,255,0.35)',
+                    borderTopColor: 'white',
+                    animation: 'spin 0.8s linear infinite',
+                  }} />
+                </div>
+              )}
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -518,9 +538,6 @@ export function ProfilePanel() {
       {/* Help Section */}
       <HelpSection lang={lang} />
 
-      {/* My Subscription Section */}
-      <SubscriptionSection lang={lang} isRTL={isRTL} />
-
       {/* App Info Footer */}
       <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
         <p className="text-xs text-gray-400 leading-relaxed">
@@ -716,114 +733,6 @@ export function ProfilePanel() {
           </div>
         </div>
       , document.body)}
-    </div>
-  );
-}
-
-// ── Subscription Sectionn ─────────────────────────────────────────────────────
-function SubscriptionSection({ lang, isRTL }: { lang: string; isRTL: boolean }) {
-  const { plan, status, expiresAt, isPremium, daysLeft } = useSubscription();
-  const isActive = isPremium || status === 'active';
-  const NAVY = '#1B2E5E';
-  const SKY = '#7BB8D4';
-
-  const planLabel = plan === 'free'
-    ? (lang === 'ar' ? 'الخطة المجانية' : 'Free Plan')
-    : plan === 'prime_plus'
-    ? 'Prime Plus'
-    : plan === 'prime_pro'
-    ? 'Prime Pro'
-    : (lang === 'ar' ? 'خطة مدفوعة' : 'Paid Plan');
-
-  const expiryDate = expiresAt
-    ? expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-KW' : 'en-US', {
-        year: 'numeric', month: 'short', day: 'numeric',
-      })
-    : null;
-
-  return (
-    <div
-      dir={isRTL ? 'rtl' : 'ltr'}
-      style={{
-        background: 'white',
-        borderRadius: 16,
-        padding: '16px 18px',
-        marginBottom: 12,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-        border: `1px solid ${SKY}44`,
-      }}
-    >
-      <h3 style={{ margin: '0 0 12px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
-        🏅 {lang === 'ar' ? 'اشتراكاتي' : 'My Subscription'}
-      </h3>
-
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: isActive ? '#F0FDF4' : '#FFF7ED',
-        border: `1.5px solid ${isActive ? '#86EFAC' : '#FDE68A'}`,
-        borderRadius: 12, padding: '12px 14px', marginBottom: 12,
-      }}>
-        <div>
-          <div style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>{planLabel}</div>
-          {expiryDate && (
-            <div style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>
-              {lang === 'ar' ? `ينتهي: ${expiryDate}` : `Expires: ${expiryDate}`}
-            </div>
-          )}
-          {plan === 'free' && (
-            <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>
-              {lang === 'ar' ? 'اشترك للوصول إلى جميع الميزات' : 'Subscribe to unlock all features'}
-            </div>
-          )}
-        </div>
-        <div style={{
-          background: isActive ? '#22C55E' : '#F59E0B',
-          color: 'white', borderRadius: 20, padding: '4px 12px',
-          fontSize: 11, fontWeight: 700,
-        }}>
-          {isActive
-            ? (lang === 'ar' ? '✅ نشط' : '✅ Active')
-            : (lang === 'ar' ? '⏸ غير نشط' : '⏸ Inactive')}
-        </div>
-      </div>
-
-      {/* Subscription features */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {[
-          { icon: '🏋️', label: lang === 'ar' ? 'برامج التمرين' : 'Workout Programs' },
-          { icon: '🥗', label: lang === 'ar' ? 'خطط التغذية' : 'Nutrition Plans' },
-          { icon: '📊', label: lang === 'ar' ? 'إحصائيات متقدمة' : 'Advanced Stats' },
-          { icon: '🤖', label: lang === 'ar' ? 'مدرب ذكي' : 'AI Coach' },
-        ].map(f => (
-          <div key={f.label} style={{
-            background: '#F8FAFC', borderRadius: 10, padding: '8px 10px',
-            display: 'flex', alignItems: 'center', gap: 8,
-            opacity: isActive ? 1 : 0.5,
-          }}>
-            <span style={{ fontSize: 16 }}>{f.icon}</span>
-            <span style={{ fontSize: 11, color: NAVY, fontWeight: 600 }}>{f.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {plan === 'free' && (
-        <button
-          onClick={() => {
-            // Navigate to pricing tab
-            const event = new CustomEvent('navigate-to-pricing');
-            window.dispatchEvent(event);
-          }}
-          style={{
-            width: '100%', marginTop: 12,
-            background: `linear-gradient(135deg, ${NAVY}, #3D5A80)`,
-            color: 'white', border: 'none',
-            borderRadius: 12, padding: '12px 0',
-            fontSize: 14, fontWeight: 800, cursor: 'pointer',
-          }}
-        >
-          🚀 {lang === 'ar' ? 'اشترك الآن' : 'Subscribe Now'}
-        </button>
-      )}
     </div>
   );
 }

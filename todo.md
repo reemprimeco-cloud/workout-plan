@@ -246,28 +246,6 @@
 - [x] Wire SpinWheel into Community challenges completion flow
 - [x] Admin Rewards tab in AdminPanel: edit probabilities, add/remove rewards, track history, monitor jackpots
 
-## Feature — Machine-Specific Exercise Images
-- [x] Replace all exercise images with accurate gym machine/equipment-specific photos
-- [x] Each exercise must show the actual machine/equipment used (not generic gym photos)
-- [x] Uploaded 21 gym machine photos to manus-storage
-- [x] Updated all 71 exercises in exercises.ts to use /manus-storage/ machine images
-- [x] Updated all 30 exercises in exerciseData.ts to use /manus-storage/ machine images
-- [x] Fixed iOS Safari broken images: storageProxy now pipes content instead of 307 redirect
-
-## Bug Fix — Profile Tab Crash
-- [ ] Fix Profile tab crash: "An unexpected error occurred" on iOS
-- [ ] Investigate root cause in ProfilePanel.tsx or related components
-
-## Bug Fix — Broken Images on Production
-- [x] Fix broken images on production site (exercises, machines, treadmill, aqua, logo, avatar all show ❓ on iPhone)
-- [x] Images work in dev but broken on deployed site — changed storageProxy from 307 redirect to content piping
-- [x] Replace manus-storage image URLs with Unsplash URLs in exercises.ts
-- [x] Replace manus-storage image URLs with Unsplash URLs in exerciseData.ts
-- [x] Add youtubeUtils.ts helper for YouTube thumbnails and Unsplash fallbacks
-- [x] Add workoutData.ts with full 8-week workout plan data
-- [x] Update WorkoutGuide.tsx, ExerciseLibrary.tsx, ActiveSession.tsx, LicenseGate.tsx, Home.tsx from ZIP
-- [x] Assign correct Unsplash image to each exercise based on standard international name (71 exercises in exercises.ts + 30 in exerciseData.ts)
-
 ## Feature Batch 13 — Challenge Reward Spin Wheel
 
 - [x] Schema: reward_spins, reward_history, reward_probabilities, challenge_rewards, jackpot_winners tables
@@ -358,18 +336,3 @@
 - [ ] WorkoutGuide.tsx: guide text
 - [ ] Nutrition.tsx: nutrition advice text
 - [ ] MyCoach.tsx: coach system prompt
-
-## UI Update — Match Screenshot Design
-- [x] Nav bar: 7 tabs only (Home / Stats / Schedule / Exercises / Coach / Community / Profile) — remove any extra tabs
-- [x] Streak badge: remove from header, show inside welcome card (top-right corner as 🔥 badge with day count)
-- [x] Welcome card: show greeting, user name, date, streak badge top-right, 3 stats (This Week / This Month / Total sessions)
-- [x] Nutrition card: show above "Choose Today's Workout" section on Home page (calories progress bar, macros row, water progress bar)
-- [x] Nutrition card: tapping opens full nutrition overlay with back button
-- [x] Weight progress bar: standalone card above "Weight Tracking" card in StatsPanel (already existed, confirmed)
-- [x] Subscriptions section: added at bottom of Profile page
-- [x] Fix overall design to match screenshot (navy dark header, white cards, clean layout)
-
-## Bug Fix — Admin Full Access
-- [x] Backend: subscription.getStatus returns prime_pro for admin users (role === 'admin')
-- [x] Frontend: SubscriptionContext treats admin role as prime_pro with all features unlocked
-- [x] ProfilePanel: hide "Subscribe Now" button for admin users (plan !== 'free' hides it automatically)

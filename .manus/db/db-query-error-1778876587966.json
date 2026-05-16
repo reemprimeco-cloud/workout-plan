@@ -1,8 +1,0 @@
-{
-  "query": "SELECT code, email, role FROM access_codes WHERE code LIKE 'PRIME-ADMIN%';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SELECT code, email, role FROM access_codes WHERE code LIKE 'PRIME-ADMIN%';",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'email' in 'field list'"
-  ]
-}
