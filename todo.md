@@ -404,3 +404,11 @@
 ## Nutrition Features — Auto-fill & Quick Meals (May 16 v5)
 - [x] Nutrition.tsx Scanner: auto-fill calories/protein/carbs/fat from scan/search result (keep editable) — LLM fallback added in foodAnalysis.ts when USDA returns null/zeros
 - [x] Nutrition.tsx Scanner: add famous meals quick-select grid (meals, coffee, drinks) — QuickMealsGrid component with 26 items across 3 categories, added above ManualSearch in ScannerTab idle state
+
+## Bug Fix — Calorie Burn Inflation (May 16 v6)
+- [x] calorieCalc.ts: use actual session duration (checkIn→checkOut) as primary formula instead of per-exercise estimation
+- [x] calorieCalc.ts: fix rest time — apply REST_MET (1.3) during rest periods instead of full exercise MET
+- [x] calorieCalc.ts: cardio fallback changed from 20 min to 15 min conservative estimate
+- [x] calorieCalc.ts: session-type fallback changed from 45 min to 30 min conservative estimate
+- [x] ActiveSession.tsx: pass checkInTime and checkOutTime to calcSessionCalories
+- [x] Home.tsx: pass weightKg from profile to ActiveSession component

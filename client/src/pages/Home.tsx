@@ -226,7 +226,7 @@ export default function Home() {
         {activeTab === 'home' && (
           <>
             {activeSession ? (
-              <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} />
+              <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} weightKg={data.profile.currentWeight || 65} />
             ) : (
               <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
             )}

@@ -53,6 +53,8 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
     session.cardio,
     session.sessionType,
     weightKg,
+    session.checkInTime,
+    session.checkOutTime,
   );
 
   const handleCheckOut = () => {
