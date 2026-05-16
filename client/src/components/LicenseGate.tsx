@@ -12,7 +12,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/favicon.ico';
+const LOGO_URL = '/manus-storage/primefit_logo_49f796b1.PNG';
 const STORAGE_KEY = 'primefit_license';
 const PRODUCT_URL = 'https://primeprint.com.kw/product/prime-fit-%d8%a8%d8%b1%d9%86%d8%a7%d9%85%d8%ac-%d8%a7%d9%84%d8%aa%d8%af%d8%b1%d9%8a%d8%a8-%d8%a7%d9%84%d8%b4%d8%a7%d9%85%d9%84-8-%d8%a3%d8%b3%d8%a7%d8%a8%d9%8a%d8%b9/';
 
@@ -30,58 +30,34 @@ interface LicenseGateProps {
 }
 
 export function LicenseGate({ children }: LicenseGateProps) {
-  const [licenseKey, setLicenseKey]         = useState('');
-  const [isVerified, setIsVerified]         = useState(false);
-  const [isExpired, setIsExpired]           = useState(false);
-  const [storedLicense, setStoredLicense]   = useState<StoredLicense | null>(null);
-  const [error, setError]                   = useState('');
-  const [loading, setLoading]               = useState(true);
-  const [autoVerifying, setAutoVerifying]   = useState(false);
-  // Trial popup — must be at top level (Rules of Hooks)
-  const [popupDismissed, setPopupDismissed] = useState<boolean>(() => {
-    try {
-      const key = localStorage.getItem('primefit_license');
-      if (!key) return false;
-      const parsed = JSON.parse(key);
-      return localStorage.getItem(`primefit_trial_popup_${parsed?.key ?? 'x'}`) === 'dismissed';
-    } catch { return false; }
-  });
-
+  const [licenseKey, setLicenseKey]   = useState('');
+  const [isVerified, setIsVerified]   = useState(false);
+  const [storedLicense, setStoredLicense] = useState<StoredLicense | null>(null);
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(true);
+  const [autoVerifying, setAutoVerifying] = useState(false);
+  const [popupDismissed, setPopupDismissed] = useState<boolean>(false);
   const verifyMutation = trpc.license.verify.useMutation();
-
-  const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsVerified(false);
-    setIsExpired(false);
-    setStoredLicense(null);
-    setLicenseKey('');
-  };
 
   const doVerify = async (key: string): Promise<boolean> => {
     try {
       const result = await verifyMutation.mutateAsync({ licenseKey: key.trim() });
       if (result.success) {
         const license: StoredLicense = {
-          key:           key.trim(),
+          key: key.trim(),
           customerName:  result.customerName  || '',
           customerEmail: result.customerEmail || '',
           verifiedAt:    new Date().toISOString(),
-          plan:          result.plan ?? 'monthly',
+          plan:          result.plan ?? 'lifetime',
           expiresAt:     result.expiresAt ? (result.expiresAt instanceof Date ? result.expiresAt.toISOString() : String(result.expiresAt)) : null,
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(license));
         setStoredLicense(license);
         setIsVerified(true);
-        setIsExpired(false);
         const url = new URL(window.location.href);
         url.searchParams.delete('key');
         window.history.replaceState({}, '', url.toString());
         return true;
-      } else if ((result as any).expired) {
-        // Key exists but subscription expired — show expired popup
-        localStorage.removeItem(STORAGE_KEY);
-        setIsExpired(true);
-        return false;
       } else {
         setError(result.message || 'مفتاح الترخيص غير صالح');
         return false;
@@ -102,17 +78,20 @@ export function LicenseGate({ children }: LicenseGateProps) {
         if (stored) {
           const parsed: StoredLicense = JSON.parse(stored);
           if (parsed.key && parsed.verifiedAt) {
+            // Check if expired locally
             if (parsed.expiresAt && new Date(parsed.expiresAt) < new Date()) {
-              // Expired locally — show expired popup instead of app
               localStorage.removeItem(STORAGE_KEY);
-              setIsExpired(true);
+            } else {
+              setStoredLicense(parsed);
+              setIsVerified(true);
+              // Initialize popup dismissed state from localStorage
+              try {
+                const popupKey = `primefit_trial_popup_${parsed.key}`;
+                setPopupDismissed(localStorage.getItem(popupKey) === 'dismissed');
+              } catch {}
               setLoading(false);
               return;
             }
-            setStoredLicense(parsed);
-            setIsVerified(true);
-            setLoading(false);
-            return;
           }
         }
       } catch {
@@ -167,10 +146,6 @@ export function LicenseGate({ children }: LicenseGateProps) {
     const expiresAt  = storedLicense?.expiresAt ? new Date(storedLicense.expiresAt) : null;
     const daysLeft   = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86400_000) : null;
     const isTrial    = daysLeft !== null && daysLeft <= 7;
-    const showBanner = isTrial && daysLeft !== null && daysLeft > 0;
-    const planLabels: Record<string, string> = { monthly: 'شهري', quarterly: 'ربع سنوي', yearly: 'سنوي', lifetime: 'دائم' };
-    const planLabel  = planLabels[storedLicense?.plan ?? 'lifetime'] ?? 'دائم';
-
     const POPUP_KEY  = `primefit_trial_popup_${storedLicense?.key ?? 'x'}`;
     const dismissPopup = () => {
       try { localStorage.setItem(POPUP_KEY, 'dismissed'); } catch {}
@@ -213,8 +188,8 @@ export function LicenseGate({ children }: LicenseGateProps) {
               <p style={{ color: '#9CA3AF', fontSize: 12, margin: '0 0 4px', lineHeight: 1.6 }}>
                 تنتهي تجربتك في{' '}
                 <strong style={{ color: '#F9FAFB' }}>
-                  {expiresAt?.toLocaleDateString('ar-KW', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                  {expiresAt?.toLocaleDateString('en-GB', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
                   })}
                 </strong>
               </p>
@@ -255,129 +230,12 @@ export function LicenseGate({ children }: LicenseGateProps) {
           </div>
         )}
 
-        {/* Expiry banner — shown after popup dismissed */}
-        {showBanner && popupDismissed && (
-          <div dir="rtl" style={{
-            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-            background: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#F59E0B',
-            color: 'white', padding: '10px 16px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            fontFamily: 'Cairo, sans-serif', fontSize: 13, fontWeight: 700,
-          }}>
-            <span>⚠️ ينتهي اشتراكك خلال {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'}</span>
-            <a href={PRODUCT_URL} target="_blank" rel="noopener noreferrer" style={{
-              background: 'white',
-              color: daysLeft !== null && daysLeft <= 2 ? '#EF4444' : '#D97706',
-              borderRadius: 8, padding: '5px 14px',
-              fontSize: 12, fontWeight: 900, textDecoration: 'none',
-            }}>🔄 جدد</a>
-          </div>
-        )}
-
-        <div style={{ paddingTop: showBanner && popupDismissed ? 44 : 0 }}>
-          {children}
-        </div>
-
-        {storedLicense && (
-          <div style={{
-            position: 'fixed', bottom: 80, left: 12, zIndex: 100,
-            background: 'rgba(27,46,94,0.85)', backdropFilter: 'blur(6px)',
-            borderRadius: 20, padding: '4px 10px',
-            fontSize: 10, fontWeight: 700, color: '#A8D4E8',
-            fontFamily: 'Cairo, sans-serif', direction: 'rtl', pointerEvents: 'none',
-          }}>
-            {planLabel} {expiresAt ? `· ${expiresAt.toLocaleDateString('ar-SA')}` : '· ∞'}
-          </div>
-        )}
+        {children}
       </>
     );
   }
 
-    // Subscription expired — show blocking popup with logout or plans options
-  if (isExpired) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '20px', fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
-      }}>
-        <div dir="rtl" style={{
-          background: 'white', borderRadius: 24,
-          width: '100%', maxWidth: 380,
-          padding: '32px 24px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-          textAlign: 'center',
-        }}>
-          {/* Icon */}
-          <div style={{ fontSize: 56, marginBottom: 12 }}>🔒</div>
-
-          {/* Title */}
-          <h2 style={{ color: '#DC2626', fontSize: 20, fontWeight: 900, margin: '0 0 8px' }}>
-            انتهت صلاحية اشتراكك
-          </h2>
-          <p style={{ color: '#EF4444', fontSize: 12, fontWeight: 700, margin: '0 0 16px' }}>
-            Your subscription has expired
-          </p>
-
-          {/* Body */}
-          <div style={{
-            background: '#FEF2F2', border: '1px solid #FECACA',
-            borderRadius: 14, padding: '14px 16px', marginBottom: 24,
-          }}>
-            <p style={{ color: '#991B1B', fontSize: 13, margin: '0 0 6px', lineHeight: 1.6 }}>
-              انتهت فترة تجربتك المجانية. لمواصلة استخدام Prime Fit وجميع ميزاته يجب الاشتراك في إحدى الخطط.
-            </p>
-            <p style={{ color: '#B91C1C', fontSize: 11, margin: 0, lineHeight: 1.6 }}>
-              Your free trial has ended. Subscribe to continue using all features.
-            </p>
-          </div>
-
-          {/* Plans button */}
-          <button
-            onClick={() => {
-              // Clear expired state, re-enter app pointing at pricing
-              localStorage.setItem('primefit_goto_pricing', '1');
-              setIsExpired(false);
-              setIsVerified(false);
-              // Redirect to pricing via URL
-              window.location.href = '/?goto=pricing';
-            }}
-            style={{
-              width: '100%',
-              background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-              color: 'white', border: 'none', borderRadius: 14,
-              padding: '14px', fontSize: 15, fontWeight: 900,
-              cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
-              boxShadow: `0 4px 16px rgba(27,46,94,0.4)`,
-            }}
-          >
-            ⭐ عرض خطط الاشتراك
-          </button>
-
-          {/* Logout button */}
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%',
-              background: 'transparent',
-              color: '#6B7280', border: '2px solid #E5E7EB', borderRadius: 14,
-              padding: '13px', fontSize: 14, fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            🚪 تسجيل الخروج
-          </button>
-
-          <p style={{ color: '#9CA3AF', fontSize: 10, margin: '12px 0 0', lineHeight: 1.5 }}>
-            بالنقر على "تسجيل الخروج" لن تتمكن من الوصول إلى التطبيق حتى تشترك
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // License entry screen
+    // License entry screen
   return (
     <div dir="rtl" style={{
       minHeight: '100vh',
@@ -491,7 +349,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
           {verifyMutation.isPending ? '⏳ جاري التحقق...' : '🚀 تفعيل البرنامج'}
         </button>
 
-        {/* Purchase link */}
+        {/* Purchase link — now links to /pricing for MyFatoorah checkout */}
         <div style={{
           marginTop: 20,
           padding: '14px',
@@ -504,9 +362,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             لا تملك مفتاح ترخيص؟
           </p>
           <a
-            href={PRODUCT_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/pricing"
             style={{
               display: 'inline-block',
               background: `linear-gradient(135deg, ${SKY}, #5BA8C8)`,
@@ -521,47 +377,9 @@ export function LicenseGate({ children }: LicenseGateProps) {
           >
             🛒 اشترِ Prime Fit الآن
           </a>
-        </div>
-
-        {/* WhatsApp order note */}
-        <div style={{
-          marginTop: 16,
-          padding: '14px 16px',
-          background: '#F0FFF4',
-          borderRadius: 12,
-          border: '1.5px solid #86EFAC',
-          textAlign: 'center',
-        }}>
-          <p style={{ margin: '0 0 4px', color: '#166534', fontWeight: 700, fontSize: 13 }}>
-            📦 بعد إتمام الطلب
+          <p style={{ margin: '8px 0 0', color: '#B0C4D8', fontSize: 10 }}>
+            دفع آمن عبر MyFatoorah · تستلم الكود فوراً
           </p>
-          <p style={{ margin: '0 0 10px', color: '#15803D', fontSize: 12, lineHeight: 1.6 }}>
-            تواصل معنا على واتساب لاستلام كود الوصول الخاص بك
-          </p>
-          <a
-            href="https://wa.me/96565068000"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: '#25D366',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: 10,
-              padding: '10px 20px',
-              fontSize: 14,
-              fontWeight: 700,
-              fontFamily: 'Cairo, sans-serif',
-              boxShadow: '0 4px 12px rgba(37,211,102,0.35)',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            واتساب: 65068000
-          </a>
         </div>
 
         {/* Footer */}

@@ -1,452 +1,630 @@
 /**
  * Pricing — Prime Fit subscription plans
  * Arabic RTL + English · MyFatoorah checkout · 7-day free trial
+ *
+ * Free plan  → generates PRIME-XXXX-XXXX key immediately (no payment)
+ * Plus / Pro → shows customer info form (name, email, phone) → redirects to MyFatoorah
+ * Renewal    → same key extended automatically via Webhook
  */
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useSubscription } from "../contexts/SubscriptionContext";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { Button } from "@/components/ui/button";
+import { Check, Loader2, Crown, Zap, Star, Copy, CheckCheck, X, User, Mail, Phone } from "lucide-react";
+import { Link } from "wouter";
+import { getLoginUrl } from "@/const";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const NAVY    = "#0D1B2A";
-const NAVY2   = "#1B2E5E";
-const CYAN    = "#00E5FF";
-const ORANGE  = "#FF6B35";
-const GOLD    = "#FFD700";
-const GREEN   = "#22C55E";
-const CARD    = "#111827";
-const CARD2   = "#1F2937";
-const TEXT    = "#F9FAFB";
-const MUTED   = "#9CA3AF";
+// ── Design tokens ──────────────────────────────────────────────────────────
+const NAVY      = "#1B2E5E";
+const NAVY_DARK = "#0F1E3D";
+const SKY       = "#7BB8D4";
+const SKY_LIGHT = "#A8D4E8";
+const GREEN     = "#22C55E";
+const GOLD      = "#F59E0B";
 
-// ── Translations ──────────────────────────────────────────────────────────────
+type Lang   = "en" | "ar";
+type Period  = "monthly" | "yearly";
+
+// ── Translations ─────────────────────────────────────────────────────────────
 const T = {
-  title:        { ar: "اختر خطتك", en: "Choose Your Plan" },
-  subtitle:     { ar: "انضم إلى آلاف المتدربين في Prime Fit", en: "Join thousands of athletes on Prime Fit" },
-  monthly:      { ar: "شهري", en: "Monthly" },
-  yearly:       { ar: "سنوي", en: "Yearly" },
-  save:         { ar: "وفّر 30%", en: "Save 30%" },
-  perMonth:     { ar: "/شهر", en: "/mo" },
-  perYear:      { ar: "/سنة", en: "/yr" },
-  free:         { ar: "مجاناً", en: "Free" },
-  trialBanner:  { ar: "🔥 جرّب Prime Pro مجاناً 7 أيام — بدون بطاقة ائتمان", en: "🔥 Try Prime Pro free for 7 days — No credit card needed" },
-  startTrial:   { ar: "ابدأ التجربة المجانية", en: "Start Free Trial" },
-  subscribe:    { ar: "اشترك الآن", en: "Subscribe Now" },
-  current:      { ar: "خطتك الحالية", en: "Current Plan" },
-  upgrade:      { ar: "ترقية", en: "Upgrade" },
-  popular:      { ar: "الأكثر شيوعاً", en: "Most Popular" },
-  bestValue:    { ar: "أفضل قيمة", en: "Best Value" },
-  cancelAnytime:{ ar: "إلغاء في أي وقت", en: "Cancel anytime" },
-  billingHistory:{ ar: "سجل الفواتير", en: "Billing History" },
-  noBilling:    { ar: "لا توجد فواتير بعد", en: "No billing records yet" },
-  activeTrial:  { ar: "تجربة مجانية نشطة", en: "Active Free Trial" },
-  trialEnds:    { ar: "تنتهي في", en: "Ends" },
-  activeUntil:  { ar: "نشط حتى", en: "Active until" },
-  features: {
-    workoutTracking:   { ar: "تتبع التمارين", en: "Workout Tracking" },
-    basicStats:        { ar: "إحصائيات أساسية", en: "Basic Stats" },
-    exerciseLibrary:   { ar: "مكتبة التمارين", en: "Exercise Library" },
-    advancedAnalytics: { ar: "تحليلات متقدمة", en: "Advanced Analytics" },
-    challenges:        { ar: "التحديات", en: "Challenges" },
-    premiumCommunity:  { ar: "مجتمع مميز", en: "Premium Community" },
-    aiCoach:           { ar: "مدرب AI شخصي", en: "Personal AI Coach" },
-  },
+  title:          { en: "Choose Your Plan",                          ar: "اختر خطتك" },
+  subtitle:       { en: "Unlock the full Prime Fit experience",      ar: "افتح تجربة Prime Fit الكاملة" },
+  monthly:        { en: "Monthly",                                   ar: "شهري" },
+  yearly:         { en: "Yearly",                                    ar: "سنوي" },
+  save:           { en: "Save 17%",                                  ar: "وفر 17%" },
+  current:        { en: "Current Plan",                              ar: "خطتك الحالية" },
+  upgrade:        { en: "Upgrade Now",                               ar: "ترقية الآن" },
+  loginFirst:     { en: "Login to Subscribe",                        ar: "سجل دخول للاشتراك" },
+  perMonth:       { en: "/mo",                                       ar: "/شهر" },
+  perYear:        { en: "/yr",                                       ar: "/سنة" },
+  free:           { en: "Free",                                      ar: "مجاني" },
+  backToApp:      { en: "← Back to App",                             ar: "← العودة للتطبيق" },
+  processing:     { en: "Processing...",                             ar: "جاري المعالجة..." },
+  billingNote:    { en: "Prices in Kuwaiti Dinar (KWD). Secure payment via MyFatoorah.", ar: "الأسعار بالدينار الكويتي. دفع آمن عبر MyFatoorah." },
+  startTrial:     { en: "Start Free Trial",                          ar: "ابدأ التجربة المجانية" },
+  trialDays:      { en: "7 days free",                               ar: "7 أيام مجاناً" },
+  trialNote:      { en: "No credit card required",                   ar: "لا حاجة لبطاقة ائتمان" },
+  yourKey:        { en: "Your License Key",                          ar: "مفتاح الترخيص الخاص بك" },
+  keyNote:        { en: "Copy this key and paste it in the app to activate your 7-day trial.", ar: "انسخ هذا المفتاح والصقه في التطبيق لتفعيل تجربتك المجانية لمدة 7 أيام." },
+  copyKey:        { en: "Copy Key",                                  ar: "نسخ المفتاح" },
+  copied:         { en: "Copied!",                                   ar: "تم النسخ!" },
+  goToApp:        { en: "Go to App & Activate",                      ar: "اذهب للتطبيق وفعّل" },
+  renewNote:      { en: "Renewing? Pay again with the same email to extend your existing key automatically.", ar: "تجديد؟ ادفع مرة أخرى بنفس البريد الإلكتروني لتمديد مفتاحك الحالي تلقائياً." },
+  // Customer info modal
+  orderDetails:   { en: "Complete Your Order",                       ar: "أكمل طلبك" },
+  orderSubtitle:  { en: "Please fill in your details before proceeding to payment", ar: "يرجى إدخال بياناتك قبل الانتقال للدفع" },
+  fullName:       { en: "Full Name",                                 ar: "الاسم الكامل" },
+  emailAddr:      { en: "Email Address",                             ar: "البريد الإلكتروني" },
+  phoneNum:       { en: "Phone Number",                              ar: "رقم الهاتف" },
+  namePlaceholder:{ en: "Your full name",                            ar: "اسمك الكامل" },
+  emailPlaceholder:{ en: "your@email.com",                           ar: "بريدك@الإلكتروني.com" },
+  phonePlaceholder:{ en: "+965 XXXX XXXX",                           ar: "+965 XXXX XXXX" },
+  proceedPayment: { en: "Proceed to Payment",                        ar: "المتابعة للدفع" },
+  cancel:         { en: "Cancel",                                    ar: "إلغاء" },
+  nameRequired:   { en: "Name is required",                          ar: "الاسم مطلوب" },
+  emailRequired:  { en: "Valid email is required",                   ar: "البريد الإلكتروني مطلوب" },
+  phoneRequired:  { en: "Phone number is required",                  ar: "رقم الهاتف مطلوب" },
+  orderSummary:   { en: "Order Summary",                             ar: "ملخص الطلب" },
 };
 
-const t = (key: keyof typeof T, lang: string) =>
-  (T[key] as Record<string, string>)[lang] ?? (T[key] as Record<string, string>)["en"];
+// ── Plans data ────────────────────────────────────────────────────────────────
+const PLANS = [
+  {
+    id: "free" as const,
+    icon: Star,
+    nameEn: "Free Trial",
+    nameAr: "تجربة مجانية",
+    descEn: "7 days full access — no payment needed",
+    descAr: "7 أيام وصول كامل — بدون دفع",
+    monthly: 0,
+    yearly: 0,
+    color: "#64748b",
+    features: [
+      { en: "Workout tracking",          ar: "تتبع التمارين" },
+      { en: "Exercise library",          ar: "مكتبة التمارين" },
+      { en: "Workout guide",             ar: "دليل التمارين" },
+      { en: "Session history",           ar: "سجل الجلسات" },
+      { en: "7 days full access",        ar: "7 أيام وصول كامل" },
+    ],
+  },
+  {
+    id: "prime_plus" as const,
+    icon: Zap,
+    nameEn: "Prime Plus",
+    nameAr: "برايم بلس",
+    descEn: "Full access with AI coaching",
+    descAr: "وصول كامل مع المدرب الذكي",
+    monthly: 2.5,
+    yearly: 25,
+    color: NAVY,
+    popular: true,
+    features: [
+      { en: "Everything in Free",        ar: "كل شيء في المجاني" },
+      { en: "AI personal coach",         ar: "مدرب شخصي بالذكاء الاصطناعي" },
+      { en: "Community access",          ar: "الوصول للمجتمع" },
+      { en: "Advanced stats",            ar: "إحصائيات متقدمة" },
+      { en: "Daily check-ins",           ar: "تسجيل يومي" },
+    ],
+  },
+  {
+    id: "prime_pro" as const,
+    icon: Crown,
+    nameEn: "Prime Pro",
+    nameAr: "برايم برو",
+    descEn: "Everything + priority support",
+    descAr: "كل شيء + دعم أولوية",
+    monthly: 4.5,
+    yearly: 45,
+    color: GOLD,
+    features: [
+      { en: "Everything in Plus",        ar: "كل شيء في بلس" },
+      { en: "Priority support",          ar: "دعم أولوية" },
+      { en: "Custom programs",           ar: "برامج مخصصة" },
+      { en: "Early access to features",  ar: "وصول مبكر للميزات الجديدة" },
+    ],
+  },
+];
 
-// ── Feature row ───────────────────────────────────────────────────────────────
-function FeatureRow({ feature, lang, included }: { feature: string; lang: string; included: boolean }) {
+// ── Input field component ─────────────────────────────────────────────────────
+function InfoField({
+  icon: Icon, label, placeholder, value, onChange, type = "text", error, isRTL,
+}: {
+  icon: React.ElementType; label: string; placeholder: string;
+  value: string; onChange: (v: string) => void; type?: string;
+  error?: string; isRTL: boolean;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
-      <span style={{ fontSize: 16, flexShrink: 0, color: included ? GREEN : MUTED }}>
-        {included ? "✓" : "✗"}
-      </span>
-      <span style={{ fontSize: 13, color: included ? TEXT : MUTED }}>
-        {t(`features.${feature}` as any, lang) ?? feature}
-      </span>
+    <div style={{ marginBottom: 16 }}>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
+        {label} <span style={{ color: "#EF4444" }}>*</span>
+      </label>
+      <div style={{ position: "relative" }}>
+        <div style={{
+          position: "absolute", top: "50%", transform: "translateY(-50%)",
+          [isRTL ? "right" : "left"]: 12, color: "#94a3b8", pointerEvents: "none",
+        }}>
+          <Icon size={16} />
+        </div>
+        <input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{
+            width: "100%", boxSizing: "border-box",
+            border: `1.5px solid ${error ? "#EF4444" : "#CBD5E1"}`,
+            borderRadius: 10, padding: isRTL ? "11px 40px 11px 12px" : "11px 12px 11px 40px",
+            fontSize: 14, fontFamily: "inherit", color: NAVY, outline: "none",
+            transition: "border-color 0.2s",
+          }}
+          onFocus={e => { e.target.style.borderColor = NAVY; }}
+          onBlur={e => { e.target.style.borderColor = error ? "#EF4444" : "#CBD5E1"; }}
+        />
+      </div>
+      {error && <p style={{ color: "#EF4444", fontSize: 11, margin: "4px 0 0", fontWeight: 600 }}>{error}</p>}
     </div>
   );
 }
 
-// ── Plan card ─────────────────────────────────────────────────────────────────
-function PlanCard({
-  plan, lang, period, currentPlan, onSubscribe, onTrial, isLoading,
-}: {
-  plan: any; lang: string; period: "monthly" | "yearly";
-  currentPlan: string; onSubscribe: (plan: string) => void;
-  onTrial: () => void; isLoading: boolean;
-}) {
-  const isCurrent  = currentPlan === plan.id;
-  const isPro      = plan.id === "prime_pro";
-  const isPlus     = plan.id === "prime_plus";
-  const isFree     = plan.id === "free";
-  const price      = period === "yearly" ? plan.priceYearly : plan.priceMonthly;
-  const nameAr     = plan.nameAr;
-  const nameEn     = plan.nameEn;
-  const name       = lang === "ar" ? nameAr : nameEn;
+export default function Pricing() {
+  const [lang, setLang] = useState<Lang>("ar");
+  const [period, setPeriod] = useState<Period>("monthly");
+  const [copied, setCopied] = useState(false);
 
-  const accentColor = isPro ? GOLD : isPlus ? CYAN : MUTED;
+  // Free trial form state
+  const [trialName, setTrialName]         = useState("");
+  const [trialEmail, setTrialEmail]       = useState("");
+  const [trialKey, setTrialKey]           = useState<string | null>(null);
+  const [trialExpiry, setTrialExpiry]     = useState<Date | null>(null);
+  const [trialError, setTrialError]       = useState("");
+  const [showTrialForm, setShowTrialForm] = useState(false);
+
+  // Customer info modal state (for paid plans)
+  const [showInfoModal, setShowInfoModal]   = useState(false);
+  const [selectedPlan, setSelectedPlan]     = useState<"prime_plus" | "prime_pro" | "free" | null>(null);
+  const [custName, setCustName]             = useState("");
+  const [custEmail, setCustEmail]           = useState("");
+  const [custPhone, setCustPhone]           = useState("");
+  const [custNameErr, setCustNameErr]       = useState("");
+  const [custEmailErr, setCustEmailErr]     = useState("");
+  const [custPhoneErr, setCustPhoneErr]     = useState("");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const { isAuthenticated, user } = useAuth();
+  const { plan: currentPlan } = useSubscription();
+
+  const t = (key: keyof typeof T) => T[key][lang];
+  const isRTL = lang === "ar";
+
+  const createCheckout = trpc.subscription.createCheckout.useMutation({
+    onSuccess: (data) => { window.location.href = data.invoiceUrl; },
+    onError: (err) => {
+      alert(err.message);
+      setCheckoutLoading(false);
+    },
+  });
+
+  const startFreeTrial = trpc.subscription.startFreeTrial.useMutation();
+
+  // Open the customer info modal — used for both free trial and paid plans
+  const handleUpgradeClick = (planId: "prime_plus" | "prime_pro" | "free") => {
+    setSelectedPlan(planId as any);
+    // Pre-fill with user data if available
+    setCustName(user?.name ?? "");
+    setCustEmail(user?.email ?? "");
+    setCustPhone("");
+    setCustNameErr(""); setCustEmailErr(""); setCustPhoneErr("");
+    setShowInfoModal(true);
+  };
+
+  // Validate and submit the customer info form (free trial or paid plan)
+  const handleProceedToPayment = async () => {
+    let valid = true;
+    if (!custName.trim()) { setCustNameErr(t("nameRequired")); valid = false; } else setCustNameErr("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!custEmail.trim() || !emailRegex.test(custEmail.trim())) { setCustEmailErr(t("emailRequired")); valid = false; } else setCustEmailErr("");
+    if (!custPhone.trim()) { setCustPhoneErr(t("phoneRequired")); valid = false; } else setCustPhoneErr("");
+    if (!valid || !selectedPlan) return;
+
+    setCheckoutLoading(true);
+    if ((selectedPlan as string) === "free") {
+      // Free trial — generate key immediately
+      try {
+        const result = await startFreeTrial.mutateAsync({
+          customerName: custName.trim(),
+          customerEmail: custEmail.trim(),
+          customerPhone: custPhone.trim(),
+        });
+        setTrialKey(result.licenseKey);
+        setTrialExpiry(result.expiresAt);
+        setShowInfoModal(false);
+      } catch (err: any) {
+        setTrialError(err?.message ?? "حدث خطأ. يرجى المحاولة مرة أخرى.");
+      } finally {
+        setCheckoutLoading(false);
+      }
+    } else {
+      createCheckout.mutate({
+        plan: selectedPlan! as "prime_plus" | "prime_pro",
+        period,
+        origin: window.location.origin,
+        customerName: custName.trim(),
+        customerEmail: custEmail.trim(),
+        customerPhone: custPhone.trim(),
+      });
+    }
+  };
+
+  const handleStartTrial = async () => {
+    setTrialError("");
+    try {
+      const result = await startFreeTrial.mutateAsync({
+        customerName:  trialName.trim() || "Prime Fit User",
+        customerEmail: trialEmail.trim() || "trial@primefit.app",
+      });
+      setTrialKey(result.licenseKey);
+      setTrialExpiry(result.expiresAt);
+    } catch (err: any) {
+      setTrialError(err?.message ?? "حدث خطأ. يرجى المحاولة مرة أخرى.");
+    }
+  };
+
+  const handleCopy = () => {
+    if (!trialKey) return;
+    navigator.clipboard.writeText(trialKey).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Get plan display name
+  const getPlanName = (planId: "prime_plus" | "prime_pro" | "free" | null) => {
+    const plan = PLANS.find(p => p.id === planId);
+    return lang === "ar" ? plan?.nameAr : plan?.nameEn;
+  };
+  const getPlanPrice = (planId: "prime_plus" | "prime_pro" | "free" | null) => {
+    const plan = PLANS.find(p => p.id === planId);
+    return plan ? (period === "monthly" ? plan.monthly : plan.yearly) : 0;
+  };
 
   return (
-    <div style={{
-      background: isPro ? `linear-gradient(135deg, ${NAVY2}, #2A1F5E)` : CARD,
-      border: `2px solid ${isCurrent ? GREEN : isPro ? GOLD : accentColor + "44"}`,
-      borderRadius: 20,
-      padding: "24px 20px",
-      position: "relative",
-      flex: "1 1 280px",
-      maxWidth: 320,
-      display: "flex",
-      flexDirection: "column",
-      boxShadow: isPro ? `0 8px 32px ${GOLD}22` : "none",
-      transition: "transform 0.2s",
-    }}>
-      {/* Badge */}
-      {isPro && !isCurrent && (
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      style={{
+        minHeight: "100vh",
+        background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
+        fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
+        padding: "24px 16px 48px",
+      }}
+    >
+      {/* ── Customer Info Modal ───────────────────────────────────────────── */}
+      {showInfoModal && selectedPlan && (
         <div style={{
-          position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
-          background: `linear-gradient(135deg, ${GOLD}, #FFA500)`,
-          color: NAVY, borderRadius: 20, padding: "4px 14px",
-          fontSize: 11, fontWeight: 900, whiteSpace: "nowrap",
+          position: "fixed", inset: 0, zIndex: 1000,
+          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16,
         }}>
-          {period === "yearly" ? t("bestValue", lang) : t("popular", lang)}
-        </div>
-      )}
-      {isCurrent && (
-        <div style={{
-          position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
-          background: GREEN, color: "white", borderRadius: 20, padding: "4px 14px",
-          fontSize: 11, fontWeight: 900, whiteSpace: "nowrap",
-        }}>✓ {t("current", lang)}</div>
-      )}
-
-      {/* Plan name */}
-      <h3 style={{ margin: "0 0 4px", color: accentColor, fontSize: 20, fontWeight: 900 }}>
-        {name}
-      </h3>
-
-      {/* Price */}
-      <div style={{ margin: "12px 0 20px", display: "flex", alignItems: "baseline", gap: 4 }}>
-        {isFree ? (
-          <span style={{ fontSize: 32, fontWeight: 900, color: TEXT }}>{t("free", lang)}</span>
-        ) : (
-          <>
-            <span style={{ fontSize: 11, color: MUTED, alignSelf: "flex-start", marginTop: 6 }}>
-              {plan.currency}
-            </span>
-            <span style={{ fontSize: 36, fontWeight: 900, color: TEXT }}>{price}</span>
-            <span style={{ fontSize: 12, color: MUTED }}>
-              {period === "yearly" ? t("perYear", lang) : t("perMonth", lang)}
-            </span>
-          </>
-        )}
-      </div>
-
-      {/* Features */}
-      <div style={{ flex: 1, marginBottom: 20 }}>
-        {Object.entries(plan.features).map(([key, val]) => (
-          <FeatureRow key={key} feature={key} lang={lang} included={val as boolean} />
-        ))}
-      </div>
-
-      {/* CTA */}
-      {isCurrent ? (
-        <div style={{ textAlign: "center", color: GREEN, fontSize: 13, fontWeight: 700, padding: "10px 0" }}>
-          ✓ {t("current", lang)}
-        </div>
-      ) : isFree ? (
-        <button
-          onClick={onTrial}
-          disabled={isLoading}
-          style={{
-            width: "100%",
-            background: `linear-gradient(135deg, ${GOLD}, #FFA500)`,
-            color: NAVY, border: "none", borderRadius: 12,
-            padding: "12px", fontSize: 13, fontWeight: 900,
-            cursor: isLoading ? "not-allowed" : "pointer",
-            opacity: isLoading ? 0.7 : 1,
-          }}
-        >
-          🎁 {t("startTrial", lang)}
-        </button>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {isPro && currentPlan === "free" && (
+          <div style={{
+            background: "white", borderRadius: 24, padding: "32px 28px",
+            width: "100%", maxWidth: 440, position: "relative",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.3)",
+            animation: "slideUp 0.25s ease",
+          }}>
+            {/* Close button */}
             <button
-              onClick={onTrial}
-              disabled={isLoading}
+              onClick={() => { setShowInfoModal(false); setCheckoutLoading(false); }}
               style={{
-                background: `linear-gradient(135deg, ${GOLD}, #FFA500)`,
-                color: NAVY, border: "none", borderRadius: 12,
-                padding: "12px", fontSize: 13, fontWeight: 900, cursor: "pointer",
-                opacity: isLoading ? 0.7 : 1,
+                position: "absolute", top: 16, [isRTL ? "left" : "right"]: 16,
+                background: "#F1F5F9", border: "none", borderRadius: 8,
+                width: 32, height: 32, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
-              🎁 {t("startTrial", lang)}
+              <X size={16} color="#64748b" />
             </button>
-          )}
+
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 900, color: NAVY }}>
+                {t("orderDetails")}
+              </h2>
+              <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+                {t("orderSubtitle")}
+              </p>
+            </div>
+
+            {/* Order summary */}
+            <div style={{
+              background: `${NAVY}08`, border: `1.5px solid ${SKY_LIGHT}`,
+              borderRadius: 12, padding: "12px 16px", marginBottom: 20,
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: 12, color: "#64748b", fontWeight: 600 }}>
+                {t("orderSummary")}
+              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 800, color: NAVY, fontSize: 15 }}>
+                  Prime Fit {getPlanName(selectedPlan)}
+                </span>
+                <span style={{ fontWeight: 900, color: NAVY, fontSize: 16 }}>
+                  {(selectedPlan as string) === "free" ? lang === "ar" ? "مجاناً" : "Free" : `${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
+                  <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
+                    {period === "monthly" ? t("perMonth") : t("perYear")}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Form fields */}
+            <InfoField
+              icon={User} label={t("fullName")} placeholder={t("namePlaceholder")}
+              value={custName} onChange={setCustName} error={custNameErr} isRTL={isRTL}
+            />
+            <InfoField
+              icon={Mail} label={t("emailAddr")} placeholder={t("emailPlaceholder")}
+              value={custEmail} onChange={setCustEmail} type="email" error={custEmailErr} isRTL={isRTL}
+            />
+            <InfoField
+              icon={Phone} label={t("phoneNum")} placeholder={t("phonePlaceholder")}
+              value={custPhone} onChange={setCustPhone} type="tel" error={custPhoneErr} isRTL={isRTL}
+            />
+
+            {/* Submit */}
+            <Button
+              onClick={handleProceedToPayment}
+              disabled={checkoutLoading}
+              style={{
+                width: "100%", background: NAVY, color: "white",
+                fontWeight: 700, borderRadius: 12, padding: "13px",
+                fontSize: 15, fontFamily: "inherit", marginTop: 4,
+              }}
+            >
+              {checkoutLoading
+                ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
+                : `🔒 ${t("proceedPayment")}`}
+            </Button>
+
+            <button
+              onClick={() => { setShowInfoModal(false); setCheckoutLoading(false); }}
+              style={{
+                width: "100%", background: "none", border: "none",
+                color: "#94a3b8", fontSize: 13, cursor: "pointer",
+                fontFamily: "inherit", marginTop: 10, padding: "6px",
+              }}
+            >
+              {t("cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth: 960, margin: "0 auto" }}>
+
+        {/* Top bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+          <Link href="/">
+            <span style={{ color: SKY_LIGHT, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>{t("backToApp")}</span>
+          </Link>
           <button
-            onClick={() => onSubscribe(plan.id)}
-            disabled={isLoading}
-            style={{
-              background: isPro
-                ? `linear-gradient(135deg, ${GOLD}CC, #FFA500CC)`
-                : `linear-gradient(135deg, ${CYAN}CC, #00B8CCCC)`,
-              color: NAVY, border: "none", borderRadius: 12,
-              padding: "12px", fontSize: 14, fontWeight: 900,
-              cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.7 : 1,
-            }}
+            onClick={() => setLang(l => l === "ar" ? "en" : "ar")}
+            style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, padding: "6px 14px", color: "white", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}
           >
-            {t("subscribe", lang)} →
-          </button>
-          <p style={{ textAlign: "center", color: MUTED, fontSize: 10, margin: 0 }}>
-            {t("cancelAnytime", lang)}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Billing History ───────────────────────────────────────────────────────────
-function BillingHistory({ lang }: { lang: string }) {
-  const { data: history } = trpc.subscription.getBillingHistory.useQuery();
-  if (!history?.length) return (
-    <p style={{ color: MUTED, textAlign: "center", fontSize: 13 }}>{t("billingHistory", lang)}: {t("noBilling", lang)}</p>
-  );
-  return (
-    <div style={{ marginTop: 32 }}>
-      <h3 style={{ color: TEXT, fontWeight: 800, margin: "0 0 12px" }}>🧾 {t("billingHistory", lang)}</h3>
-      {history.map((r: any) => (
-        <div key={r.id} style={{
-          background: CARD2, borderRadius: 12, padding: "12px 16px",
-          marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <div>
-            <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: "0 0 2px" }}>
-              {r.plan === "prime_pro" ? (lang === "ar" ? "برايم برو" : "Prime Pro") : (lang === "ar" ? "برايم بلس" : "Prime Plus")}
-              {" · "}{r.period === "yearly" ? t("yearly", lang) : t("monthly", lang)}
-            </p>
-            <p style={{ color: MUTED, fontSize: 11, margin: 0 }}>
-              {new Date(r.created_at).toLocaleDateString(lang === "ar" ? "ar-KW" : "en-US")}
-            </p>
-          </div>
-          <div style={{ textAlign: "end" }}>
-            <p style={{ color: r.status === "paid" ? GREEN : ORANGE, fontWeight: 800, fontSize: 14, margin: "0 0 2px" }}>
-              {r.currency} {r.amount}
-            </p>
-            <p style={{ color: MUTED, fontSize: 10, margin: 0 }}>
-              {r.status === "paid" ? "✓" : "✗"} {r.invoice_id}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Main Pricing Page ─────────────────────────────────────────────────────────
-export default function Pricing() {
-  const { lang, isRTL } = useLanguage();
-  const sub             = useSubscription();
-  const utils           = trpc.useUtils();
-
-  const [period, setPeriod]   = useState<"monthly" | "yearly">("monthly");
-  const [statusMsg, setStatus] = useState("");
-  const [errorMsg, setError]   = useState("");
-
-  const [trialKey, setTrialKey]       = useState<string | null>(null);
-
-  const { data: plans }     = trpc.subscription.getPlans.useQuery();
-  const startFreeTrial      = trpc.subscription.startFreeTrial.useMutation({
-    onSuccess: (d) => {
-      setTrialKey(d.licenseKey);
-      setStatus(lang === "ar"
-        ? `🎉 تجربتك المجانية جاهزة! استخدم الكود أدناه للدخول`
-        : `🎉 Your free trial is ready! Use the code below to enter`);
-    },
-    onError: (e) => setError(e.message),
-  });
-  const createCheckout      = trpc.subscription.createCheckout.useMutation({
-    onSuccess: (data) => { window.location.href = data.paymentUrl; },
-    onError: (e) => setError(e.message),
-  });
-
-  const isLoading = startFreeTrial.isPending || createCheckout.isPending;
-
-  const handleSubscribe = (planId: string) => {
-    setError(""); setTrialKey(null);
-    createCheckout.mutate({ plan: planId as any, period, lang: lang as "ar" | "en" });
-  };
-
-  const handleTrial = () => {
-    setError(""); setTrialKey(null);
-    startFreeTrial.mutate();
-  };
-
-  return (
-    <div dir={isRTL ? "rtl" : "ltr"} style={{
-      background: NAVY, minHeight: "100vh",
-      fontFamily: "Cairo, Tajawal, system-ui, sans-serif",
-      padding: "24px 16px 80px",
-    }}>
-
-      {/* Trial banner */}
-      {sub.plan === "free" && !sub.isTrial && (
-        <div style={{
-          background: `linear-gradient(135deg, ${GOLD}33, ${ORANGE}22)`,
-          border: `1px solid ${GOLD}44`,
-          borderRadius: 16, padding: "14px 16px",
-          textAlign: "center", marginBottom: 24,
-        }}>
-          <p style={{ color: GOLD, fontSize: 14, fontWeight: 800, margin: "0 0 10px" }}>
-            {t("trialBanner", lang)}
-          </p>
-          <button onClick={handleTrial} disabled={isLoading} style={{
-            background: `linear-gradient(135deg, ${GOLD}, #FFA500)`,
-            color: NAVY, border: "none", borderRadius: 10,
-            padding: "10px 24px", fontSize: 13, fontWeight: 900, cursor: "pointer",
-          }}>
-            🚀 {t("startTrial", lang)}
+            {lang === "ar" ? "English" : "عربي"}
           </button>
         </div>
-      )}
 
-      {/* Active subscription status */}
-      {sub.plan !== "free" && (
-        <div style={{
-          background: CARD2, border: `1px solid ${sub.isTrial ? GOLD : GREEN}44`,
-          borderRadius: 16, padding: "14px 16px", marginBottom: 20,
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <div>
-            <p style={{ color: sub.isTrial ? GOLD : GREEN, fontWeight: 800, fontSize: 14, margin: "0 0 2px" }}>
-              {sub.isTrial ? `⏳ ${t("activeTrial", lang)}` : `✅ ${lang === "ar" ? "اشتراك نشط" : "Active Subscription"}`}
-            </p>
-            {sub.expiresAt && (
-              <p style={{ color: MUTED, fontSize: 12, margin: 0 }}>
-                {sub.isTrial ? t("trialEnds", lang) : t("activeUntil", lang)}: {new Date(sub.expiresAt).toLocaleDateString(lang === "ar" ? "ar-KW" : "en-US")}
-                {sub.daysLeft !== null && sub.daysLeft <= 7 && (
-                  <span style={{ color: ORANGE, fontWeight: 700, marginRight: 6 }}>
-                    {" "}({sub.daysLeft} {lang === "ar" ? "أيام" : "days left"})
+        {/* Title */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <h1 style={{ color: "white", fontSize: 30, fontWeight: 900, margin: "0 0 8px" }}>{t("title")}</h1>
+          <p style={{ color: SKY_LIGHT, fontSize: 15, margin: 0 }}>{t("subtitle")}</p>
+        </div>
+
+        {/* Period toggle */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 4, display: "flex", gap: 4 }}>
+            {(["monthly", "yearly"] as Period[]).map(p => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                style={{
+                  border: "none", borderRadius: 10, padding: "8px 20px", cursor: "pointer",
+                  background: period === p ? "white" : "transparent",
+                  color: period === p ? NAVY : "white",
+                  fontWeight: 700, fontSize: 14, transition: "all 0.2s", fontFamily: "inherit",
+                }}
+              >
+                {t(p)}
+                {p === "yearly" && (
+                  <span style={{ marginInlineStart: 6, background: GREEN, color: "white", borderRadius: 6, padding: "2px 6px", fontSize: 10 }}>
+                    {t("save")}
                   </span>
                 )}
-              </p>
-            )}
+              </button>
+            ))}
           </div>
-          <span style={{
-            background: sub.plan === "prime_pro" ? `${GOLD}22` : `${CYAN}22`,
-            color: sub.plan === "prime_pro" ? GOLD : CYAN,
-            borderRadius: 10, padding: "4px 12px", fontSize: 12, fontWeight: 800,
-          }}>
-            {sub.plan === "prime_pro" ? (lang === "ar" ? "برايم برو" : "Prime Pro") : (lang === "ar" ? "برايم بلس" : "Prime Plus")}
-          </span>
         </div>
-      )}
 
-      {/* Header */}
-      <h1 style={{ color: TEXT, fontSize: 26, fontWeight: 900, textAlign: "center", margin: "0 0 6px" }}>
-        {t("title", lang)}
-      </h1>
-      <p style={{ color: MUTED, textAlign: "center", fontSize: 13, margin: "0 0 24px" }}>
-        {t("subtitle", lang)}
-      </p>
+        {/* Plan cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: 20 }}>
+          {PLANS.map((plan) => {
+            const Icon    = plan.icon;
+            const price   = period === "monthly" ? plan.monthly : plan.yearly;
+            const isCurrent = currentPlan === plan.id;
+            const isPopular = plan.popular;
 
-      {/* Period toggle */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 0, marginBottom: 28 }}>
-        {(["monthly", "yearly"] as const).map(p => (
-          <button key={p} onClick={() => setPeriod(p)} style={{
-            padding: "10px 24px", border: "none",
-            background: period === p ? CYAN : CARD2,
-            color: period === p ? NAVY : MUTED,
-            fontWeight: 800, fontSize: 13, cursor: "pointer",
-            borderRadius: p === "monthly" ? (isRTL ? "0 12px 12px 0" : "12px 0 0 12px") : (isRTL ? "12px 0 0 12px" : "0 12px 12px 0"),
-            fontFamily: "Cairo, sans-serif",
-            display: "flex", alignItems: "center", gap: 6,
-          }}>
-            {t(p, lang)}
-            {p === "yearly" && (
-              <span style={{ background: ORANGE, color: "white", borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 900 }}>
-                {t("save", lang)}
-              </span>
-            )}
-          </button>
-        ))}
+            return (
+              <div
+                key={plan.id}
+                style={{
+                  background: "white",
+                  borderRadius: 20,
+                  padding: "28px 24px",
+                  boxShadow: isPopular ? `0 12px 40px rgba(27,46,94,0.35)` : "0 4px 16px rgba(0,0,0,0.12)",
+                  border: isPopular ? `2.5px solid ${NAVY}` : "2px solid transparent",
+                  position: "relative",
+                  transition: "transform 0.2s",
+                }}
+              >
+                {isPopular && (
+                  <div style={{
+                    position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)",
+                    background: NAVY, color: "white", borderRadius: 20, padding: "4px 18px",
+                    fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
+                  }}>
+                    ⭐ {lang === "ar" ? "الأكثر شيوعاً" : "Most Popular"}
+                  </div>
+                )}
+
+                {/* Plan header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${plan.color}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon size={22} color={plan.color} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: NAVY }}>
+                      {lang === "en" ? plan.nameEn : plan.nameAr}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                      {lang === "en" ? plan.descEn : plan.descAr}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div style={{ marginBottom: 20 }}>
+                  {price === 0 ? (
+                    <div>
+                      <span style={{ fontSize: 30, fontWeight: 900, color: NAVY }}>{t("free")}</span>
+                      <span style={{ marginInlineStart: 8, background: `${GREEN}18`, color: "#16a34a", borderRadius: 8, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>
+                        {t("trialDays")}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 30, fontWeight: 900, color: NAVY }}>{price.toFixed(2)}</span>
+                      <span style={{ fontSize: 14, color: "#64748b", marginInlineStart: 4 }}>
+                        KWD{period === "monthly" ? t("perMonth") : t("perYear")}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* Features */}
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {plan.features.map((f, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#374151" }}>
+                      <Check size={16} color={GREEN} strokeWidth={3} />
+                      {lang === "en" ? f.en : f.ar}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* ── CTA: Current plan ── */}
+                {isCurrent ? (
+                  <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
+                    ✓ {t("current")}
+                  </div>
+
+                /* ── CTA: Free plan ── */
+                ) : plan.id === "free" ? (
+                  <>
+                    {trialKey ? (
+                      /* Key display after successful trial generation */
+                      <div style={{ background: "#F0FDF4", borderRadius: 14, padding: 16, border: `1.5px solid ${GREEN}44` }}>
+                        <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#166534", fontSize: 13 }}>
+                          🎉 {t("yourKey")}
+                        </p>
+                        <div style={{
+                          background: "white", borderRadius: 10, padding: "10px 14px",
+                          fontFamily: "monospace", fontSize: 16, fontWeight: 800, color: NAVY,
+                          letterSpacing: "0.08em", textAlign: "center", marginBottom: 10,
+                          border: `1.5px solid ${SKY_LIGHT}`,
+                        }}>
+                          {trialKey}
+                        </div>
+                        <p style={{ margin: "0 0 10px", color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>
+                          {t("keyNote")}
+                          {trialExpiry && (
+                            <> · {lang === "ar" ? "ينتهي في" : "Expires"}: <strong>{new Date(trialExpiry).toLocaleDateString()}</strong></>
+                          )}
+                        </p>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            onClick={handleCopy}
+                            style={{
+                              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                              background: copied ? GREEN : NAVY, color: "white", border: "none",
+                              borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700,
+                              cursor: "pointer", fontFamily: "inherit", transition: "background 0.2s",
+                            }}
+                          >
+                            {copied ? <CheckCheck size={15} /> : <Copy size={15} />}
+                            {copied ? t("copied") : t("copyKey")}
+                          </button>
+                          <Link href="/">
+                            <span style={{
+                              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                              background: SKY, color: "white", textDecoration: "none",
+                              borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700,
+                              fontFamily: "inherit", cursor: "pointer",
+                            }}>
+                              {t("goToApp")}
+                            </span>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Start trial button — opens same info modal as paid plans */
+                      <div>
+                        {trialError && (
+                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+                        )}
+                        <Button
+                          onClick={() => handleUpgradeClick("free")}
+                          style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
+                        >
+                          🎁 {t("startTrial")}
+                        </Button>
+                        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
+                          {t("trialNote")}
+                        </p>
+                      </div>
+                    )}
+                  </>
+
+                /* ── CTA: Paid plans ── */
+                ) : (
+                  <Button
+                    onClick={() => handleUpgradeClick(plan.id as "prime_plus" | "prime_pro")}
+                    style={{ width: "100%", background: plan.color, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
+                  >
+                    {isAuthenticated ? t("upgrade") : t("loginFirst")}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Renewal note */}
+        <div style={{ marginTop: 28, background: "rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 20px", textAlign: "center" }}>
+          <p style={{ color: SKY_LIGHT, fontSize: 13, margin: 0 }}>
+            🔄 {t("renewNote")}
+          </p>
+        </div>
+
+        {/* Billing note */}
+        <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 20 }}>
+          {t("billingNote")}
+        </p>
       </div>
 
-      {/* Plan cards */}
-      <div style={{
-        display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap",
-        marginBottom: 32,
-      }}>
-        {(plans ?? []).map((plan: any) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            lang={lang}
-            period={period}
-            currentPlan={sub.plan}
-            onSubscribe={handleSubscribe}
-            onTrial={handleTrial}
-            isLoading={isLoading}
-          />
-        ))}
-      </div>
-
-      {/* Trial key display */}
-      {trialKey && (
-        <div style={{
-          background: `${GOLD}22`, border: `2px dashed ${GOLD}`,
-          borderRadius: 16, padding: "16px", marginBottom: 16, textAlign: "center",
-        }}>
-          <p style={{ color: GOLD, fontSize: 12, fontWeight: 700, margin: "0 0 8px" }}>
-            {lang === "ar" ? "🔑 كود التفعيل الخاص بك" : "🔑 Your Activation Code"}
-          </p>
-          <div style={{
-            background: NAVY, borderRadius: 10, padding: "10px 16px",
-            marginBottom: 8, display: "inline-block",
-          }}>
-            <span style={{ color: CYAN, fontSize: 20, fontWeight: 900, letterSpacing: 3, fontFamily: "monospace" }}>
-              {trialKey}
-            </span>
-          </div>
-          <p style={{ color: MUTED, fontSize: 11, margin: "0 0 10px" }}>
-            {lang === "ar"
-              ? "ارجع إلى شاشة الدخول وأدخل هذا الكود للبدء"
-              : "Go back to the entry screen and enter this code to start"}
-          </p>
-          <button
-            onClick={() => { navigator.clipboard?.writeText(trialKey); }}
-            style={{
-              background: `${CYAN}22`, border: `1px solid ${CYAN}44`, color: CYAN,
-              borderRadius: 8, padding: "6px 16px", fontSize: 12,
-              fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            📋 {lang === "ar" ? "نسخ الكود" : "Copy Code"}
-          </button>
-        </div>
-      )}
-
-      {/* Status / error */}
-      {statusMsg && (
-        <div style={{ background: `${GREEN}22`, border: `1px solid ${GREEN}`, borderRadius: 12, padding: "12px 16px", textAlign: "center", color: GREEN, fontWeight: 700, marginBottom: 16 }}>
-          {statusMsg}
-        </div>
-      )}
-      {errorMsg && (
-        <div style={{ background: "#EF444422", border: "1px solid #EF4444", borderRadius: 12, padding: "12px 16px", textAlign: "center", color: "#EF4444", fontWeight: 700, marginBottom: 16 }}>
-          ⚠️ {errorMsg}
-        </div>
-      )}
-
-      {/* Billing history */}
-      <BillingHistory lang={lang} />
-
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');`}</style>
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
