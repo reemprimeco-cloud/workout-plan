@@ -400,3 +400,7 @@
 - [x] Nutrition.tsx: progress circle color reflects remaining calories (green/orange/red)
 - [x] Nutrition.tsx: remaining = goal - food + estimated exercise calories
 - [x] Nutrition.tsx Goals modal: goal mode selector (fat loss / maintain / muscle gain) already existed in TDEE section
+
+## Nutrition Features — Auto-fill & Quick Meals (May 16 v5)
+- [x] Nutrition.tsx Scanner: auto-fill calories/protein/carbs/fat from scan/search result (keep editable) — LLM fallback added in foodAnalysis.ts when USDA returns null/zeros
+- [x] Nutrition.tsx Scanner: add famous meals quick-select grid (meals, coffee, drinks) — QuickMealsGrid component with 26 items across 3 categories, added above ManualSearch in ScannerTab idle state
