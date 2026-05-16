@@ -1156,6 +1156,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             </span>
           </div>
 
+          <QuickMealsGrid lang={lang} mealType={mealType} setMealType={setMealType} />
           <ManualSearch lang={lang} mealType={mealType} setMealType={setMealType} />
         </>
       )}
@@ -1352,6 +1353,188 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
 
       <input ref={fileInputRef}   type="file" accept="image/*"            style={{ display: "none" }} onChange={e => e.target.files?.[0] && processImage(e.target.files[0])} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={e => e.target.files?.[0] && processImage(e.target.files[0])} />
+    </div>
+  );
+}
+
+// ── Quick Meals Grid ─────────────────────────────────────────────────────────
+type QuickMealCategory = "meals" | "coffee" | "drinks";
+
+interface QuickMealItem {
+  nameAr: string;
+  nameEn: string;
+  emoji: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  serving: string;
+}
+
+const QUICK_MEALS: Record<QuickMealCategory, QuickMealItem[]> = {
+  meals: [
+    { nameAr: "كبسة دجاج",   nameEn: "Chicken Kabsa",   emoji: "🍚", calories: 520, protein: 32, carbs: 65, fat: 12, serving: "1 plate (350g)" },
+    { nameAr: "شاورما دجاج", nameEn: "Chicken Shawarma", emoji: "🌯", calories: 420, protein: 28, carbs: 42, fat: 14, serving: "1 wrap (250g)" },
+    { nameAr: "برغر",         nameEn: "Burger",           emoji: "🍔", calories: 550, protein: 30, carbs: 48, fat: 24, serving: "1 burger (220g)" },
+    { nameAr: "بيتزا",        nameEn: "Pizza",            emoji: "🍕", calories: 280, protein: 12, carbs: 34, fat: 10, serving: "1 slice (100g)" },
+    { nameAr: "سلطة خضراء",  nameEn: "Green Salad",      emoji: "🥗", calories: 80,  protein: 3,  carbs: 10, fat: 3,  serving: "1 bowl (200g)" },
+    { nameAr: "فول مدمس",    nameEn: "Foul Medames",     emoji: "🫘", calories: 180, protein: 10, carbs: 28, fat: 4,  serving: "1 cup (200g)" },
+    { nameAr: "تمر",          nameEn: "Dates",            emoji: "🌴", calories: 120, protein: 1,  carbs: 32, fat: 0,  serving: "4 dates (40g)" },
+    { nameAr: "خبز عربي",    nameEn: "Arabic Bread",     emoji: "🫓", calories: 165, protein: 5,  carbs: 34, fat: 1,  serving: "1 loaf (65g)" },
+    { nameAr: "أرز مع دجاج", nameEn: "Rice with Chicken",emoji: "🍗", calories: 480, protein: 35, carbs: 58, fat: 10, serving: "1 plate (350g)" },
+    { nameAr: "مكرونة",       nameEn: "Pasta",            emoji: "🍝", calories: 350, protein: 12, carbs: 65, fat: 6,  serving: "1 plate (250g)" },
+  ],
+  coffee: [
+    { nameAr: "كابتشينو",      nameEn: "Cappuccino",       emoji: "☕", calories: 120, protein: 6,  carbs: 12, fat: 5,  serving: "1 cup (240ml)" },
+    { nameAr: "لاتيه",         nameEn: "Latte",            emoji: "🥛", calories: 190, protein: 10, carbs: 19, fat: 7,  serving: "1 cup (360ml)" },
+    { nameAr: "أمريكانو",      nameEn: "Americano",        emoji: "☕", calories: 15,  protein: 1,  carbs: 3,  fat: 0,  serving: "1 cup (240ml)" },
+    { nameAr: "شاي بالحليب",  nameEn: "Tea with Milk",    emoji: "🍵", calories: 80,  protein: 3,  carbs: 12, fat: 2,  serving: "1 cup (240ml)" },
+    { nameAr: "قهوة عربية",   nameEn: "Arabic Coffee",    emoji: "🫖", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 cup (100ml)" },
+    { nameAr: "ماتشا لاتيه",  nameEn: "Matcha Latte",     emoji: "🍵", calories: 160, protein: 6,  carbs: 22, fat: 5,  serving: "1 cup (360ml)" },
+    { nameAr: "إسبريسو",       nameEn: "Espresso",         emoji: "☕", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 shot (30ml)" },
+    { nameAr: "شوكولاتة ساخنة",nameEn: "Hot Chocolate",   emoji: "🍫", calories: 220, protein: 8,  carbs: 35, fat: 6,  serving: "1 cup (240ml)" },
+  ],
+  drinks: [
+    { nameAr: "ماء",           nameEn: "Water",            emoji: "💧", calories: 0,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 bottle (500ml)" },
+    { nameAr: "عصير برتقال",  nameEn: "Orange Juice",     emoji: "🍊", calories: 110, protein: 2,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "كولا",          nameEn: "Cola",             emoji: "🥤", calories: 140, protein: 0,  carbs: 39, fat: 0,  serving: "1 can (355ml)" },
+    { nameAr: "لبن",           nameEn: "Milk",             emoji: "🥛", calories: 150, protein: 8,  carbs: 12, fat: 8,  serving: "1 glass (240ml)" },
+    { nameAr: "عصير تفاح",    nameEn: "Apple Juice",      emoji: "🍎", calories: 115, protein: 0,  carbs: 28, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "ليموناضة",      nameEn: "Lemonade",         emoji: "🍋", calories: 100, protein: 0,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "عصير مانجو",   nameEn: "Mango Juice",      emoji: "🥭", calories: 130, protein: 1,  carbs: 32, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "شاي أخضر",     nameEn: "Green Tea",        emoji: "🍵", calories: 2,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 cup (240ml)" },
+  ],
+};
+
+function QuickMealsGrid({ lang, mealType, setMealType }: {
+  lang: string; mealType: MealType; setMealType: (m: MealType) => void;
+}) {
+  const utils = trpc.useUtils();
+  const [category, setCategory] = useState<QuickMealCategory>("meals");
+  const [addedId, setAddedId]   = useState<string | null>(null);
+
+  const logMeal = trpc.nutrition.logMeal.useMutation({
+    onSuccess: () => {
+      utils.nutrition.getTodayLog.invalidate();
+      utils.nutrition.getToday.invalidate();
+    },
+  });
+
+  const handleQuickAdd = async (item: QuickMealItem) => {
+    const id = `${category}-${item.nameEn}`;
+    setAddedId(id);
+    await logMeal.mutateAsync({
+      mealType,
+      foodName: item.nameEn,
+      foodNameAr: item.nameAr,
+      calories: item.calories,
+      proteinG: item.protein,
+      carbsG:   item.carbs,
+      fatG:     item.fat,
+      servingSize: item.serving,
+      addedByAI: false,
+    });
+    setTimeout(() => setAddedId(null), 1500);
+  };
+
+  const catTabs: { id: QuickMealCategory; labelAr: string; labelEn: string; icon: string }[] = [
+    { id: "meals",  labelAr: "وجبات",    labelEn: "Meals",   icon: "🍽️" },
+    { id: "coffee", labelAr: "قهوة",     labelEn: "Coffee",  icon: "☕" },
+    { id: "drinks", labelAr: "مشروبات",  labelEn: "Drinks",  icon: "🥤" },
+  ];
+
+  return (
+    <div style={card()}>
+      {/* Header */}
+      <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 12px" }}>
+        ⚡ {lang === "ar" ? "إضافة سريعة" : "Quick Add"}
+      </p>
+
+      {/* Meal type selector */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+        {(["breakfast","lunch","dinner","snack"] as const).map(mt => (
+          <button key={mt} onClick={() => setMealType(mt)} style={{
+            padding: "5px 10px", borderRadius: 16,
+            border: mealType === mt ? `1.5px solid ${NAVY}` : `1px solid ${BORDER}`,
+            background: mealType === mt ? NAVY : WHITE,
+            color: mealType === mt ? WHITE : TEXT2,
+            fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+          }}>
+            {MEAL_ICONS[mt]} {tl(mt, lang)}
+          </button>
+        ))}
+      </div>
+
+      {/* Category tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, borderBottom: `1px solid ${BORDER}`, paddingBottom: 10 }}>
+        {catTabs.map(ct => (
+          <button key={ct.id} onClick={() => setCategory(ct.id)} style={{
+            flex: 1, padding: "8px 4px", borderRadius: 12,
+            border: category === ct.id ? `1.5px solid ${SKY}` : `1px solid ${BORDER}`,
+            background: category === ct.id ? SKY_LIGHT : WHITE,
+            color: category === ct.id ? NAVY : TEXT2,
+            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+          }}>
+            <span style={{ fontSize: 18 }}>{ct.icon}</span>
+            <span>{lang === "ar" ? ct.labelAr : ct.labelEn}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Meals grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {QUICK_MEALS[category].map(item => {
+          const id = `${category}-${item.nameEn}`;
+          const isAdded = addedId === id;
+          return (
+            <button
+              key={id}
+              onClick={() => !isAdded && handleQuickAdd(item)}
+              disabled={isAdded || logMeal.isPending}
+              style={{
+                background: isAdded ? "#F0FDF4" : WHITE,
+                border: `1.5px solid ${isAdded ? "#22C55E" : BORDER}`,
+                borderRadius: 14, padding: "10px 10px",
+                cursor: isAdded ? "default" : "pointer",
+                fontFamily: "inherit",
+                display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4,
+                textAlign: lang === "ar" ? "right" : "left",
+                boxShadow: SHADOW,
+                transition: "all 0.15s",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
+                <span style={{ fontSize: 22 }}>{isAdded ? "✅" : item.emoji}</span>
+                <span style={{ color: TEXT, fontSize: 12, fontWeight: 700, flex: 1, lineHeight: 1.2 }}>
+                  {lang === "ar" ? item.nameAr : item.nameEn}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
+                <span style={{
+                  background: "#FFF7ED", color: "#F97316",
+                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 700,
+                }}>
+                  🔥 {item.calories}
+                </span>
+                <span style={{
+                  background: "#FEF2F2", color: C_PROTEIN,
+                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 600,
+                }}>
+                  P {item.protein}g
+                </span>
+                <span style={{
+                  background: "#FFFBEB", color: C_CARBS,
+                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 600,
+                }}>
+                  C {item.carbs}g
+                </span>
+              </div>
+              <span style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{item.serving}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
