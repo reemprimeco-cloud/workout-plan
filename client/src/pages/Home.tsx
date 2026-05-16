@@ -115,7 +115,6 @@ export default function Home() {
   };
   const tabs: { id: Tab; iconUrl: string; label: string }[] = [
     { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
-    { id: 'nutrition', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: isRTL ? 'التغذية' : 'Nutrition' },
     { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
     { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: t('navGuide') },
     { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
@@ -178,7 +177,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: streak + active indicator */}
+        {/* Right: active session indicator only */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeSession && (
             <div style={{
@@ -189,12 +188,6 @@ export default function Home() {
               🔴 {t('activeSession')}
             </div>
           )}
-          <div style={{
-            background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '6px 12px',
-            color: SKY_LIGHT, fontSize: 12,
-          }}>
-            🔥 {stats.streak} {t('streak')}
-          </div>
         </div>
       </header>
 
@@ -404,6 +397,18 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
+          {/* Streak badge — top right of welcome card */}
+          <div style={{
+            position: 'absolute', top: 0, right: 0,
+            background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '8px 12px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            border: `1px solid ${SKY}44`,
+            minWidth: 60,
+          }}>
+            <span style={{ fontSize: 22 }}>🔥</span>
+            <span style={{ color: 'white', fontWeight: 900, fontSize: 18, lineHeight: 1 }}>{stats.streak}</span>
+            <span style={{ color: SKY_LIGHT, fontSize: 10 }}>{t('streak')}</span>
+          </div>
           <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
           <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
             {profile.name}
@@ -456,10 +461,13 @@ function CheckInPanel({ onStart, stats, profile }: {
         </div>
       </div>
 
+      {/* Nutrition Summary Card — tapping navigates to nutrition tab */}
+      <NutritionSummaryCard />
+
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
         <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 900 }}>
-          🏋️‍♀️ {t('chooseWorkout')}
+          🏗️‍♀️ {t('chooseWorkout')}
         </h3>
         <p style={{ margin: '4px 0 0', color: '#7A9BB5', fontSize: 12 }}>
           {t('autoTime')}
@@ -791,7 +799,77 @@ function CheckInPanel({ onStart, stats, profile }: {
   );
 }
 
-// ── Setup Form (shown to new users) ──────────────────────────
+// ── Nutrition Summary Card (shown on Home above workout section) ────────────────────────────────────────────
+function NutritionSummaryCard() {
+  const { lang, isRTL } = useLanguage();
+  const { data: todayLog } = trpc.nutrition.getTodayLog.useQuery({});
+  const { data: goals } = trpc.nutrition.getGoals.useQuery();
+
+  const calories = todayLog?.totals?.calories ?? 0;
+  const goalCal = todayLog?.goals?.calories ?? 2000;
+  const protein = todayLog?.totals?.proteinG ?? 0;
+  const carbs = todayLog?.totals?.carbsG ?? 0;
+  const fat = todayLog?.totals?.fatG ?? 0;
+  const water = todayLog?.totalWaterMl ?? 0;
+  const goalWater = todayLog?.goals?.waterMl ?? 2500;
+  const calPct = Math.min(100, Math.round((calories / goalCal) * 100));
+  const waterPct = Math.min(100, Math.round((water / goalWater) * 100));
+
+  const NAVY = '#1B2E5E';
+  const SKY = '#7BB8D4';
+  const GREEN = '#22C55E';
+
+  return (
+    <div
+      style={{
+        background: 'white', borderRadius: 16, padding: '14px 16px', marginBottom: 14,
+        boxShadow: '0 2px 12px rgba(27,46,94,0.08)', border: '1px solid #D0DFF055',
+        cursor: 'default',
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>
+          🥗 {lang === 'ar' ? 'تغذية اليوم' : "Today's Nutrition"}
+        </span>
+      </div>
+
+      {/* Calories row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{ fontSize: 12, color: '#475569' }}>🔥 {lang === 'ar' ? 'سعرات' : 'Calories'}</span>
+        <span style={{ fontSize: 12, color: '#475569' }}>{calories} / {goalCal} kcal</span>
+      </div>
+      <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{ height: '100%', width: `${calPct}%`, background: `linear-gradient(90deg, ${SKY}, ${NAVY})`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+      </div>
+
+      {/* Macros row */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        {[
+          { label: lang === 'ar' ? 'بروتين' : 'Protein', value: `${Math.round(protein)}g`, color: '#EF4444', bg: '#FEF2F2' },
+          { label: lang === 'ar' ? 'كربو' : 'Carbs', value: `${Math.round(carbs)}g`, color: '#F59E0B', bg: '#FFFBEB' },
+          { label: lang === 'ar' ? 'دهون' : 'Fat', value: `${Math.round(fat)}g`, color: '#8B5CF6', bg: '#F5F3FF' },
+        ].map(m => (
+          <div key={m.label} style={{ flex: 1, background: m.bg, borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}>
+            <div style={{ fontWeight: 800, color: m.color, fontSize: 14 }}>{m.value}</div>
+            <div style={{ color: '#94a3b8', fontSize: 10 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Water row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{ fontSize: 12, color: '#475569' }}>💧 {lang === 'ar' ? 'ماء' : 'Water'}</span>
+        <span style={{ fontSize: 12, color: SKY, fontWeight: 700 }}>{water} / {goalWater} ml</span>
+      </div>
+      <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${waterPct}%`, background: `linear-gradient(90deg, #38BDF8, #0EA5E9)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Setup Form (shown to new users) ────────────────────────────────────────────
 function SetupForm({ tracker }: { onComplete: () => void; tracker: ReturnType<typeof useGymTracker> }) {
   const [form, setForm] = useState({ name: '', age: '', height: '', currentWeight: '', targetWeight: '', gender: 'female' as 'female' | 'male' });
   const [error, setError] = useState('');
