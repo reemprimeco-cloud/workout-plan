@@ -240,8 +240,8 @@ export function ProfilePanel() {
         {/* Top row: avatar + stats */}
         <div className="flex items-center gap-5 px-5 pt-6 pb-3">
 
-          {/* Avatar */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
+          {/* Avatar — initials only, no upload */}
+          <div style={{ flexShrink: 0 }}>
             <div style={{
               width: 82, height: 82, borderRadius: '50%',
               background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
@@ -249,53 +249,9 @@ export function ProfilePanel() {
               fontSize: 34, fontWeight: 900, color: 'white',
               boxShadow: '0 0 0 3px white, 0 0 0 4.5px #1B2E5E22',
               userSelect: 'none',
-              overflow: 'hidden',
-              position: 'relative',
             }}>
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="avatar"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                />
-              ) : (
-                profile.name ? profile.name.trim()[0].toUpperCase() : '?'
-              )}
-              {/* Loading overlay while uploading to S3 */}
-              {avatarUploading && (
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'rgba(27,46,94,0.6)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <div style={{
-                    width: 24, height: 24, borderRadius: '50%',
-                    border: '3px solid rgba(255,255,255,0.35)',
-                    borderTopColor: 'white',
-                    animation: 'spin 0.8s linear infinite',
-                  }} />
-                </div>
-              )}
+              {profile.name ? profile.name.trim()[0].toUpperCase() : '?'}
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                position: 'absolute', bottom: 0,
-                ...(isRTL ? { left: 0 } : { right: 0 }),
-                width: 26, height: 26, borderRadius: '50%',
-                background: '#1B2E5E', border: '2.5px solid white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', fontSize: 11, color: 'white',
-              }}
-              aria-label="Change photo"
-            >+</button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleAvatarChange}
-            />
           </div>
 
           {/* Stats columns */}

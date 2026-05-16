@@ -374,3 +374,9 @@
 ## Bug Fix — Streak Badge & Nutrition Tab (May 16 v2)
 - [x] Home.tsx: fix streak badge overlap in LTR (English) — added paddingRight:72 wrapper so name text never goes under badge
 - [x] Home.tsx: restore Nutrition tab in bottom nav — added back between Stats and Exercises using inline SVG nutrition icon
+
+## UI Cleanup — May 16 v3
+- [x] Home.tsx: remove streak badge from welcome card entirely
+- [x] Home.tsx: remove profile image/avatar circle from header
+- [x] ProfilePanel.tsx: remove profile image/avatar upload section (replaced with initials-only circle)
+- [x] Home.tsx: remove NutritionSummaryCard from home page (Nutrition tab stays active)
