@@ -347,3 +347,11 @@
 - [x] AdminPanel: copy button next to each license key in Subscriptions tab
 - [x] Remove all WooCommerce/primeprint.com.kw links from LicenseGate and Pricing pages
 - [x] Keep only MyFatoorah as payment gateway (removed WooCommerce webhook, ping route, and poller from server)
+
+## Feature Restore — Unified Subscription Flow (Pricing.tsx)
+- [x] Pricing.tsx: all 3 plan buttons open same modal (name + email + phone)
+- [x] Pricing.tsx: Free Trial modal title "ابدأ تجربتك المجانية", summary "مجاناً — ٧ أيام", button "🎁 احصل على مفتاحي المجاني"
+- [x] Pricing.tsx: after free trial generation → popup overlay with PRIME-XXXX-XXXX in large font + copy button (✓ for 2s) + expiry date + "حسناً، شكراً!" close button
+- [x] Pricing.tsx: auto-email sent to customer with key after free trial generation (resendKeyEmail called in startFreeTrial)
+- [x] Pricing.tsx: Plus/Pro → redirect to MyFatoorah checkout after form submission
+- [x] Pricing.tsx: Free plan button shows "ابدأ التجربة المجانية" if no key yet, "✓ خطتك الحالية" after key generated

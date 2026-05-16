@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, verifyAccessCode, createAccessCode } from "../db";
 import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
+import { resendKeyEmail } from "../_core/email";
 import { eq, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
@@ -85,6 +86,22 @@ export const subscriptionRouter = router({
       });
 
       console.log(`[FreeTrial] Generated key ${newKey} for ${input.customerEmail ?? "(no email)"}, expires ${expiresAt.toDateString()}`);
+
+      // Send email with the license key
+      if (input.customerEmail) {
+        try {
+          await resendKeyEmail({
+            to: input.customerEmail,
+            customerName: input.customerName || "Prime Fit User",
+            licenseKey: newKey,
+            expiresAt,
+          });
+          console.log(`[FreeTrial] Email sent to ${input.customerEmail}`);
+        } catch (emailErr) {
+          // Don't fail the request if email fails — key was already created
+          console.error(`[FreeTrial] Email failed for ${input.customerEmail}:`, emailErr);
+        }
+      }
 
       return {
         success: true,
