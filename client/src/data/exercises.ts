@@ -715,7 +715,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تركيز على الأرداف والفخذين وحرق دهون الأرداف',
     descriptionEn: 'Focus on glutes, thighs, and lower body fat burn',
     defaultExercises: ['squat_db', 'lunge_db', 'hip_thrust', 'rdl', 'leg_press', 'donkey_kicks', 'calf_raises'],
-    defaultCardio: 'treadmill',
+    defaultCardio: undefined,
   },
   upper_arms: {
     nameAr: 'الجزء العلوي - الذراعان والظهر',
@@ -724,7 +724,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تركيز على الذراعين والظهر وحرق دهون اليدين',
     descriptionEn: 'Focus on arms, back definition, and upper body strength',
     defaultExercises: ['bicep_curl', 'tricep_ext', 'lat_pulldown', 'db_row', 'hammer_curl', 'tricep_pushdown'],
-    defaultCardio: 'elliptical',
+    defaultCardio: undefined,
   },
   core_cardio: {
     nameAr: 'البطن والكور + كارديو مكثف',
@@ -733,7 +733,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تركيز على حرق دهون البطن وتقوية عضلات الكور',
     descriptionEn: 'Burn belly fat and strengthen core muscles',
     defaultExercises: ['plank', 'crunches', 'bicycle_crunches', 'leg_raises', 'russian_twist', 'mountain_climbers'],
-    defaultCardio: 'bike',
+    defaultCardio: undefined,
   },
   chest_shoulders: {
     nameAr: 'الصدر والأكتاف',
@@ -742,7 +742,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تقوية الصدر والأكتاف وتحسين القوام',
     descriptionEn: 'Strengthen chest and shoulders, improve posture',
     defaultExercises: ['chest_press', 'shoulder_press', 'lateral_raise', 'chest_fly', 'tricep_kickback', 'side_plank'],
-    defaultCardio: 'elliptical',
+    defaultCardio: undefined,
   },
   full_body: {
     nameAr: 'الجسم الكامل',
@@ -751,7 +751,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تمارين مركبة تعمل على الجسم كاملاً',
     descriptionEn: 'Compound movements targeting the entire body',
     defaultExercises: ['squat_db', 'chest_press', 'lat_pulldown', 'hip_thrust', 'plank', 'bicep_curl', 'tricep_ext'],
-    defaultCardio: 'treadmill',
+    defaultCardio: undefined,
   },
   aqua: {
     nameAr: 'كلاس الأكوا (Aqua Aerobics)',
@@ -778,7 +778,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تمارين الكارديو والإحماء',
     descriptionEn: 'Cardio and endurance training sessions',
     defaultExercises: [],
-    defaultCardio: 'treadmill',
+    defaultCardio: undefined,
   },
   warm_up: {
     nameAr: 'الإحماء الديناميكي',
