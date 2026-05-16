@@ -30,6 +30,23 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 
+// Inline SVG logo — renders on all browsers without image loading issues
+function PrimeFitLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size * 0.22,
+      background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <svg width={size * 0.58} height={size * 0.58} viewBox="0 0 24 24" fill="none">
+        <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z"
+          fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
 type Tab = 'home' | 'nutrition' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
 
 export default function Home() {
@@ -146,14 +163,8 @@ export default function Home() {
       }}>
         {/* Left: Logo + App Name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Prime Fit Logo (small) */}
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img
-              src={LOGO_URL}
-              alt="Prime Fit"
-              style={{ height: 40, width: 40, objectFit: 'contain', display: 'block', borderRadius: 8 }}
-            />
-          </div>
+          {/* Prime Fit Logo (small) — inline SVG, renders on all browsers */}
+          <PrimeFitLogo size={40} />
           {/* User avatar (if uploaded) */}
           {headerAvatar && (
             <div
@@ -397,9 +408,10 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Streak badge — top right of welcome card */}
+          {/* Streak badge — top right (LTR) / top left (RTL) of welcome card */}
           <div style={{
-            position: 'absolute', top: 0, right: 0,
+            position: 'absolute', top: 0,
+            ...(isRTL ? { left: 0 } : { right: 0 }),
             background: 'rgba(255,255,255,0.12)', borderRadius: 12, padding: '8px 12px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
             border: `1px solid ${SKY}44`,
@@ -870,7 +882,7 @@ function NutritionSummaryCard() {
 }
 
 // ── Setup Form (shown to new users) ────────────────────────────────────────────
-function SetupForm({ tracker }: { onComplete: () => void; tracker: ReturnType<typeof useGymTracker> }) {
+function SetupForm({ tracker, onComplete: _onComplete }: { onComplete: () => void; tracker: ReturnType<typeof useGymTracker> }) {
   const [form, setForm] = useState({ name: '', age: '', height: '', currentWeight: '', targetWeight: '', gender: 'female' as 'female' | 'male' });
   const [error, setError] = useState('');
 

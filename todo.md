@@ -365,3 +365,8 @@
 - [x] Home.tsx: 7 tabs only — removed "nutrition" tab from nav bar (home, stats, guide, exercises, coach, community, profile)
 - [x] Home.tsx: streak badge moved from header to inside welcome card (top-right corner as 🔥 badge with day count)
 - [x] Home.tsx: NutritionSummaryCard added above "Choose Today's Workout" section (calories + macros + water)
+
+## Bug Fix — 3 UI Issues (May 16)
+- [x] Home.tsx: replace /favicon.ico <img> with inline SVG PrimeFitLogo component in header
+- [x] Home.tsx: fix streak badge overlap in RTL — move streak badge properly inside welcome card (not overlapping name)
+- [x] ProfilePanel.tsx: add subscription status card at bottom reading from localStorage (key, plan, expiry, days left)
