@@ -355,3 +355,8 @@
 - [x] Pricing.tsx: auto-email sent to customer with key after free trial generation (resendKeyEmail called in startFreeTrial)
 - [x] Pricing.tsx: Plus/Pro → redirect to MyFatoorah checkout after form submission
 - [x] Pricing.tsx: Free plan button shows "ابدأ التجربة المجانية" if no key yet, "✓ خطتك الحالية" after key generated
+
+## Bug Fix — Free Plan Button & Admin Copy Buttons
+- [x] Pricing.tsx: free plan "✓ خطتك الحالية" button now opens the info modal when no key generated yet, shows static badge after key generated
+- [x] AdminPanel: copy button already exists next to each license key in Licenses tab (📋 → ✓ for 1.8s)
+- [x] AdminPanel: copy button already exists next to each license key in Subscriptions tab
