@@ -15,8 +15,12 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (typeof window === "undefined") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
+
+  // Only redirect to login from admin page
+  // For all other pages, LicenseGate handles unauthenticated users
+  const isAdminPage = window.location.pathname === "/admin";
+  if (!isAdminPage) return;
 
   window.location.href = getLoginUrl();
 };
