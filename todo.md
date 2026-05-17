@@ -580,3 +580,9 @@
 ## AI Coach Chat Layout Fix (WhatsApp-Style)
 - [x] Fix MyCoach.tsx chat section: header + stats + tabs fixed at top, chat messages scroll independently, input bar fixed at bottom — nothing moves except the messages area
 - [x] Entire MyCoach page must fill the screen height (no page-level scroll), integrated with the app shell (bottom nav stays fixed)
+## Statistics Logic Fix
+- [x] Fix streak calculation: use actual consecutive workout dates, NOT total session count
+- [x] Fix weekly sessions: count sessions in current calendar week (Sun-Sat), not rolling 7 days
+- [x] Fix monthly sessions: count sessions in current calendar month
+- [x] Ensure total sessions = all completed sessions (verified correct)
+- [x] Update StatsPanel UI labels to clearly distinguish streak vs total sessions
