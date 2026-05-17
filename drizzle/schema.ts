@@ -247,13 +247,18 @@ export const challengeParticipants = mysqlTable("challenge_participants", {
 export type ChallengeParticipant = typeof challengeParticipants.$inferSelect;
 export type InsertChallengeParticipant = typeof challengeParticipants.$inferInsert;
 
-// Social notifications — per-user inbox for likes, comments, etc.
+// Social notifications — per-user inbox for likes, comments, follows, DMs, replies
 export const socialNotifications = mysqlTable("social_notifications", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),        // recipient
   actorId: int("actorId").notNull(),       // who triggered it
-  type: mysqlEnum("type", ["like", "cheer", "fire", "comment", "achievement", "mention"]).notNull(),
+  type: mysqlEnum("type", ["like", "cheer", "fire", "comment", "achievement", "mention", "follow", "reply", "message"]).notNull(),
   postId: int("postId"),                   // related post (if any)
+  commentId: int("commentId"),             // related comment (if any)
+  messageId: int("messageId"),             // related DM (if any)
+  replyId: int("replyId"),                 // related reply (if any)
+  actorName: varchar("actorName", { length: 255 }), // cached actor name
+  actorAvatar: text("actorAvatar"),        // cached actor avatar URL
   message: text("message").notNull(),
   messageEn: text("messageEn"),
   isRead: boolean("isRead").default(false).notNull(),
@@ -262,6 +267,27 @@ export const socialNotifications = mysqlTable("social_notifications", {
 
 export type SocialNotification = typeof socialNotifications.$inferSelect;
 export type InsertSocialNotification = typeof socialNotifications.$inferInsert;
+
+// User privacy settings — controls DM, follow, mention permissions + notification prefs
+export const userPrivacySettings = mysqlTable("user_privacy_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  allowDMs: boolean("allowDMs").default(true).notNull(),
+  allowFollows: boolean("allowFollows").default(true).notNull(),
+  allowMentions: boolean("allowMentions").default(true).notNull(),
+  privateAccount: boolean("privateAccount").default(false).notNull(),
+  notifyLikes: boolean("notifyLikes").default(true).notNull(),
+  notifyComments: boolean("notifyComments").default(true).notNull(),
+  notifyMentions: boolean("notifyMentions").default(true).notNull(),
+  notifyFollows: boolean("notifyFollows").default(true).notNull(),
+  notifyMessages: boolean("notifyMessages").default(true).notNull(),
+  notifyReplies: boolean("notifyReplies").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserPrivacySettings = typeof userPrivacySettings.$inferSelect;
+export type InsertUserPrivacySettings = typeof userPrivacySettings.$inferInsert;
 
 // XP log — tracks all XP-earning events
 export const communityXpLog = mysqlTable("community_xp_log", {

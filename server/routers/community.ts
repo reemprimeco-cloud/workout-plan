@@ -24,6 +24,8 @@ import {
   getUserById, searchUsers,
   sendDirectMessage, getConversation, getConversationList, markMessagesRead, getUnreadDMCount,
   bookmarkPost, unbookmarkPost, isBookmarked, getUserBookmarks,
+  getUserPrivacySettings, upsertUserPrivacySettings,
+  markSingleNotificationRead, deleteNotification,
 } from "../db";
 import { getDb } from "../db";
 import { users, communityPosts, communityComments, communityChallenges, challengeParticipants, communityReportPosts } from "../../drizzle/schema";
@@ -903,5 +905,76 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
         hiddenPosts: hiddenCount?.count ?? 0,
         bannedUsers: bannedCount?.count ?? 0,
       };
+    }),
+
+  // ── Privacy Settings ─────────────────────────────────────────────────────
+  /** Get my privacy settings */
+  getPrivacySettings: protectedProcedure
+    .query(async ({ ctx }) => {
+      const settings = await getUserPrivacySettings(ctx.user.id);
+      // Return defaults if not set
+      return settings ?? {
+        id: 0, userId: ctx.user.id,
+        allowDMs: true, allowFollows: true, allowMentions: true, privateAccount: false,
+        notifyLikes: true, notifyComments: true, notifyMentions: true,
+        notifyFollows: true, notifyMessages: true, notifyReplies: true,
+        createdAt: new Date(), updatedAt: new Date(),
+      };
+    }),
+
+  /** Update my privacy settings */
+  updatePrivacySettings: protectedProcedure
+    .input(z.object({
+      allowDMs: z.boolean().optional(),
+      allowFollows: z.boolean().optional(),
+      allowMentions: z.boolean().optional(),
+      privateAccount: z.boolean().optional(),
+      notifyLikes: z.boolean().optional(),
+      notifyComments: z.boolean().optional(),
+      notifyMentions: z.boolean().optional(),
+      notifyFollows: z.boolean().optional(),
+      notifyMessages: z.boolean().optional(),
+      notifyReplies: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await getUserPrivacySettings(ctx.user.id);
+      await upsertUserPrivacySettings({
+        userId: ctx.user.id,
+        allowDMs: input.allowDMs ?? existing?.allowDMs ?? true,
+        allowFollows: input.allowFollows ?? existing?.allowFollows ?? true,
+        allowMentions: input.allowMentions ?? existing?.allowMentions ?? true,
+        privateAccount: input.privateAccount ?? existing?.privateAccount ?? false,
+        notifyLikes: input.notifyLikes ?? existing?.notifyLikes ?? true,
+        notifyComments: input.notifyComments ?? existing?.notifyComments ?? true,
+        notifyMentions: input.notifyMentions ?? existing?.notifyMentions ?? true,
+        notifyFollows: input.notifyFollows ?? existing?.notifyFollows ?? true,
+        notifyMessages: input.notifyMessages ?? existing?.notifyMessages ?? true,
+        notifyReplies: input.notifyReplies ?? existing?.notifyReplies ?? true,
+      });
+      return { success: true };
+    }),
+
+  // ── Enhanced Notification Actions ────────────────────────────────────────
+  /** Mark a single notification as read */
+  markOneNotificationRead: protectedProcedure
+    .input(z.object({ notifId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await markSingleNotificationRead(input.notifId, ctx.user.id);
+      return { success: true };
+    }),
+
+  /** Delete a notification */
+  deleteNotification: protectedProcedure
+    .input(z.object({ notifId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteNotification(input.notifId, ctx.user.id);
+      return { success: true };
+    }),
+
+  /** Get notifications with follow/DM/reply types */
+  getNotificationsV2: protectedProcedure
+    .input(z.object({ limit: z.number().default(50) }))
+    .query(async ({ ctx, input }) => {
+      return getSocialNotifications(ctx.user.id, input.limit);
     }),
 });
