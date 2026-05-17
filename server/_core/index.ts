@@ -11,6 +11,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
+import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -55,6 +56,10 @@ async function startServer() {
     socket.on("disconnect", () => {});
   });
   app.post("/api/webhooks/myfatoorah", myfatoorahWebhookHandler);
+
+  // ── Google OAuth redirect flow (mobile-safe) ─────────────────────────────
+  app.get("/api/auth/google", googleAuthRedirect);
+  app.get("/api/auth/google/callback", googleAuthCallback);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
