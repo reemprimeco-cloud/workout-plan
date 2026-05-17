@@ -44,6 +44,29 @@ function AppWithSocket() {
   const isAdminPage = window.location.pathname === "/admin";
   const useLicense = new URLSearchParams(window.location.search).get('use_license') === '1';
 
+  // While auth check is in progress, show a full-screen spinner to prevent
+  // any flash of the home screen before we know if the user is logged in.
+  if (authLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0F1E3D 0%, #1B2E5E 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          width: 48, height: 48,
+          border: '4px solid rgba(123,184,212,0.3)',
+          borderTop: '4px solid #7BB8D4',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   // Show auth page for unauthenticated users (not on public/admin pages)
   if (!authLoading && !currentUser && !isPublicPage && !isAdminPage) {
     if (useLicense) {
