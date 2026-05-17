@@ -562,3 +562,11 @@
 - [x] Redesign ProfilePanel to match clean card-based layout (avatar circle, name/stats row, Edit Profile button, subscription card, logout/reset buttons)
 - [x] Remove license key from subscription card in ProfilePanel — show "Admin" for admin role, or plan name (Prime Plus / Prime Pro / Free) for regular users
 - [x] Add Admin Panel button in the top bar of Home.tsx, visible only to admin users (role === 'admin')
+
+## Connect Pricing Page to Auth Flow
+- [x] Audit existing AuthPage, SubscriptionPage, and subscription backend
+- [x] Store selected plan+billing in sessionStorage before redirecting to login
+- [x] Show pricing page before login/signup for unauthenticated users
+- [x] After login: if plan was selected, activate free plan or redirect to MyFatoorah
+- [x] Skip pricing page for returning users with active subscription
+- [x] Save plan, billing cycle, status, expiration to DB linked to user_id

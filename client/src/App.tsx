@@ -17,6 +17,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
+import PricingBeforeAuth from "./pages/PricingBeforeAuth";
 
 function Router() {
   return (
@@ -67,12 +68,12 @@ function AppWithSocket() {
     );
   }
 
-  // Show auth page for unauthenticated users (not on public/admin pages)
+  // For unauthenticated users on non-public pages: show Pricing first, then Auth
   if (!authLoading && !currentUser && !isPublicPage && !isAdminPage) {
     return (
       <TooltipProvider>
         <Toaster />
-        <AuthPage />
+        <PricingBeforeAuth />
       </TooltipProvider>
     );
   }

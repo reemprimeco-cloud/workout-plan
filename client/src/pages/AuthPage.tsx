@@ -17,9 +17,11 @@ type Mode = 'login' | 'signup' | 'forgot' | 'reset-sent';
 
 interface AuthPageProps {
   onSuccess?: () => void;
+  onBackToPricing?: () => void;
+  selectedPlan?: string | null;
 }
 
-export default function AuthPage({ onSuccess }: AuthPageProps) {
+export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: AuthPageProps) {
   const [mode, setMode] = useState<Mode>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -74,8 +76,11 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
       try {
         await loginMutation.mutateAsync({ email, password });
         await utils.auth.me.invalidate();
-        onSuccess?.();
-        window.location.reload();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
       } catch (err: any) {
         setError(err.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
       }
@@ -91,8 +96,11 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
       try {
         await signUpMutation.mutateAsync({ fullName, email, password });
         await utils.auth.me.invalidate();
-        onSuccess?.();
-        window.location.reload();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
       } catch (err: any) {
         setError(err.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
       }
@@ -188,6 +196,20 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
         width: '100%', maxWidth: 420,
         boxShadow: '0 20px 60px rgba(27,46,94,0.45)',
       }}>
+        {/* Back to pricing button */}
+        {onBackToPricing && (
+          <button
+            onClick={onBackToPricing}
+            style={{
+              background: 'none', border: 'none', color: '#7A9BB5', cursor: 'pointer',
+              fontSize: 13, fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+              display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0,
+            }}
+          >
+            &#8594; تغيير الخطة
+          </button>
+        )}
+
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <img src={LOGO_URL} alt="Prime Fit" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 18, marginBottom: 10 }} />
@@ -195,6 +217,18 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
           <p style={{ color: '#7A9BB5', fontSize: 12, margin: 0 }}>
             {mode === 'login' ? 'مرحباً بعودتك' : mode === 'signup' ? 'أنشئ حسابك الآن' : 'إعادة تعيين كلمة المرور'}
           </p>
+          {selectedPlan && selectedPlan !== 'free' && (
+            <div style={{ marginTop: 8, background: '#EFF6FF', borderRadius: 8, padding: '4px 12px', display: 'inline-block' }}>
+              <span style={{ color: NAVY, fontSize: 12, fontWeight: 700 }}>
+                الخطة المختارة: {selectedPlan === 'prime_plus' ? 'Prime Plus' : 'Prime Pro'}
+              </span>
+            </div>
+          )}
+          {selectedPlan === 'free' && (
+            <div style={{ marginTop: 8, background: '#F0FDF4', borderRadius: 8, padding: '4px 12px', display: 'inline-block' }}>
+              <span style={{ color: '#16a34a', fontSize: 12, fontWeight: 700 }}>🎁 تجربة مجانية 7 أيام</span>
+            </div>
+          )}
         </div>
 
         {/* Google Sign-In button removed — email/password login only */}

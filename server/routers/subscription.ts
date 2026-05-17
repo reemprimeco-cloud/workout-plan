@@ -329,6 +329,63 @@ export const subscriptionRouter = router({
       return { licenseKey: subRows[0]?.licenseKey ?? null };
     }),
 
+  // Activate a free subscription directly (no license key required)
+  // Called after login/signup when user selected the free plan on the pricing page
+  activateFreeSubscription: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const userId = ctx.user.openId;
+
+      // Check if user already has an active subscription — don't overwrite it
+      const existing = await database
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .limit(1);
+
+      if (existing.length > 0) {
+        const sub = existing[0];
+        if (sub.status === "active" || sub.status === "trialing") {
+          // Already has active subscription — return current state
+          return { success: true, alreadyActive: true, plan: sub.plan, status: sub.status };
+        }
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+      if (existing.length > 0) {
+        await database
+          .update(subscriptions)
+          .set({
+            plan: "free",
+            status: "trialing",
+            period: "monthly",
+            startsAt: now,
+            expiresAt,
+            licenseKey: null,
+            updatedAt: now,
+          })
+          .where(eq(subscriptions.userId, userId));
+      } else {
+        await database.insert(subscriptions).values({
+          userId,
+          plan: "free",
+          status: "trialing",
+          period: "monthly",
+          startsAt: now,
+          expiresAt,
+          licenseKey: null,
+          email: ctx.user.email ?? null,
+        });
+      }
+
+      console.log(`[Subscription] Free 7-day trial activated for user ${userId}, expires ${expiresAt.toISOString()}`);
+      return { success: true, alreadyActive: false, plan: "free", status: "trialing", expiresAt };
+    }),
+
   // Get billing history for current user
   getBillingHistory: protectedProcedure.query(async ({ ctx }) => {
     const database = await getDb();
