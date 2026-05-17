@@ -474,3 +474,23 @@
 - [ ] ProfilePanel: Remove "Started: 17 May 2026", "Data saved locally", "Auto save enabled" text
 - [ ] AuthPage: Replace "لديك كود وصول؟ ادخل كود الوصول" with WhatsApp support link (https://wa.me/96565068000)
 - [ ] Help/UserGuide: Update with latest app features
+
+## P1 — Single-Device Enforcement
+- [x] DB: Add sessions table (id, userId, deviceId, userAgent, ipAddress, createdAt, expiresAt, revoked)
+- [x] DB: Add activeDeviceId, activeSessionId fields to users table
+- [x] Backend: On login — create session record, store deviceId, revoke all previous sessions
+- [x] Backend: Middleware — reject requests where session.deviceId !== request.deviceId
+- [x] Backend: Logout — mark session as revoked in DB
+- [x] Frontend: Generate and persist deviceId in localStorage (crypto.randomUUID)
+- [x] Frontend: Send x-device-id header on all tRPC requests
+
+## P2 — Remove Google Sign-In Button
+- [x] Remove Google Sign-In button from AuthPage UI (keep backend OAuth route for existing users)
+- [x] Remove VITE_GOOGLE_CLIENT_ID dependency from AuthPage
+
+## P3 — Security Hardening
+- [x] Install helmet and express-rate-limit packages
+- [x] Add helmet middleware to Express server
+- [x] Add rate limiting on login endpoint (max 10 attempts per 15 min per IP)
+- [x] Add rate limiting on signup endpoint (max 5 per hour per IP)
+- [x] Add rate limiting on forgot-password endpoint (max 3 per hour per IP)

@@ -12,6 +12,8 @@ import { serveStatic, setupVite } from "./vite";
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
 import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 // ── Socket.IO singleton — import this in routers to emit events ───────────────
 let _io: SocketIOServer | null = null;
@@ -37,6 +39,53 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+// ── Rate limiters ─────────────────────────────────────────────────────────────
+/** Login: max 10 attempts per 15 minutes per IP */
+const loginRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts. Please try again in 15 minutes." },
+  keyGenerator: (req) => {
+    // Use x-forwarded-for if behind proxy, else remote address
+    const forwarded = req.headers["x-forwarded-for"];
+    return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
+      ?? req.socket?.remoteAddress
+      ?? "unknown";
+  },
+});
+
+/** Sign-up: max 5 accounts per hour per IP */
+const signupRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many sign-up attempts. Please try again in an hour." },
+  keyGenerator: (req) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
+      ?? req.socket?.remoteAddress
+      ?? "unknown";
+  },
+});
+
+/** Forgot-password: max 3 requests per hour per IP */
+const forgotPasswordRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many password reset requests. Please try again in an hour." },
+  keyGenerator: (req) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
+      ?? req.socket?.remoteAddress
+      ?? "unknown";
+  },
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -60,6 +109,19 @@ async function startServer() {
   // ── Google OAuth redirect flow (mobile-safe) ─────────────────────────────
   app.get("/api/auth/google", googleAuthRedirect);
   app.get("/api/auth/google/callback", googleAuthCallback);
+
+  // ── Security middleware ───────────────────────────────────────────────────
+  app.use(helmet({
+    // Allow inline scripts/styles needed by Vite HMR in development
+    contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
+  }));
+
+  // ── Rate limiting on auth endpoints ──────────────────────────────────────
+  // Applied as path-prefix middleware BEFORE the tRPC handler so they fire
+  // regardless of which tRPC procedure is called.
+  app.use("/api/trpc/standaloneAuth.login", loginRateLimit);
+  app.use("/api/trpc/standaloneAuth.signUp", signupRateLimit);
+  app.use("/api/trpc/standaloneAuth.forgotPassword", forgotPasswordRateLimit);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));

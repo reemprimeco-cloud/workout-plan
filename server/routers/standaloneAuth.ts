@@ -9,7 +9,7 @@ import { randomBytes } from "crypto";
 import { eq } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { z } from "zod";
-import { users } from "../../drizzle/schema";
+import { users, deviceSessions } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { ENV } from "../_core/env";
@@ -27,10 +27,16 @@ function generateResetToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+/**
+ * Create a session JWT cookie and, if a deviceId is provided,
+ * record the device session in the DB and update the user's activeDeviceId.
+ * All previous device sessions for this user are revoked (single-device enforcement).
+ */
 async function createSessionAndSetCookie(
   ctx: { res: any; req: any },
   openId: string,
-  name: string
+  name: string,
+  deviceId?: string | null
 ): Promise<void> {
   const sessionToken = await sdk.createSessionToken(openId, {
     name,
@@ -41,6 +47,52 @@ async function createSessionAndSetCookie(
     ...cookieOptions,
     maxAge: ONE_YEAR_MS,
   });
+
+  // ── Single-device enforcement ──────────────────────────────────────────
+  if (deviceId) {
+    try {
+      const db = await getDb();
+      if (db) {
+        // Find user by openId to get numeric id
+        const userRows = await db.select({ id: users.id })
+          .from(users)
+          .where(eq(users.openId, openId))
+          .limit(1);
+        const userId = userRows[0]?.id;
+
+        if (userId) {
+          // Revoke all existing device sessions for this user
+          await db.update(deviceSessions)
+            .set({ revoked: true })
+            .where(eq(deviceSessions.userId, userId));
+
+          // Insert new device session record
+          const expiresAt = new Date(Date.now() + ONE_YEAR_MS);
+          const userAgent = ctx.req.headers?.["user-agent"] ?? null;
+          const ipAddress = (ctx.req.headers?.["x-forwarded-for"] as string)?.split(",")[0]?.trim()
+            ?? ctx.req.socket?.remoteAddress
+            ?? null;
+
+          await db.insert(deviceSessions).values({
+            userId,
+            deviceId,
+            userAgent,
+            ipAddress,
+            revoked: false,
+            expiresAt,
+          });
+
+          // Update user's activeDeviceId
+          await db.update(users)
+            .set({ activeDeviceId: deviceId })
+            .where(eq(users.id, userId));
+        }
+      }
+    } catch (err) {
+      // Non-fatal: device session binding failure should not block login
+      console.warn("[Auth] Device session binding failed (non-fatal):", err);
+    }
+  }
 }
 
 async function sendEmail(opts: {
@@ -112,7 +164,9 @@ export const standaloneAuthRouter = router({
         lastLoginAt: new Date(),
       });
 
-      await createSessionAndSetCookie(ctx, openId, input.fullName);
+      // Extract deviceId from request header (sent by frontend)
+      const deviceId = (ctx.req.headers?.["x-device-id"] as string) || null;
+      await createSessionAndSetCookie(ctx, openId, input.fullName, deviceId);
 
       return { success: true, message: "تم إنشاء الحساب بنجاح" };
     }),
@@ -156,7 +210,9 @@ export const standaloneAuthRouter = router({
         .set({ lastSignedIn: new Date(), lastLoginAt: new Date() })
         .where(eq(users.id, user.id));
 
-      await createSessionAndSetCookie(ctx, user.openId, user.fullName || user.name || "");
+      // Extract deviceId from request header (sent by frontend)
+      const deviceId = (ctx.req.headers?.["x-device-id"] as string) || null;
+      await createSessionAndSetCookie(ctx, user.openId, user.fullName || user.name || "", deviceId);
 
       return {
         success: true,
@@ -403,7 +459,8 @@ export const standaloneAuthRouter = router({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create user" });
       }
 
-      await createSessionAndSetCookie(ctx, user.openId, user.fullName || user.name || "");
+      const deviceId = (ctx.req.headers?.["x-device-id"] as string) || null;
+      await createSessionAndSetCookie(ctx, user.openId, user.fullName || user.name || "", deviceId);
 
       return {
         success: true,
@@ -469,6 +526,23 @@ export const standaloneAuthRouter = router({
     .mutation(async ({ ctx }) => {
       // Clear session cookie
       ctx.res.clearCookie(COOKIE_NAME);
+
+      // Revoke device session in DB (non-fatal)
+      try {
+        const db = await getDb();
+        if (db && ctx.user?.id) {
+          await db.update(deviceSessions)
+            .set({ revoked: true })
+            .where(eq(deviceSessions.userId, ctx.user.id));
+          // Clear activeDeviceId
+          await db.update(users)
+            .set({ activeDeviceId: null })
+            .where(eq(users.id, ctx.user.id));
+        }
+      } catch (err) {
+        console.warn("[Auth] Failed to revoke device session on logout (non-fatal):", err);
+      }
+
       return { success: true, message: "تم تسجيل الخروج بنجاح" };
     }),
 });

@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { getDeviceId } from "./lib/deviceId";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -41,11 +42,19 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+// Initialise device ID on app start (creates and persists if not present)
+const deviceId = getDeviceId();
+
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
+      headers() {
+        return {
+          "x-device-id": deviceId,
+        };
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
