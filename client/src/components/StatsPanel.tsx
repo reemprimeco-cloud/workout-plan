@@ -188,8 +188,8 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
       {/* ── Main Stats ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
-          { icon: '🏆', label: isAr ? 'إجمالي الجلسات' : 'Total Sessions', value: stats.totalSessions, color: NAVY },
           { icon: '🔥', label: isAr ? 'أيام متتالية' : 'Day Streak', value: stats.streak, color: '#DC2626' },
+          { icon: '🏆', label: isAr ? 'إجمالي الجلسات' : 'Total Sessions', value: stats.totalSessions, color: NAVY },
           { icon: '📅', label: isAr ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, color: SKY },
           { icon: '📆', label: isAr ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, color: '#3D5A80' },
         ].map(s => (

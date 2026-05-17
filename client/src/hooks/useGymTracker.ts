@@ -401,39 +401,77 @@ export function useGymTracker() {
       return { ...prev, weightLog: log, profile: { ...prev.profile, currentWeight: weight } };
     });
   }, []);
+  // ── Statistics ────────────────────────────────────────────────────
 
-  // ── Statistics ─────────────────────────────────────────
+  // Helper: normalise a date to midnight local time string "YYYY-MM-DD"
+  const toDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  const completedSessions = data.sessions.filter(s => !s.isActive);
+
   const stats = {
-    totalSessions: data.sessions.filter(s => !s.isActive).length,
-    thisWeek: data.sessions.filter(s => {
-      const d = new Date(s.date);
+    // 1. Total sessions — all completed sessions regardless of date
+    totalSessions: completedSessions.length,
+
+    // 2. This week — sessions in the current calendar week (Sunday – Saturday)
+    thisWeek: (() => {
       const now = new Date();
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      return d >= weekAgo && !s.isActive;
-    }).length,
-    thisMonth: data.sessions.filter(s => {
-      const d = new Date(s.date);
+      // Start of current week: Sunday at 00:00
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      return completedSessions.filter(s => new Date(s.date) >= weekStart).length;
+    })(),
+
+    // 3. This month — sessions in the current calendar month
+    thisMonth: (() => {
       const now = new Date();
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && !s.isActive;
-    }).length,
+      return completedSessions.filter(s => {
+        const d = new Date(s.date);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }).length;
+    })(),
+
     weightLost: Math.max(0, data.profile.startWeight - data.profile.currentWeight),
     progressPercent: Math.min(100, Math.round(
       ((data.profile.startWeight - data.profile.currentWeight) /
         (data.profile.startWeight - data.profile.targetWeight)) * 100
     )),
     sessionsByType: Object.keys(sessionTypes).reduce((acc, type) => {
-      acc[type as SessionType] = data.sessions.filter(s => s.sessionType === type && !s.isActive).length;
+      acc[type as SessionType] = completedSessions.filter(s => s.sessionType === type).length;
       return acc;
     }, {} as Record<SessionType, number>),
+
+    // 4. Streak — consecutive CALENDAR DAYS with at least one completed session
+    //    Algorithm:
+    //    a) Collect unique workout dates ("YYYY-MM-DD") sorted descending
+    //    b) Starting from today (or yesterday if no session today), walk backwards
+    //       counting only days that have a workout; stop at the first gap.
     streak: (() => {
-      const completed = data.sessions.filter(s => !s.isActive).sort((a, b) => b.date.localeCompare(a.date));
+      const completed = completedSessions;
       if (!completed.length) return 0;
+
+      // Build a Set of unique workout date strings
+      const workoutDays = new Set(completed.map(s => s.date.slice(0, 10)));
+
+      const today = new Date();
+      const todayStr = toDateStr(today);
+
+      // If user hasn't worked out today, check if they worked out yesterday
+      // (streak is still alive if last workout was yesterday)
+      let checkDate = new Date(today);
+      if (!workoutDays.has(todayStr)) {
+        // Move back one day to see if streak is still alive from yesterday
+        checkDate.setDate(checkDate.getDate() - 1);
+        const yesterdayStr = toDateStr(checkDate);
+        if (!workoutDays.has(yesterdayStr)) return 0; // streak broken
+      }
+
+      // Walk backwards day by day counting consecutive workout days
       let streak = 0;
-      let current = new Date();
-      for (const s of completed) {
-        const d = new Date(s.date);
-        const diff = Math.floor((current.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-        if (diff <= 1) { streak++; current = d; } else break;
+      while (workoutDays.has(toDateStr(checkDate))) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
       }
       return streak;
     })(),
