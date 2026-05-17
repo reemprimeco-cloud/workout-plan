@@ -14,6 +14,7 @@ import { SubscriptionSuccess, SubscriptionError } from "./pages/SubscriptionResu
 import { LicenseGate } from "./components/LicenseGate";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/subscription/success"} component={SubscriptionSuccess} />
       <Route path={"/subscription/error"} component={SubscriptionError} />
       <Route path={"/reset-password"} component={ResetPasswordPage} />
+      <Route path={"/profile-setup"} component={ProfileSetupPage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -36,7 +38,7 @@ function AppWithSocket() {
     retry: false,
     refetchOnWindowFocus: false,
   });
-  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password"].includes(window.location.pathname);
+  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password", "/profile-setup"].includes(window.location.pathname);
   const isAdminPage = window.location.pathname === "/admin";
   const useLicense = new URLSearchParams(window.location.search).get('use_license') === '1';
 
@@ -61,6 +63,12 @@ function AppWithSocket() {
         <AuthPage />
       </TooltipProvider>
     );
+  }
+
+  // Redirect to profile setup if user is logged in but profile is incomplete
+  if (!authLoading && currentUser && window.location.pathname !== "/profile-setup" && !(currentUser as any)?.fullName) {
+    window.location.href = "/profile-setup";
+    return null;
   }
 
   return (
