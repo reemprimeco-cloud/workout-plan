@@ -38,7 +38,9 @@ function AppWithSocket() {
     retry: false,
     refetchOnWindowFocus: false,
   });
-  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password", "/profile-setup"].includes(window.location.pathname);
+  // /profile-setup is NOT a public page — users must be logged in to access it.
+  // Unauthenticated visitors hitting /profile-setup will be redirected to AuthPage first.
+  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password"].includes(window.location.pathname);
   const isAdminPage = window.location.pathname === "/admin";
   const useLicense = new URLSearchParams(window.location.search).get('use_license') === '1';
 
@@ -65,12 +67,14 @@ function AppWithSocket() {
     );
   }
 
-  // Redirect to profile setup if user is logged in but profile is incomplete
-  // Google/OAuth users (loginMethod='google' or authProvider='google') already have a name from OAuth
-  // Only email/password users who haven't set fullName need profile setup
+  // Only redirect to profile setup for brand-new users who have NO name at all.
+  // Existing registered users who already have a name go straight to the app.
+  // Google/OAuth users always have a name from OAuth — never redirect them.
+  const hasFullName = !!(currentUser as any)?.fullName;
+  const hasAnyName = !!(currentUser as any)?.name;
   const isGoogleUser = (currentUser as any)?.loginMethod === 'google' || (currentUser as any)?.authProvider === 'google';
-  const hasName = !!(currentUser as any)?.fullName || !!(currentUser as any)?.name || isGoogleUser;
-  if (!authLoading && currentUser && window.location.pathname !== "/profile-setup" && !hasName) {
+  const needsProfileSetup = !authLoading && currentUser && !isGoogleUser && !hasFullName && !hasAnyName;
+  if (needsProfileSetup && window.location.pathname !== "/profile-setup") {
     window.location.href = "/profile-setup";
     return null;
   }
