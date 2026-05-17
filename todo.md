@@ -573,3 +573,6 @@
 
 ## Edit Profile Redesign
 - [x] Redesign Edit Profile form to match reference: white background, icon-prefixed fields (Name, Current Weight, Target Weight, Starting Weight, Height, Age), gender toggle (Male/Female), Health Summary section (BMI + weight classification), Save Changes + Cancel buttons, user avatar card at top
+
+## AI Coach Page Redesign
+- [x] Redesign AI Coach (مدربي الذكي) page: white background, navy blue accents, stats cards row (sessions/weight change/weekly achievement/streak), clean chat message bubbles, navy header card with coach icon, send button with navy color
