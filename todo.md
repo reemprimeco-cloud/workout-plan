@@ -531,3 +531,8 @@
 - [x] Optional CTA button with customizable text and link
 - [x] Email notifications sent to registered user emails
 - [x] Admin notification send UI in Broadcast tab (or new Notifications tab)
+
+## Admin Access Fix
+- [x] Admin users bypass subscription gate (LicenseGate checks user role)
+- [x] Promote reemprimeco@gmail.com to admin role in DB
+- [x] Disable device enforcement (activeDeviceId column not yet in DB)
