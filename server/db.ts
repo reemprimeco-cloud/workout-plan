@@ -11,6 +11,9 @@ import {
   socialNotifications, InsertSocialNotification,
   adminProfile, InsertAdminProfile,
   broadcastNotifications, InsertBroadcastNotification,
+  userFollows, InsertUserFollow,
+  directMessages, InsertDirectMessage,
+  communityBookmarks, InsertCommunityBookmark,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -701,4 +704,178 @@ export async function getAllLicensedCustomerEmails(): Promise<{ email: string; n
     seen.add(r.email);
     return true;
   }) as { email: string; name: string | null }[];
+}
+
+// ── User Follows ──────────────────────────────────────────────────────────────
+
+export async function followUser(followerId: number, followingId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(userFollows).values({ followerId, followingId })
+    .onDuplicateKeyUpdate({ set: { followerId } }); // no-op on duplicate
+}
+
+export async function unfollowUser(followerId: number, followingId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  const { and } = await import('drizzle-orm');
+  await db.delete(userFollows)
+    .where(and(eq(userFollows.followerId, followerId), eq(userFollows.followingId, followingId)));
+}
+
+export async function isFollowing(followerId: number, followingId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const { and } = await import('drizzle-orm');
+  const rows = await db.select().from(userFollows)
+    .where(and(eq(userFollows.followerId, followerId), eq(userFollows.followingId, followingId)))
+    .limit(1);
+  return rows.length > 0;
+}
+
+export async function getFollowerCount(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db.select().from(userFollows).where(eq(userFollows.followingId, userId));
+  return rows.length;
+}
+
+export async function getFollowingCount(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db.select().from(userFollows).where(eq(userFollows.followerId, userId));
+  return rows.length;
+}
+
+export async function getFollowingIds(userId: number): Promise<number[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ followingId: userFollows.followingId })
+    .from(userFollows).where(eq(userFollows.followerId, userId));
+  return rows.map(r => r.followingId);
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select({
+    id: users.id,
+    name: users.name,
+    fullName: users.fullName,
+    avatarUrl: users.avatarUrl,
+    createdAt: users.createdAt,
+  }).from(users).where(eq(users.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function searchUsers(query: string, limit = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  const { like, or } = await import('drizzle-orm');
+  const rows = await db.select({
+    id: users.id,
+    name: users.name,
+    fullName: users.fullName,
+    avatarUrl: users.avatarUrl,
+  }).from(users)
+    .where(or(
+      like(users.name, `%${query}%`),
+      like(users.fullName, `%${query}%`),
+    ))
+    .limit(limit);
+  return rows;
+}
+
+// ── Direct Messages ───────────────────────────────────────────────────────────
+
+export async function sendDirectMessage(data: InsertDirectMessage) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  const [row] = await db.insert(directMessages).values(data).$returningId();
+  return row.id;
+}
+
+export async function getConversation(userId1: number, userId2: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  const { and, or } = await import('drizzle-orm');
+  const rows = await db.select().from(directMessages)
+    .where(or(
+      and(eq(directMessages.senderId, userId1), eq(directMessages.receiverId, userId2)),
+      and(eq(directMessages.senderId, userId2), eq(directMessages.receiverId, userId1)),
+    ))
+    .orderBy(desc(directMessages.createdAt))
+    .limit(limit);
+  return rows.reverse();
+}
+
+export async function getConversationList(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get all messages involving this user, ordered by most recent
+  const { or } = await import('drizzle-orm');
+  const rows = await db.select().from(directMessages)
+    .where(or(eq(directMessages.senderId, userId), eq(directMessages.receiverId, userId)))
+    .orderBy(desc(directMessages.createdAt));
+  // Group by conversation partner
+  const seen = new Map<number, typeof rows[0]>();
+  for (const msg of rows) {
+    const partnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+    if (!seen.has(partnerId)) seen.set(partnerId, msg);
+  }
+  return Array.from(seen.entries()).map(([partnerId, lastMsg]) => ({ partnerId, lastMsg }));
+}
+
+export async function markMessagesRead(senderId: number, receiverId: number) {
+  const db = await getDb();
+  if (!db) return;
+  const { and } = await import('drizzle-orm');
+  await db.update(directMessages)
+    .set({ isRead: true })
+    .where(and(eq(directMessages.senderId, senderId), eq(directMessages.receiverId, receiverId)));
+}
+
+export async function getUnreadDMCount(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const { and } = await import('drizzle-orm');
+  const rows = await db.select().from(directMessages)
+    .where(and(eq(directMessages.receiverId, userId), eq(directMessages.isRead, false)));
+  return rows.length;
+}
+
+// ── Community Bookmarks ───────────────────────────────────────────────────────
+
+export async function bookmarkPost(userId: number, postId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(communityBookmarks).values({ userId, postId })
+    .onDuplicateKeyUpdate({ set: { userId } }); // no-op on duplicate
+}
+
+export async function unbookmarkPost(userId: number, postId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  const { and } = await import('drizzle-orm');
+  await db.delete(communityBookmarks)
+    .where(and(eq(communityBookmarks.userId, userId), eq(communityBookmarks.postId, postId)));
+}
+
+export async function isBookmarked(userId: number, postId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const { and } = await import('drizzle-orm');
+  const rows = await db.select().from(communityBookmarks)
+    .where(and(eq(communityBookmarks.userId, userId), eq(communityBookmarks.postId, postId)))
+    .limit(1);
+  return rows.length > 0;
+}
+
+export async function getUserBookmarks(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(communityBookmarks)
+    .where(eq(communityBookmarks.userId, userId))
+    .orderBy(desc(communityBookmarks.createdAt));
+  return rows.map(r => r.postId);
 }

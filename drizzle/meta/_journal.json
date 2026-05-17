@@ -204,6 +204,13 @@
       "when": 1779054531924,
       "tag": "0028_solid_lionheart",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1779057837348,
+      "tag": "0029_sturdy_goliath",
+      "breakpoints": true
     }
   ]
 }

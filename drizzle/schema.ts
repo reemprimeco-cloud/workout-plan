@@ -690,3 +690,35 @@ export const mealFavorites = mysqlTable("meal_favorites", {
 });
 export type MealFavorite = typeof mealFavorites.$inferSelect;
 export type InsertMealFavorite = typeof mealFavorites.$inferInsert;
+
+// ── User Follows ──────────────────────────────────────────────────────────────
+export const userFollows = mysqlTable("user_follows", {
+  id:          int("id").autoincrement().primaryKey(),
+  followerId:  int("followerId").notNull(),   // the user who follows
+  followingId: int("followingId").notNull(),  // the user being followed
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+});
+export type UserFollow = typeof userFollows.$inferSelect;
+export type InsertUserFollow = typeof userFollows.$inferInsert;
+
+// ── Direct Messages ───────────────────────────────────────────────────────────
+export const directMessages = mysqlTable("direct_messages", {
+  id:         int("id").autoincrement().primaryKey(),
+  senderId:   int("senderId").notNull(),
+  receiverId: int("receiverId").notNull(),
+  content:    text("content").notNull(),
+  isRead:     boolean("isRead").default(false).notNull(),
+  createdAt:  timestamp("createdAt").defaultNow().notNull(),
+});
+export type DirectMessage = typeof directMessages.$inferSelect;
+export type InsertDirectMessage = typeof directMessages.$inferInsert;
+
+// ── Community Post Bookmarks ──────────────────────────────────────────────────
+export const communityBookmarks = mysqlTable("community_bookmarks", {
+  id:        int("id").autoincrement().primaryKey(),
+  userId:    int("userId").notNull(),
+  postId:    int("postId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CommunityBookmark = typeof communityBookmarks.$inferSelect;
+export type InsertCommunityBookmark = typeof communityBookmarks.$inferInsert;
