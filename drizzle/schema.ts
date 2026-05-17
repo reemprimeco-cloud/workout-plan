@@ -14,10 +14,22 @@ export const users = mysqlTable("users", {
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
+  /** Full name for standalone auth accounts */
+  fullName: varchar("fullName", { length: 255 }),
+  email: varchar("email", { length: 320 }).unique(),
+  /** Hashed password for email/password auth (null for OAuth users) */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  /** Auth provider: manus | email | google */
+  authProvider: mysqlEnum("authProvider", ["manus", "email", "google"]).default("manus").notNull(),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   avatarUrl: text("avatarUrl"),
+  /** Token for password reset flow */
+  resetToken: varchar("resetToken", { length: 128 }),
+  resetTokenExpiresAt: timestamp("resetTokenExpiresAt"),
+  /** Token for email verification */
+  emailVerified: boolean("emailVerified").default(false).notNull(),
+  lastLoginAt: timestamp("lastLoginAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -286,12 +298,24 @@ export const subscriptions = mysqlTable("subscriptions", {
   userId:      varchar("userId", { length: 255 }).notNull().unique(),
   plan:        mysqlEnum("plan", ["free", "prime_plus", "prime_pro"]).default("free").notNull(),
   status:      mysqlEnum("status", ["active", "expired", "cancelled", "trialing", "pending"]).default("active").notNull(),
-  period:      mysqlEnum("period", ["monthly", "yearly", "lifetime"]).default("monthly").notNull(),
+  period:      mysqlEnum("period", ["monthly", "yearly", "lifetime", "free_trial"]).default("monthly").notNull(),
   trialEndsAt: timestamp("trialEndsAt"),
   startsAt:    timestamp("startsAt").defaultNow().notNull(),
   expiresAt:   timestamp("expiresAt"),  // null = never expires (lifetime)
   invoiceId:   varchar("invoiceId", { length: 255 }),
   licenseKey:  varchar("licenseKey", { length: 128 }),  // linked PRIME-XXXX-XXXX key
+  /** Email of the subscriber (denormalized for admin queries) */
+  email:           varchar("email", { length: 320 }),
+  /** ID of the access_code used to activate this subscription */
+  activationCodeId: int("activationCodeId"),
+  /** Payment status: paid | pending | failed | refunded */
+  paymentStatus:   mysqlEnum("paymentStatus", ["paid", "pending", "failed", "refunded", "free"]).default("free").notNull(),
+  /** Payment provider: myfatoorah | manual | free */
+  paymentProvider: mysqlEnum("paymentProvider", ["myfatoorah", "manual", "free"]).default("free").notNull(),
+  /** Payment transaction / invoice reference */
+  transactionId:   varchar("transactionId", { length: 255 }),
+  /** Whether to auto-renew on expiry */
+  autoRenew:       boolean("autoRenew").default(false).notNull(),
   createdAt:   timestamp("createdAt").defaultNow().notNull(),
   updatedAt:   timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

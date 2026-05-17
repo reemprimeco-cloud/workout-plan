@@ -412,3 +412,19 @@
 - [x] calorieCalc.ts: session-type fallback changed from 45 min to 30 min conservative estimate
 - [x] ActiveSession.tsx: pass checkInTime and checkOutTime to calcSessionCalories
 - [x] Home.tsx: pass weightKg from profile to ActiveSession component
+
+## Auth & Subscription System Migration (Safe)
+
+- [ ] DB: Add password_hash, auth_provider (google/email/manus), full_name fields to users table
+- [ ] DB: Update subscriptions table — add email, activation_code_id, payment_status, payment_provider, transaction_id, auto_renew fields; add free_trial to billing_cycle enum
+- [ ] Backend: Email + Password Sign Up procedure (bcrypt hash, unique email check)
+- [ ] Backend: Email + Password Login procedure (verify hash, issue JWT session)
+- [ ] Backend: Forgot Password procedure (send reset email with token)
+- [ ] Backend: Google Sign-In procedure (OAuth token verify, upsert user)
+- [ ] Backend: Update access control — premium access checks subscription.status == active
+- [ ] Backend: Update MyFatoorah webhook — detect plan, create/update subscription, calculate expiry
+- [ ] Frontend: New auth page with Google Sign-In + Email/Password tabs
+- [ ] Frontend: Forgot Password page
+- [ ] Frontend: Existing user migration flow — link activation code to new account once
+- [ ] Admin: Update subscriptions page — name, email, code, provider, plan, billing, dates, days remaining, payment status, color indicators (green/orange/red)
+- [ ] Profile: Show account email, subscription plan, expiry, days remaining, login provider
