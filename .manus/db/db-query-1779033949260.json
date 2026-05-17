@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `age` int;\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `height` int;\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `currentWeight` decimal(5,2);\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `targetWeight` decimal(5,2);\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `gender` enum('male','female');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `age` int;\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `height` int;\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `currentWeight` decimal(5,2);\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `targetWeight` decimal(5,2);\nALTER TABLE `users` ADD COLUMN IF NOT EXISTS `gender` enum('male','female');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3426
+}

@@ -1,0 +1,82 @@
+{
+  "query": "SHOW COLUMNS FROM users LIKE 'age';\nSHOW COLUMNS FROM users LIKE 'height';\nSHOW COLUMNS FROM users LIKE 'currentWeight';\nSHOW COLUMNS FROM users LIKE 'targetWeight';\nSHOW COLUMNS FROM users LIKE 'gender';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SHOW COLUMNS FROM users LIKE 'age';\nSHOW COLUMNS FROM users LIKE 'height';\nSHOW COLUMNS FROM users LIKE 'currentWeight';\nSHOW COLUMNS FROM users LIKE 'targetWeight';\nSHOW COLUMNS FROM users LIKE 'gender';",
+  "rows": [
+    {
+      "Field": "age",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "height",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "currentWeight",
+      "Type": "decimal(5,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "targetWeight",
+      "Type": "decimal(5,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "gender",
+      "Type": "enum('male','female')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nage\tint\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\nheight\tint\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\ncurrentWeight\tdecimal(5,2)\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\ntargetWeight\tdecimal(5,2)\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\ngender\tenum('male','female')\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 2723
+}
