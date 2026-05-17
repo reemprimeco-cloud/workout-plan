@@ -465,3 +465,12 @@
 - [ ] Add one-time data migration: import existing localStorage data to DB on first login
 - [ ] Ensure profile data (name, age, height, weight, gender, goal) syncs from DB on all devices
 - [ ] Test: login on device A, add session, login on device B, verify session appears
+
+## Profile & Auth UI Fixes (May 17)
+- [ ] ProfilePanel: Remove "Change Key" button, keep only Logout
+- [ ] ProfilePanel: Show subscription card (plan, expiry, days left, status color)
+- [ ] ProfilePanel: Remove notification preferences section
+- [ ] ProfilePanel: Remove workout reminder section
+- [ ] ProfilePanel: Remove "Started: 17 May 2026", "Data saved locally", "Auto save enabled" text
+- [ ] AuthPage: Replace "لديك كود وصول؟ ادخل كود الوصول" with WhatsApp support link (https://wa.me/96565068000)
+- [ ] Help/UserGuide: Update with latest app features

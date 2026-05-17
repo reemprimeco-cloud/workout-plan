@@ -528,8 +528,6 @@ export function ProfilePanel() {
         } catch { return null; }
       })()}
 
-      {/* Notification Settings */}
-      <NotificationSettings />
       {/* Logout Button */}
       <div className="pb-2">
         <button
@@ -548,21 +546,7 @@ export function ProfilePanel() {
           🚪 {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
         </button>
       </div>
-      {/* Change License Button */}
-      <div className="pb-2">
-        <button
-          onClick={() => {
-            if (window.confirm(lang === 'ar' ? 'هل تريد تغيير مفتاح الترخيص؟ سيتم تسجيل خروجك من البرنامج.' : 'Change license key? You will be logged out of the app.')) {
-              localStorage.removeItem('primefit_license');
-              window.location.reload();
-            }
-          }}
-          className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
-          style={{ borderColor: '#7BB8D4', color: '#1B2E5E', background: 'rgba(123,184,212,0.08)' }}
-        >
-          🔑 {lang === 'ar' ? 'تغيير مفتاح الترخيص' : 'Change License Key'}
-        </button>
-      </div>
+
       {/* Reset Button */}
       <div className="pb-2">
         <button onClick={() => setShowReset(true)}
@@ -576,15 +560,8 @@ export function ProfilePanel() {
 
       {/* App Info Footer */}
       <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
-        <p className="text-xs text-gray-400 leading-relaxed">
-          {lang === 'ar'
-            ? `تاريخ البداية: ${new Date(profile.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} • البيانات محفوظة محلياً على جهازك 🔒`
-            : `Started: ${new Date(profile.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} • Data saved locally on your device 🔒`
-          }
-        </p>
-        <p className="text-xs text-gray-300 mt-1">Gym Tracker v1.0 • Auto-save enabled ✅</p>
         <p className="text-xs mt-2" style={{ color: '#C8C8D0', letterSpacing: '0.03em' }}>
-          Made by <span style={{ fontWeight: 700, color: '#B0B0C0' }}>Primeco</span>  © {new Date().getFullYear()} All rights reserved
+          Made by <span style={{ fontWeight: 700, color: '#B0B0C0' }}>Primeco</span> © {new Date().getFullYear()} All rights reserved
         </p>
       </div>
 
