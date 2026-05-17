@@ -4,7 +4,7 @@
 // Access is granted by the admin assigning an active subscription
 // to the user's account via the Admin Panel → Users tab.
 // ============================================================
-import React, { useEffect } from 'react';
+import React from 'react';
 import { trpc } from '../lib/trpc';
 
 const NAVY = '#1B2E5E';
@@ -18,10 +18,19 @@ interface LicenseGateProps {
 }
 
 export function LicenseGate({ children }: LicenseGateProps) {
+  const { data: currentUser } = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
   const subscriptionStatus = trpc.subscription.getStatus.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: true,
   });
+
+  // Admin users always bypass the subscription gate
+  if ((currentUser as any)?.role === 'admin') {
+    return <>{children}</>;
+  }
 
   // Show loading while checking subscription
   if (subscriptionStatus.isLoading) {
