@@ -211,6 +211,13 @@
       "when": 1779057837348,
       "tag": "0029_sturdy_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1779058546894,
+      "tag": "0030_amusing_machine_man",
+      "breakpoints": true
     }
   ]
 }
