@@ -432,4 +432,43 @@ export const standaloneAuthRouter = router({
         authProvider: result[0]?.authProvider ?? null,
       };
     }),
+
+  /** Update user profile (age, height, weight, gender) */
+  updateProfile: protectedProcedure
+    .input(z.object({
+      fullName: z.string().min(1).max(100).optional(),
+      age: z.number().min(0).max(150).optional(),
+      height: z.number().min(0).max(300).optional(),
+      currentWeight: z.number().min(0).max(500).optional(),
+      targetWeight: z.number().min(0).max(500).optional(),
+      gender: z.enum(['male', 'female']).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const user = ctx.user;
+
+      const updates: any = {};
+      if (input.fullName) updates.fullName = input.fullName;
+      if (input.age !== undefined) updates.age = input.age;
+      if (input.height !== undefined) updates.height = input.height;
+      if (input.currentWeight !== undefined) updates.currentWeight = input.currentWeight;
+      if (input.targetWeight !== undefined) updates.targetWeight = input.targetWeight;
+      if (input.gender) updates.gender = input.gender;
+
+      await db.update(users)
+        .set(updates)
+        .where(eq(users.id, user.id));
+
+      return { success: true, message: "تم تحديث الملف الشخصي بنجاح" };
+    }),
+
+  /** Logout user */
+  logout: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      // Clear session cookie
+      ctx.res.clearCookie(COOKIE_NAME);
+      return { success: true, message: "تم تسجيل الخروج بنجاح" };
+    }),
 });

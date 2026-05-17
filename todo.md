@@ -428,3 +428,11 @@
 - [ ] Frontend: Existing user migration flow — link activation code to new account once
 - [ ] Admin: Update subscriptions page — name, email, code, provider, plan, billing, dates, days remaining, payment status, color indicators (green/orange/red)
 - [ ] Profile: Show account email, subscription plan, expiry, days remaining, login provider
+
+
+## New User Onboarding Flow (Auth System Migration)
+- [ ] Create ProfileSetupPage component for new users after login
+- [ ] Update standaloneAuth.login to redirect to profile setup page
+- [ ] Add logout procedure to standaloneAuth router
+- [ ] Trigger logout for all existing users on app startup (migration)
+- [ ] Save profile data to users table (full_name, age, height, current_weight, target_weight, gender)

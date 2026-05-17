@@ -530,6 +530,24 @@ export function ProfilePanel() {
 
       {/* Notification Settings */}
       <NotificationSettings />
+      {/* Logout Button */}
+      <div className="pb-2">
+        <button
+          onClick={() => {
+            if (window.confirm(lang === 'ar' ? 'هل تريد تسجيل الخروج؟' : 'Logout?')) {
+              trpc.standaloneAuth.logout.useMutation().mutate(undefined, {
+                onSuccess: () => {
+                  window.location.href = '/';
+                },
+              });
+            }
+          }}
+          className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
+          style={{ borderColor: '#EF4444', color: '#DC2626', background: 'rgba(239,68,68,0.08)' }}
+        >
+          🚪 {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+        </button>
+      </div>
       {/* Change License Button */}
       <div className="pb-2">
         <button
