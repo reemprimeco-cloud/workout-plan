@@ -570,3 +570,6 @@
 - [x] After login: if plan was selected, activate free plan or redirect to MyFatoorah
 - [x] Skip pricing page for returning users with active subscription
 - [x] Save plan, billing cycle, status, expiration to DB linked to user_id
+
+## Edit Profile Redesign
+- [x] Redesign Edit Profile form to match reference: white background, icon-prefixed fields (Name, Current Weight, Target Weight, Starting Weight, Height, Age), gender toggle (Male/Female), Health Summary section (BMI + weight classification), Save Changes + Cancel buttons, user avatar card at top
