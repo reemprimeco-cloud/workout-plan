@@ -11,6 +11,7 @@
  *  - Insights: AI insights
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import NutritionMealsTab from "../components/NutritionMealsTab";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getDailyCaloriesBurned } from "../lib/calorieCalc";
@@ -955,44 +956,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
 
 // ── Meals Tab ─────────────────────────────────────────────────────────────────
 function MealsTab({ lang }: { lang: string }) {
-  const utils = trpc.useUtils();
-  const { data: history, isLoading } = trpc.nutrition.getMealHistory.useQuery({ limit: 30 });
-  const deleteMeal = trpc.nutrition.deleteMeal.useMutation({
-    onSuccess: () => {
-      utils.nutrition.getMealHistory.invalidate();
-      utils.nutrition.getTodayLog.invalidate();
-      utils.nutrition.getToday.invalidate();
-    },
-  });
-
-  if (isLoading) return (
-    <div style={{ textAlign: "center", padding: "48px 0" }}>
-      <div style={{ fontSize: 32, animation: "spin 1s linear infinite" }}>⏳</div>
-    </div>
-  );
-
-  if (!history?.length) return (
-    <div style={{ textAlign: "center", padding: "56px 0" }}>
-      <div style={{
-        width: 80, height: 80, borderRadius: "50%", background: "#FFF7ED",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 40, margin: "0 auto 16px",
-      }}>🍽️</div>
-      <p style={{ color: TEXT, fontSize: 15, fontWeight: 700, margin: "0 0 6px" }}>{tl("noMeals", lang)}</p>
-      <p style={{ color: MUTED, fontSize: 12 }}>
-        {lang === "ar" ? "استخدم الماسح لإضافة وجباتك" : "Use the scanner to add your meals"}
-      </p>
-    </div>
-  );
-
-  return (
-    <div>
-      {history.map((meal: any) => (
-        <MealCard key={meal.id} meal={meal} lang={lang}
-          onDelete={() => deleteMeal.mutate({ mealId: meal.id })} />
-      ))}
-    </div>
-  );
+  return <NutritionMealsTab lang={lang} />;
 }
 
 // ── Scanner Tab ───────────────────────────────────────────────────────────────

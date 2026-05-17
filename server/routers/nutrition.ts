@@ -27,6 +27,7 @@ import {
   nutritionInsights,
   mealLogs,
   mealLogItems,
+  mealFavorites,
 } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 
@@ -713,4 +714,249 @@ Reply with JSON array only:
       const portion = scaleNutrition(per100g, input.grams);
       return { food, per100g, portion };
     }),
+
+  // ── Favorites ─────────────────────────────────────────────────────────────
+
+  /** Get user's saved favorite meals */
+  getFavorites: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+    return db
+      .select()
+      .from(mealFavorites)
+      .where(eq(mealFavorites.userId, ctx.user.id))
+      .orderBy(desc(mealFavorites.createdAt));
+  }),
+
+  /** Save a meal to favorites */
+  addFavorite: protectedProcedure
+    .input(z.object({
+      name:        z.string().min(1).max(255),
+      nameAr:      z.string().max(255).optional(),
+      calories:    z.number().min(0).max(9999),
+      proteinG:    z.number().min(0).max(999).default(0),
+      carbsG:      z.number().min(0).max(999).default(0),
+      fatG:        z.number().min(0).max(999).default(0),
+      mealType:    z.enum(["breakfast","lunch","dinner","snack","drink","coffee","protein_shake"]).default("snack"),
+      servingSize: z.string().max(64).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      const [result] = await db.insert(mealFavorites).values({
+        userId:      ctx.user.id,
+        name:        input.name,
+        nameAr:      input.nameAr,
+        calories:    input.calories,
+        proteinG:    input.proteinG,
+        carbsG:      input.carbsG,
+        fatG:        input.fatG,
+        mealType:    input.mealType,
+        servingSize: input.servingSize,
+      });
+      return { success: true, id: (result as any).insertId };
+    }),
+
+  /** Remove a favorite */
+  removeFavorite: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      await db.delete(mealFavorites).where(
+        and(eq(mealFavorites.id, input.id), eq(mealFavorites.userId, ctx.user.id))
+      );
+      return { success: true };
+    }),
+
+  // ── History (grouped by day) ───────────────────────────────────────────────
+
+  /** Get meal history grouped by calendar date */
+  getDailyHistory: protectedProcedure
+    .input(z.object({ days: z.number().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      const since = new Date();
+      since.setDate(since.getDate() - input.days);
+      since.setHours(0, 0, 0, 0);
+      const logs = await db
+        .select()
+        .from(mealLogs)
+        .where(and(eq(mealLogs.userId, ctx.user.id), gte(mealLogs.loggedAt, since)))
+        .orderBy(desc(mealLogs.loggedAt));
+      // Group by date string
+      const grouped: Record<string, typeof logs> = {};
+      for (const log of logs) {
+        const dateKey = log.loggedAt.toISOString().split("T")[0];
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(log);
+      }
+      return Object.entries(grouped).map(([date, meals]) => ({
+        date,
+        totalCalories: Math.round(meals.reduce((s, m) => s + Number(m.totalCalories), 0)),
+        totalProtein:  Math.round(meals.reduce((s, m) => s + Number(m.totalProtein), 0) * 10) / 10,
+        totalCarbs:    Math.round(meals.reduce((s, m) => s + Number(m.totalCarbs), 0) * 10) / 10,
+        totalFat:      Math.round(meals.reduce((s, m) => s + Number(m.totalFat), 0) * 10) / 10,
+        mealCount:     meals.length,
+        meals: meals.map(m => ({
+          id:             String(m.id),
+          mealType:       m.mealType,
+          loggedAt:       m.loggedAt.toISOString(),
+          totalCalories:  Number(m.totalCalories),
+          totalProtein:   Number(m.totalProtein),
+          totalCarbs:     Number(m.totalCarbs),
+          totalFat:       Number(m.totalFat),
+          notes:          m.notes,
+          imageUrl:       m.imageUrl,
+        })),
+      }));
+    }),
+
+  /** Get today's meals grouped by meal type */
+  getTodayMeals: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay   = new Date(startOfDay.getTime() + 86400000);
+    const logs = await db
+      .select()
+      .from(mealLogs)
+      .where(and(
+        eq(mealLogs.userId, ctx.user.id),
+        gte(mealLogs.loggedAt, startOfDay),
+        lte(mealLogs.loggedAt, endOfDay)
+      ))
+      .orderBy(mealLogs.loggedAt);
+    // Fetch items for all logs
+    const result: Record<string, any[]> = { breakfast: [], lunch: [], dinner: [], snack: [] };
+    for (const log of logs) {
+      const items = await db
+        .select()
+        .from(mealLogItems)
+        .where(eq(mealLogItems.mealLogId, log.id));
+      const entry = {
+        id:             String(log.id),
+        mealType:       log.mealType,
+        loggedAt:       log.loggedAt.toISOString(),
+        totalCalories:  Number(log.totalCalories),
+        totalProtein:   Number(log.totalProtein),
+        totalCarbs:     Number(log.totalCarbs),
+        totalFat:       Number(log.totalFat),
+        notes:          log.notes,
+        imageUrl:       log.imageUrl,
+        items: items.map(i => ({
+          id:       String(i.id),
+          name:     i.name,
+          nameAr:   i.nameAr,
+          calories: Number(i.calories),
+          protein:  Number(i.protein),
+          carbs:    Number(i.carbs),
+          fat:      Number(i.fat),
+          grams:    Number(i.estimatedGrams),
+          portionDesc: i.portionDesc,
+        })),
+      };
+      const type = log.mealType in result ? log.mealType : "snack";
+      result[type].push(entry);
+    }
+    return result;
+  }),
+
+  /** Quick-add a single food item as a meal log */
+  quickAdd: protectedProcedure
+    .input(z.object({
+      name:        z.string().min(1).max(255),
+      nameAr:      z.string().max(255).optional(),
+      calories:    z.number().min(0).max(9999),
+      proteinG:    z.number().min(0).max(999).default(0),
+      carbsG:      z.number().min(0).max(999).default(0),
+      fatG:        z.number().min(0).max(999).default(0),
+      mealType:    z.enum(["breakfast","lunch","dinner","snack"]).default("snack"),
+      servingSize: z.string().max(64).optional(),
+      quantity:    z.number().min(0.1).max(100).default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+      const [logResult] = await db.insert(mealLogs).values({
+        userId:         ctx.user.id,
+        mealType:       input.mealType,
+        totalCalories:  input.calories * input.quantity,
+        totalProtein:   input.proteinG * input.quantity,
+        totalCarbs:     input.carbsG * input.quantity,
+        totalFat:       input.fatG * input.quantity,
+        totalFiber:     0,
+        totalSugar:     0,
+        totalSodium:    0,
+        notes:          input.servingSize ? `${input.quantity}x ${input.servingSize}` : undefined,
+      });
+      const mealLogId = (logResult as any).insertId;
+      await db.insert(mealLogItems).values({
+        mealLogId,
+        name:            input.name,
+        nameAr:          input.nameAr,
+        estimatedGrams:  (input.quantity * 100),
+        portionDesc:     input.servingSize,
+        calories:        input.calories * input.quantity,
+        protein:         input.proteinG * input.quantity,
+        carbs:           input.carbsG * input.quantity,
+        fat:             input.fatG * input.quantity,
+        fiber:           0,
+        sugar:           0,
+        sodium:          0,
+        per100gCalories: input.calories,
+        per100gProtein:  input.proteinG,
+        per100gCarbs:    input.carbsG,
+        per100gFat:      input.fatG,
+      });
+      return { success: true, mealId: String(mealLogId) };
+    }),
+
+  /** Get recently used food names (last 10 unique) */
+  getRecentMeals: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+    // Get last 50 items, deduplicate by name client-side
+    const items = await db
+      .select({
+        name:     mealLogItems.name,
+        nameAr:   mealLogItems.nameAr,
+        calories: mealLogItems.calories,
+        protein:  mealLogItems.protein,
+        carbs:    mealLogItems.carbs,
+        fat:      mealLogItems.fat,
+        grams:    mealLogItems.estimatedGrams,
+        portionDesc: mealLogItems.portionDesc,
+        mealType: mealLogs.mealType,
+        loggedAt: mealLogs.loggedAt,
+      })
+      .from(mealLogItems)
+      .innerJoin(mealLogs, eq(mealLogItems.mealLogId, mealLogs.id))
+      .where(eq(mealLogs.userId, ctx.user.id))
+      .orderBy(desc(mealLogs.loggedAt))
+      .limit(50);
+    // Deduplicate by name, keep most recent
+    const seen = new Set<string>();
+    const recent: typeof items = [];
+    for (const item of items) {
+      const key = item.name.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        recent.push(item);
+        if (recent.length >= 10) break;
+      }
+    }
+    return recent.map(i => ({
+      name:        i.name,
+      nameAr:      i.nameAr,
+      calories:    Number(i.calories),
+      proteinG:    Number(i.protein),
+      carbsG:      Number(i.carbs),
+      fatG:        Number(i.fat),
+      mealType:    i.mealType,
+      servingSize: i.portionDesc,
+    }));
+  }),
 });
