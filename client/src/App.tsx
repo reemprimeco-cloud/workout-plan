@@ -70,7 +70,7 @@ function AppWithSocket() {
           <Toaster />
           {(isAdminPage || isPublicPage)
             ? <Router />
-            : <LicenseGate><Router /></LicenseGate>
+            : <Router />
           }
         </TooltipProvider>
       </SubscriptionProvider>
