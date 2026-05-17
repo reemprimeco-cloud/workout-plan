@@ -153,12 +153,106 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
+// ── Subscription Card ────────────────────────────────────────────────────────────
+function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boolean }) {
+  const subQuery = trpc.subscription.getStatus.useQuery();
+  const sub = subQuery.data;
+
+  if (subQuery.isLoading) return null;
+
+  // Determine display values
+  let planDisplay = '';
+  let periodDisplay = '';
+  let statusLabel = '';
+  let statusColor = '#22C55E';
+  let expiresAt: Date | null = null;
+  let daysLeft: number | null = null;
+  let isExpired = false;
+
+  if (isAdmin) {
+    // Admin: show Admin badge
+    planDisplay = lang === 'ar' ? 'مدير' : 'Admin';
+    periodDisplay = lang === 'ar' ? 'وصول كامل' : 'Full Access';
+    statusLabel = lang === 'ar' ? 'نشط' : 'Active';
+    statusColor = '#22C55E';
+  } else if (sub) {
+    const planLabels: Record<string, Record<'ar' | 'en', string>> = {
+      free:       { ar: 'مجاني',      en: 'Free' },
+      prime_plus: { ar: 'Prime Plus', en: 'Prime Plus' },
+      prime_pro:  { ar: 'Prime Pro',  en: 'Prime Pro' },
+    };
+    const periodLabels: Record<string, Record<'ar' | 'en', string>> = {
+      monthly:    { ar: 'شهري',         en: 'Monthly' },
+      yearly:     { ar: 'سنوي',          en: 'Yearly' },
+      lifetime:   { ar: 'دائم',          en: 'Lifetime' },
+      free_trial: { ar: 'تجريبي مجاني', en: 'Free Trial' },
+    };
+    planDisplay = planLabels[sub.plan ?? 'free']?.[lang] ?? sub.plan ?? '';
+    const subAny = sub as any;
+    periodDisplay = periodLabels[subAny.period ?? 'monthly']?.[lang] ?? '';
+    expiresAt = sub.expiresAt ? new Date(sub.expiresAt) : null;
+    daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000) : null;
+    isExpired = expiresAt ? expiresAt < new Date() : false;
+    statusColor = isExpired ? '#EF4444' : (daysLeft !== null && daysLeft <= 3 ? '#F59E0B' : '#22C55E');
+    statusLabel = isExpired
+      ? (lang === 'ar' ? 'منتهي' : 'Expired')
+      : sub.status === 'trialing'
+        ? (lang === 'ar' ? 'تجريبي' : 'Trialing')
+        : (lang === 'ar' ? 'نشط' : 'Active');
+  } else {
+    return null;
+  }
+
+  return (
+    <div style={{
+      background: 'white', borderRadius: 16, padding: '16px 18px',
+      boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
+      border: `1.5px solid ${statusColor}33`,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 15 }}>
+          {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
+        </span>
+        <span style={{
+          background: `${statusColor}22`, color: statusColor,
+          borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 800,
+        }}>
+          {statusLabel}
+        </span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <p style={{ margin: '0 0 2px', color: '#374151', fontSize: 15, fontWeight: 800 }}>{periodDisplay || planDisplay}</p>
+          <p style={{ margin: 0, color: '#6B7280', fontSize: 13, fontWeight: 600 }}>{planDisplay}</p>
+        </div>
+        <div style={{ textAlign: 'end' }}>
+          {expiresAt && (
+            <p style={{ margin: 0, color: statusColor, fontSize: 12, fontWeight: 700 }}>
+              {isExpired
+                ? (lang === 'ar' ? 'انتهى' : 'Expired')
+                : daysLeft === 0 ? (lang === 'ar' ? 'اليوم' : 'Today')
+                : `${daysLeft} ${lang === 'ar' ? 'يوم' : 'days'}`}
+            </p>
+          )}
+          {expiresAt && (
+            <p style={{ margin: '2px 0 0', color: '#9CA3AF', fontSize: 10 }}>
+              {expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
   const { logout: logoutFn, user } = useAuth();
   const { lang, setLang, t, isRTL } = useLanguage();
   const userEmail = (user as any)?.email || '';
+  const userRole = (user as any)?.role || 'user';
+  const isAdmin = userRole === 'admin';
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ ...profile });
@@ -237,7 +331,7 @@ export function ProfilePanel() {
         ))}
       </div>
 
-      {/* ── Instagram-style profile header ── */}
+      {/* ── Profile Settings Header (reference design) ── */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
 
         {/* Top row: avatar + stats */}
@@ -327,7 +421,7 @@ export function ProfilePanel() {
 
         {/* Name + meta + email */}
         <div style={{ padding: '0 20px 4px' }}>
-          <p style={{ fontSize: 15, fontWeight: 900, color: '#111827', margin: 0 }}>
+          <p style={{ fontSize: 16, fontWeight: 900, color: '#111827', margin: 0 }}>
             {profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}
           </p>
           {userEmail && (
@@ -340,6 +434,11 @@ export function ProfilePanel() {
               ? `${profile.age} سنة · ${profile.height} سم · ${profile.gender === 'female' ? 'أنثى' : 'ذكر'}`
               : `${profile.age} yrs · ${profile.height} cm · ${profile.gender === 'female' ? 'Female' : 'Male'}`}
           </p>
+          {isAdmin && (
+            <span style={{ display: 'inline-block', marginTop: 4, background: '#1B2E5E', color: 'white', fontSize: 10, fontWeight: 800, borderRadius: 20, padding: '2px 10px', letterSpacing: '0.05em' }}>
+              {lang === 'ar' ? 'مدير' : 'Admin'}
+            </span>
+          )}
         </div>
 
         {/* Edit Profile button */}
@@ -474,67 +573,8 @@ export function ProfilePanel() {
         ))}
       </div>
 
-      {/* Subscription Status Card */}
-      {(() => {
-        try {
-          const stored = JSON.parse(localStorage.getItem('primefit_license') ?? 'null') as {
-            key?: string; plan?: string; expiresAt?: string | null;
-            customerName?: string; customerEmail?: string; verifiedAt?: string;
-          } | null;
-          if (!stored?.key) return null;
-          const expiresAt  = stored.expiresAt ? new Date(stored.expiresAt) : null;
-          const daysLeft   = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000) : null;
-          const isExpired  = expiresAt ? expiresAt < new Date() : false;
-          const planLabels: Record<string, string> = {
-            monthly:   lang === 'ar' ? 'تجربة مجانية' : 'Free Trial',
-            quarterly: lang === 'ar' ? 'ربع سنوي'     : 'Quarterly',
-            yearly:    lang === 'ar' ? 'سنوي'          : 'Yearly',
-            lifetime:  lang === 'ar' ? 'دائم'          : 'Lifetime',
-          };
-          const planLabel  = planLabels[stored.plan ?? 'monthly'] ?? (lang === 'ar' ? 'نشط' : 'Active');
-          const statusColor = isExpired ? '#EF4444' : daysLeft !== null && daysLeft <= 3 ? '#F59E0B' : '#22C55E';
-          return (
-            <div style={{
-              background: 'white', borderRadius: 16, padding: '16px 18px',
-              boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
-              border: `1.5px solid ${statusColor}33`,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 14 }}>
-                  {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
-                </span>
-                <span style={{
-                  background: `${statusColor}22`, color: statusColor,
-                  borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 800,
-                }}>
-                  {isExpired ? (lang === 'ar' ? 'منتهي' : 'Expired') : (lang === 'ar' ? 'نشط' : 'Active')}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <p style={{ margin: '0 0 3px', color: '#374151', fontSize: 13, fontWeight: 700 }}>{planLabel}</p>
-                  <p style={{ margin: 0, color: '#9CA3AF', fontSize: 11, fontFamily: 'monospace' }}>{stored.key}</p>
-                </div>
-                <div style={{ textAlign: 'end' }}>
-                  {expiresAt && (
-                    <p style={{ margin: 0, color: statusColor, fontSize: 12, fontWeight: 700 }}>
-                      {isExpired
-                        ? (lang === 'ar' ? 'انتهى' : 'Expired')
-                        : daysLeft === 0 ? (lang === 'ar' ? 'اليوم' : 'Today')
-                        : `${daysLeft} ${lang === 'ar' ? 'يوم' : 'days'}`}
-                    </p>
-                  )}
-                  {expiresAt && (
-                    <p style={{ margin: '2px 0 0', color: '#9CA3AF', fontSize: 10 }}>
-                      {expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        } catch { return null; }
-      })()}
+      {/* Subscription Status Card — uses DB subscription via trpc */}
+      <SubscriptionCard lang={lang} isAdmin={isAdmin} />
 
       {/* Logout Button */}
       <div className="pb-2">
