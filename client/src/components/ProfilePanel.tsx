@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/_core/hooks/useAuth';
 import { useGymTracker } from '@/hooks/useGymTracker';
 import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
@@ -155,6 +156,7 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
+  const { logout: logoutFn } = useAuth();
   const { lang, setLang, t, isRTL } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
@@ -531,13 +533,10 @@ export function ProfilePanel() {
       {/* Logout Button */}
       <div className="pb-2">
         <button
-          onClick={() => {
+          onClick={async () => {
             if (window.confirm(lang === 'ar' ? 'هل تريد تسجيل الخروج؟' : 'Logout?')) {
-              trpc.standaloneAuth.logout.useMutation().mutate(undefined, {
-                onSuccess: () => {
-                  window.location.href = '/';
-                },
-              });
+              await logoutFn();
+              window.location.href = '/';
             }
           }}
           className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
