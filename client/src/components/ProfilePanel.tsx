@@ -614,101 +614,185 @@ export function ProfilePanel() {
       {editing && createPortal(
         <div style={{
           position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'rgba(0,0,0,0.6)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          padding: '0 0 0 0',
+          background: 'white',
+          overflowY: 'auto',
+          fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
         }}>
-          <div style={{
-            background: 'white', borderRadius: '20px 20px 0 0',
-            width: '100%', maxWidth: 520,
-            maxHeight: '92vh', overflowY: 'auto',
-          }}>
-            <div className="p-5">
-              <h3 className="text-lg font-black text-gray-800 mb-1">{t('editProfile')}</h3>
-              {userEmail && (
-                <p className="text-xs text-gray-400 mb-4" style={{ direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userEmail}</p>
-              )}
-              <div className="space-y-3">
-                {/* Name */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">{t('name')}</label>
-                  <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50"
-                    placeholder={lang === 'ar' ? 'اسمك' : 'Your name'} />
-                </div>
-                {/* Current Weight */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">{lang === 'ar' ? 'الوزن الحالي (kg)' : 'Current Weight (kg)'}</label>
-                  <input
-                    type="number" step="0.1" min="30" max="250"
-                    value={form.currentWeight || ''}
-                    onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
-                    placeholder={lang === 'ar' ? '72.6' : '72.6'}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50"
-                    autoFocus
-                  />
-                </div>
-                {/* Target Weight */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">{t('targetWeightLabel')} (kg)</label>
-                  <input
-                    type="number" step="0.1" min="30" max="250"
-                    value={form.targetWeight || ''}
-                    onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
-                    placeholder={lang === 'ar' ? '65' : '65'}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50"
-                  />
-                </div>
-                {/* Starting Weight */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">{t('startWeightLabel')} (kg)</label>
-                  <input type="number" step="0.1" value={form.startWeight} onChange={e => setForm({ ...form, startWeight: Number(e.target.value) })}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50" min={30} max={300} placeholder="72.6" />
-                </div>
-                {/* Age + Height row */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1">{t('age')}</label>
-                    <input type="number" value={form.age} onChange={e => setForm({ ...form, age: Number(e.target.value) })}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50" min={10} max={100} placeholder="36" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1">{t('height')} (cm)</label>
-                    <input type="number" value={form.height} onChange={e => setForm({ ...form, height: Number(e.target.value) })}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50" min={100} max={250} placeholder="165" />
-                  </div>
-                </div>
-                {/* Gender */}
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-2">{t('gender')}</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {(['female', 'male'] as const).map(g => (
-                      <button key={g} onClick={() => setForm({ ...form, gender: g })}
-                        className={`py-2 rounded-lg font-semibold text-sm border transition-all ${form.gender === g ? 'bg-[#1B2E5E] text-white border-[#1B2E5E]' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                        {g === 'female' ? t('genderFemale') : t('genderMale')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {/* Live BMI Preview */}
-                {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
-                  const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
-                  const previewCat = getBMICategory(previewBMI, lang);
-                  return (
-                    <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{t('bmiLabel')}</span>
-                      <span className="text-sm font-bold" style={{ color: previewCat.color }}>{previewBMI} — {previewCat.label}</span>
-                    </div>
-                  );
-                })()}
+          <div dir={isRTL ? 'rtl' : 'ltr'} style={{ maxWidth: 520, margin: '0 auto', minHeight: '100vh', background: 'white' }}>
+
+            {/* ── Header ── */}
+            <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #F3F4F6' }}>
+              <button onClick={() => setEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#374151', fontSize: 20, lineHeight: 1 }}>←</button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#111827' }}>
+                  {lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+                </h2>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+                  {lang === 'ar' ? 'تحديث معلوماتك وتتبع تقدمك' : 'Update your information and track your progress'}
+                </p>
               </div>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setEditing(false)}
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1.5px solid #E5E7EB', background: 'white', color: '#6B7280', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >{t('cancel')}</button>
+              <div style={{ width: 28 }} />
+            </div>
+
+            {/* ── User Card ── */}
+            <div style={{ margin: '16px 16px 0', background: '#F8FAFC', borderRadius: 16, padding: '16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 26, fontWeight: 900, color: 'white',
+                border: '3px solid #1B2E5E',
+              }}>
+                {form.name ? form.name.trim()[0].toUpperCase() : '?'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#111827' }}>{form.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</p>
+                {userEmail && <p style={{ margin: '2px 0 4px', fontSize: 12, color: '#6B7280', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userEmail}</p>}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#EFF6FF', color: '#2563EB', borderRadius: 8, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  {lang === 'ar' ? 'حساب البريد' : 'Email Account'}
+                </span>
+              </div>
+            </div>
+
+            {/* ── Personal Information ── */}
+            <div style={{ padding: '20px 16px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}</span>
+              </div>
+
+              {/* Field helper */}
+              {([
+                { icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', label: lang === 'ar' ? 'الاسم' : 'Name', field: 'name' as const, type: 'text', placeholder: lang === 'ar' ? 'اسمك' : 'Your name', min: undefined, max: undefined, step: undefined },
+                { icon: 'M3 6h18M3 12h18M3 18h18', label: lang === 'ar' ? 'الوزن الحالي (kg)' : 'Current Weight (kg)', field: 'currentWeight' as const, type: 'number', placeholder: '73.1', min: 30, max: 250, step: 0.1 },
+                { icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z', label: lang === 'ar' ? 'الوزن المستهدف (kg)' : 'Target Weight (kg)', field: 'targetWeight' as const, type: 'number', placeholder: '66', min: 30, max: 250, step: 0.1 },
+                { icon: 'M3 3v18h18', label: lang === 'ar' ? 'وزن البداية (kg)' : 'Starting Weight (kg)', field: 'startWeight' as const, type: 'number', placeholder: '72.6', min: 30, max: 300, step: 0.1 },
+              ] as const).map((f) => (
+                <div key={f.field} style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={f.icon} />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0 0 2px', fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{f.label}</p>
+                    <input
+                      type={f.type}
+                      step={f.step}
+                      min={f.min}
+                      max={f.max}
+                      value={f.field === 'name' ? (form.name || '') : ((form[f.field] as number) || '')}
+                      onChange={e => setForm({ ...form, [f.field]: f.type === 'number' ? (e.target.value === '' ? 0 : Number(e.target.value)) : e.target.value })}
+                      placeholder={f.placeholder}
+                      autoFocus={f.field === 'currentWeight'}
+                      style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: 'inherit' }}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {/* Height + Age side by side */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                {([
+                  { icon: 'M12 2v20M2 12h20', label: lang === 'ar' ? 'الطول (cm)' : 'Height (cm)', field: 'height' as const, placeholder: '165', min: 100, max: 250 },
+                  { icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z', label: lang === 'ar' ? 'العمر' : 'Age', field: 'age' as const, placeholder: '36', min: 10, max: 100 },
+                ] as const).map(f => (
+                  <div key={f.field} style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d={f.icon} />
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 10, color: '#9CA3AF', fontWeight: 600 }}>{f.label}</p>
+                      <input
+                        type="number"
+                        min={f.min} max={f.max}
+                        value={(form[f.field] as number) || ''}
+                        onChange={e => setForm({ ...form, [f.field]: Number(e.target.value) })}
+                        placeholder={f.placeholder}
+                        style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: 'inherit' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Gender */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'الجنس' : 'Gender'}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, background: '#F3F4F6', borderRadius: 12, padding: 4 }}>
+                  {(['male', 'female'] as const).map(g => (
+                    <button key={g} onClick={() => setForm({ ...form, gender: g })}
+                      style={{
+                        padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
+                        background: form.gender === g ? '#2563EB' : 'transparent',
+                        color: form.gender === g ? 'white' : '#6B7280',
+                        transition: 'all 0.2s',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      }}>
+                      {g === 'male' ? '♂' : '♀'} {g === 'male' ? (lang === 'ar' ? 'ذكر' : 'Male') : (lang === 'ar' ? 'أنثى' : 'Female')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Health Summary ── */}
+              {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
+                const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
+                const previewCat = getBMICategory(previewBMI, lang);
+                return (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'ملخص الصحة' : 'Health Summary'}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {/* Weight Status */}
+                      <div style={{ background: `${previewCat.color}15`, border: `1.5px solid ${previewCat.color}40`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: `${previewCat.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewCat.color} strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div>
+                          <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{previewCat.label}</p>
+                          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: previewCat.color }}>{previewBMI}</p>
+                        </div>
+                      </div>
+                      {/* BMI */}
+                      <div style={{ background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div>
+                          <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{lang === 'ar' ? 'مؤشر كتلة الجسم' : 'Body Mass Index (BMI)'}</p>
+                          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#2563EB' }}>{previewBMI}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Save / Cancel ── */}
+              <div style={{ paddingBottom: 32 }}>
                 <button onClick={handleSave}
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', background: '#1B2E5E', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                >{t('save')}</button>
+                  style={{ width: '100%', padding: '14px 0', borderRadius: 14, border: 'none', background: '#2563EB', color: 'white', fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  {lang === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
+                </button>
+                <button onClick={() => setEditing(false)}
+                  style={{ width: '100%', padding: '13px 0', borderRadius: 14, border: '1.5px solid #E5E7EB', background: 'white', color: '#374151', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                  {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                </button>
+                <p style={{ textAlign: 'center', margin: '12px 0 0', fontSize: 11, color: '#9CA3AF' }}>
+                  🔒 {lang === 'ar' ? 'بياناتك آمنة وخاصة' : 'Your data is secure and private'}
+                </p>
               </div>
             </div>
           </div>
