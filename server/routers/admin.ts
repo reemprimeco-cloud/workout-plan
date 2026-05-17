@@ -87,21 +87,27 @@ export const adminRouter = router({
     const totalBroadcasts = broadcasts.length;
     const totalRecipients = broadcasts.reduce((s, b) => s + b.recipientCount, 0);
 
-    // Count registered users
+    // Count registered users and subscriptions
     const db = await getDb();
     let totalUsers = 0;
     let activeSubscribers = 0;
+    let expiredSubscribers = 0;
     if (db) {
-      const allUsers = await db.select({ id: users.id }).from(users);
+      const allUsers = await db.select({ id: users.id }).from(users).where(ne(users.role, 'admin'));
       totalUsers = allUsers.length;
       const activeSubs = await db
         .select({ id: subscriptions.id })
         .from(subscriptions)
         .where(eq(subscriptions.status, "active"));
       activeSubscribers = activeSubs.length;
+      const expiredSubs = await db
+        .select({ id: subscriptions.id })
+        .from(subscriptions)
+        .where(eq(subscriptions.status, "expired"));
+      expiredSubscribers = expiredSubs.length;
     }
 
-    return { total, active, inactive, totalBroadcasts, totalRecipients, totalUsers, activeSubscribers };
+    return { total, active, inactive, totalBroadcasts, totalRecipients, totalUsers, activeSubscribers, expiredSubscribers };
   }),
 
   // ── Broadcasts (legacy email-only) ────────────────────────────────────────
