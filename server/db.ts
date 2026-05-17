@@ -14,6 +14,7 @@ import {
   userFollows, InsertUserFollow,
   directMessages, InsertDirectMessage,
   communityBookmarks, InsertCommunityBookmark,
+  userPrivacySettings, InsertUserPrivacySettings,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -878,4 +879,48 @@ export async function getUserBookmarks(userId: number) {
     .where(eq(communityBookmarks.userId, userId))
     .orderBy(desc(communityBookmarks.createdAt));
   return rows.map(r => r.postId);
+}
+
+// ── User Privacy Settings ─────────────────────────────────────────────────────
+export async function getUserPrivacySettings(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(userPrivacySettings)
+    .where(eq(userPrivacySettings.userId, userId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function upsertUserPrivacySettings(data: InsertUserPrivacySettings) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  await db.insert(userPrivacySettings).values(data).onDuplicateKeyUpdate({
+    set: {
+      allowDMs: data.allowDMs,
+      allowFollows: data.allowFollows,
+      allowMentions: data.allowMentions,
+      privateAccount: data.privateAccount,
+      notifyLikes: data.notifyLikes,
+      notifyComments: data.notifyComments,
+      notifyMentions: data.notifyMentions,
+      notifyFollows: data.notifyFollows,
+      notifyMessages: data.notifyMessages,
+      notifyReplies: data.notifyReplies,
+    },
+  });
+}
+
+// ── Enhanced Social Notifications ─────────────────────────────────────────────
+export async function markSingleNotificationRead(notifId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(socialNotifications)
+    .set({ isRead: true })
+    .where(eq(socialNotifications.id, notifId));
+}
+
+export async function deleteNotification(notifId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(socialNotifications)
+    .where(eq(socialNotifications.id, notifId));
 }
