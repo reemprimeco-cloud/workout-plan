@@ -1,0 +1,9 @@
+{
+  "query": "\nINSERT INTO subscriptions (userId, plan, status, period, startsAt, expiresAt, licenseKey, createdAt, updatedAt)\nVALUES \n  ('nQx7SizYzJpXEdxC3TnPVE', 'prime_pro', 'active', 'lifetime', NOW(), NULL, 'PRIME-ADMIN-LIFETIME', NOW(), NOW()),\n  ('license:PRIME-ADMIN-REEM', 'prime_pro', 'active', 'lifetime', NOW(), NULL, 'PRIME-ADMIN-LIFETIME', NOW(), NOW())\nON DUPLICATE KEY UPDATE\n  plan = 'prime_pro',\n  status = 'active',\n  period = 'lifetime',\n  expiresAt = NULL,\n  licenseKey = 'PRIME-ADMIN-LIFETIME',\n  updatedAt = NOW();\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute \nINSERT INTO subscriptions (userId, plan, status, period, startsAt, expiresAt, licenseKey, createdAt, updatedAt)\nVALUES \n  ('nQx7SizYzJpXEdxC3TnPVE', 'prime_pro', 'active', 'lifetime', NOW(), NULL, 'PRIME-ADMIN-LIFETIME', NOW(), NOW()),\n  ('license:PRIME-ADMIN-REEM', 'prime_pro', 'active', 'lifetime', NOW(), NULL, 'PRIME-ADMIN-LIFETIME', NOW(), NOW())\nON DUPLICATE KEY UPDATE\n  plan = 'prime_pro',\n  status = 'active',\n  period = 'lifetime',\n  expiresAt = NULL,\n  licenseKey = 'PRIME-ADMIN-LIFETIME',\n  updatedAt = NOW();\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1844
+}

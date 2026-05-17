@@ -1,0 +1,1 @@
+ALTER TABLE `subscriptions` MODIFY COLUMN `period` enum('monthly','yearly','lifetime') NOT NULL DEFAULT 'monthly';
