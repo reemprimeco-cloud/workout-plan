@@ -111,10 +111,15 @@ export const subscriptionRouter = router({
       };
     }),
 
-  // Get current user's subscription status
-  getStatus: protectedProcedure.query(async ({ ctx }) => {
+  // Get current user's subscription status (public so unauthenticated users can check before login)
+  getStatus: publicProcedure.query(async ({ ctx }) => {
     const database = await getDb();
     if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+    // If not authenticated, return free plan
+    if (!ctx.user) {
+      return { plan: "free", status: "active", expiresAt: null, licenseKey: null };
+    }
 
     const userId = ctx.user.openId;
     const rows = await database
