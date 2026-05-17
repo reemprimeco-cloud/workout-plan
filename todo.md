@@ -444,3 +444,15 @@
 - [x] Add logout procedure to standaloneAuth router
 - [x] Trigger logout for all existing users on app startup (migration)
 - [x] Save profile data to users table (full_name, age, height, current_weight, target_weight, gender)
+
+## Google Sign-In Mobile Safari Fix
+
+- [x] Replaced GIS popup/prompt flow with server-side OAuth redirect flow (/api/auth/google)
+- [x] Added /api/auth/google and /api/auth/google/callback routes to Express server
+- [x] Fixed verifySession to not reject sessions with empty name field
+- [x] Ensured session name is always non-empty (fallback chain: fullName → name → displayName → email prefix → "User")
+- [x] Added subscription linking by email after Google login
+- [x] Added google_error query param handling in AuthPage for clear error messages
+- [x] Removed infinite loading state (no more googleLoading stuck state)
+- [x] GOOGLE_CLIENT_SECRET configured in environment
+- [x] All 113 tests passing, 0 TypeScript errors

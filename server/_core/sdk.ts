@@ -214,17 +214,18 @@ class SDKServer {
 
       if (
         !isNonEmptyString(openId) ||
-        !isNonEmptyString(appId) ||
-        !isNonEmptyString(name)
+        !isNonEmptyString(appId)
       ) {
-        console.warn("[Auth] Session payload missing required fields");
+        console.warn("[Auth] Session payload missing required fields (openId or appId)");
         return null;
       }
+      // name can be empty for standalone auth users — treat missing as empty string
+      const safeName = isNonEmptyString(name) ? name : "";
 
       return {
         openId,
         appId,
-        name,
+        name: safeName,
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
