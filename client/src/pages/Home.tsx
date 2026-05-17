@@ -147,7 +147,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: active session indicator only */}
+        {/* Right: active session indicator + admin button */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeSession && (
             <div style={{
@@ -157,6 +157,27 @@ export default function Home() {
             }}>
               🔴 {t('activeSession')}
             </div>
+          )}
+          {(currentUser as any)?.role === 'admin' && (
+            <a
+              href="/admin"
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: '1.5px solid rgba(255,255,255,0.35)',
+                borderRadius: 10,
+                padding: '5px 12px',
+                color: 'white',
+                fontSize: 12,
+                fontWeight: 700,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              ⚙️ {lang === 'ar' ? 'الإدارة' : 'Admin'}
+            </a>
           )}
         </div>
       </header>

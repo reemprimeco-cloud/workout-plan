@@ -557,3 +557,8 @@
 - [x] Add subscription status filter dropdown (All / Active / Trialing / Expired / No Subscription) to Users tab
 - [x] Filter user list in real-time as admin types or selects filter
 - [x] Remove the Subscriptions tab from the admin panel tab bar and content
+
+## Profile Redesign & Admin Button
+- [x] Redesign ProfilePanel to match clean card-based layout (avatar circle, name/stats row, Edit Profile button, subscription card, logout/reset buttons)
+- [x] Remove license key from subscription card in ProfilePanel — show "Admin" for admin role, or plan name (Prime Plus / Prime Pro / Free) for regular users
+- [x] Add Admin Panel button in the top bar of Home.tsx, visible only to admin users (role === 'admin')
