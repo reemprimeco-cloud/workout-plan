@@ -1,4 +1,4 @@
-import { boolean, double, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, decimal, double, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -30,6 +30,11 @@ export const users = mysqlTable("users", {
   /** Token for email verification */
   emailVerified: boolean("emailVerified").default(false).notNull(),
   lastLoginAt: timestamp("lastLoginAt"),
+  age: int("age"),
+  height: int("height"),
+  currentWeight: decimal("currentWeight", { precision: 5, scale: 2 }),
+  targetWeight: decimal("targetWeight", { precision: 5, scale: 2 }),
+  gender: mysqlEnum("gender", ["male", "female"]),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
