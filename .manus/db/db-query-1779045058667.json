@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, email, role, authProvider, name, fullName FROM users WHERE email LIKE '%reemprimeco%' OR email LIKE '%reem%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SELECT id, email, role, authProvider, name, fullName FROM users WHERE email LIKE '%reemprimeco%' OR email LIKE '%reem%';",
+  "rows": [
+    {
+      "id": "1",
+      "email": "reemprimeco@gmail.com",
+      "role": "admin",
+      "authProvider": "google",
+      "name": "Reem Alfaraj",
+      "fullName": "Reem Alfaraj"
+    },
+    {
+      "id": "4230006",
+      "email": "reemprimeco@gmail.com",
+      "role": "admin",
+      "authProvider": "manus",
+      "name": "Reem",
+      "fullName": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\trole\tauthProvider\tname\tfullName\n1\treemprimeco@gmail.com\tadmin\tgoogle\tReem Alfaraj\tReem Alfaraj\n4230006\treemprimeco@gmail.com\tadmin\tmanus\tReem\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1776
+}

@@ -536,3 +536,6 @@
 - [x] Admin users bypass subscription gate (LicenseGate checks user role)
 - [x] Promote reemprimeco@gmail.com to admin role in DB
 - [x] Disable device enforcement (activeDeviceId column not yet in DB)
+
+## Admin Users Tab Fix
+- [x] Filter out admin users from the Users tab (only show role = 'user' accounts)

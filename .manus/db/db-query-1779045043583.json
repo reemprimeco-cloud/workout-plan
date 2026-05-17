@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, email, role, authProvider FROM users WHERE email = 'reemprimeco@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SELECT id, email, role, authProvider FROM users WHERE email = 'reemprimeco@gmail.com';",
+  "rows": [
+    {
+      "id": "1",
+      "email": "reemprimeco@gmail.com",
+      "role": "admin",
+      "authProvider": "google"
+    },
+    {
+      "id": "4230006",
+      "email": "reemprimeco@gmail.com",
+      "role": "admin",
+      "authProvider": "manus"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\trole\tauthProvider\n1\treemprimeco@gmail.com\tadmin\tgoogle\n4230006\treemprimeco@gmail.com\tadmin\tmanus\n",
+  "stderr": "",
+  "execution_time_ms": 1758
+}

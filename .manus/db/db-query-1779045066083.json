@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, email, role, authProvider, name FROM users WHERE authProvider = 'email' ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SELECT id, email, role, authProvider, name FROM users WHERE authProvider = 'email' ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "7920036",
+      "email": "r.bhck@live.com",
+      "role": "user",
+      "authProvider": "email",
+      "name": "Reem Alfaraj"
+    },
+    {
+      "id": "7920011",
+      "email": "shioom78@gmail.com",
+      "role": "user",
+      "authProvider": "email",
+      "name": "Shayma adel"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\trole\tauthProvider\tname\n7920036\tr.bhck@live.com\tuser\temail\tReem Alfaraj\n7920011\tshioom78@gmail.com\tuser\temail\tShayma adel\n",
+  "stderr": "",
+  "execution_time_ms": 1779
+}
