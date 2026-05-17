@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
+type Tab = 'dashboard' | 'users' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -487,6 +487,8 @@ export default function AdminPanel() {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Users tab state
+  const [userSearch, setUserSearch] = useState('');
+  const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'trialing' | 'expired' | 'none'>('all');
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [subForm, setSubForm] = useState({ plan: 'prime_plus' as 'free' | 'prime_plus' | 'prime_pro', status: 'active' as 'active' | 'expired' | 'cancelled' | 'trialing' | 'pending', period: 'monthly' as 'monthly' | 'yearly' | 'lifetime' | 'free_trial', expiresAt: '' });
   const [subMsg, setSubMsg] = useState('');
@@ -716,7 +718,6 @@ export default function AdminPanel() {
         {([
           ['dashboard', t('tabDashboard', lang)],
           ['users', t('tabUsers', lang)],
-          ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
@@ -932,7 +933,7 @@ export default function AdminPanel() {
         {/* ── USERS TAB ── */}
         {activeTab === 'users' && (
           <div style={cardStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 900 }}>
                 {lang === 'ar' ? 'المستخدمون المسجلون' : 'Registered Users'} ({usersQuery.data?.length ?? 0})
               </h2>
@@ -941,14 +942,51 @@ export default function AdminPanel() {
                 {lang === 'ar' ? 'تحديث' : 'Refresh'}
               </button>
             </div>
+
+            {/* Search + Filter bar */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                placeholder={lang === 'ar' ? '🔍 بحث بالاسم أو البريد...' : '🔍 Search by name or email...'}
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+              />
+              <select
+                value={userStatusFilter}
+                onChange={e => setUserStatusFilter(e.target.value as any)}
+                style={{ ...inputStyle, width: 'auto', minWidth: 150, background: 'white', cursor: 'pointer' }}
+              >
+                <option value="all">{lang === 'ar' ? 'كل الحالات' : 'All Statuses'}</option>
+                <option value="active">{lang === 'ar' ? 'نشط' : 'Active'}</option>
+                <option value="trialing">{lang === 'ar' ? 'تجريبي' : 'Trialing'}</option>
+                <option value="expired">{lang === 'ar' ? 'منتهي' : 'Expired'}</option>
+                <option value="none">{lang === 'ar' ? 'بدون اشتراك' : 'No Subscription'}</option>
+              </select>
+            </div>
+
             {subMsg && <p style={{ color: subMsg.startsWith('❌') ? '#DC2626' : '#16A34A', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{subMsg}</p>}
             {usersQuery.isLoading ? (
               <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
             ) : !usersQuery.data?.length ? (
               <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا يوجد مستخدمون بعد.' : 'No users yet.'}</p>
-            ) : (
+            ) : (() => {
+              const filtered = usersQuery.data.filter(u => {
+                const q = userSearch.trim().toLowerCase();
+                const matchSearch = !q ||
+                  (u.fullName ?? u.name ?? '').toLowerCase().includes(q) ||
+                  (u.email ?? '').toLowerCase().includes(q);
+                const matchStatus =
+                  userStatusFilter === 'all' ? true :
+                  userStatusFilter === 'none' ? !u.subscription :
+                  u.subscription?.status === userStatusFilter;
+                return matchSearch && matchStatus;
+              });
+              return filtered.length === 0 ? (
+                <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد نتائج.' : 'No results found.'}</p>
+              ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {usersQuery.data.map((u) => {
+                {filtered.map((u) => {
                   const sub = u.subscription;
                   const statusColor: Record<string, string> = { active: '#16A34A', trialing: '#2563EB', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706' };
                   const planLabel: Record<string, string> = { free: lang === 'ar' ? 'مجاني' : 'Free', prime_plus: 'Prime Plus', prime_pro: 'Prime Pro' };
@@ -1039,7 +1077,8 @@ export default function AdminPanel() {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
@@ -1158,8 +1197,8 @@ export default function AdminPanel() {
           </>
         )}
 
-        {/* ── SUBSCRIPTIONS TAB ── */}
-        {activeTab === 'subscriptions' && (
+        {/* Subscriptions tab removed */}
+        {false && (
           <div style={cardStyle}>
             <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('tabSubscriptions', lang)}</h2>
             {subscriptionsQuery.isLoading ? (
