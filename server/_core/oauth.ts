@@ -111,11 +111,37 @@ export function registerOAuthRoutes(app: Express) {
 
       res.cookie(COOKIE_NAME, sessionToken, finalCookieOptions);
 
-      // Step 6: Redirect — check if user needs profile setup
-      // A user needs profile setup if they have no fullName set yet
-      // (Google users get fullName from userInfo.name above, so only truly new users)
+      // Step 6: Auto-link subscription by email (for new Google users who already paid)
+      if (userInfo.email && database) {
+        try {
+          const { subscriptions } = await import('../../drizzle/schema');
+          const updatedUser2 = await db.getUserByOpenId(userInfo.openId);
+          if (updatedUser2) {
+            // Find any subscription with matching email but no userId assigned yet
+            const unlinkedSub = await database.select()
+              .from(subscriptions)
+              .where(eq(subscriptions.email, userInfo.email))
+              .limit(1);
+            if (unlinkedSub.length > 0 && unlinkedSub[0].userId !== String(updatedUser2.id)) {
+              await database.update(subscriptions)
+                .set({ userId: String(updatedUser2.id) })
+                .where(eq(subscriptions.id, unlinkedSub[0].id));
+              console.log("[OAuth] Linked subscription to user:", updatedUser2.id);
+            }
+          }
+        } catch (subErr) {
+          // Non-fatal: subscription linking failure should not block login
+          console.warn("[OAuth] Subscription linking failed (non-fatal):", subErr);
+        }
+      }
+
+      // Step 7: Redirect — check if user needs profile setup
+      // Google users already have fullName set from OAuth, so only truly new users
+      // who have no name at all need profile setup
       const updatedUser = await db.getUserByOpenId(userInfo.openId);
-      const needsProfileSetup = !updatedUser?.fullName;
+      // Google users have fullName set — they go directly to home
+      // New email/password users without fullName go to profile-setup
+      const needsProfileSetup = !updatedUser?.fullName && !updatedUser?.name;
 
       const redirectTo = needsProfileSetup ? "/profile-setup" : "/";
       console.log("[OAuth] Redirecting to:", redirectTo, "| needsProfileSetup:", needsProfileSetup);
