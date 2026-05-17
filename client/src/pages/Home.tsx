@@ -22,6 +22,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import MyCoach from './MyCoach';
 import Community from './Community';
 import Nutrition from './Nutrition';
+import { useGymSync } from '../hooks/useGymSync';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -53,6 +54,16 @@ export default function Home() {
   const tracker = useGymTracker();
   const { lang, t, isRTL } = useLanguage();
   const { isAuthenticated } = useAuth();
+  // Background DB sync — keeps sessions + weight logs in sync across devices
+  useGymSync();
+
+  // Reload page when DB sync brings in new data from another device
+  useEffect(() => {
+    const handleSynced = () => window.location.reload();
+    window.addEventListener('gym-data-synced', handleSynced);
+    return () => window.removeEventListener('gym-data-synced', handleSynced);
+  }, []);
+
   const profileQuery = trpc.userProfile.getProfile.useQuery(undefined, { enabled: isAuthenticated, retry: false });
   const headerAvatar = profileQuery.data?.avatarUrl ?? null;
   const [activeTab, setActiveTab] = useState<Tab>('home');

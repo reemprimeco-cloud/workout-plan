@@ -583,3 +583,42 @@ export const personalizedPrograms = mysqlTable("personalized_programs", {
 });
 export type PersonalizedProgram = typeof personalizedPrograms.$inferSelect;
 export type InsertPersonalizedProgram = typeof personalizedPrograms.$inferInsert;
+
+// ── Workout Sessions (cross-device sync) ────────────────────────────────────
+// Stores all gym sessions for each user, synced from localStorage gym_tracker_v3
+export const gymSessions = mysqlTable("gym_sessions", {
+  id:            int("id").autoincrement().primaryKey(),
+  userId:        int("userId").notNull(),
+  clientId:      varchar("clientId", { length: 64 }).notNull(),  // original localStorage ID
+  date:          varchar("date", { length: 10 }).notNull(),       // "2025-05-08"
+  checkInTime:   varchar("checkInTime", { length: 8 }).notNull(), // "09:35"
+  checkOutTime:  varchar("checkOutTime", { length: 8 }),
+  sessionType:   varchar("sessionType", { length: 64 }).notNull(),
+  exercises:     text("exercises").notNull(),   // JSON array of ExerciseLog
+  cardio:        text("cardio"),               // JSON CardioLog or null
+  aqua:          text("aqua"),                 // JSON AquaLog or null
+  sauna:         text("sauna"),                // JSON SaunaLog or null
+  mood:          varchar("mood", { length: 4 }),
+  energyLevel:   int("energyLevel"),
+  notes:         text("notes"),
+  bodyWeight:    decimal("bodyWeight", { precision: 5, scale: 2 }),
+  caloriesBurned: int("caloriesBurned"),
+  isActive:      boolean("isActive").default(false).notNull(),
+  createdAt:     timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:     timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GymSession = typeof gymSessions.$inferSelect;
+export type InsertGymSession = typeof gymSessions.$inferInsert;
+
+// ── Weight Logs (cross-device sync) ─────────────────────────────────────────
+export const weightLogs = mysqlTable("weight_logs", {
+  id:        int("id").autoincrement().primaryKey(),
+  userId:    int("userId").notNull(),
+  date:      varchar("date", { length: 10 }).notNull(),  // "2025-05-08"
+  weight:    decimal("weight", { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WeightLog = typeof weightLogs.$inferSelect;
+export type InsertWeightLog = typeof weightLogs.$inferInsert;

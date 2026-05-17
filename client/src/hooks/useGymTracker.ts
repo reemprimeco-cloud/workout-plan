@@ -213,14 +213,19 @@ export function useGymTracker() {
   // ── Check out ──────────────────────────────────────────
   const checkOut = useCallback((sessionId: string, updates?: Partial<GymSession>) => {
     const now = new Date();
-    setData(prev => ({
-      ...prev,
-      sessions: prev.sessions.map(s =>
+    setData(prev => {
+      const updatedSessions = prev.sessions.map(s =>
         s.id === sessionId
           ? { ...s, ...updates, checkOutTime: formatTime(now), isActive: false }
           : s
-      ),
-    }));
+      );
+      // Dispatch event for DB sync
+      const completed = updatedSessions.find(s => s.id === sessionId);
+      if (completed) {
+        setTimeout(() => window.dispatchEvent(new CustomEvent('gym-session-completed', { detail: completed })), 100);
+      }
+      return { ...prev, sessions: updatedSessions };
+    });
   }, []);
 
   // ── Update exercise in active session ──────────────────
@@ -349,6 +354,8 @@ export function useGymTracker() {
 
   // ── Delete session ─────────────────────────────────────
   const deleteSession = useCallback((sessionId: string) => {
+    // Dispatch event for DB sync before removing from state
+    window.dispatchEvent(new CustomEvent('gym-session-deleted', { detail: { id: sessionId } }));
     setData(prev => ({
       ...prev,
       sessions: prev.sessions.filter(s => s.id !== sessionId),
@@ -384,6 +391,8 @@ export function useGymTracker() {
   // ── Log weight ─────────────────────────────────────────────────────
   const logWeight = useCallback((weight: number) => {
     const today = new Date().toISOString().split('T')[0];
+    // Dispatch event for DB sync
+    window.dispatchEvent(new CustomEvent('gym-weight-logged', { detail: { date: today, weight } }));
     setData(prev => {
       const log = [...prev.weightLog];
       const idx = log.findIndex(l => l.date === today);

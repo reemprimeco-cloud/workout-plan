@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET fullName = name WHERE authProvider = 'google' AND fullName IS NULL AND name IS NOT NULL;\nUPDATE users SET fullName = name, authProvider = 'google' WHERE loginMethod = 'google' AND fullName IS NULL AND name IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute UPDATE users SET fullName = name WHERE authProvider = 'google' AND fullName IS NULL AND name IS NOT NULL;\nUPDATE users SET fullName = name, authProvider = 'google' WHERE loginMethod = 'google' AND fullName IS NULL AND name IS NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2003
+}
