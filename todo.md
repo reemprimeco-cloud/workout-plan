@@ -456,3 +456,12 @@
 - [x] Removed infinite loading state (no more googleLoading stuck state)
 - [x] GOOGLE_CLIENT_SECRET configured in environment
 - [x] All 113 tests passing, 0 TypeScript errors
+
+## Cross-Device Data Sync (Critical)
+- [ ] Audit all localStorage keys and data structures used in useGymTracker hook
+- [ ] Create DB tables: workout_sessions, weight_logs, active_session (if not already exist)
+- [ ] Build tRPC procedures: createSession, getSessions, deleteSession, logWeight, getWeightLog, saveActiveSession, getActiveSession, clearActiveSession
+- [ ] Migrate useGymTracker hook to use tRPC instead of localStorage
+- [ ] Add one-time data migration: import existing localStorage data to DB on first login
+- [ ] Ensure profile data (name, age, height, weight, gender, goal) syncs from DB on all devices
+- [ ] Test: login on device A, add session, login on device B, verify session appears
