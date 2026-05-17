@@ -286,10 +286,10 @@ export const subscriptions = mysqlTable("subscriptions", {
   userId:      varchar("userId", { length: 255 }).notNull().unique(),
   plan:        mysqlEnum("plan", ["free", "prime_plus", "prime_pro"]).default("free").notNull(),
   status:      mysqlEnum("status", ["active", "expired", "cancelled", "trialing", "pending"]).default("active").notNull(),
-  period:      mysqlEnum("period", ["monthly", "yearly"]).default("monthly").notNull(),
+  period:      mysqlEnum("period", ["monthly", "yearly", "lifetime"]).default("monthly").notNull(),
   trialEndsAt: timestamp("trialEndsAt"),
   startsAt:    timestamp("startsAt").defaultNow().notNull(),
-  expiresAt:   timestamp("expiresAt"),
+  expiresAt:   timestamp("expiresAt"),  // null = never expires (lifetime)
   invoiceId:   varchar("invoiceId", { length: 255 }),
   licenseKey:  varchar("licenseKey", { length: 128 }),  // linked PRIME-XXXX-XXXX key
   createdAt:   timestamp("createdAt").defaultNow().notNull(),
