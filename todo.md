@@ -539,3 +539,15 @@
 
 ## Admin Users Tab Fix
 - [x] Filter out admin users from the Users tab (only show role = 'user' accounts)
+
+## Delete User Button in Admin Users Tab
+- [ ] Add Delete button to each user row in the admin Users tab
+- [ ] Show confirmation dialog before deleting
+- [ ] Wire to existing deleteUser tRPC procedure
+- [ ] Refresh user list after successful deletion
+
+## Admin Panel — Remove Licenses Tab & Update Dashboard
+- [x] Remove the Licenses tab from the admin panel tab bar
+- [x] Remove the entire Licenses tab content (create code form + access codes list)
+- [x] Update Dashboard stats cards: replace Total Licenses / Active Licenses / Inactive Licenses with Total Users / Active Subscribers / Expired Subscriptions
+- [x] Keep Broadcasts Sent and Total Recipients cards on Dashboard

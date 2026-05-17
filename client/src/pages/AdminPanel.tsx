@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'users' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
+type Tab = 'dashboard' | 'users' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -715,7 +715,6 @@ export default function AdminPanel() {
       }}>
         {([
           ['dashboard', t('tabDashboard', lang)],
-          ['licenses', t('tabLicenses', lang)],
           ['users', t('tabUsers', lang)],
           ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
@@ -746,11 +745,11 @@ export default function AdminPanel() {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
               {[
-                { label: t('totalLicenses', lang), value: stats?.total ?? '—', color: NAVY, icon: '🔑' },
-                { label: t('activeLicenses', lang), value: stats?.active ?? '—', color: '#16A34A', icon: '✅' },
-                { label: t('inactiveLicenses', lang), value: stats?.inactive ?? '—', color: '#DC2626', icon: '❌' },
-                { label: t('totalBroadcasts', lang), value: stats?.totalBroadcasts ?? '—', color: '#7C3AED', icon: '📢' },
-                { label: t('totalRecipients', lang), value: stats?.totalRecipients ?? '—', color: '#0369A1', icon: '👥' },
+                { label: lang === 'ar' ? 'إجمالي المستخدمين' : 'Total Users', value: stats?.totalUsers ?? '—', color: NAVY, icon: '👥' },
+                { label: lang === 'ar' ? 'مشتركون نشطون' : 'Active Subscribers', value: stats?.activeSubscribers ?? '—', color: '#16A34A', icon: '✅' },
+                { label: lang === 'ar' ? 'اشتراكات منتهية' : 'Expired Subscriptions', value: stats?.expiredSubscribers ?? '—', color: '#DC2626', icon: '❌' },
+                { label: lang === 'ar' ? 'إشعارات مُرسلة' : 'Broadcasts Sent', value: stats?.totalBroadcasts ?? '—', color: '#7C3AED', icon: '📢' },
+                { label: lang === 'ar' ? 'إجمالي المستلمين' : 'Total Recipients', value: stats?.totalRecipients ?? '—', color: '#0369A1', icon: '📨' },
               ].map(({ label, value, color, icon }) => (
                 <div key={label} style={{ background: 'white', borderRadius: 16, padding: '20px 16px', textAlign: 'center', boxShadow: '0 2px 12px rgba(27,46,94,0.08)', border: `1px solid ${SKY_LIGHT}44` }}>
                   <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
@@ -788,8 +787,8 @@ export default function AdminPanel() {
           </>
         )}
 
-        {/* ── LICENSES TAB ── */}
-        {activeTab === 'licenses' && (
+        {/* Licenses tab removed — subscription-based system only */}
+        {false && (
           <>
             {/* Create Code Card */}
             <div style={cardStyle}>
