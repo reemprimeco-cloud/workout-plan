@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
+import { getGoogleLoginUrl } from '../const';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -12,6 +13,7 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+const OAUTH_PORTAL_URL = import.meta.env.VITE_OAUTH_PORTAL_URL ?? '';
 
 type Mode = 'login' | 'signup' | 'forgot' | 'reset-sent';
 
@@ -58,18 +60,18 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
   }, []);
 
   /**
-   * Google Sign-In via server-side redirect flow.
-   * This is the ONLY reliable method on mobile Safari (ITP blocks popups/iframes).
-   * Flow: click → redirect to /api/auth/google → Google consent → /api/auth/google/callback → /
+   * Google Sign-In via Manus OAuth portal.
+   * The Manus portal handles Google OAuth using its own registered client —
+   * works on all mobile browsers including Safari (standard redirect, no popup).
+   * Flow: click → Manus portal → Google consent → /api/oauth/callback → /
    */
   const handleGoogleSignIn = () => {
-    if (!GOOGLE_CLIENT_ID) {
+    if (!OAUTH_PORTAL_URL) {
       setError('تسجيل الدخول عبر Google غير مفعّل حالياً.');
       return;
     }
-    // Redirect to server-side Google OAuth handler
-    const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.href = `/api/auth/google?returnTo=${returnTo}`;
+    // Redirect to Manus OAuth portal with Google platform hint
+    window.location.href = getGoogleLoginUrl();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,8 +206,8 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
           </p>
         </div>
 
-        {/* Google Sign-In — redirect flow (works on all mobile browsers) */}
-        {(mode === 'login' || mode === 'signup') && GOOGLE_CLIENT_ID && (
+        {/* Google Sign-In — Manus portal redirect (works on all mobile browsers incl. Safari) */}
+        {(mode === 'login' || mode === 'signup') && OAUTH_PORTAL_URL && (
           <div style={{ marginBottom: 20 }}>
             <button
               type="button"
