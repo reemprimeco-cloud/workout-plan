@@ -1,7 +1,7 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import { eq } from "drizzle-orm";
-import { users } from "../../drizzle/schema";
+import { users, deviceSessions } from "../../drizzle/schema";
 import { getDb } from "../db";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
@@ -110,6 +110,41 @@ export function registerOAuthRoutes(app: Express) {
       });
 
       res.cookie(COOKIE_NAME, sessionToken, finalCookieOptions);
+
+      // Step 5b: Bind device session for single-device enforcement
+      const deviceId = req.headers["x-device-id"] as string | undefined;
+      if (deviceId) {
+        try {
+          const dbConn = await getDb();
+          if (dbConn) {
+            const userRow = await db.getUserByOpenId(userInfo.openId);
+            if (userRow) {
+              // Revoke all previous device sessions
+              await dbConn.update(deviceSessions)
+                .set({ revoked: true })
+                .where(eq(deviceSessions.userId, userRow.id));
+              // Insert new device session
+              const expiresAt = new Date(Date.now() + ONE_YEAR_MS);
+              const userAgent = req.headers["user-agent"] ?? null;
+              const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? req.socket?.remoteAddress ?? null;
+              await dbConn.insert(deviceSessions).values({
+                userId: userRow.id,
+                deviceId,
+                userAgent,
+                ipAddress,
+                revoked: false,
+                expiresAt,
+              });
+              // Update activeDeviceId
+              await dbConn.update(users)
+                .set({ activeDeviceId: deviceId })
+                .where(eq(users.id, userRow.id));
+            }
+          }
+        } catch (devErr) {
+          console.warn("[OAuth] Device session binding failed (non-fatal):", devErr);
+        }
+      }
 
       // Step 6: Auto-link subscription by email (for new Google users who already paid)
       if (userInfo.email && database) {

@@ -35,6 +35,8 @@ export const users = mysqlTable("users", {
   currentWeight: decimal("currentWeight", { precision: 5, scale: 2 }),
   targetWeight: decimal("targetWeight", { precision: 5, scale: 2 }),
   gender: mysqlEnum("gender", ["male", "female"]),
+  /** Active device ID for single-device enforcement */
+  activeDeviceId: varchar("activeDeviceId", { length: 128 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -622,3 +624,18 @@ export const weightLogs = mysqlTable("weight_logs", {
 
 export type WeightLog = typeof weightLogs.$inferSelect;
 export type InsertWeightLog = typeof weightLogs.$inferInsert;
+
+
+// ── Device Sessions (single-device enforcement) ──────────────────────────────
+export const deviceSessions = mysqlTable("device_sessions", {
+  id:           int("id").autoincrement().primaryKey(),
+  userId:       int("userId").notNull(),
+  deviceId:     varchar("deviceId", { length: 128 }).notNull(),
+  userAgent:    text("userAgent"),
+  ipAddress:    varchar("ipAddress", { length: 64 }),
+  revoked:      boolean("revoked").default(false).notNull(),
+  createdAt:    timestamp("createdAt").defaultNow().notNull(),
+  expiresAt:    timestamp("expiresAt").notNull(),
+});
+export type DeviceSession = typeof deviceSessions.$inferSelect;
+export type InsertDeviceSession = typeof deviceSessions.$inferInsert;

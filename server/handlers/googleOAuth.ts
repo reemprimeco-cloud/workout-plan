@@ -9,7 +9,7 @@
  */
 import type { Request, Response } from "express";
 import { eq } from "drizzle-orm";
-import { users, subscriptions } from "../../drizzle/schema";
+import { users, subscriptions, deviceSessions } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { ENV } from "../_core/env";
@@ -249,6 +249,35 @@ export async function googleAuthCallback(req: Request, res: Response) {
       ...cookieOptions,
       maxAge: ONE_YEAR_MS,
     });
+
+    // Bind device session for single-device enforcement
+    const deviceId = req.headers["x-device-id"] as string | undefined;
+    if (deviceId && user) {
+      try {
+        const expiresAt = new Date(Date.now() + ONE_YEAR_MS);
+        const userAgent = req.headers["user-agent"] ?? null;
+        const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? req.socket?.remoteAddress ?? null;
+        // Revoke all previous device sessions
+        await db.update(deviceSessions)
+          .set({ revoked: true })
+          .where(eq(deviceSessions.userId, user.id));
+        // Insert new device session
+        await db.insert(deviceSessions).values({
+          userId: user.id,
+          deviceId,
+          userAgent,
+          ipAddress,
+          revoked: false,
+          expiresAt,
+        });
+        // Update activeDeviceId
+        await db.update(users)
+          .set({ activeDeviceId: deviceId })
+          .where(eq(users.id, user.id));
+      } catch (devErr: any) {
+        console.warn("[GoogleOAuth] Device session binding failed (non-fatal):", devErr.message);
+      }
+    }
 
     console.log(`[GoogleOAuth] Login success for ${email}, redirecting to ${returnTo}`);
 
