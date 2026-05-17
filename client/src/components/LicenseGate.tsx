@@ -38,6 +38,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
   const [autoVerifying, setAutoVerifying] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState<boolean>(false);
   const verifyMutation = trpc.license.verify.useMutation();
+  const subscriptionStatus = trpc.subscription.getStatus.useQuery(undefined, { retry: false });
 
   const doVerify = async (key: string): Promise<boolean> => {
     try {
@@ -69,9 +70,16 @@ export function LicenseGate({ children }: LicenseGateProps) {
     }
   };
 
-  // On mount: check stored license OR auto-verify from URL ?key=
+  // On mount: check subscription status OR stored license OR auto-verify from URL ?key=
   useEffect(() => {
     const init = async () => {
+      // 0. Check if user has active subscription (new auth system)
+      if (subscriptionStatus.data?.status === 'active') {
+        setIsVerified(true);
+        setLoading(false);
+        return;
+      }
+      
       // 1. Check if already verified locally
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
