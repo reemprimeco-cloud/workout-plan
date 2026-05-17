@@ -20,6 +20,10 @@ import {
   getSocialNotifications,
   markNotificationsRead,
   getUnreadNotificationCount,
+  followUser, unfollowUser, isFollowing, getFollowerCount, getFollowingCount, getFollowingIds,
+  getUserById, searchUsers,
+  sendDirectMessage, getConversation, getConversationList, markMessagesRead, getUnreadDMCount,
+  bookmarkPost, unbookmarkPost, isBookmarked, getUserBookmarks,
 } from "../db";
 import { getDb } from "../db";
 import { users, communityPosts, communityComments, communityChallenges, challengeParticipants } from "../../drizzle/schema";
@@ -597,5 +601,139 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
         participantsCount: 0,
       }).$returningId();
       return { success: true, id: challenge.id };
+    }),
+
+  // ── Follow System ─────────────────────────────────────────────────────────
+
+  followUser: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.userId === ctx.user.id) throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot follow yourself" });
+      await followUser(ctx.user.id, input.userId);
+      return { success: true };
+    }),
+
+  unfollowUser: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await unfollowUser(ctx.user.id, input.userId);
+      return { success: true };
+    }),
+
+  isFollowing: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return { following: await isFollowing(ctx.user.id, input.userId) };
+    }),
+
+  getUserProfile: publicProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const user = await getUserById(input.userId);
+      if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+      const db = await getDb();
+      const postCount = db ? (await db.select().from(communityPosts).where(eq(communityPosts.userId, input.userId))).length : 0;
+      const [followers, following] = await Promise.all([
+        getFollowerCount(input.userId),
+        getFollowingCount(input.userId),
+      ]);
+      const isFollowingUser = ctx?.user ? await isFollowing(ctx.user.id, input.userId) : false;
+      return { ...user, postCount, followers, following, isFollowing: isFollowingUser };
+    }),
+
+  searchUsers: protectedProcedure
+    .input(z.object({ query: z.string().min(1) }))
+    .query(async ({ input }) => {
+      return searchUsers(input.query, 10);
+    }),
+
+  // ── Direct Messages ───────────────────────────────────────────────────────
+
+  sendDM: protectedProcedure
+    .input(z.object({ receiverId: z.number(), content: z.string().min(1).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.receiverId === ctx.user.id) throw new TRPCError({ code: "BAD_REQUEST" });
+      const id = await sendDirectMessage({ senderId: ctx.user.id, receiverId: input.receiverId, content: input.content, isRead: false });
+      // Real-time socket emit
+      try {
+        const io = getIO();
+        io?.to(`user:${input.receiverId}`).emit("new_dm", { senderId: ctx.user.id, content: input.content });
+      } catch (e) { /* non-fatal */ }
+      return { success: true, id };
+    }),
+
+  getDMConversation: protectedProcedure
+    .input(z.object({ partnerId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      await markMessagesRead(input.partnerId, ctx.user.id);
+      const messages = await getConversation(ctx.user.id, input.partnerId);
+      const partner = await getUserById(input.partnerId);
+      return { messages, partner };
+    }),
+
+  getDMList: protectedProcedure.query(async ({ ctx }) => {
+    const convos = await getConversationList(ctx.user.id);
+    const enriched = await Promise.all(convos.map(async c => {
+      const partner = await getUserById(c.partnerId);
+      return { ...c, partner };
+    }));
+    return enriched;
+  }),
+
+  getUnreadDMCount: protectedProcedure.query(async ({ ctx }) => {
+    return { count: await getUnreadDMCount(ctx.user.id) };
+  }),
+
+  // ── Bookmarks ─────────────────────────────────────────────────────────────
+
+  bookmarkPost: protectedProcedure
+    .input(z.object({ postId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await bookmarkPost(ctx.user.id, input.postId);
+      return { success: true };
+    }),
+
+  unbookmarkPost: protectedProcedure
+    .input(z.object({ postId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await unbookmarkPost(ctx.user.id, input.postId);
+      return { success: true };
+    }),
+
+  isBookmarked: protectedProcedure
+    .input(z.object({ postId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return { bookmarked: await isBookmarked(ctx.user.id, input.postId) };
+    }),
+
+  getMyBookmarks: protectedProcedure.query(async ({ ctx }) => {
+    const postIds = await getUserBookmarks(ctx.user.id);
+    if (postIds.length === 0) return [];
+    const db = await getDb();
+    if (!db) return [];
+    const { inArray } = await import('drizzle-orm');
+    const posts = await db.select().from(communityPosts).where(inArray(communityPosts.id, postIds));
+    return posts;
+  }),
+
+  // ── Following Feed ────────────────────────────────────────────────────────
+
+  getFollowingFeed: protectedProcedure
+    .input(z.object({ limit: z.number().default(20), offset: z.number().default(0) }))
+    .query(async ({ ctx, input }) => {
+      const followingIds = await getFollowingIds(ctx.user.id);
+      if (followingIds.length === 0) return { posts: [] };
+      const db = await getDb();
+      if (!db) return { posts: [] };
+      const { inArray, desc: descOp } = await import('drizzle-orm');
+      const posts = await db.select().from(communityPosts)
+        .where(inArray(communityPosts.userId, followingIds))
+        .orderBy(descOp(communityPosts.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+      const userRows = await db.select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+        .from(users);
+      const userMap = Object.fromEntries(userRows.map(u => [u.id, { name: u.name ?? 'User', avatarUrl: u.avatarUrl }]));
+      return { posts: posts.map(p => ({ ...p, userName: userMap[p.userId]?.name ?? 'User', userAvatar: userMap[p.userId]?.avatarUrl })) };
     }),
 });
