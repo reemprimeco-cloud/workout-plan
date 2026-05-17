@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
+type Tab = 'dashboard' | 'users' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -114,6 +114,7 @@ const T: Record<string, Record<Lang, string>> = {
   // Rewards tab
   tabRewards: { ar: '🎰 المكافآت', en: '🎰 Rewards' },
   tabChallenges: { ar: '🏆 التحديات', en: '🏆 Challenges' },
+  tabCommunity: { ar: '🌐 المجتمع', en: '🌐 Community' },
   rewardName: { ar: 'اسم المكافأة', en: 'Reward Name' },
   rewardProbability: { ar: 'الاحتمالية %', en: 'Probability %' },
   rewardTier: { ar: 'المستوى', en: 'Tier' },
@@ -463,6 +464,204 @@ function AdminChallengesTab({ lang }: { lang: string }) {
     </div>
   );
 }
+// ── Admin Community Tab ────────────────────────────────────────────────────────────────────
+function AdminCommunityTab({ lang }: { lang: string }) {
+  const isRTL = lang === 'ar';
+  const utils = trpc.useUtils();
+  const [subTab, setSubTab] = React.useState<'posts' | 'users' | 'reports'>('posts');
+  const [postFilter, setPostFilter] = React.useState<'all' | 'hidden' | 'pinned'>('all');
+  const [userSearch, setUserSearch] = React.useState('');
+  const [reportFilter, setReportFilter] = React.useState<'pending' | 'resolved' | 'dismissed' | 'all'>('pending');
+  const [banReason, setBanReason] = React.useState('');
+  const [banningUserId, setBanningUserId] = React.useState<number | null>(null);
+
+  const statsQ = trpc.community.adminGetCommunityStats.useQuery();
+  const postsQ = trpc.community.adminGetAllPosts.useQuery({ limit: 50, offset: 0, filter: postFilter });
+  const usersQ = trpc.community.adminGetAllUsers.useQuery({ limit: 50, offset: 0, search: userSearch || undefined });
+  const reportsQ = trpc.community.adminGetReports.useQuery({ status: reportFilter });
+
+  const deletePostMut = trpc.community.adminDeletePost.useMutation({ onSuccess: () => utils.community.adminGetAllPosts.invalidate() });
+  const pinPostMut = trpc.community.adminPinPost.useMutation({ onSuccess: () => utils.community.adminGetAllPosts.invalidate() });
+  const hidePostMut = trpc.community.adminHidePost.useMutation({ onSuccess: () => utils.community.adminGetAllPosts.invalidate() });
+  const banMut = trpc.community.adminBanUser.useMutation({ onSuccess: () => { utils.community.adminGetAllUsers.invalidate(); setBanningUserId(null); setBanReason(''); } });
+  const unbanMut = trpc.community.adminUnbanUser.useMutation({ onSuccess: () => utils.community.adminGetAllUsers.invalidate() });
+  const resolveReportMut = trpc.community.adminResolveReport.useMutation({ onSuccess: () => utils.community.adminGetReports.invalidate() });
+
+  const stats = statsQ.data;
+  const cardStyle: React.CSSProperties = { background: 'white', borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(27,46,94,0.08)', marginBottom: 20 };
+
+  return (
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Stats row */}
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 20 }}>
+          {[
+            { label: isRTL ? 'إجمالي المنشورات' : 'Total Posts', value: stats.totalPosts, color: '#1B2E5E' },
+            { label: isRTL ? 'إجمالي المستخدمين' : 'Total Users', value: stats.totalUsers, color: '#0369A1' },
+            { label: isRTL ? 'بلاغات معلقة' : 'Pending Reports', value: stats.pendingReports, color: '#DC2626' },
+            { label: isRTL ? 'منشورات مخفية' : 'Hidden Posts', value: stats.hiddenPosts, color: '#D97706' },
+            { label: isRTL ? 'محظورون' : 'Banned Users', value: stats.bannedUsers, color: '#7C3AED' },
+          ].map(s => (
+            <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '14px 16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(27,46,94,0.08)' }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Sub-tab bar */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        {(['posts', 'users', 'reports'] as const).map(tab => (
+          <button key={tab} onClick={() => setSubTab(tab)} style={{
+            padding: '8px 20px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+            background: subTab === tab ? '#1B2E5E' : '#F0F4F8',
+            color: subTab === tab ? 'white' : '#7A9BB5',
+          }}>
+            {tab === 'posts' ? (isRTL ? 'المنشورات' : 'Posts') : tab === 'users' ? (isRTL ? 'المستخدمون' : 'Users') : (isRTL ? 'البلاغات' : 'Reports')}
+          </button>
+        ))}
+      </div>
+
+      {/* POSTS sub-tab */}
+      {subTab === 'posts' && (
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+            {(['all', 'hidden', 'pinned'] as const).map(f => (
+              <button key={f} onClick={() => setPostFilter(f)} style={{
+                padding: '6px 14px', borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                background: postFilter === f ? '#1B2E5E' : '#F0F4F8',
+                color: postFilter === f ? 'white' : '#7A9BB5',
+              }}>
+                {f === 'all' ? (isRTL ? 'الكل' : 'All') : f === 'hidden' ? (isRTL ? 'مخفية' : 'Hidden') : (isRTL ? 'مثبتة' : 'Pinned')}
+              </button>
+            ))}
+          </div>
+          {postsQ.isLoading ? <div style={{ color: '#7A9BB5' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (postsQ.data?.posts ?? []).length === 0 ? (
+            <div style={{ color: '#7A9BB5', textAlign: 'center', padding: 20 }}>{isRTL ? 'لا توجد منشورات' : 'No posts'}</div>
+          ) : (postsQ.data?.posts ?? []).map((post: any) => (
+            <div key={post.id} style={{ border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E' }}>{post.userName ?? 'User'}</span>
+                    {post.isPinned && <span style={{ background: '#FEF3C7', color: '#D97706', fontSize: 10, padding: '2px 6px', borderRadius: 8, fontWeight: 700 }}>{isRTL ? 'مثبت' : 'Pinned'}</span>}
+                    {post.isHidden && <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: 10, padding: '2px 6px', borderRadius: 8, fontWeight: 700 }}>{isRTL ? 'مخفي' : 'Hidden'}</span>}
+                  </div>
+                  <div style={{ fontSize: 13, color: '#374151', marginBottom: 4, wordBreak: 'break-word' }}>{post.content?.slice(0, 120)}{(post.content?.length ?? 0) > 120 ? '...' : ''}</div>
+                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>❤️ {post.likesCount} &nbsp; 💬 {post.commentsCount} &nbsp; {new Date(post.createdAt).toLocaleDateString()}</div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button onClick={() => pinPostMut.mutate({ postId: post.id, isPinned: !post.isPinned })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #D97706', background: 'white', color: '#D97706', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    {post.isPinned ? (isRTL ? 'إلغاء التثبيت' : 'Unpin') : (isRTL ? 'تثبيت' : 'Pin')}
+                  </button>
+                  <button onClick={() => hidePostMut.mutate({ postId: post.id, isHidden: !post.isHidden })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #7C3AED', background: 'white', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    {post.isHidden ? (isRTL ? 'إظهار' : 'Show') : (isRTL ? 'إخفاء' : 'Hide')}
+                  </button>
+                  <button onClick={() => { if (confirm(isRTL ? 'حذف هذا المنشور؟' : 'Delete this post?')) deletePostMut.mutate({ postId: post.id }); }} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #DC2626', background: 'white', color: '#DC2626', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    {isRTL ? 'حذف' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* USERS sub-tab */}
+      {subTab === 'users' && (
+        <div style={cardStyle}>
+          <input
+            value={userSearch}
+            onChange={e => setUserSearch(e.target.value)}
+            placeholder={isRTL ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'}
+            style={{ width: '100%', padding: '10px 14px', border: '1px solid #CBD5E1', borderRadius: 10, fontSize: 13, marginBottom: 16, direction: isRTL ? 'rtl' : 'ltr' }}
+          />
+          {usersQ.isLoading ? <div style={{ color: '#7A9BB5' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (usersQ.data?.users ?? []).map((u: any) => (
+            <div key={u.id} style={{ border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: u.isBanned ? '#FEE2E2' : 'linear-gradient(135deg, #1B2E5E, #7BB8D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: 16, flexShrink: 0 }}>
+                {u.name?.[0]?.toUpperCase() ?? 'U'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E' }}>{u.name ?? 'Unknown'} {u.role === 'admin' && <span style={{ background: '#1B2E5E', color: 'white', fontSize: 10, padding: '1px 6px', borderRadius: 6 }}>Admin</span>} {u.isBanned && <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: 10, padding: '1px 6px', borderRadius: 6 }}>{isRTL ? 'محظور' : 'Banned'}</span>}</div>
+                <div style={{ fontSize: 11, color: '#9CA3AF' }}>{u.email}</div>
+                {u.isBanned && u.banReason && <div style={{ fontSize: 11, color: '#DC2626', marginTop: 2 }}>{isRTL ? 'سبب: ' : 'Reason: '}{u.banReason}</div>}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {u.isBanned ? (
+                  <button onClick={() => unbanMut.mutate({ userId: u.id })} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #16A34A', background: 'white', color: '#16A34A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    {isRTL ? 'رفع الحظر' : 'Unban'}
+                  </button>
+                ) : (
+                  banningUserId === u.id ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <input value={banReason} onChange={e => setBanReason(e.target.value)} placeholder={isRTL ? 'سبب الحظر (اختياري)' : 'Ban reason (optional)'} style={{ padding: '4px 8px', border: '1px solid #CBD5E1', borderRadius: 6, fontSize: 12, width: 150 }} />
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => banMut.mutate({ userId: u.id, reason: banReason || undefined })} style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: 'none', background: '#DC2626', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{isRTL ? 'تأكيد' : 'Confirm'}</button>
+                        <button onClick={() => setBanningUserId(null)} style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid #CBD5E1', background: 'white', fontSize: 11, cursor: 'pointer' }}>{isRTL ? 'إلغاء' : 'Cancel'}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setBanningUserId(u.id)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #DC2626', background: 'white', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      {isRTL ? 'حظر' : 'Ban'}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* REPORTS sub-tab */}
+      {subTab === 'reports' && (
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+            {(['pending', 'resolved', 'dismissed', 'all'] as const).map(f => (
+              <button key={f} onClick={() => setReportFilter(f)} style={{
+                padding: '6px 14px', borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                background: reportFilter === f ? '#1B2E5E' : '#F0F4F8',
+                color: reportFilter === f ? 'white' : '#7A9BB5',
+              }}>
+                {f === 'pending' ? (isRTL ? 'معلقة' : 'Pending') : f === 'resolved' ? (isRTL ? 'محلولة' : 'Resolved') : f === 'dismissed' ? (isRTL ? 'مرفوضة' : 'Dismissed') : (isRTL ? 'الكل' : 'All')}
+              </button>
+            ))}
+          </div>
+          {reportsQ.isLoading ? <div style={{ color: '#7A9BB5' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (reportsQ.data ?? []).length === 0 ? (
+            <div style={{ color: '#7A9BB5', textAlign: 'center', padding: 20 }}>{isRTL ? 'لا توجد بلاغات' : 'No reports'}</div>
+          ) : (reportsQ.data ?? []).map((r: any) => (
+            <div key={r.id} style={{ border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E', marginBottom: 4 }}>{isRTL ? 'من ' : 'From: '}{r.reporterName ?? 'Unknown'}</div>
+                  <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>{isRTL ? 'السبب: ' : 'Reason: '}{r.reason}</div>
+                  {r.postContent && <div style={{ fontSize: 11, color: '#9CA3AF', background: '#F8FAFC', borderRadius: 6, padding: '4px 8px', marginBottom: 4 }}>{r.postContent?.slice(0, 80)}...</div>}
+                  <div style={{ fontSize: 10, color: '#CBD5E1' }}>{new Date(r.createdAt).toLocaleDateString()}</div>
+                </div>
+                {r.status === 'pending' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button onClick={() => resolveReportMut.mutate({ reportId: r.id, status: 'resolved' })} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: '#16A34A', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                      {isRTL ? 'حل' : 'Resolve'}
+                    </button>
+                    <button onClick={() => resolveReportMut.mutate({ reportId: r.id, status: 'dismissed' })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: 'white', color: '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                      {isRTL ? 'رفض' : 'Dismiss'}
+                    </button>
+                  </div>
+                )}
+                {r.status !== 'pending' && (
+                  <span style={{ background: r.status === 'resolved' ? '#DCFCE7' : '#F3F4F6', color: r.status === 'resolved' ? '#16A34A' : '#6B7280', fontSize: 11, padding: '4px 10px', borderRadius: 10, fontWeight: 700 }}>
+                    {r.status === 'resolved' ? (isRTL ? 'محلول' : 'Resolved') : (isRTL ? 'مرفوض' : 'Dismissed')}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { user, loading, logout } = useAuth();
   const utils = trpc.useUtils();
@@ -721,6 +920,7 @@ export default function AdminPanel() {
           ['broadcast', t('tabBroadcast', lang)],
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
+          ['community', t('tabCommunity', lang)],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
           <button
@@ -1301,6 +1501,8 @@ export default function AdminPanel() {
 
         {/* ── CHALLENGES TAB ── */}
         {activeTab === 'challenges' && <AdminChallengesTab lang={lang} />}
+        {/* ── COMMUNITY TAB ── */}
+        {activeTab === 'community' && <AdminCommunityTab lang={lang} />}
         {/* ── PROFILE TAB ── */}
         {activeTab === 'profile' && (
           <div style={cardStyle}>

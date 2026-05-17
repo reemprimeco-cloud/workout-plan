@@ -3,7 +3,7 @@
  * leaderboard, challenges, XP/levels, and AI insights.
  */
 import { z } from "zod";
-import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
+import { router, protectedProcedure, publicProcedure, adminProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "../_core/llm";
 import { storagePut } from "../storage";
@@ -26,7 +26,7 @@ import {
   bookmarkPost, unbookmarkPost, isBookmarked, getUserBookmarks,
 } from "../db";
 import { getDb } from "../db";
-import { users, communityPosts, communityComments, communityChallenges, challengeParticipants } from "../../drizzle/schema";
+import { users, communityPosts, communityComments, communityChallenges, challengeParticipants, communityReportPosts } from "../../drizzle/schema";
 import { eq, like, or } from "drizzle-orm";
 import { getIO } from "../_core/index";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
@@ -735,5 +735,173 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
         .from(users);
       const userMap = Object.fromEntries(userRows.map(u => [u.id, { name: u.name ?? 'User', avatarUrl: u.avatarUrl }]));
       return { posts: posts.map(p => ({ ...p, userName: userMap[p.userId]?.name ?? 'User', userAvatar: userMap[p.userId]?.avatarUrl })) };
+    }),
+
+  // ── Admin Community Procedures ──────────────────────────────────────────────
+  adminGetAllPosts: adminProcedure
+    .input(z.object({
+      limit: z.number().default(30),
+      offset: z.number().default(0),
+      filter: z.enum(['all', 'reported', 'hidden', 'pinned']).default('all'),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { posts: [], total: 0 };
+      const { desc: descOp, eq: eqOp } = await import('drizzle-orm');
+      let whereClause: any = undefined;
+      if (input.filter === 'hidden') whereClause = eqOp(communityPosts.isHidden, true);
+      else if (input.filter === 'pinned') whereClause = eqOp(communityPosts.isPinned, true);
+      const posts = await db.select({
+        id: communityPosts.id, userId: communityPosts.userId, content: communityPosts.content,
+        type: communityPosts.type, imageUrl: communityPosts.imageUrl, visibility: communityPosts.visibility,
+        likesCount: communityPosts.likesCount, commentsCount: communityPosts.commentsCount,
+        isTrending: communityPosts.isTrending, isPinned: communityPosts.isPinned, isHidden: communityPosts.isHidden,
+        createdAt: communityPosts.createdAt,
+        userName: users.name, userEmail: users.email, userAvatar: users.avatarUrl,
+      })
+        .from(communityPosts)
+        .leftJoin(users, eqOp(communityPosts.userId, users.id))
+        .where(whereClause)
+        .orderBy(descOp(communityPosts.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+      return { posts, total: posts.length };
+    }),
+
+  adminDeletePost: adminProcedure
+    .input(z.object({ postId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const { eq: eqOp } = await import('drizzle-orm');
+      await db.delete(communityComments).where(eqOp(communityComments.postId, input.postId));
+      await db.delete(communityPosts).where(eqOp(communityPosts.id, input.postId));
+      return { success: true };
+    }),
+
+  adminPinPost: adminProcedure
+    .input(z.object({ postId: z.number(), isPinned: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const { eq: eqOp } = await import('drizzle-orm');
+      await db.update(communityPosts).set({ isPinned: input.isPinned }).where(eqOp(communityPosts.id, input.postId));
+      return { success: true };
+    }),
+
+  adminHidePost: adminProcedure
+    .input(z.object({ postId: z.number(), isHidden: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const { eq: eqOp } = await import('drizzle-orm');
+      await db.update(communityPosts).set({ isHidden: input.isHidden }).where(eqOp(communityPosts.id, input.postId));
+      return { success: true };
+    }),
+
+  adminGetAllUsers: adminProcedure
+    .input(z.object({ limit: z.number().default(50), offset: z.number().default(0), search: z.string().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { users: [] };
+      const { desc: descOp, or: orOp, like: likeOp } = await import('drizzle-orm');
+      let whereClause: any = undefined;
+      if (input.search) {
+        whereClause = orOp(likeOp(users.name, `%${input.search}%`), likeOp(users.email, `%${input.search}%`));
+      }
+      const rows = await db.select({
+        id: users.id, name: users.name, email: users.email, avatarUrl: users.avatarUrl,
+        role: users.role, isBanned: users.isBanned, bannedAt: users.bannedAt, banReason: users.banReason,
+        createdAt: users.createdAt, lastSignedIn: users.lastSignedIn,
+      })
+        .from(users)
+        .where(whereClause)
+        .orderBy(descOp(users.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+      return { users: rows };
+    }),
+
+  adminBanUser: adminProcedure
+    .input(z.object({ userId: z.number(), reason: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const { eq: eqOp } = await import('drizzle-orm');
+      await db.update(users).set({ isBanned: true, bannedAt: new Date(), banReason: input.reason ?? null }).where(eqOp(users.id, input.userId));
+      return { success: true };
+    }),
+
+  adminUnbanUser: adminProcedure
+    .input(z.object({ userId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const { eq: eqOp } = await import('drizzle-orm');
+      await db.update(users).set({ isBanned: false, bannedAt: null, banReason: null }).where(eqOp(users.id, input.userId));
+      return { success: true };
+    }),
+
+  reportPost: protectedProcedure
+    .input(z.object({ postId: z.number(), reason: z.string().min(1).max(255) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      await db.insert(communityReportPosts).values({ postId: input.postId, reporterId: ctx.user.id, reason: input.reason });
+      return { success: true };
+    }),
+
+  adminGetReports: adminProcedure
+    .input(z.object({ status: z.enum(['pending', 'resolved', 'dismissed', 'all']).default('pending') }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const { desc: descOp, eq: eqOp } = await import('drizzle-orm');
+      let whereClause: any = undefined;
+      if (input.status !== 'all') whereClause = eqOp(communityReportPosts.status, input.status as any);
+      const reports = await db.select({
+        id: communityReportPosts.id, postId: communityReportPosts.postId,
+        reason: communityReportPosts.reason, status: communityReportPosts.status,
+        adminNote: communityReportPosts.adminNote, createdAt: communityReportPosts.createdAt,
+        reporterName: users.name, reporterEmail: users.email,
+        postContent: communityPosts.content,
+      })
+        .from(communityReportPosts)
+        .leftJoin(users, eqOp(communityReportPosts.reporterId, users.id))
+        .leftJoin(communityPosts, eqOp(communityReportPosts.postId, communityPosts.id))
+        .where(whereClause)
+        .orderBy(descOp(communityReportPosts.createdAt));
+      return reports;
+    }),
+
+  adminResolveReport: adminProcedure
+    .input(z.object({ reportId: z.number(), status: z.enum(['resolved', 'dismissed']), adminNote: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const { eq: eqOp } = await import('drizzle-orm');
+      await db.update(communityReportPosts)
+        .set({ status: input.status, adminNote: input.adminNote ?? null, resolvedAt: new Date() })
+        .where(eqOp(communityReportPosts.id, input.reportId));
+      return { success: true };
+    }),
+
+  adminGetCommunityStats: adminProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return { totalPosts: 0, totalUsers: 0, pendingReports: 0, hiddenPosts: 0, bannedUsers: 0 };
+      const { count, eq: eqOp } = await import('drizzle-orm');
+      const [postsCount] = await db.select({ count: count() }).from(communityPosts);
+      const [usersCount] = await db.select({ count: count() }).from(users);
+      const [reportsCount] = await db.select({ count: count() }).from(communityReportPosts).where(eqOp(communityReportPosts.status, 'pending'));
+      const [hiddenCount] = await db.select({ count: count() }).from(communityPosts).where(eqOp(communityPosts.isHidden, true));
+      const [bannedCount] = await db.select({ count: count() }).from(users).where(eqOp(users.isBanned, true));
+      return {
+        totalPosts: postsCount?.count ?? 0,
+        totalUsers: usersCount?.count ?? 0,
+        pendingReports: reportsCount?.count ?? 0,
+        hiddenPosts: hiddenCount?.count ?? 0,
+        bannedUsers: bannedCount?.count ?? 0,
+      };
     }),
 });

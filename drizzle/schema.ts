@@ -40,6 +40,9 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  isBanned: boolean("isBanned").default(false).notNull(),
+  bannedAt: timestamp("bannedAt"),
+  banReason: text("banReason"),
 });
 
 export type User = typeof users.$inferSelect;
@@ -164,6 +167,8 @@ export const communityPosts = mysqlTable("community_posts", {
   likesCount: int("likesCount").default(0).notNull(),
   commentsCount: int("commentsCount").default(0).notNull(),
   isTrending: boolean("isTrending").default(false).notNull(),
+  isPinned: boolean("isPinned").default(false).notNull(),
+  isHidden: boolean("isHidden").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -722,3 +727,17 @@ export const communityBookmarks = mysqlTable("community_bookmarks", {
 });
 export type CommunityBookmark = typeof communityBookmarks.$inferSelect;
 export type InsertCommunityBookmark = typeof communityBookmarks.$inferInsert;
+
+// ── Community Post Reports (moderation) ──────────────────────────────────────
+export const communityReportPosts = mysqlTable("community_report_posts", {
+  id:         int("id").autoincrement().primaryKey(),
+  postId:     int("postId").notNull(),
+  reporterId: int("reporterId").notNull(),
+  reason:     varchar("reason", { length: 255 }).notNull(),
+  status:     mysqlEnum("status", ["pending", "resolved", "dismissed"]).default("pending").notNull(),
+  adminNote:  text("adminNote"),
+  createdAt:  timestamp("createdAt").defaultNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+});
+export type CommunityReportPost = typeof communityReportPosts.$inferSelect;
+export type InsertCommunityReportPost = typeof communityReportPosts.$inferInsert;
