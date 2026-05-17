@@ -66,7 +66,10 @@ function AppWithSocket() {
   }
 
   // Redirect to profile setup if user is logged in but profile is incomplete
-  if (!authLoading && currentUser && window.location.pathname !== "/profile-setup" && !(currentUser as any)?.fullName) {
+  // Check both fullName (standalone auth) and name (OAuth/Google users)
+  // Google users get their name from OAuth, so they don't need profile setup
+  const hasName = !!(currentUser as any)?.fullName || !!(currentUser as any)?.name;
+  if (!authLoading && currentUser && window.location.pathname !== "/profile-setup" && !hasName) {
     window.location.href = "/profile-setup";
     return null;
   }
