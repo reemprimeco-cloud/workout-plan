@@ -606,3 +606,6 @@
 - [ ] MealsTab: swipe-to-delete
 - [ ] MealsTab: replace emoji with SVG vector icons
 - [ ] MealsTab: white background iOS-style cards
+
+## Notification Bell / XP Panel Clipping Fix
+- [x] Move Community tab outside main element (like Coach tab) to fix overflow:hidden clipping of fixed-position panels

@@ -189,7 +189,20 @@ export default function Home() {
           <MyCoach />
         </div>
       )}
-      <main style={activeTab === 'coach' ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
+      {/* Community tab gets its own full-height container — avoids overflow:hidden clipping fixed panels */}
+      {activeTab === 'community' && (
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+          <Community
+            userId={currentUser?.id}
+            streak={stats.streak}
+            weeklyCompletion={stats.progressPercent}
+            currentWeight={data.profile.currentWeight}
+            targetWeight={data.profile.targetWeight}
+            name={data.profile.name}
+          />
+        </div>
+      )}
+      <main style={(activeTab === 'coach' || activeTab === 'community') ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
 
         {/* Active Session Banner */}
         {activeSession && (
@@ -253,17 +266,7 @@ export default function Home() {
           </div>
         )}
         {activeTab === 'profile' && <ProfilePanel />}
-        {/* coach tab rendered outside main above */}
-        {activeTab === 'community' && (
-          <Community
-            userId={currentUser?.id}
-            streak={stats.streak}
-            weeklyCompletion={stats.progressPercent}
-            currentWeight={data.profile.currentWeight}
-            targetWeight={data.profile.targetWeight}
-            name={data.profile.name}
-          />
-        )}
+        {/* coach + community tabs rendered outside main above */}
       </main>
 
       {/* ── Bottom Navigation ── */}
