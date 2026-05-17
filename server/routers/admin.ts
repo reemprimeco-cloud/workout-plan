@@ -21,7 +21,7 @@ import {
   adminNotifications,
   notificationReads,
 } from "../../drizzle/schema";
-import { desc, eq, and, notInArray, isNull, or, inArray, gte, lt } from "drizzle-orm";
+import { desc, eq, and, notInArray, isNull, or, inArray, gte, lt, ne } from "drizzle-orm";
 import { sendBroadcastEmail } from "../_core/email";
 import { storagePut } from "../storage";
 
@@ -209,6 +209,7 @@ export const adminRouter = router({
         lastSignedIn: users.lastSignedIn,
       })
       .from(users)
+      .where(ne(users.role, 'admin'))
       .orderBy(desc(users.createdAt))
       .limit(500);
 
