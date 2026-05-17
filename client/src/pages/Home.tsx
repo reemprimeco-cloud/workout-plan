@@ -71,46 +71,6 @@ export default function Home() {
   const { activeSession, startSession, stats, data } = tracker;
   const { data: currentUser } = trpc.auth.me.useQuery();
 
-  // Show profile setup if new user (no name or weight set)
-  const isNewUser = !data.profile.name || data.profile.currentWeight === 0;
-  if (isNewUser) {
-    return (
-      <div dir="ltr" style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        fontFamily: 'Inter, system-ui, sans-serif',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}>
-        <div style={{
-          background: '#fff',
-          borderRadius: 24,
-          padding: '32px 24px',
-          width: '100%',
-          maxWidth: 420,
-          boxShadow: '0 20px 60px rgba(27,46,94,0.35)',
-        }}>
-          {/* Logo on setup screen */}
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <img
-              src={LOGO_URL}
-              alt="Prime Fit"
-              style={{ width: 100, height: 100, objectFit: 'contain', marginBottom: 12, borderRadius: 16 }}
-            />
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: 0 }}>
-              Welcome to Prime Fit
-            </h1>
-            <p style={{ color: '#7A9BB5', fontSize: 13, marginTop: 6 }}>
-              Set up your profile to get started
-            </p>
-          </div>
-          <SetupForm onComplete={() => {}} tracker={tracker} />
-        </div>
-      </div>
-    );
-  }
 
   const handleStart = (type: SessionType) => {
     setStartingSession(true);
