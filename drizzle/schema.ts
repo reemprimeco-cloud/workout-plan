@@ -673,3 +673,20 @@ export const deviceSessions = mysqlTable("device_sessions", {
 });
 export type DeviceSession = typeof deviceSessions.$inferSelect;
 export type InsertDeviceSession = typeof deviceSessions.$inferInsert;
+
+// ── Meal Favorites (quick-add saved meals) ───────────────────────────────────
+export const mealFavorites = mysqlTable("meal_favorites", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      int("userId").notNull(),
+  name:        varchar("name", { length: 255 }).notNull(),
+  nameAr:      varchar("nameAr", { length: 255 }),
+  calories:    int("calories").notNull().default(0),
+  proteinG:    double("proteinG").notNull().default(0),
+  carbsG:      double("carbsG").notNull().default(0),
+  fatG:        double("fatG").notNull().default(0),
+  mealType:    mysqlEnum("mealType", ["breakfast", "lunch", "dinner", "snack", "drink", "coffee", "protein_shake"]).notNull().default("snack"),
+  servingSize: varchar("servingSize", { length: 64 }),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+});
+export type MealFavorite = typeof mealFavorites.$inferSelect;
+export type InsertMealFavorite = typeof mealFavorites.$inferInsert;

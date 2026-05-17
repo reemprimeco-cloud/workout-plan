@@ -586,3 +586,23 @@
 - [x] Fix monthly sessions: count sessions in current calendar month
 - [x] Ensure total sessions = all completed sessions (verified correct)
 - [x] Update StatsPanel UI labels to clearly distinguish streak vs total sessions
+
+## Nutrition System Redesign (MyFitnessPal-style)
+- [ ] DB schema: add meal_favorites table
+- [ ] Run pnpm db:push for new tables
+- [ ] Server: addFavorite, removeFavorite, getFavorites procedures
+- [ ] Server: getHistory grouped by day procedure
+- [ ] Server: getRecentMeals procedure
+- [ ] Server: quickAdd procedure
+- [ ] Redesign MealsTab: daily view grouped by meal type
+- [ ] MealsTab: daily calorie/macro summary header
+- [ ] MealsTab: water tracking row
+- [ ] MealsTab: meal group sections with + add button per group
+- [ ] MealsTab: floating FAB with quick-add sheet
+- [ ] MealsTab: manual entry form
+- [ ] MealsTab: History tab (browse previous days)
+- [ ] MealsTab: Favorites section
+- [ ] MealsTab: Recently Used section
+- [ ] MealsTab: swipe-to-delete
+- [ ] MealsTab: replace emoji with SVG vector icons
+- [ ] MealsTab: white background iOS-style cards
