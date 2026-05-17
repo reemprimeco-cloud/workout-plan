@@ -1009,10 +1009,12 @@ export default function AdminPanel() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ background: NAVY, color: 'white' }}>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'معرف المستخدم' : 'User ID'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'البريد الإلكتروني' : 'Email'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الخطة' : 'Plan'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'المزود' : 'Provider'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الأيام المتبقية' : 'Days Left'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</th>
                     </tr>
                   </thead>
@@ -1034,10 +1036,17 @@ export default function AdminPanel() {
                         cancelled: t('subCancelled', lang),
                         pending: t('subPending', lang),
                       };
+                      const daysLeft = sub.expiresAt ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+                      const daysColor = daysLeft === null ? '#64748b' : daysLeft <= 0 ? '#DC2626' : daysLeft <= 7 ? '#F59E0B' : '#16A34A';
+                      const providerLabel: Record<string, string> = {
+                        myfatoorah: 'MyFatoorah',
+                        manual: lang === 'ar' ? 'يدوي' : 'Manual',
+                        free: lang === 'ar' ? 'مجاني' : 'Free',
+                      };
                       return (
                         <tr key={sub.id} style={{ background: i % 2 === 0 ? '#F8FBFF' : 'white', borderBottom: `1px solid ${SKY_LIGHT}44` }}>
-                          <td style={{ padding: '10px 12px', color: '#334155', fontFamily: 'monospace', fontSize: 11 }}>
-                            {sub.userId.length > 16 ? sub.userId.slice(0, 16) + '…' : sub.userId}
+                          <td style={{ padding: '10px 12px', color: '#334155', fontSize: 11 }}>
+                            {sub.email ? (sub.email.length > 20 ? sub.email.slice(0, 20) + '…' : sub.email) : '—'}
                           </td>
                           <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY }}>
                             {planLabel[sub.plan] ?? sub.plan}
@@ -1047,8 +1056,14 @@ export default function AdminPanel() {
                               {statusLabel[sub.status] ?? sub.status}
                             </span>
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
+                            {providerLabel[sub.paymentProvider] ?? sub.paymentProvider}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
                             {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: daysColor, fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}>
+                            {daysLeft === null ? (lang === 'ar' ? '∞' : '∞') : daysLeft <= 0 ? (lang === 'ar' ? 'منتهي' : 'Expired') : `${daysLeft}d`}
                           </td>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: sub.licenseKey ? '#1B2E5E' : '#CBD5E1' }}>
                             {sub.licenseKey ? (
