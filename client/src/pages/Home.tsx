@@ -183,7 +183,13 @@ export default function Home() {
       </header>
 
       {/* ── Content ── */}
-      <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
+      {/* Coach tab gets its own full-height flex container (WhatsApp-style) */}
+      {activeTab === 'coach' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+          <MyCoach />
+        </div>
+      )}
+      <main style={activeTab === 'coach' ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
 
         {/* Active Session Banner */}
         {activeSession && (
@@ -247,7 +253,7 @@ export default function Home() {
           </div>
         )}
         {activeTab === 'profile' && <ProfilePanel />}
-        {activeTab === 'coach' && <MyCoach />}
+        {/* coach tab rendered outside main above */}
         {activeTab === 'community' && (
           <Community
             userId={currentUser?.id}

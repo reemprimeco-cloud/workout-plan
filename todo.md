@@ -576,3 +576,7 @@
 
 ## AI Coach Page Redesign
 - [x] Redesign AI Coach (مدربي الذكي) page: white background, navy blue accents, stats cards row (sessions/weight change/weekly achievement/streak), clean chat message bubbles, navy header card with coach icon, send button with navy color
+
+## AI Coach Chat Layout Fix (WhatsApp-Style)
+- [x] Fix MyCoach.tsx chat section: header + stats + tabs fixed at top, chat messages scroll independently, input bar fixed at bottom — nothing moves except the messages area
+- [x] Entire MyCoach page must fill the screen height (no page-level scroll), integrated with the app shell (bottom nav stays fixed)
