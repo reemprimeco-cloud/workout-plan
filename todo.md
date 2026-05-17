@@ -551,3 +551,9 @@
 - [x] Remove the entire Licenses tab content (create code form + access codes list)
 - [x] Update Dashboard stats cards: replace Total Licenses / Active Licenses / Inactive Licenses with Total Users / Active Subscribers / Expired Subscriptions
 - [x] Keep Broadcasts Sent and Total Recipients cards on Dashboard
+
+## Admin Panel — Search/Filter Users & Remove Subscriptions Tab
+- [x] Add search input (by name or email) to Users tab header
+- [x] Add subscription status filter dropdown (All / Active / Trialing / Expired / No Subscription) to Users tab
+- [x] Filter user list in real-time as admin types or selects filter
+- [x] Remove the Subscriptions tab from the admin panel tab bar and content
