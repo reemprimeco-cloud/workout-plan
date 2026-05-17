@@ -21,7 +21,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'licenses' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
+type Tab = 'dashboard' | 'licenses' | 'users' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -100,7 +100,8 @@ const T: Record<string, Record<Lang, string>> = {
   profileSaved: { ar: '✅ تم الحفظ بنجاح!', en: '✅ Saved successfully!' },
   uploadPhoto: { ar: '📷 تغيير الصورة', en: '📷 Change Photo' },
   // Subscriptions tab
-  tabSubscriptions: { ar: '💳 الاشتراكات', en: '💳 Subscriptions' },
+  tabUsers: { ar: 'المستخدمون', en: 'Users' },
+  tabSubscriptions: { ar: 'الاشتراكات', en: 'Subscriptions' },
   subNoData: { ar: 'لا توجد اشتراكات بعد.', en: 'No subscriptions yet.' },
   subActive: { ar: '✅ نشط', en: '✅ Active' },
   subTrialing: { ar: '🔵 تجريبي', en: '🔵 Trialing' },
@@ -485,6 +486,11 @@ export default function AdminPanel() {
   const [formError, setFormError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Users tab state
+  const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [subForm, setSubForm] = useState({ plan: 'prime_plus' as 'free' | 'prime_plus' | 'prime_pro', status: 'active' as 'active' | 'expired' | 'cancelled' | 'trialing' | 'pending', period: 'monthly' as 'monthly' | 'yearly' | 'lifetime' | 'free_trial', expiresAt: '' });
+  const [subMsg, setSubMsg] = useState('');
+
   // Broadcast state
   const [bSubject, setBSubject] = useState('');
   const [bBody, setBBody] = useState('');
@@ -492,6 +498,7 @@ export default function AdminPanel() {
   const [bResult, setBResult] = useState('');
   const [bMode, setBMode] = useState<'all' | 'one'>('all');
   const [bTargetEmail, setBTargetEmail] = useState('');
+  const [bChannel, setBChannel] = useState<'inapp' | 'email' | 'both'>('both');
 
   // Profile state
   const [pName, setPName] = useState('');
@@ -507,6 +514,7 @@ export default function AdminPanel() {
   const codesQuery = trpc.license.list.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const broadcastsQuery = trpc.admin.listBroadcasts.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const subscriptionsQuery = trpc.admin.listSubscriptions.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
+  const usersQuery = trpc.admin.listUsers.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const profileQuery = trpc.admin.getProfile.useQuery(undefined, {
     enabled: !!user && user.role === 'admin',
   });
@@ -556,6 +564,31 @@ export default function AdminPanel() {
     },
     onError: (err) => setBResult(`❌ ${err.message}`),
   });
+  const updateSubMutation = trpc.admin.updateUserSubscription.useMutation({
+    onSuccess: () => {
+      usersQuery.refetch();
+      setEditingUser(null);
+      setSubMsg(lang === 'ar' ? 'تم تحديث الاشتراك بنجاح' : 'Subscription updated successfully');
+      setTimeout(() => setSubMsg(''), 3000);
+    },
+    onError: (err) => setSubMsg(`❌ ${err.message}`),
+  });
+  const deleteUserMutation = trpc.admin.deleteUser.useMutation({
+    onSuccess: () => usersQuery.refetch(),
+    onError: (err) => alert(err.message),
+  });
+  const sendAdminNotifMutation = trpc.admin.sendAdminNotification.useMutation({
+    onSuccess: (data) => {
+      utils.admin.listAdminNotifications.invalidate();
+      utils.admin.getStats.invalidate();
+      setBResult(`✅ ${lang === 'ar' ? `تم الإرسال إلى ${data.recipientCount} مستخدم` : `Sent to ${data.recipientCount} users`}`);
+      setBSubject(''); setBBody(''); setBTargetEmail('');
+      setTimeout(() => setBResult(''), 5000);
+    },
+    onError: (err) => setBResult(`❌ ${err.message}`),
+  });
+  const adminNotifsQuery = trpc.admin.listAdminNotifications.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
+
   const updateProfileMutation = trpc.admin.updateProfile.useMutation({
     onSuccess: () => { utils.admin.getProfile.invalidate(); setPMsg(t('profileSaved', lang)); setTimeout(() => setPMsg(''), 3000); },
     onError: (err) => setPMsg(`❌ ${err.message}`),
@@ -683,6 +716,7 @@ export default function AdminPanel() {
         {([
           ['dashboard', t('tabDashboard', lang)],
           ['licenses', t('tabLicenses', lang)],
+          ['users', t('tabUsers', lang)],
           ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
           ['rewards', t('tabRewards', lang)],
@@ -896,6 +930,120 @@ export default function AdminPanel() {
           </>
         )}
 
+        {/* ── USERS TAB ── */}
+        {activeTab === 'users' && (
+          <div style={cardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 900 }}>
+                {lang === 'ar' ? 'المستخدمون المسجلون' : 'Registered Users'} ({usersQuery.data?.length ?? 0})
+              </h2>
+              <button onClick={() => usersQuery.refetch()}
+                style={{ background: `${SKY}22`, border: `1.5px solid ${SKY}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', color: NAVY, fontSize: 12, fontWeight: 700 }}>
+                {lang === 'ar' ? 'تحديث' : 'Refresh'}
+              </button>
+            </div>
+            {subMsg && <p style={{ color: subMsg.startsWith('❌') ? '#DC2626' : '#16A34A', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{subMsg}</p>}
+            {usersQuery.isLoading ? (
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+            ) : !usersQuery.data?.length ? (
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا يوجد مستخدمون بعد.' : 'No users yet.'}</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {usersQuery.data.map((u) => {
+                  const sub = u.subscription;
+                  const statusColor: Record<string, string> = { active: '#16A34A', trialing: '#2563EB', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706' };
+                  const planLabel: Record<string, string> = { free: lang === 'ar' ? 'مجاني' : 'Free', prime_plus: 'Prime Plus', prime_pro: 'Prime Pro' };
+                  const isEditing = editingUser === u.openId;
+                  return (
+                    <div key={u.id} style={{ border: `1.5px solid ${SKY_LIGHT}44`, borderRadius: 14, padding: '14px 18px', background: '#FAFBFF' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <div style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>{u.fullName || u.name || '—'}</div>
+                          <div style={{ color: '#64748b', fontSize: 12, marginTop: 2, direction: 'ltr' }}>{u.email || '—'}</div>
+                          <div style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
+                            {lang === 'ar' ? 'انضم:' : 'Joined:'} {new Date(u.createdAt).toLocaleDateString('en-GB')}
+                            {u.lastSignedIn ? ` · ${lang === 'ar' ? 'آخر دخول:' : 'Last login:'} ${new Date(u.lastSignedIn).toLocaleDateString('en-GB')}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          {sub ? (
+                            <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}18`, color: statusColor[sub.status] ?? '#64748b', borderRadius: 6, padding: '4px 10px', fontWeight: 700, fontSize: 11 }}>
+                              {planLabel[sub.plan] ?? sub.plan} · {sub.status}
+                              {sub.expiresAt ? ` · ${new Date(sub.expiresAt).toLocaleDateString('en-GB')}` : ''}
+                            </span>
+                          ) : (
+                            <span style={{ background: '#F1F5F9', color: '#94A3B8', borderRadius: 6, padding: '4px 10px', fontSize: 11 }}>{lang === 'ar' ? 'بدون اشتراك' : 'No subscription'}</span>
+                          )}
+                          <button
+                            onClick={() => {
+                              setEditingUser(isEditing ? null : u.openId);
+                              if (!isEditing) setSubForm({ plan: (sub?.plan as any) ?? 'prime_plus', status: (sub?.status as any) ?? 'active', period: (sub?.period as any) ?? 'monthly', expiresAt: sub?.expiresAt ? new Date(sub.expiresAt).toISOString().split('T')[0] : '' });
+                            }}
+                            style={{ background: isEditing ? '#FEE2E2' : `${NAVY}18`, border: `1.5px solid ${isEditing ? '#EF4444' : NAVY}`, color: isEditing ? '#DC2626' : NAVY, borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                            {isEditing ? (lang === 'ar' ? 'إلغاء' : 'Cancel') : (lang === 'ar' ? 'تعديل الاشتراك' : 'Edit Subscription')}
+                          </button>
+                          {u.role !== 'admin' && (
+                            <button
+                              onClick={() => { if (confirm(lang === 'ar' ? `حذف ${u.email}؟` : `Delete ${u.email}?`)) deleteUserMutation.mutate({ userId: u.id }); }}
+                              disabled={deleteUserMutation.isPending}
+                              style={{ background: '#FEE2E2', border: '1px solid #EF4444', color: '#DC2626', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                              {lang === 'ar' ? 'حذف' : 'Delete'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {isEditing && (
+                        <div style={{ marginTop: 14, padding: '14px 16px', background: 'white', borderRadius: 10, border: `1.5px solid ${SKY_LIGHT}` }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 12 }}>
+                            <div>
+                              <label style={labelStyle}>{lang === 'ar' ? 'الخطة' : 'Plan'}</label>
+                              <select value={subForm.plan} onChange={e => setSubForm(f => ({ ...f, plan: e.target.value as any }))} style={{ ...inputStyle, background: 'white' }}>
+                                <option value="free">{lang === 'ar' ? 'مجاني' : 'Free'}</option>
+                                <option value="prime_plus">Prime Plus</option>
+                                <option value="prime_pro">Prime Pro</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label style={labelStyle}>{lang === 'ar' ? 'الحالة' : 'Status'}</label>
+                              <select value={subForm.status} onChange={e => setSubForm(f => ({ ...f, status: e.target.value as any }))} style={{ ...inputStyle, background: 'white' }}>
+                                <option value="active">{lang === 'ar' ? 'نشط' : 'Active'}</option>
+                                <option value="trialing">{lang === 'ar' ? 'تجريبي' : 'Trialing'}</option>
+                                <option value="pending">{lang === 'ar' ? 'معلق' : 'Pending'}</option>
+                                <option value="expired">{lang === 'ar' ? 'منتهي' : 'Expired'}</option>
+                                <option value="cancelled">{lang === 'ar' ? 'ملغي' : 'Cancelled'}</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label style={labelStyle}>{lang === 'ar' ? 'الفترة' : 'Period'}</label>
+                              <select value={subForm.period} onChange={e => setSubForm(f => ({ ...f, period: e.target.value as any }))} style={{ ...inputStyle, background: 'white' }}>
+                                <option value="monthly">{lang === 'ar' ? 'شهري' : 'Monthly'}</option>
+                                <option value="yearly">{lang === 'ar' ? 'سنوي' : 'Yearly'}</option>
+                                <option value="lifetime">{lang === 'ar' ? 'مدى الحياة' : 'Lifetime'}</option>
+                                <option value="free_trial">{lang === 'ar' ? 'تجريبي مجاني' : 'Free Trial'}</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label style={labelStyle}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires At'}</label>
+                              <input type="date" value={subForm.expiresAt} onChange={e => setSubForm(f => ({ ...f, expiresAt: e.target.value }))} style={{ ...inputStyle, direction: 'ltr' }} />
+                              <p style={{ margin: '3px 0 0', fontSize: 10, color: '#94A3B8' }}>{lang === 'ar' ? 'اتركه فارغاً للاشتراك الدائم' : 'Leave empty for lifetime'}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => updateSubMutation.mutate({ userOpenId: u.openId, plan: subForm.plan, status: subForm.status, period: subForm.period, expiresAt: subForm.expiresAt || null })}
+                            disabled={updateSubMutation.isPending}
+                            style={{ background: updateSubMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, color: 'white', border: 'none', borderRadius: 10, padding: '10px 24px', fontSize: 13, fontWeight: 900, cursor: updateSubMutation.isPending ? 'not-allowed' : 'pointer' }}>
+                            {updateSubMutation.isPending ? '...' : (lang === 'ar' ? 'حفظ الاشتراك' : 'Save Subscription')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── BROADCAST TAB ── */}
         {activeTab === 'broadcast' && (
           <>
@@ -951,20 +1099,35 @@ export default function AdminPanel() {
                 {bResult && (
                   <p style={{ color: bResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult}</p>
                 )}
+                {/* Channel selector */}
+                <div>
+                  <label style={labelStyle}>{lang === 'ar' ? 'قناة الإرسال' : 'Send Channel'}</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['both', 'inapp', 'email'] as const).map(ch => (
+                      <button key={ch} onClick={() => setBChannel(ch)}
+                        style={{ flex: 1, padding: '8px 4px', border: `2px solid ${bChannel === ch ? NAVY : SKY_LIGHT}`, borderRadius: 8, background: bChannel === ch ? NAVY : 'white', color: bChannel === ch ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {ch === 'both' ? (lang === 'ar' ? 'الاثنان' : 'Both') : ch === 'inapp' ? (lang === 'ar' ? 'داخل التطبيق' : 'In-App') : (lang === 'ar' ? 'بريد إلكتروني' : 'Email')}
+                      </button>
+                    ))}
+                  </div>
+                  <p style={{ margin: '4px 0 0', fontSize: 10, color: '#94A3B8' }}>{lang === 'ar' ? '"داخل التطبيق" = نافذة منبثقة للمستخدمين عند فتح التطبيق' : '"In-App" = popup shown to users when they open the app'}</p>
+                </div>
                 <button
                   onClick={() => {
                     if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
-                    if (bMode === 'one') {
-                      if (!bTargetEmail.trim() || !bTargetEmail.includes('@')) { setBResult(lang === 'ar' ? '❌ يرجى إدخال بريد إلكتروني صحيح' : '❌ Please enter a valid email'); return; }
-                      sendToOneMutation.mutate({ email: bTargetEmail.trim(), subject: bSubject.trim(), body: bBody.trim(), type: bType });
-                    } else {
-                      if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار لجميع العملاء؟' : 'Send this broadcast to all customers?')) return;
-                      broadcastMutation.mutate({ subject: bSubject.trim(), body: bBody.trim(), type: bType });
-                    }
+                    if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار؟' : 'Send this notification?')) return;
+                    sendAdminNotifMutation.mutate({
+                      title: bSubject.trim(),
+                      message: bBody.trim(),
+                      channel: bChannel,
+                      target: bMode === 'one' ? 'specific' : 'all',
+                      targetEmail: bMode === 'one' ? bTargetEmail.trim() : undefined,
+                      type: bType,
+                    });
                   }}
-                  disabled={broadcastMutation.isPending || sendToOneMutation.isPending}
-                  style={{ background: (broadcastMutation.isPending || sendToOneMutation.isPending) ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '13px 28px', fontSize: 14, fontWeight: 900, cursor: (broadcastMutation.isPending || sendToOneMutation.isPending) ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
-                  {(broadcastMutation.isPending || sendToOneMutation.isPending) ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
+                  disabled={sendAdminNotifMutation.isPending}
+                  style={{ background: sendAdminNotifMutation.isPending ? '#94A3B8' : `linear-gradient(135deg, #7C3AED, #5B21B6)`, color: 'white', border: 'none', borderRadius: 12, padding: '13px 28px', fontSize: 14, fontWeight: 900, cursor: sendAdminNotifMutation.isPending ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}>
+                  {sendAdminNotifMutation.isPending ? t('broadcastSending', lang) : (bMode === 'one' ? t('broadcastSendOneBtn', lang) : t('broadcastSend', lang))}
                 </button>
               </div>
             </div>

@@ -626,6 +626,40 @@ export type WeightLog = typeof weightLogs.$inferSelect;
 export type InsertWeightLog = typeof weightLogs.$inferInsert;
 
 
+// ── Admin Broadcast Notifications (in-app popup + email) ────────────────────
+export const adminNotifications = mysqlTable("admin_notifications", {
+  id:           int("id").autoincrement().primaryKey(),
+  title:        varchar("title", { length: 255 }).notNull(),
+  titleAr:      varchar("titleAr", { length: 255 }),
+  message:      text("message").notNull(),
+  messageAr:    text("messageAr"),
+  imageUrl:     varchar("imageUrl", { length: 512 }),
+  ctaText:      varchar("ctaText", { length: 128 }),
+  ctaTextAr:    varchar("ctaTextAr", { length: 128 }),
+  ctaLink:      varchar("ctaLink", { length: 512 }),
+  /** Delivery channels: inapp | email | both */
+  channel:      mysqlEnum("channel", ["inapp", "email", "both"]).default("inapp").notNull(),
+  /** Targeting: all | active_subscribers | new_subscribers | specific */
+  target:       mysqlEnum("target", ["all", "active_subscribers", "new_subscribers", "specific"]).default("all").notNull(),
+  targetEmail:  varchar("targetEmail", { length: 320 }),  // used when target = 'specific'
+  type:         mysqlEnum("type", ["update", "news", "offer", "reminder", "other"]).default("other").notNull(),
+  sentBy:       varchar("sentBy", { length: 255 }),
+  recipientCount: int("recipientCount").default(0).notNull(),
+  createdAt:    timestamp("createdAt").defaultNow().notNull(),
+});
+export type AdminNotification = typeof adminNotifications.$inferSelect;
+export type InsertAdminNotification = typeof adminNotifications.$inferInsert;
+
+// Tracks which users have read/dismissed each admin notification
+export const notificationReads = mysqlTable("notification_reads", {
+  id:             int("id").autoincrement().primaryKey(),
+  notificationId: int("notificationId").notNull(),
+  userId:         int("userId").notNull(),
+  readAt:         timestamp("readAt").defaultNow().notNull(),
+});
+export type NotificationRead = typeof notificationReads.$inferSelect;
+export type InsertNotificationRead = typeof notificationReads.$inferInsert;
+
 // ── Device Sessions (single-device enforcement) ──────────────────────────────
 export const deviceSessions = mysqlTable("device_sessions", {
   id:           int("id").autoincrement().primaryKey(),

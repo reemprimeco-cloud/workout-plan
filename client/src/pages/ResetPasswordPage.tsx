@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
 
         {done ? (
           <div style={{ marginTop: 20 }}>
-            <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 36, marginBottom: 12, color: '#16A34A' }}>✔</div>
             <h2 style={{ color: NAVY, fontSize: 18, fontWeight: 900 }}>تم تغيير كلمة المرور</h2>
             <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 20 }}>يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة</p>
             <button
@@ -95,13 +95,13 @@ export default function ResetPasswordPage() {
 
             {!token && (
               <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '10px 14px', marginBottom: 16, color: '#DC2626', fontSize: 13 }}>
-                ⚠️ رابط غير صالح. يرجى طلب رابط جديد.
+                رابط غير صالح. يرجى طلب رابط جديد.
               </div>
             )}
 
             {error && (
               <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '10px 14px', marginBottom: 16, color: '#DC2626', fontSize: 13 }}>
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
                     position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 16,
                   }}>
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function ResetPasswordPage() {
                   opacity: resetMutation.isPending ? 0.7 : 1,
                 }}
               >
-                {resetMutation.isPending ? '⏳ جاري الحفظ...' : '🔑 تغيير كلمة المرور'}
+                {resetMutation.isPending ? 'جاري الحفظ...' : 'تغيير كلمة المرور'}
               </button>
             </form>
           </>

@@ -494,3 +494,40 @@
 - [x] Add rate limiting on login endpoint (max 10 attempts per 15 min per IP)
 - [x] Add rate limiting on signup endpoint (max 5 per hour per IP)
 - [x] Add rate limiting on forgot-password endpoint (max 3 per hour per IP)
+
+## Emoji Removal & Profile Redesign
+- [x] AuthPage: Remove 💪 flexed arm emoji from sign-up subtitle
+- [x] AuthPage: Remove 🙈 monkey emoji from password field toggle
+- [x] AuthPage: Remove 🚀 rocket emoji from sign-up button
+- [x] AuthPage: Remove 💬 speech bubble emoji from Need Help WhatsApp link
+- [x] ResetPasswordPage: Remove 👁 eye emoji from password field toggle
+- [x] ResetPasswordPage: Remove 🔑 key emoji from reset button
+- [x] ProfilePanel Edit: Remove ⚖️ emoji from Current Weight label
+- [x] ProfilePanel Edit: Remove 🎯 emoji from Target Weight label
+- [x] ProfilePanel Edit: Remove ✏️ emoji from Edit Profile title
+- [x] ProfilePanel Edit: Remove ✅ emoji from Save button
+- [x] ProfilePanel: Redesign edit form fields to clean/simple look
+- [x] ProfilePanel: Show registered email in profile by default
+
+## Admin User Management & Subscription System
+- [x] Fix admin page access issue (check auth gate)
+- [x] Add "Users" tab in admin panel to list all registered email users
+- [x] Show user details: name, email, registration date, auth provider, subscription status
+- [x] Admin can activate/deactivate/delete user accounts
+- [x] Replace license-code activation with admin-controlled email subscription system
+- [x] Admin can create/assign subscription plans (free, prime_plus, prime_pro) to users
+- [x] Admin can set subscription period (monthly, yearly, lifetime) and expiry dates
+- [x] Admin can activate/deactivate/extend subscriptions for any user
+- [x] Users see subscription status in their profile
+- [x] App access gated by active subscription (not license codes)
+
+## Notification System Upgrade
+- [x] Add admin_notifications table for in-app popup notifications
+- [x] Add notification_reads table to track read status per user
+- [x] Admin can send notifications via: in-app popup, email, or both
+- [x] In-app popup: modal with blurred background, title, message, optional image, close button
+- [x] After closing, notification marked as read and never reappears
+- [x] Notification targeting: all users, specific users, active subscribers, new subscribers
+- [x] Optional CTA button with customizable text and link
+- [x] Email notifications sent to registered user emails
+- [x] Admin notification send UI in Broadcast tab (or new Notifications tab)

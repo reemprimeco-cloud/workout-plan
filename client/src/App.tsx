@@ -16,6 +16,7 @@ import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
+import AdminNotificationPopup from "./components/AdminNotificationPopup";
 
 function Router() {
   return (
@@ -42,7 +43,6 @@ function AppWithSocket() {
   // Unauthenticated visitors hitting /profile-setup will be redirected to AuthPage first.
   const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password"].includes(window.location.pathname);
   const isAdminPage = window.location.pathname === "/admin";
-  const useLicense = new URLSearchParams(window.location.search).get('use_license') === '1';
 
   // While auth check is in progress, show a full-screen spinner to prevent
   // any flash of the home screen before we know if the user is logged in.
@@ -69,19 +69,6 @@ function AppWithSocket() {
 
   // Show auth page for unauthenticated users (not on public/admin pages)
   if (!authLoading && !currentUser && !isPublicPage && !isAdminPage) {
-    if (useLicense) {
-      // Legacy license code flow
-      return (
-        <SocketProvider userId={undefined}>
-          <SubscriptionProvider>
-            <TooltipProvider>
-              <Toaster />
-              <LicenseGate><Router /></LicenseGate>
-            </TooltipProvider>
-          </SubscriptionProvider>
-        </SocketProvider>
-      );
-    }
     return (
       <TooltipProvider>
         <Toaster />
@@ -107,10 +94,13 @@ function AppWithSocket() {
       <SubscriptionProvider>
         <TooltipProvider>
           <Toaster />
-          {(isAdminPage || isPublicPage)
+          {/* Subscription gate: admin and public pages bypass it */}
+          {isAdminPage || isPublicPage
             ? <Router />
-            : <Router />
+            : <LicenseGate><Router /></LicenseGate>
           }
+          {/* In-app admin notification popups — shown to all authenticated users */}
+          {currentUser && !isAdminPage && <AdminNotificationPopup />}
         </TooltipProvider>
       </SubscriptionProvider>
     </SocketProvider>

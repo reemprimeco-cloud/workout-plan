@@ -18,7 +18,7 @@ function calcBMI(weight: number, height: number): number {
 
 function getBMICategory(bmi: number, lang: 'ar' | 'en') {
   if (bmi < 18.5) return { label: lang === 'ar' ? 'نقص وزن' : 'Underweight', color: '#3B82F6' };
-  if (bmi < 25)   return { label: lang === 'ar' ? 'طبيعي ✅' : 'Normal ✅', color: '#10B981' };
+  if (bmi < 25)   return { label: lang === 'ar' ? 'طبيعي' : 'Normal', color: '#10B981' };
   if (bmi < 30)   return { label: lang === 'ar' ? 'زيادة وزن' : 'Overweight', color: '#F59E0B' };
   return { label: lang === 'ar' ? 'سمنة' : 'Obese', color: '#EF4444' };
 }
@@ -78,7 +78,7 @@ function WeightLogSection() {
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-5">
-      <h3 className="font-bold text-gray-800 mb-3">⚖️ {lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
+      <h3 className="font-bold text-gray-800 mb-3">{lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
       {/* Input */}
       <div className="flex gap-2 mb-4">
         <input
@@ -93,7 +93,7 @@ function WeightLogSection() {
           className="px-4 py-2.5 rounded-xl font-bold text-sm text-white transition-all"
           style={{ background: saved ? '#10B981' : '#E05A00' }}
         >
-          {saved ? '✅' : (lang === 'ar' ? 'سجّل' : 'Log')}
+          {saved ? '✔' : (lang === 'ar' ? 'سجّل' : 'Log')}
         </button>
       </div>
       {/* Last 5 entries */}
@@ -138,7 +138,7 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
         style={{ background: 'none', border: 'none', cursor: 'pointer' }}
       >
         <span className="font-bold text-gray-800 text-sm">
-          📘 {lang === 'ar' ? 'دليل الاستخدام' : 'Help & User Guide'}
+          {lang === 'ar' ? 'دليل الاستخدام' : 'Help & User Guide'}
         </span>
         <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
           ▾
@@ -156,8 +156,9 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
-  const { logout: logoutFn } = useAuth();
+  const { logout: logoutFn, user } = useAuth();
   const { lang, setLang, t, isRTL } = useLanguage();
+  const userEmail = (user as any)?.email || '';
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ ...profile });
@@ -324,11 +325,16 @@ export function ProfilePanel() {
           </div>
         </div>
 
-        {/* Name + meta */}
+        {/* Name + meta + email */}
         <div style={{ padding: '0 20px 4px' }}>
           <p style={{ fontSize: 15, fontWeight: 900, color: '#111827', margin: 0 }}>
             {profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}
           </p>
+          {userEmail && (
+            <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 0', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+              {userEmail}
+            </p>
+          )}
           <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0', lineHeight: 1.5 }}>
             {lang === 'ar'
               ? `${profile.age} سنة · ${profile.height} سم · ${profile.gender === 'female' ? 'أنثى' : 'ذكر'}`
@@ -354,7 +360,7 @@ export function ProfilePanel() {
 
       {/* BMI Meter */}
       <div className="bg-white rounded-2xl shadow-md p-5">
-        <h3 className="font-bold text-gray-800 mb-3">📊 {t('bmiLabel')}</h3>
+        <h3 className="font-bold text-gray-800 mb-3">{t('bmiLabel')}</h3>
         <div className="relative h-4 rounded-full overflow-hidden mb-2"
           style={{ background: 'linear-gradient(to right, #3B82F6 0%, #10B981 25%, #F59E0B 55%, #EF4444 80%, #7C3AED 100%)' }}>
           <div className="absolute top-0 w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-md transition-all duration-500"
@@ -397,7 +403,7 @@ export function ProfilePanel() {
             background: 'rgba(255,255,255,0.1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 20, flexShrink: 0,
-          }}>🎯</div>
+          }}>◎</div>
         </div>
 
         {/* Description */}
@@ -495,7 +501,7 @@ export function ProfilePanel() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 14 }}>
-                  🔑 {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
+                  {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
                 </span>
                 <span style={{
                   background: `${statusColor}22`, color: statusColor,
@@ -542,7 +548,7 @@ export function ProfilePanel() {
           className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
           style={{ borderColor: '#EF4444', color: '#DC2626', background: 'rgba(239,68,68,0.08)' }}
         >
-          🚪 {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+          {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
         </button>
       </div>
 
@@ -550,7 +556,7 @@ export function ProfilePanel() {
       <div className="pb-2">
         <button onClick={() => setShowReset(true)}
           className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 font-semibold text-sm hover:bg-red-50 transition-all">
-          🗑️ {t('resetData')}
+          {t('resetData')}
         </button>
       </div>
 
@@ -578,106 +584,91 @@ export function ProfilePanel() {
             maxHeight: '92vh', overflowY: 'auto',
           }}>
             <div className="p-5">
-              <h3 className="text-lg font-black text-gray-800 mb-4">✏️ {t('editProfile')}</h3>
-              <div className="space-y-4">
-                {/* ── Current Weight - Highlighted at top ── */}
-                <div className="bg-orange-50 border-2 border-[#E05A00] rounded-2xl p-4">
-                  <label className="text-sm font-black text-[#E05A00] block mb-2">⚖️ {lang === 'ar' ? 'الوزن الحالي' : 'Current Weight'}</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number" step="0.1" min="30" max="250"
-                      value={form.currentWeight || ''}
-                      onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
-                      placeholder={lang === 'ar' ? 'مثال: 72.6' : 'e.g. 72.6'}
-                      className="flex-1 border-2 border-orange-300 rounded-xl px-4 py-3 text-gray-800 text-lg font-bold focus:border-[#E05A00] outline-none bg-white"
-                      autoFocus
-                    />
-                    <span className="text-lg font-bold text-[#E05A00]">kg</span>
-                  </div>
-                  {form.currentWeight > 0 && form.currentWeight < 30 && (
-                    <p className="text-xs text-red-500 mt-1">{lang === 'ar' ? 'الوزن يجب أن يكون أكثر من 30 كجم' : 'Weight must be over 30 kg'}</p>
-                  )}
-                  {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
-                    const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
-                    const previewCat = getBMICategory(previewBMI, lang);
-                    return (
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-gray-500">BMI:</span>
-                        <span className="text-sm font-black" style={{ color: previewCat.color }}>{previewBMI} — {previewCat.label}</span>
-                      </div>
-                    );
-                  })()}
-                </div>
+              <h3 className="text-lg font-black text-gray-800 mb-1">{t('editProfile')}</h3>
+              {userEmail && (
+                <p className="text-xs text-gray-400 mb-4" style={{ direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userEmail}</p>
+              )}
+              <div className="space-y-3">
+                {/* Name */}
                 <div>
-                  <label className="text-sm font-semibold text-gray-600 block mb-1">{t('name')}</label>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">{t('name')}</label>
                   <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
-                    placeholder={lang === 'ar' ? 'اسمك...' : 'Your name...'} />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50"
+                    placeholder={lang === 'ar' ? 'اسمك' : 'Your name'} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-600 block mb-1">{t('age')}</label>
-                    <input type="number" value={form.age} onChange={e => setForm({ ...form, age: Number(e.target.value) })}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={10} max={100} placeholder="e.g. 36" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-600 block mb-1">{t('height')}</label>
-                    <input type="number" value={form.height} onChange={e => setForm({ ...form, height: Number(e.target.value) })}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={100} max={250} placeholder="e.g. 165" />
-                  </div>
+                {/* Current Weight */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">{lang === 'ar' ? 'الوزن الحالي (kg)' : 'Current Weight (kg)'}</label>
+                  <input
+                    type="number" step="0.1" min="30" max="250"
+                    value={form.currentWeight || ''}
+                    onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder={lang === 'ar' ? '72.6' : '72.6'}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50"
+                    autoFocus
+                  />
                 </div>
                 {/* Target Weight */}
                 <div>
-                  <label className="text-sm font-semibold text-gray-600 block mb-1">
-                    🎯 {t('targetWeightLabel')} <span className="text-xs text-gray-400">(kg)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number" step="0.1" min="30" max="250"
-                      value={form.targetWeight || ''}
-                      onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
-                      placeholder={lang === 'ar' ? 'مثال: 65' : 'e.g. 65'}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
-                    />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">{t('targetWeightLabel')} (kg)</label>
+                  <input
+                    type="number" step="0.1" min="30" max="250"
+                    value={form.targetWeight || ''}
+                    onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    placeholder={lang === 'ar' ? '65' : '65'}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50"
+                  />
+                </div>
+                {/* Starting Weight */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">{t('startWeightLabel')} (kg)</label>
+                  <input type="number" step="0.1" value={form.startWeight} onChange={e => setForm({ ...form, startWeight: Number(e.target.value) })}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50" min={30} max={300} placeholder="72.6" />
+                </div>
+                {/* Age + Height row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 block mb-1">{t('age')}</label>
+                    <input type="number" value={form.age} onChange={e => setForm({ ...form, age: Number(e.target.value) })}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50" min={10} max={100} placeholder="36" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 block mb-1">{t('height')} (cm)</label>
+                    <input type="number" value={form.height} onChange={e => setForm({ ...form, height: Number(e.target.value) })}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:border-[#1B2E5E] focus:ring-1 focus:ring-[#1B2E5E] outline-none bg-gray-50" min={100} max={250} placeholder="165" />
                   </div>
                 </div>
+                {/* Gender */}
                 <div>
-                  <label className="text-sm font-semibold text-gray-600 block mb-1">{t('startWeightLabel')}</label>
-                  <input type="number" step="0.1" value={form.startWeight} onChange={e => setForm({ ...form, startWeight: Number(e.target.value) })}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={30} max={300} placeholder="e.g. 72.6" />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-gray-600 block mb-2">{t('gender')}</label>
+                  <label className="text-xs font-semibold text-gray-500 block mb-2">{t('gender')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     {(['female', 'male'] as const).map(g => (
                       <button key={g} onClick={() => setForm({ ...form, gender: g })}
-                        className={`py-2.5 rounded-xl font-semibold text-sm border-2 transition-all ${form.gender === g ? 'bg-[#E05A00] text-white border-[#E05A00]' : 'bg-white text-gray-600 border-gray-200'}`}>
-                        {g === 'female' ? `♀️ ${t('genderFemale')}` : `♂️ ${t('genderMale')}`}
+                        className={`py-2 rounded-lg font-semibold text-sm border transition-all ${form.gender === g ? 'bg-[#1B2E5E] text-white border-[#1B2E5E]' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                        {g === 'female' ? t('genderFemale') : t('genderMale')}
                       </button>
                     ))}
                   </div>
                 </div>
                 {/* Live BMI Preview */}
-                {Number(form.height) > 0 && Number(form.currentWeight) > 0 && (() => {
+                {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
                   const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
                   const previewCat = getBMICategory(previewBMI, lang);
                   return (
-                    <div className="bg-gray-50 rounded-xl p-3 text-center">
-                      <div className="text-sm text-gray-500">{t('bmiLabel')}</div>
-                      <div className="text-2xl font-black mt-1" style={{ color: previewCat.color }}>{previewBMI}</div>
-                      <div className="text-sm font-semibold mt-0.5" style={{ color: previewCat.color }}>{previewCat.label}</div>
+                    <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                      <span className="text-xs text-gray-500">{t('bmiLabel')}</span>
+                      <span className="text-sm font-bold" style={{ color: previewCat.color }}>{previewBMI} — {previewCat.label}</span>
                     </div>
                   );
                 })()}
               </div>
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-5">
                 <button onClick={() => setEditing(false)}
-                  style={{ flex: 1, padding: '12px 0', borderRadius: 12, border: '2px solid #E5E7EB', background: 'white', color: '#6B7280', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1.5px solid #E5E7EB', background: 'white', color: '#6B7280', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >{t('cancel')}</button>
                 <button onClick={handleSave}
-                  style={{ flex: 1, padding: '12px 0', borderRadius: 12, border: 'none', background: '#1B2E5E', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                >✅ {t('save')}</button>
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', background: '#1B2E5E', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >{t('save')}</button>
               </div>
             </div>
           </div>
@@ -700,7 +691,7 @@ export function ProfilePanel() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
           }}>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 48, marginBottom: 8 }}>⚠️</div>
+              <div style={{ fontSize: 36, marginBottom: 8, color: '#DC2626' }}>⚠</div>
               <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: '#DC2626' }}>
                 {t('resetData')}
               </h3>
@@ -714,8 +705,8 @@ export function ProfilePanel() {
             }}>
               <p style={{ margin: 0, fontSize: 12, color: '#991B1B', lineHeight: 1.6 }}>
                 {lang === 'ar'
-                  ? '🗑️ سيتم حذف: جميع جلسات التمرين، سجل الوزن، بيانات الملف الشخصي. لا يمكن التراجع عن هذا الإجراء.'
-                  : '🗑️ This will delete: all workout sessions, weight log, and profile data. This cannot be undone.'}
+                  ? 'سيتم حذف: جميع جلسات التمرين، سجل الوزن، بيانات الملف الشخصي. لا يمكن التراجع عن هذا الإجراء.'
+                  : 'This will delete: all workout sessions, weight log, and profile data. This cannot be undone.'}
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
