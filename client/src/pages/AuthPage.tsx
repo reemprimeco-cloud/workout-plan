@@ -40,6 +40,7 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const googleError = params.get('google_error');
+    const oauthError = params.get('error');
     if (googleError) {
       const errorMessages: Record<string, string> = {
         cancelled: 'تم إلغاء تسجيل الدخول عبر Google',
@@ -55,6 +56,11 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
       // Clean up URL
       const url = new URL(window.location.href);
       url.searchParams.delete('google_error');
+      window.history.replaceState({}, '', url.toString());
+    } else if (oauthError === 'oauth_failed') {
+      setError('فشل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
       window.history.replaceState({}, '', url.toString());
     }
   }, []);
