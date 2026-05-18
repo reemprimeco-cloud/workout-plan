@@ -484,6 +484,9 @@ function CheckInPanel({ onStart, stats, profile }: {
         </p>
       </div>
 
+      {/* Today's Gym Classes */}
+      <TodayGymClasses />
+
       {/* Session Type Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {sessionOrder.map(type => {
@@ -805,6 +808,168 @@ function CheckInPanel({ onStart, stats, profile }: {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// ── Today's Gym Classes (shown on Home below check-in title, above exercise cards) ─────────────────────────
+function TodayGymClasses() {
+  const { lang, isRTL } = useLanguage();
+  const { isAuthenticated } = useAuth();
+
+  // Get today's day name (Monday, Tuesday, etc.)
+  const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  const { data: classes = [], isLoading } = trpc.gymClasses.getTodayClasses.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
+  const joinMutation = trpc.gymClasses.joinClass.useMutation();
+  const utils = trpc.useUtils();
+
+  const [joinedIds, setJoinedIds] = React.useState<Set<number>>(new Set());
+  const [joiningId, setJoiningId] = React.useState<number | null>(null);
+
+  const handleJoin = async (classId: number) => {
+    if (joinedIds.has(classId) || joiningId === classId) return;
+    setJoiningId(classId);
+    try {
+      await joinMutation.mutateAsync({ classId });
+      setJoinedIds(prev => new Set(Array.from(prev).concat(classId)));
+    } catch {
+      // already joined or error — mark as joined anyway
+      setJoinedIds(prev => new Set(Array.from(prev).concat(classId)));
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const intensityColor = (i: string) => {
+    if (i === 'Beginner') return { bg: '#DCFCE7', text: '#16A34A' };
+    if (i === 'Intermediate') return { bg: '#FEF9C3', text: '#CA8A04' };
+    return { bg: '#FEE2E2', text: '#DC2626' };
+  };
+
+  // Don't render section if no classes and not loading
+  if (!isLoading && classes.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Section header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <h3 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 900 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AppIcons.Calendar size={18} />
+            {lang === 'ar' ? 'حصص اليوم' : "Today's Classes"}
+          </span>
+        </h3>
+        <span style={{ fontSize: 11, color: '#7A9BB5', fontWeight: 600 }}>
+          {lang === 'ar' ? todayDay : todayDay}
+        </span>
+      </div>
+
+      {/* Loading skeleton */}
+      {isLoading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[1, 2].map(i => (
+            <div key={i} style={{ height: 88, background: '#E2E8F0', borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
+          ))}
+        </div>
+      )}
+
+      {/* Class cards — wide format, one per row */}
+      {!isLoading && classes.map((cls: any) => {
+        const joined = joinedIds.has(cls.id) || cls.alreadyJoined;
+        const ic = intensityColor(cls.intensity);
+        return (
+          <div
+            key={cls.id}
+            style={{
+              background: 'white',
+              border: `2px solid ${joined ? '#BBF7D0' : SKY_LIGHT}`,
+              borderRadius: 16,
+              padding: '14px 16px',
+              marginBottom: 10,
+              boxShadow: '0 2px 12px rgba(27,46,94,0.07)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              transition: 'border-color 0.3s',
+            }}
+          >
+            {/* Left: brand color accent bar */}
+            <div style={{
+              width: 5, alignSelf: 'stretch', borderRadius: 4,
+              background: cls.gymBrandColor || NAVY,
+              flexShrink: 0,
+            }} />
+
+            {/* Center: class info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 900, color: NAVY, fontSize: 14 }}>{cls.className}</span>
+                <span style={{ ...ic, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ic.bg, color: ic.text }}>
+                  {cls.intensity}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
+                  <AppIcons.Coach size={13} />{cls.coach}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
+                  <AppIcons.Timer size={13} />{cls.time} · {cls.durationMin}{lang === 'ar' ? 'د' : 'min'}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#94A3B8' }}>
+                  <AppIcons.Location size={12} />{cls.gymName}{cls.branchName ? ` · ${cls.branchName}` : ''}
+                </span>
+              </div>
+              {cls.notes && (
+                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{cls.notes}</div>
+              )}
+            </div>
+
+            {/* Right: join button */}
+            <button
+              onClick={() => handleJoin(cls.id)}
+              disabled={joined || joiningId === cls.id}
+              style={{
+                flexShrink: 0,
+                padding: '8px 16px',
+                borderRadius: 10,
+                border: 'none',
+                cursor: joined ? 'default' : 'pointer',
+                fontSize: 12,
+                fontWeight: 700,
+                background: joined
+                  ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                  : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+                color: 'white',
+                transition: 'background 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              {joiningId === cls.id ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <AppIcons.Spinner size={13} />
+                  {lang === 'ar' ? '...' : '...'}
+                </span>
+              ) : joined ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <AppIcons.Check size={13} />
+                  {lang === 'ar' ? 'مسجّل' : 'Joined'}
+                </span>
+              ) : (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <AppIcons.Plus size={13} />
+                  {lang === 'ar' ? 'انضم' : 'Join'}
+                </span>
+              )}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -232,6 +232,13 @@
       "when": 1779064199695,
       "tag": "0032_abandoned_the_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1779141263696,
+      "tag": "0033_flowery_microchip",
+      "breakpoints": true
     }
   ]
 }

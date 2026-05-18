@@ -8,6 +8,7 @@ import { trpc } from '../lib/trpc';
 import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
 import { AppIcons } from '../components/AppIcons';
+import GymClassesAdminTab from '../components/GymClassesAdminTab';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -22,7 +23,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'profile';
+type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'gymClasses' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -117,6 +118,7 @@ const T: Record<string, Record<Lang, string>> = {
   tabRewards: { ar: 'المكافآت', en: 'Rewards' },
   tabChallenges: { ar: 'التحديات', en: 'Challenges' },
   tabCommunity: { ar: 'المجتمع', en: 'Community' },
+  tabGymClasses: { ar: 'الجيم والحصص', en: 'Gyms & Classes' },
   rewardName: { ar: 'اسم المكافأة', en: 'Reward Name' },
   rewardProbability: { ar: 'الاحتمالية %', en: 'Probability %' },
   rewardTier: { ar: 'المستوى', en: 'Tier' },
@@ -931,6 +933,7 @@ export default function AdminPanel() {
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
           ['community', t('tabCommunity', lang)],
+          ['gymClasses', t('tabGymClasses', lang)],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
           <button
@@ -1772,6 +1775,11 @@ export default function AdminPanel() {
               {updateProfileMutation.isPending ? t('profileSaving', lang) : t('profileSave', lang)}
             </button>
           </div>
+        )}
+
+        {/* ── GYM CLASSES TAB ── */}
+        {activeTab === 'gymClasses' && (
+          <GymClassesAdminTab lang={lang} />
         )}
 
       </main>

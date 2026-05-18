@@ -763,3 +763,26 @@
 - [x] Fix DailySummaryCard: use correct field names (goals.calories/proteinG/carbsG/fatG instead of goals.dailyCalories etc.)
 - [x] Meals Today summary labels clarified: "kcal Consumed" = eaten today, "Goal" = daily calorie target, "Remaining" = Goal − Consumed
 - [x] Add short explanatory subtitles under each summary number so users understand what each value means
+
+## Gym Classes System
+- [x] DB: Add gyms table (id, name, logoUrl, brandColor, createdAt)
+- [x] DB: Add branches table (id, gymId, name, location, createdAt)
+- [x] DB: Add gym_classes table (id, gymId, branchId, className, coach, day, time, durationMin, intensity, caloriesOverride, notes, createdAt)
+- [x] DB: Add joined_classes table (id, userId, classId, joinedAt, caloriesBurned, xpAwarded)
+- [x] DB tables created directly via SQL (migration conflict workaround)
+- [x] Server: getGyms, createGym, updateGym, deleteGym procedures
+- [x] Server: getBranches, createBranch, updateBranch, deleteBranch procedures
+- [x] Server: getTodayClasses procedure (filter by current weekday)
+- [x] Server: joinClass procedure (log join, award XP, track calories)
+- [x] Server: importSchedule procedure (parse Excel/CSV, upsert classes, replace old schedule for gym/branch)
+- [x] Server: getJoinedClasses procedure (today's joined classes for user)
+- [x] Admin: Gyms tab — list, create, edit, delete gyms with logo upload and brand color
+- [x] Admin: Branches tab — list, create, edit, delete branches per gym
+- [x] Admin: Schedule Upload tab — file upload (xlsx/csv), preview parsed rows, confirm import
+- [x] Home page: "Today's Classes" section below check-in title, above exercise cards
+- [x] Home page: Wide-format class card with accent bar, class name, coach, time, duration, intensity badge, gym/branch, Join button
+- [x] Home page: Join button awards XP, logs calories, shows Joined state
+- [x] Home page: Already-joined classes show "Joined" state (disabled button, green checkmark)
+- [x] Home page: Section hidden when no classes scheduled for today
+- [x] Home page: Bilingual labels (AR/EN) on class cards
+- [x] Vitest tests for gymClasses router (14 tests, all passing)
