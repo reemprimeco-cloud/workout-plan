@@ -5,7 +5,7 @@
  * Preserves: Feed, Leaderboard, Challenges, XP, Stories, AI Insight
  * New: Follow/Unfollow, DM, User Profiles, Feed tabs (For You/Following/Trending), Bookmarks
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { AppIcons } from "../components/AppIcons";
@@ -193,8 +193,8 @@ function AIInsightCard({ lang, streak, weeklyCompletion, currentWeight, targetWe
   );
 }
 
-// ── Post Card ─────────────────────────────────────────────────────────────────
-function PostCard({ post, lang, currentUserId, onProfileClick }: {
+// ── Post Card ────────────────────────────────────────────────────────────────
+const PostCard = memo(function PostCard({ post, lang, currentUserId, onProfileClick }: {
   post: any; lang: string; currentUserId?: number; onProfileClick: (id: number) => void;
 }) {
   const [showComments, setShowComments] = useState(false);
@@ -348,9 +348,9 @@ function PostCard({ post, lang, currentUserId, onProfileClick }: {
       )}
     </div>
   );
-}
+});
 
-// ── New Post Form (bottom sheet) ──────────────────────────────────────────────
+// ── New Post Form (bottom sheet) ────────────────────────────────────────────
 function NewPostForm({ lang, onClose, currentUser }: { lang: string; onClose: () => void; currentUser?: any }) {
   const utils = trpc.useUtils();
   const [content, setContent] = useState("");
@@ -741,11 +741,56 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
   const [showNewPost, setShowNewPost] = useState(false);
   const [feedTab, setFeedTab] = useState<FeedTab>("for_you");
   const [livePosts, setLivePosts] = useState<any[]>([]);
+  const [page, setPage] = useState(0);
+  const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const feedBottomRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 15;
   const { data: meData } = trpc.auth.me.useQuery();
   const currentUser = (meData as any)?.user;
 
-  const { data: feedData, isLoading } = trpc.community.getFeed.useQuery({ limit: 30, offset: 0 });
-  const { data: followingFeed } = trpc.community.getFollowingFeed.useQuery({ limit: 30, offset: 0 }, { enabled: feedTab === "following" });
+  const { data: feedData, isLoading } = trpc.community.getFeed.useQuery({ limit: PAGE_SIZE, offset: page * PAGE_SIZE });
+  const { data: followingFeed } = trpc.community.getFollowingFeed.useQuery({ limit: PAGE_SIZE, offset: 0 }, { enabled: feedTab === "following" });
+
+  // Accumulate pages for infinite scroll
+  useEffect(() => {
+    if (!feedData?.posts) return;
+    if (page === 0) {
+      setAllPosts(feedData.posts);
+    } else {
+      setAllPosts(prev => {
+        const existingIds = new Set(prev.map((p: any) => p.id));
+        const newPosts = feedData.posts.filter((p: any) => !existingIds.has(p.id));
+        return [...prev, ...newPosts];
+      });
+    }
+    setHasMore(feedData.posts.length === PAGE_SIZE);
+    setLoadingMore(false);
+  }, [feedData, page]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    if (!feedBottomRef.current || feedTab !== "for_you") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !isLoading) {
+          setLoadingMore(true);
+          setPage(p => p + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(feedBottomRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, isLoading, feedTab]);
+
+  // Reset pagination when switching feed tabs
+  useEffect(() => {
+    setPage(0);
+    setAllPosts([]);
+    setHasMore(true);
+  }, [feedTab]);
 
   useEffect(() => {
     const socket = socketCtx?.socket;
@@ -758,8 +803,8 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
   }, [socketCtx?.socket]);
 
   const forYouPosts = [
-    ...livePosts.filter(lp => !(feedData?.posts ?? []).find((p: any) => p.id === lp.id)),
-    ...(feedData?.posts ?? []),
+    ...livePosts.filter(lp => !allPosts.find((p: any) => p.id === lp.id)),
+    ...allPosts,
   ];
   const trendingPosts = (feedData?.trending ?? forYouPosts).filter((p: any) => (p.likesCount ?? 0) > 0 || p.isTrending);
   const followingPosts = followingFeed?.posts ?? [];
@@ -802,14 +847,49 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
       )}
 
       {/* Posts */}
-      {isLoading ? (
-        <div style={{ color: MUTED, textAlign: "center", padding: 40 }}>{t("loading", lang)}</div>
+      {isLoading && page === 0 ? (
+        <div style={{ padding: "0 16px" }}>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ background: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, boxShadow: "0 2px 8px rgba(27,46,94,0.06)" }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
+                <div className="skeleton" style={{ width: 40, height: 40, borderRadius: 20, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton" style={{ width: "45%", height: 14, borderRadius: 6, marginBottom: 5 }} />
+                  <div className="skeleton" style={{ width: "25%", height: 10, borderRadius: 6 }} />
+                </div>
+              </div>
+              <div className="skeleton" style={{ width: "100%", height: 14, borderRadius: 6, marginBottom: 6 }} />
+              <div className="skeleton" style={{ width: "80%", height: 14, borderRadius: 6, marginBottom: 6 }} />
+              <div className="skeleton" style={{ width: "60%", height: 14, borderRadius: 6, marginBottom: 12 }} />
+              <div style={{ display: "flex", gap: 12 }}>
+                <div className="skeleton" style={{ width: 60, height: 28, borderRadius: 14 }} />
+                <div className="skeleton" style={{ width: 60, height: 28, borderRadius: 14 }} />
+                <div className="skeleton" style={{ width: 60, height: 28, borderRadius: 14 }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : displayPosts.length === 0 ? (
         <div style={{ color: MUTED, textAlign: "center", padding: 40, fontSize: 14 }}>{t("noFeed", lang)}</div>
       ) : (
-        displayPosts.map((post: any) => (
-          <PostCard key={post.id} post={post} lang={lang} currentUserId={currentUserId} onProfileClick={onProfileClick} />
-        ))
+        <>
+          {displayPosts.map((post: any) => (
+            <PostCard key={post.id} post={post} lang={lang} currentUserId={currentUserId} onProfileClick={onProfileClick} />
+          ))}
+          {/* Infinite scroll sentinel */}
+          {feedTab === "for_you" && (
+            <div ref={feedBottomRef} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {loadingMore && (
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[1,2,3].map(i => <div key={i} className="skeleton" style={{ width: 8, height: 8, borderRadius: 4 }} />)}
+                </div>
+              )}
+              {!hasMore && displayPosts.length > 0 && (
+                <div style={{ color: MUTED, fontSize: 12, paddingBottom: 8 }}>—</div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {/* FAB */}

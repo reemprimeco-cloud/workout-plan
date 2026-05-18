@@ -24,6 +24,7 @@ import MyCoach from './MyCoach';
 import Community from './Community';
 import Nutrition from './Nutrition';
 import { useGymSync } from '../hooks/useGymSync';
+import { useHaptic } from '../hooks/useHaptic';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -68,12 +69,24 @@ export default function Home() {
   const profileQuery = trpc.userProfile.getProfile.useQuery(undefined, { enabled: isAuthenticated, retry: false });
   const headerAvatar = profileQuery.data?.avatarUrl ?? null;
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [prevTab, setPrevTab] = useState<Tab>('home');
+  const [tabKey, setTabKey] = useState(0);
   const [startingSession, setStartingSession] = useState(false);
+  const { selection, lightTap } = useHaptic();
+
+  const handleTabChange = (tab: Tab) => {
+    if (tab === activeTab) return;
+    selection(); // haptic feedback on tab tap
+    setPrevTab(activeTab);
+    setActiveTab(tab);
+    setTabKey(k => k + 1);
+  };
   const { activeSession, startSession, stats, data } = tracker;
   const { data: currentUser } = trpc.auth.me.useQuery();
 
 
   const handleStart = (type: SessionType) => {
+    lightTap(); // haptic feedback on session start
     setStartingSession(true);
     startSession(type);
     setTimeout(() => setStartingSession(false), 300);
@@ -186,13 +199,13 @@ export default function Home() {
       {/* ── Content ── */}
       {/* Coach tab gets its own full-height flex container (WhatsApp-style) */}
       {activeTab === 'coach' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+        <div key={`coach-${tabKey}`} className="tab-enter" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
           <MyCoach />
         </div>
       )}
       {/* Community tab gets its own full-height container — avoids overflow:hidden clipping fixed panels */}
       {activeTab === 'community' && (
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+        <div key={`community-${tabKey}`} className="tab-enter" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
           <Community
             userId={currentUser?.id}
             streak={stats.streak}
@@ -203,7 +216,11 @@ export default function Home() {
           />
         </div>
       )}
-      <main style={(activeTab === 'coach' || activeTab === 'community') ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
+      <main
+        key={`main-${tabKey}`}
+        className={(activeTab !== 'coach' && activeTab !== 'community') ? 'tab-enter scroll-ios' : ''}
+        style={(activeTab === 'coach' || activeTab === 'community') ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+      >
 
         {/* Active Session Banner */}
         {activeSession && (
@@ -283,13 +300,15 @@ export default function Home() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
+            className="haptic-press no-select touch-target"
             style={{
               flex: 1, padding: '10px 4px 8px',
               border: 'none', background: 'none', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
               transition: 'all 0.2s',
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
+              minHeight: 56,
             }}
           >
             {TabSVGIcons[tab.id]

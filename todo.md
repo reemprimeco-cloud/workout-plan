@@ -467,12 +467,12 @@
 - [ ] Test: login on device A, add session, login on device B, verify session appears
 
 ## Profile & Auth UI Fixes (May 17)
-- [ ] ProfilePanel: Remove "Change Key" button, keep only Logout
+- [x] ProfilePanel: Remove "Change Key" button, keep only Logout (already removed in previous batch)
 - [ ] ProfilePanel: Show subscription card (plan, expiry, days left, status color)
-- [ ] ProfilePanel: Remove notification preferences section
-- [ ] ProfilePanel: Remove workout reminder section
-- [ ] ProfilePanel: Remove "Started: 17 May 2026", "Data saved locally", "Auto save enabled" text
-- [ ] AuthPage: Replace "لديك كود وصول؟ ادخل كود الوصول" with WhatsApp support link (https://wa.me/96565068000)
+- [x] ProfilePanel: Remove notification preferences section (unused import removed)
+- [x] ProfilePanel: Remove workout reminder section (not present in current code)
+- [x] ProfilePanel: Remove "Started: 17 May 2026", "Data saved locally", "Auto save enabled" text (not present in current code)
+- [x] AuthPage: Replace "لديك كود وصول؟ ادخل كود الوصول" with WhatsApp support link (already done) (https://wa.me/96565068000)
 - [ ] Help/UserGuide: Update with latest app features
 
 ## P1 — Single-Device Enforcement
@@ -681,3 +681,27 @@
 - [x] Fix back button on legal pages to navigate to home (profile tab)
 - [x] Update email from support@primefit.app to reemprimeco@gmail.com in legalContent.ts (8 occurrences)
 - [x] 0 TypeScript errors after changes
+
+## Mobile & iOS Optimization (Pasted_content_06.txt)
+- [x] index.css: Add safe-area inset CSS (env(safe-area-inset-*)) for notch/home-bar handling
+- [x] index.css: Fix viewport to use 100dvh (dynamic viewport height) for mobile browsers
+- [x] index.css: Add -webkit-overflow-scrolling: touch and overscroll-behavior for smooth iOS scrolling
+- [x] index.html: Update viewport meta to viewport-fit=cover for notch support
+- [x] App.tsx / Home.tsx: Add keyboard-aware layout (visualViewport resize listener to adjust bottom nav)
+- [x] Add loading skeleton components for main content areas (Home, Community, Nutrition)
+- [x] Add pull-to-refresh on Community feed and Home page
+- [x] Add smooth page/tab transition animations (CSS transitions between tabs)
+- [x] Add haptic feedback utility (useHaptic hook wrapping navigator.vibrate) for likes, XP, buttons
+- [x] Apply haptic feedback to: like/reaction buttons, XP reward events, challenge completion, nav tab taps
+- [x] Community: Add infinite scroll / pagination (load more on scroll bottom)
+- [x] Community: Optimize re-renders (memoize PostCard, use React.memo)
+- [x] Community: Add lazy loading for post images
+- [x] ProfilePanel: Remove "Change Key" button, keep only Logout (already removed in previous batch)
+- [x] ProfilePanel: Remove notification preferences section (unused import removed)
+- [x] ProfilePanel: Remove workout reminder section (not present in current code)
+- [x] ProfilePanel: Remove "Started: 17 May 2026", "Data saved locally", "Auto save enabled" text (not present in current code)
+- [x] AuthPage: Replace "لديك كود وصول؟ ادخل كود الوصول" with WhatsApp support link (already done)
+- [x] Admin Users tab: Add Delete button with confirmation dialog, wire to deleteUser procedure (already done)
+- [x] index.css: Improve touch target sizes (min 44px for all interactive elements)
+- [x] index.css: Disable text selection on UI elements (user-select: none on buttons/nav)
+- [x] PWA: Update manifest.json with better app metadata (description, categories, screenshots)
