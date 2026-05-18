@@ -779,3 +779,60 @@ export const exerciseFavorites = mysqlTable("exercise_favorites", {
 });
 export type ExerciseFavorite = typeof exerciseFavorites.$inferSelect;
 export type InsertExerciseFavorite = typeof exerciseFavorites.$inferInsert;
+
+// ── Gym Classes System ────────────────────────────────────────────────────────
+
+// Gyms — each gym has a name, optional logo, and brand color
+export const gyms = mysqlTable("gyms", {
+  id:         int("id").autoincrement().primaryKey(),
+  name:       varchar("name", { length: 255 }).notNull(),
+  logoUrl:    text("logoUrl"),
+  brandColor: varchar("brandColor", { length: 7 }).default("#1B2E5E"),
+  createdAt:  timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:  timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Gym = typeof gyms.$inferSelect;
+export type InsertGym = typeof gyms.$inferInsert;
+
+// Branches — each branch belongs to a gym
+export const gymBranches = mysqlTable("gym_branches", {
+  id:        int("id").autoincrement().primaryKey(),
+  gymId:     int("gymId").notNull(),
+  name:      varchar("name", { length: 255 }).notNull(),
+  location:  varchar("location", { length: 512 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GymBranch = typeof gymBranches.$inferSelect;
+export type InsertGymBranch = typeof gymBranches.$inferInsert;
+
+// Gym Classes — one row per class per weekday
+export const gymClasses = mysqlTable("gym_classes", {
+  id:               int("id").autoincrement().primaryKey(),
+  gymId:            int("gymId").notNull(),
+  branchId:         int("branchId").notNull(),
+  className:        varchar("className", { length: 255 }).notNull(),
+  coach:            varchar("coach", { length: 255 }).notNull(),
+  day:              mysqlEnum("day", ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]).notNull(),
+  time:             varchar("time", { length: 20 }).notNull(),   // e.g. "07:00 PM"
+  durationMin:      int("durationMin").notNull().default(60),
+  intensity:        mysqlEnum("intensity", ["Beginner","Intermediate","Advanced"]).notNull().default("Beginner"),
+  caloriesOverride: int("caloriesOverride"),                     // null = auto-estimate
+  notes:            text("notes"),
+  createdAt:        timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:        timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GymClass = typeof gymClasses.$inferSelect;
+export type InsertGymClass = typeof gymClasses.$inferInsert;
+
+// Joined Classes — tracks when a user presses Join on a class card
+export const joinedClasses = mysqlTable("joined_classes", {
+  id:             int("id").autoincrement().primaryKey(),
+  userId:         int("userId").notNull(),
+  classId:        int("classId").notNull(),
+  joinedAt:       timestamp("joinedAt").defaultNow().notNull(),
+  caloriesBurned: int("caloriesBurned").notNull().default(0),
+  xpAwarded:      int("xpAwarded").notNull().default(0),
+});
+export type JoinedClass = typeof joinedClasses.$inferSelect;
+export type InsertJoinedClass = typeof joinedClasses.$inferInsert;
