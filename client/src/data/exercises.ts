@@ -47,6 +47,8 @@ export interface CardioTemplate {
   defaultIncline: string;
   speedLabel?: string;
   inclineLabel?: string;
+  speedLabelEn?: string;
+  inclineLabelEn?: string;
   showCalories?: boolean;
   showDistance?: boolean;
   image: string;
@@ -643,7 +645,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'treadmill', nameAr: 'جهاز المشي (Treadmill)', nameEn: 'Treadmill', machine: 'Treadmill',
     defaultDuration: 20, defaultSpeed: '5.5', defaultIncline: '3',
-    speedLabel: 'السرعة (كم/ساعة)', inclineLabel: 'الانحدار (%)',
+    speedLabel: 'السرعة (كم/ساعة)', inclineLabel: 'الانحدار (%)', speedLabelEn: 'Speed (km/h)', inclineLabelEn: 'Incline (%)',
     showCalories: true, showDistance: true,
     image: IMG.treadmill, tip: 'المشي بانحدار يزيد من حرق الدهون في الأرداف والفخذين.',
     tipEn: 'Walking on incline burns more fat in glutes and thighs.',
@@ -652,7 +654,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'elliptical', nameAr: 'جهاز الأوربتراك (Elliptical)', nameEn: 'Elliptical', machine: 'Elliptical',
     defaultDuration: 20, defaultSpeed: '5', defaultIncline: '3',
-    speedLabel: 'المقاومة (Level)', inclineLabel: 'الانحدار (Level)',
+    speedLabel: 'المقاومة (Level)', inclineLabel: 'الانحدار (Level)', speedLabelEn: 'Resistance (Level)', inclineLabelEn: 'Incline (Level)',
     showCalories: true, showDistance: false,
     image: IMG.elliptical, tip: 'يعمل على الجسم بالكامل بدون ضغط على المفاصل.',
     tipEn: 'Works the whole body without joint stress.',
@@ -661,7 +663,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'bike', nameAr: 'الدراجة الثابتة (Stationary Bike)', nameEn: 'Stationary Bike', machine: 'Stationary Bike',
     defaultDuration: 30, defaultSpeed: '8', defaultIncline: '4',
-    speedLabel: 'المقاومة (Level)', inclineLabel: 'Level متقطع',
+    speedLabel: 'المقاومة (Level)', inclineLabel: 'Level متقطع', speedLabelEn: 'Resistance (Level)', inclineLabelEn: 'Interval Level',
     showCalories: true, showDistance: false,
     image: IMG.cardio, tip: 'الكارديو المتقطع يحرق دهون البطن أسرع بكثير.',
     tipEn: 'Interval cardio burns belly fat much faster.',
@@ -670,7 +672,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'rower', nameAr: 'جهاز التجديف (Rower)', nameEn: 'Rowing Machine', machine: 'Rowing Machine',
     defaultDuration: 15, defaultSpeed: '24', defaultIncline: '5',
-    speedLabel: 'سرعة الجذب (SPM)', inclineLabel: 'مستوى المقاومة',
+    speedLabel: 'سرعة الجذب (SPM)', inclineLabel: 'مستوى المقاومة', speedLabelEn: 'Stroke Rate (SPM)', inclineLabelEn: 'Resistance Level',
     showCalories: true, showDistance: true,
     image: IMG.rower, tip: 'التجديف يعمل على 86% من عضلات الجسم — مثالي للإحماء الشامل.',
     tipEn: 'Rowing engages 86% of body muscles — ideal for full-body warm-up.',
@@ -679,7 +681,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'precor_bike', nameAr: 'دراجة Precor (Precor Bike)', nameEn: 'Precor Bike', machine: 'Precor Bike',
     defaultDuration: 20, defaultSpeed: '80', defaultIncline: '8',
-    speedLabel: 'السرعة (RPM)', inclineLabel: 'مستوى المقاومة',
+    speedLabel: 'السرعة (RPM)', inclineLabel: 'مستوى المقاومة', speedLabelEn: 'Speed (RPM)', inclineLabelEn: 'Resistance Level',
     showCalories: true, showDistance: false,
     image: IMG.elliptical, tip: 'الدراجة الثابتة تحرق دهون الفخذين والأرداف بدون ضغط على الركبتين.',
     tipEn: 'Stationary bike burns thigh and glute fat without knee stress.',
@@ -688,7 +690,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'climbmill', nameAr: 'جهاز الدرج (Climbmill)', nameEn: 'Climbmill / StairMaster', machine: 'Climbmill',
     defaultDuration: 20, defaultSpeed: '60', defaultIncline: '0',
-    speedLabel: 'السرعة (خطوة/دقيقة)', inclineLabel: 'المستوى',
+    speedLabel: 'السرعة (خطوة/دقيقة)', inclineLabel: 'المستوى', speedLabelEn: 'Speed (steps/min)', inclineLabelEn: 'Level',
     showCalories: true, showDistance: false,
     image: IMG.glutes, tip: 'جهاز الدرج يستهدف الأرداف والفخذين بشكل مكثف — من أفضل أجهزة حرق الدهون.',
     tipEn: 'Climbmill intensely targets glutes and thighs — one of the best fat-burning machines.',

@@ -5,6 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -22,6 +23,9 @@ interface AuthPageProps {
 }
 
 export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: AuthPageProps) {
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+
   const [mode, setMode] = useState<Mode>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,7 +46,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
     const googleError = params.get('google_error');
     const oauthError = params.get('error');
     if (googleError) {
-      const errorMessages: Record<string, string> = {
+      const errorMessagesAr: Record<string, string> = {
         cancelled: 'تم إلغاء تسجيل الدخول عبر Google',
         token_exchange_failed: 'فشل التحقق من حساب Google. يرجى المحاولة مرة أخرى.',
         userinfo_failed: 'تعذر الحصول على معلومات الحساب من Google.',
@@ -52,18 +56,29 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         db_unavailable: 'خدمة قاعدة البيانات غير متاحة. يرجى المحاولة لاحقاً.',
         unexpected_error: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
       };
-      setError(errorMessages[googleError] || 'فشل تسجيل الدخول عبر Google');
+      const errorMessagesEn: Record<string, string> = {
+        cancelled: 'Google sign-in was cancelled.',
+        token_exchange_failed: 'Google account verification failed. Please try again.',
+        userinfo_failed: 'Could not retrieve Google account information.',
+        invalid_user: 'Invalid Google account data.',
+        user_creation_failed: 'Could not create account. Please try again.',
+        config_error: 'Google sign-in is not currently enabled.',
+        db_unavailable: 'Database service unavailable. Please try again later.',
+        unexpected_error: 'An unexpected error occurred. Please try again.',
+      };
+      const messages = isAr ? errorMessagesAr : errorMessagesEn;
+      setError(messages[googleError] || (isAr ? 'فشل تسجيل الدخول عبر Google' : 'Google sign-in failed'));
       // Clean up URL
       const url = new URL(window.location.href);
       url.searchParams.delete('google_error');
       window.history.replaceState({}, '', url.toString());
     } else if (oauthError === 'oauth_failed') {
-      setError('فشل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.');
+      setError(isAr ? 'فشل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.' : 'Google sign-in failed. Please try again.');
       const url = new URL(window.location.href);
       url.searchParams.delete('error');
       window.history.replaceState({}, '', url.toString());
     }
-  }, []);
+  }, [isAr]);
 
 
 
@@ -82,15 +97,15 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           window.location.reload();
         }
       } catch (err: any) {
-        setError(err.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
+        setError(err.message || (isAr ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.'));
       }
     } else if (mode === 'signup') {
       if (password !== confirmPassword) {
-        setError('كلمتا المرور غير متطابقتين');
+        setError(isAr ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
         return;
       }
       if (password.length < 8) {
-        setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+        setError(isAr ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters');
         return;
       }
       try {
@@ -102,19 +117,21 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           window.location.reload();
         }
       } catch (err: any) {
-        setError(err.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
+        setError(err.message || (isAr ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.'));
       }
     } else if (mode === 'forgot') {
       try {
         await forgotMutation.mutateAsync({ email, origin: window.location.origin });
         setMode('reset-sent');
       } catch (err: any) {
-        setError(err.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
+        setError(err.message || (isAr ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.'));
       }
     }
   };
 
   const isLoading = loginMutation.isPending || signUpMutation.isPending || forgotMutation.isPending;
+
+  const fontFamily = isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif';
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -122,12 +139,12 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
     border: `1.5px solid ${SKY_LIGHT}`,
     borderRadius: 12,
     fontSize: 14,
-    fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+    fontFamily,
     outline: 'none',
     color: NAVY,
     background: '#F8FAFC',
     boxSizing: 'border-box',
-    direction: 'rtl',
+    direction: isAr ? 'rtl' : 'ltr',
   };
 
   const labelStyle: React.CSSProperties = {
@@ -136,7 +153,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
     fontWeight: 700,
     color: NAVY,
     marginBottom: 6,
-    textAlign: 'right',
+    textAlign: isAr ? 'right' : 'left',
   };
 
   const primaryBtn: React.CSSProperties = {
@@ -149,7 +166,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
     fontSize: 15,
     fontWeight: 900,
     cursor: isLoading ? 'not-allowed' : 'pointer',
-    fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+    fontFamily,
     opacity: isLoading ? 0.7 : 1,
     transition: 'opacity 0.2s',
   };
@@ -157,10 +174,10 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
   // Reset sent screen
   if (mode === 'reset-sent') {
     return (
-      <div dir="rtl" style={{
+      <div dir={isAr ? 'rtl' : 'ltr'} style={{
         minHeight: '100vh',
         background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+        fontFamily,
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
       }}>
         <div style={{
@@ -170,14 +187,14 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         }}>
           <div style={{ fontSize: 40, marginBottom: 16, color: NAVY }}>&#9993;</div>
           <h2 style={{ color: NAVY, fontSize: 20, fontWeight: 900, margin: '0 0 12px' }}>
-            تحقق من بريدك الإلكتروني
+            {isAr ? 'تحقق من بريدك الإلكتروني' : 'Check Your Email'}
           </h2>
           <p style={{ color: '#4B5563', fontSize: 14, lineHeight: 1.7, margin: '0 0 24px' }}>
-            أرسلنا رابط إعادة تعيين كلمة المرور إلى<br />
+            {isAr ? 'أرسلنا رابط إعادة تعيين كلمة المرور إلى' : 'We sent a password reset link to'}<br />
             <strong style={{ color: NAVY }}>{email}</strong>
           </p>
           <button onClick={() => setMode('login')} style={{ ...primaryBtn, width: 'auto', padding: '12px 32px' }}>
-            العودة لتسجيل الدخول
+            {isAr ? 'العودة لتسجيل الدخول' : 'Back to Login'}
           </button>
         </div>
       </div>
@@ -185,10 +202,10 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
   }
 
   return (
-    <div dir="rtl" style={{
+    <div dir={isAr ? 'rtl' : 'ltr'} style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-      fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+      fontFamily,
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }}>
       <div style={{
@@ -202,11 +219,11 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
             onClick={onBackToPricing}
             style={{
               background: 'none', border: 'none', color: '#7A9BB5', cursor: 'pointer',
-              fontSize: 13, fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+              fontSize: 13, fontFamily,
               display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0,
             }}
           >
-            &#8594; تغيير الخطة
+            &#8594; {isAr ? 'تغيير الخطة' : 'Change Plan'}
           </button>
         )}
 
@@ -215,18 +232,22 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           <img src={LOGO_URL} alt="Prime Fit" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 18, marginBottom: 10 }} />
           <h1 style={{ fontSize: 24, fontWeight: 900, color: NAVY, margin: '0 0 4px' }}>Prime Fit</h1>
           <p style={{ color: '#7A9BB5', fontSize: 12, margin: 0 }}>
-            {mode === 'login' ? 'مرحباً بعودتك' : mode === 'signup' ? 'أنشئ حسابك الآن' : 'إعادة تعيين كلمة المرور'}
+            {mode === 'login'
+              ? (isAr ? 'مرحباً بعودتك' : 'Welcome back')
+              : mode === 'signup'
+              ? (isAr ? 'أنشئ حسابك الآن' : 'Create your account')
+              : (isAr ? 'إعادة تعيين كلمة المرور' : 'Reset your password')}
           </p>
           {selectedPlan && selectedPlan !== 'free' && (
             <div style={{ marginTop: 8, background: '#EFF6FF', borderRadius: 8, padding: '4px 12px', display: 'inline-block' }}>
               <span style={{ color: NAVY, fontSize: 12, fontWeight: 700 }}>
-                الخطة المختارة: {selectedPlan === 'prime_plus' ? 'Prime Plus' : 'Prime Pro'}
+                {isAr ? 'الخطة المختارة:' : 'Selected Plan:'} {selectedPlan === 'prime_plus' ? 'Prime Plus' : 'Prime Pro'}
               </span>
             </div>
           )}
           {selectedPlan === 'free' && (
             <div style={{ marginTop: 8, background: '#F0FDF4', borderRadius: 8, padding: '4px 12px', display: 'inline-block' }}>
-              <span style={{ color: '#16a34a', fontSize: 12, fontWeight: 700 }}>تجربة مجانية 7 أيام</span>
+              <span style={{ color: '#16a34a', fontSize: 12, fontWeight: 700 }}>{isAr ? 'تجربة مجانية 7 أيام' : '7-Day Free Trial'}</span>
             </div>
           )}
         </div>
@@ -237,7 +258,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         {error && (
           <div style={{
             background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10,
-            padding: '10px 14px', marginBottom: 16, color: '#DC2626', fontSize: 13, textAlign: 'right',
+            padding: '10px 14px', marginBottom: 16, color: '#DC2626', fontSize: 13, textAlign: isAr ? 'right' : 'left',
           }}>
             {error}
           </div>
@@ -245,7 +266,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         {success && (
           <div style={{
             background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10,
-            padding: '10px 14px', marginBottom: 16, color: '#16A34A', fontSize: 13, textAlign: 'right',
+            padding: '10px 14px', marginBottom: 16, color: '#16A34A', fontSize: 13, textAlign: isAr ? 'right' : 'left',
           }}>
             {success}
           </div>
@@ -255,12 +276,12 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         <form onSubmit={handleSubmit}>
           {mode === 'signup' && (
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>الاسم الكامل</label>
+              <label style={labelStyle}>{isAr ? 'الاسم الكامل' : 'Full Name'}</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
-                placeholder="مثال: ريم الفرج"
+                placeholder={isAr ? 'مثال: ريم الفرج' : 'e.g. Sarah Smith'}
                 required
                 style={inputStyle}
               />
@@ -268,7 +289,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           )}
 
           <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>البريد الإلكتروني</label>
+            <label style={labelStyle}>{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
             <input
               type="email"
               value={email}
@@ -281,13 +302,13 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
 
           {mode !== 'forgot' && (
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>كلمة المرور</label>
+              <label style={labelStyle}>{isAr ? 'كلمة المرور' : 'Password'}</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder={mode === 'signup' ? '8 أحرف على الأقل' : 'كلمة المرور'}
+                  placeholder={mode === 'signup' ? (isAr ? '8 أحرف على الأقل' : 'At least 8 characters') : (isAr ? 'كلمة المرور' : 'Password')}
                   required
                   style={{ ...inputStyle, paddingLeft: 44, direction: 'ltr', textAlign: 'left' }}
                 />
@@ -299,7 +320,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
                     background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 16,
                   }}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {showPassword ? (isAr ? 'إخفاء' : 'Hide') : (isAr ? 'إظهار' : 'Show')}
                 </button>
               </div>
             </div>
@@ -307,12 +328,12 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
 
           {mode === 'signup' && (
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>تأكيد كلمة المرور</label>
+              <label style={labelStyle}>{isAr ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="أعد كتابة كلمة المرور"
+                placeholder={isAr ? 'أعد كتابة كلمة المرور' : 'Re-enter your password'}
                 required
                 style={{ ...inputStyle, direction: 'ltr', textAlign: 'left' }}
               />
@@ -326,17 +347,23 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
                 onClick={() => { setMode('forgot'); setError(''); }}
                 style={{
                   background: 'none', border: 'none', color: SKY, fontSize: 12,
-                  cursor: 'pointer', fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+                  cursor: 'pointer', fontFamily,
                   fontWeight: 600, padding: 0,
                 }}
               >
-                نسيت كلمة المرور؟
+                {isAr ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
               </button>
             </div>
           )}
 
           <button type="submit" disabled={isLoading} style={primaryBtn}>
-            {isLoading ? 'جاري التحميل...' : mode === 'login' ? 'تسجيل الدخول' : mode === 'signup' ? 'إنشاء الحساب' : 'إرسال رابط الإعادة'}
+            {isLoading
+              ? (isAr ? 'جاري التحميل...' : 'Loading...')
+              : mode === 'login'
+              ? (isAr ? 'تسجيل الدخول' : 'Log In')
+              : mode === 'signup'
+              ? (isAr ? 'إنشاء الحساب' : 'Create Account')
+              : (isAr ? 'إرسال رابط الإعادة' : 'Send Reset Link')}
           </button>
         </form>
 
@@ -344,25 +371,25 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           {mode === 'login' && (
             <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>
-              ليس لديك حساب؟{' '}
+              {isAr ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
               <button
                 type="button"
                 onClick={() => { setMode('signup'); setError(''); }}
-                style={{ background: 'none', border: 'none', color: NAVY, fontWeight: 900, cursor: 'pointer', fontSize: 13, fontFamily: 'Cairo, Tajawal, system-ui, sans-serif' }}
+                style={{ background: 'none', border: 'none', color: NAVY, fontWeight: 900, cursor: 'pointer', fontSize: 13, fontFamily }}
               >
-                سجل الآن
+                {isAr ? 'سجل الآن' : 'Sign Up'}
               </button>
             </p>
           )}
           {mode === 'signup' && (
             <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>
-              لديك حساب بالفعل؟{' '}
+              {isAr ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
               <button
                 type="button"
                 onClick={() => { setMode('login'); setError(''); }}
-                style={{ background: 'none', border: 'none', color: NAVY, fontWeight: 900, cursor: 'pointer', fontSize: 13, fontFamily: 'Cairo, Tajawal, system-ui, sans-serif' }}
+                style={{ background: 'none', border: 'none', color: NAVY, fontWeight: 900, cursor: 'pointer', fontSize: 13, fontFamily }}
               >
-                تسجيل الدخول
+                {isAr ? 'تسجيل الدخول' : 'Log In'}
               </button>
             </p>
           )}
@@ -370,9 +397,9 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
             <button
               type="button"
               onClick={() => { setMode('login'); setError(''); }}
-              style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, fontFamily: 'Cairo, Tajawal, system-ui, sans-serif' }}
+              style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, fontFamily }}
             >
-              ← العودة لتسجيل الدخول
+              {isAr ? '← العودة لتسجيل الدخول' : '← Back to Login'}
             </button>
           )}
         </div>
@@ -395,7 +422,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
               borderRadius: 20,
               padding: '7px 18px',
               border: '1.5px solid rgba(37,211,102,0.25)',
-              fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+              fontFamily,
               transition: 'background 0.2s',
             }}
           >

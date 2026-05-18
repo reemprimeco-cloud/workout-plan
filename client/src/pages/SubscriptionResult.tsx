@@ -3,12 +3,16 @@ import { Link } from "wouter";
 import { CheckCircle, XCircle, Copy, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const NAVY = "#1B2E5E";
 const SKY = "#7BB8D4";
 
 export function SubscriptionSuccess() {
   const [copied, setCopied] = useState(false);
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+  const fontFamily = isAr ? "Cairo, sans-serif" : "Inter, system-ui, sans-serif";
 
   // MyFatoorah appends ?paymentId=xxx to the CallBackUrl automatically
   const params = new URLSearchParams(window.location.search);
@@ -47,7 +51,7 @@ export function SubscriptionSuccess() {
 
   return (
     <div
-      dir="rtl"
+      dir={isAr ? "rtl" : "ltr"}
       style={{
         minHeight: "100vh",
         background: "#F0F4F8",
@@ -55,7 +59,7 @@ export function SubscriptionSuccess() {
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
-        fontFamily: "Cairo, sans-serif",
+        fontFamily,
       }}
     >
       <div
@@ -71,10 +75,12 @@ export function SubscriptionSuccess() {
       >
         <CheckCircle size={64} color="#22c55e" style={{ marginBottom: 16 }} />
         <h1 style={{ fontSize: 26, fontWeight: 900, color: NAVY, margin: "0 0 8px" }}>
-          تم الدفع بنجاح!
+          {isAr ? 'تم الدفع بنجاح!' : 'Payment Successful!'}
         </h1>
         <p style={{ color: "#64748b", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
-          شكراً لاشتراكك في Prime Fit. كود التفعيل الخاص بك جاهز أدناه وقد أُرسل أيضاً إلى بريدك الإلكتروني.
+          {isAr
+            ? 'شكراً لاشتراكك في Prime Fit. كود التفعيل الخاص بك جاهز أدناه وقد أُرسل أيضاً إلى بريدك الإلكتروني.'
+            : 'Thank you for subscribing to Prime Fit. Your activation code is ready below and has also been sent to your email.'}
         </p>
 
         {/* License Key Box */}
@@ -94,7 +100,7 @@ export function SubscriptionSuccess() {
           >
             <Loader2 size={28} color={SKY} className="animate-spin" />
             <p style={{ color: "#7A9BB5", fontSize: 13, margin: 0 }}>
-              جاري تجهيز كود التفعيل...
+              {isAr ? 'جاري تجهيز كود التفعيل...' : 'Preparing your activation code...'}
             </p>
           </div>
         ) : licenseKey ? (
@@ -108,7 +114,7 @@ export function SubscriptionSuccess() {
             }}
           >
             <p style={{ color: "#9CA3AF", fontSize: 11, margin: "0 0 8px", letterSpacing: "1px", textTransform: "uppercase" }}>
-              كود التفعيل
+              {isAr ? 'كود التفعيل' : 'Activation Code'}
             </p>
             <div
               style={{
@@ -145,11 +151,11 @@ export function SubscriptionSuccess() {
                 alignItems: "center",
                 gap: 8,
                 transition: "background 0.2s",
-                fontFamily: "Cairo, sans-serif",
+                fontFamily,
               }}
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? "تم النسخ!" : "نسخ الكود"}
+              {copied ? (isAr ? 'تم النسخ!' : 'Copied!') : (isAr ? 'نسخ الكود' : 'Copy Code')}
             </button>
           </div>
         ) : (
@@ -163,11 +169,13 @@ export function SubscriptionSuccess() {
             }}
           >
             <p style={{ color: "#92400E", fontSize: 13, margin: 0, lineHeight: 1.7 }}>
-              سيصلك كود التفعيل على بريدك الإلكتروني خلال دقائق. إذا لم يصلك، تواصل معنا على{" "}
-              <a href="https://wa.me/96565068000" style={{ color: "#D97706", fontWeight: 700 }}>
-                واتساب
-              </a>
-              .
+              {isAr ? (
+                <>سيصلك كود التفعيل على بريدك الإلكتروني خلال دقائق. إذا لم يصلك، تواصل معنا على{" "}
+                  <a href="https://wa.me/96565068000" style={{ color: "#D97706", fontWeight: 700 }}>واتساب</a>.</>
+              ) : (
+                <>Your activation code will be sent to your email within minutes. If you don't receive it, contact us on{" "}
+                  <a href="https://wa.me/96565068000" style={{ color: "#D97706", fontWeight: 700 }}>WhatsApp</a>.</>
+              )}
             </p>
           </div>
         )}
@@ -179,16 +187,26 @@ export function SubscriptionSuccess() {
             borderRadius: 12,
             padding: "16px",
             marginBottom: 24,
-            textAlign: "right",
+            textAlign: isAr ? "right" : "left",
           }}
         >
           <p style={{ color: NAVY, fontWeight: 700, fontSize: 13, margin: "0 0 8px" }}>
-            كيفية الاستخدام:
+            {isAr ? 'كيفية الاستخدام:' : 'How to use:'}
           </p>
-          <ol style={{ color: "#64748b", fontSize: 12, lineHeight: 2, margin: 0, paddingRight: 16 }}>
-            <li>افتح تطبيق Prime Fit</li>
-            <li>اضغط على "لدي كود تفعيل"</li>
-            <li>أدخل الكود أعلاه وابدأ فوراً</li>
+          <ol style={{ color: "#64748b", fontSize: 12, lineHeight: 2, margin: 0, paddingRight: isAr ? 16 : 0, paddingLeft: isAr ? 0 : 16 }}>
+            {isAr ? (
+              <>
+                <li>افتح تطبيق Prime Fit</li>
+                <li>اضغط على "لدي كود تفعيل"</li>
+                <li>أدخل الكود أعلاه وابدأ فوراً</li>
+              </>
+            ) : (
+              <>
+                <li>Open the Prime Fit app</li>
+                <li>Tap "I have an activation code"</li>
+                <li>Enter the code above and start immediately</li>
+              </>
+            )}
           </ol>
         </div>
 
@@ -200,11 +218,11 @@ export function SubscriptionSuccess() {
               fontWeight: 700,
               borderRadius: 12,
               padding: "12px 32px",
-              fontFamily: "Cairo, sans-serif",
+              fontFamily,
               width: "100%",
             }}
           >
-            الذهاب إلى التطبيق
+            {isAr ? 'الذهاب إلى التطبيق' : 'Go to App'}
           </Button>
         </Link>
       </div>
@@ -213,9 +231,13 @@ export function SubscriptionSuccess() {
 }
 
 export function SubscriptionError() {
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+  const fontFamily = isAr ? "Cairo, sans-serif" : "Inter, system-ui, sans-serif";
+
   return (
     <div
-      dir="rtl"
+      dir={isAr ? "rtl" : "ltr"}
       style={{
         minHeight: "100vh",
         background: "#F0F4F8",
@@ -223,7 +245,7 @@ export function SubscriptionError() {
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
-        fontFamily: "Cairo, sans-serif",
+        fontFamily,
       }}
     >
       <div
@@ -239,11 +261,12 @@ export function SubscriptionError() {
       >
         <XCircle size={64} color="#ef4444" style={{ marginBottom: 16 }} />
         <h1 style={{ fontSize: 26, fontWeight: 900, color: NAVY, margin: "0 0 8px" }}>
-          فشل الدفع
+          {isAr ? 'فشل الدفع' : 'Payment Failed'}
         </h1>
         <p style={{ color: "#64748b", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
-          حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى أو التواصل معنا على{" "}
-          <strong>65068000</strong>.
+          {isAr
+            ? <>حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى أو التواصل معنا على{" "}<strong>65068000</strong>.</>
+            : <>An error occurred while processing your payment. Please try again or contact us at{" "}<strong>65068000</strong>.</>}
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <Link href="/pricing">
@@ -254,11 +277,11 @@ export function SubscriptionError() {
                 fontWeight: 700,
                 borderRadius: 12,
                 padding: "12px 32px",
-                fontFamily: "Cairo, sans-serif",
+                fontFamily,
                 width: "100%",
               }}
             >
-              المحاولة مرة أخرى
+              {isAr ? 'المحاولة مرة أخرى' : 'Try Again'}
             </Button>
           </Link>
           <a
@@ -274,10 +297,10 @@ export function SubscriptionError() {
               padding: "12px 32px",
               fontSize: 14,
               fontWeight: 700,
-              fontFamily: "Cairo, sans-serif",
+              fontFamily,
             }}
           >
-            تواصل معنا على واتساب
+            {isAr ? 'تواصل معنا على واتساب' : 'Contact us on WhatsApp'}
           </a>
         </div>
       </div>

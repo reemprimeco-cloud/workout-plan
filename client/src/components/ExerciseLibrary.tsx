@@ -540,11 +540,11 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           <span style={{
             background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
             padding: "4px 10px", fontSize: 11, fontWeight: 600,
-          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Lightning size={12} />{machine.speedLabel ? (isAr ? machine.speedLabel : machine.speedLabel) : (isAr ? "السرعة" : "Speed")}: {machine.defaultSpeed}</span></span>
+          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Lightning size={12} />{isAr ? (machine.speedLabel || 'السرعة') : (machine.speedLabelEn || machine.speedLabel || 'Speed')}: {machine.defaultSpeed}</span></span>
           <span style={{
             background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
             padding: "4px 10px", fontSize: 11, fontWeight: 600,
-          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Mountain size={12} />{machine.inclineLabel ? (isAr ? machine.inclineLabel : machine.inclineLabel) : (isAr ? "الانحدار" : "Incline")}: {machine.defaultIncline}</span></span>
+          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Mountain size={12} />{isAr ? (machine.inclineLabel || 'الانحدار') : (machine.inclineLabelEn || machine.inclineLabel || 'Incline')}: {machine.defaultIncline}</span></span>
           {machine.showCalories && (
             <span style={{
               background: "#FFF3E0", color: "#E65100", borderRadius: 8,
@@ -587,8 +587,8 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           <div style={{ marginTop: 10 }}>
             <div style={{ fontSize: 12, color: "#4A4A6A", lineHeight: 1.8 }}>
               <div><strong>{isAr ? "المدة الافتراضية:" : "Default Duration:"}</strong> {machine.defaultDuration} {isAr ? "دقيقة" : "min"}</div>
-              <div><strong>{machine.speedLabel || (isAr ? "السرعة:" : "Speed:")}:</strong> {machine.defaultSpeed}</div>
-              <div><strong>{machine.inclineLabel || (isAr ? "الانحدار:" : "Incline:")}:</strong> {machine.defaultIncline}</div>
+              <div><strong>{isAr ? (machine.speedLabel || 'السرعة:') : (machine.speedLabelEn || machine.speedLabel || 'Speed:')}:</strong> {machine.defaultSpeed}</div>
+              <div><strong>{isAr ? (machine.inclineLabel || 'الانحدار:') : (machine.inclineLabelEn || machine.inclineLabel || 'Incline:')}:</strong> {machine.defaultIncline}</div>
               {machine.showCalories && <div><strong>{isAr ? "الكالوريز:" : "Calories:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
               {machine.showDistance && <div><strong>{isAr ? "المسافة:" : "Distance:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
             </div>

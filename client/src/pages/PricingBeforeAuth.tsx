@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import AuthPage from './AuthPage';
 import PricingSelector from './PricingSelector';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // sessionStorage key for persisting plan selection across auth redirect
 const PLAN_KEY = 'primefit_selected_plan';
@@ -137,6 +138,8 @@ function PostAuthActivator({
   }, [authDone]);
 
   const isProcessing = activateFree.isPending || createCheckout.isPending;
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
 
   if (isProcessing) {
     return (
@@ -145,7 +148,7 @@ function PostAuthActivator({
         background: 'linear-gradient(135deg, #0F1E3D 0%, #1B2E5E 100%)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexDirection: 'column', gap: 16,
-        fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+        fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
       }}>
         <div style={{
           width: 48, height: 48,
@@ -156,7 +159,9 @@ function PostAuthActivator({
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ color: '#A8D4E8', fontSize: 15, fontWeight: 600 }}>
-          {selectedPlan === 'free' ? 'جاري تفعيل الاشتراك المجاني...' : 'جاري التوجيه لصفحة الدفع...'}
+          {selectedPlan === 'free'
+            ? (isAr ? 'جاري تفعيل الاشتراك المجاني...' : 'Activating free subscription...')
+            : (isAr ? 'جاري التوجيه لصفحة الدفع...' : 'Redirecting to payment...')}
         </div>
       </div>
     );
