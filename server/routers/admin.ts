@@ -20,6 +20,7 @@ import {
   users,
   adminNotifications,
   notificationReads,
+  billingHistory,
 } from "../../drizzle/schema";
 import { desc, eq, and, notInArray, isNull, or, inArray, gte, lt, ne } from "drizzle-orm";
 import { sendBroadcastEmail } from "../_core/email";
@@ -495,5 +496,35 @@ export const adminRouter = router({
         // Duplicate — already read, ignore
       }
       return { success: true };
+    }),
+
+  // ── List Billing History (Transactions) ──────────────────────────────────
+  listBillingHistory: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(200).default(100) }).optional())
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select({
+          id: billingHistory.id,
+          userId: billingHistory.userId,
+          plan: billingHistory.plan,
+          period: billingHistory.period,
+          amount: billingHistory.amount,
+          currency: billingHistory.currency,
+          status: billingHistory.status,
+          invoiceId: billingHistory.invoiceId,
+          paymentRef: billingHistory.paymentRef,
+          createdAt: billingHistory.createdAt,
+          userName: users.name,
+          userFullName: users.fullName,
+          userEmail: users.email,
+        })
+        .from(billingHistory)
+        .leftJoin(users, eq(billingHistory.userId, users.openId))
+        .orderBy(desc(billingHistory.createdAt))
+        .limit(input?.limit ?? 100);
+      return rows;
     }),
 });
