@@ -767,3 +767,15 @@ export const communityReportPosts = mysqlTable("community_report_posts", {
 });
 export type CommunityReportPost = typeof communityReportPosts.$inferSelect;
 export type InsertCommunityReportPost = typeof communityReportPosts.$inferInsert;
+
+// ── Exercise Favorites ────────────────────────────────────────────────────────
+// Stores user-favorited exercises. exerciseId is the string key from exercises.ts
+// (e.g. "squat_db", "bicep_curl"). Does NOT affect workout plans or sessions.
+export const exerciseFavorites = mysqlTable("exercise_favorites", {
+  id:         int("id").autoincrement().primaryKey(),
+  userId:     int("userId").notNull(),
+  exerciseId: varchar("exerciseId", { length: 128 }).notNull(),
+  createdAt:  timestamp("createdAt").defaultNow().notNull(),
+});
+export type ExerciseFavorite = typeof exerciseFavorites.$inferSelect;
+export type InsertExerciseFavorite = typeof exerciseFavorites.$inferInsert;

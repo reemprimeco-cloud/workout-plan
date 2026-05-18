@@ -4,8 +4,22 @@
 
 import { AppIcons } from "./AppIcons";
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
 import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
+
+// ── Heart Icon SVG (vector outline / filled) ─────────────────
+function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
+  return filled ? (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ) : (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
 
 interface ExerciseLibraryProps {
   gender: "male" | "female";
@@ -41,6 +55,18 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
   const [showGoalAlert, setShowGoalAlert] = useState(true);
   const [showTipsAlert, setShowTipsAlert] = useState(false);
+
+  // ── Favorites state (DB-backed via tRPC) ──
+  const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
+  const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
+  const removeFav = trpc.exerciseFavorites.removeFavorite.useMutation({ onSuccess: () => refetchFavs() });
+
+  const isFav = (id: string) => favIds.includes(id);
+  const toggleFav = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (isFav(id)) removeFav.mutate({ exerciseId: id });
+    else addFav.mutate({ exerciseId: id });
+  };
 
   const exercises = grouped[activeCategory] || [];
 
@@ -289,52 +315,75 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
               }}
             >
               {/* Card Header */}
-              <button
-                onClick={() => setExpandedExercise(isExpanded ? null : ex.id)}
-                style={{
-                  width: "100%",
-                  background: "none",
-                  border: "none",
-                  padding: "14px 16px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  direction: isAr ? "rtl" : "ltr",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
-                  {/* Sets/Reps badge */}
-                  <div
-                    style={{
-                      background: "rgba(123,184,212,0.15)",
-                      border: "1px solid rgba(123,184,212,0.3)",
-                      borderRadius: 8,
-                      padding: "6px 10px",
-                      textAlign: "center",
-                      minWidth: 52,
-                    }}
-                  >
-                    <div style={{ color: "#7BB8D4", fontSize: 14, fontWeight: 800 }}>{ex.sets}</div>
-                    <div style={{ color: "#64748b", fontSize: 10 }}>{isAr ? "جولات" : "sets"}</div>
-                  </div>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <button
+                  onClick={() => setExpandedExercise(isExpanded ? null : ex.id)}
+                  style={{
+                    flex: 1,
+                    background: "none",
+                    border: "none",
+                    padding: "14px 16px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    direction: isAr ? "rtl" : "ltr",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+                    {/* Sets/Reps badge */}
+                    <div
+                      style={{
+                        background: "rgba(123,184,212,0.15)",
+                        border: "1px solid rgba(123,184,212,0.3)",
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        textAlign: "center",
+                        minWidth: 52,
+                      }}
+                    >
+                      <div style={{ color: "#7BB8D4", fontSize: 14, fontWeight: 800 }}>{ex.sets}</div>
+                      <div style={{ color: "#64748b", fontSize: 10 }}>{isAr ? "جولات" : "sets"}</div>
+                    </div>
 
-                  <div style={{ flex: 1, textAlign: isAr ? "right" : "left" }}>
-                    <div style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>
-                      {isAr ? ex.nameAr : ex.name}
-                    </div>
-                    <div style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
-                      {ex.reps} {isAr ? "تكرار" : "reps"} &nbsp;·&nbsp;
-                      <span style={{ color: REST_COLOR(restSec) }}>
-                        ⏱ {isAr ? ex.restAr : `${ex.rest}s rest`}
-                      </span>
+                    <div style={{ flex: 1, textAlign: isAr ? "right" : "left" }}>
+                      <div style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>
+                        {isAr ? ex.nameAr : ex.name}
+                      </div>
+                      <div style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
+                        {ex.reps} {isAr ? "تكرار" : "reps"} &nbsp;·&nbsp;
+                        <span style={{ color: REST_COLOR(restSec), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                          <AppIcons.Timer size={12} /> {isAr ? ex.restAr : `${ex.rest}s rest`}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <span style={{ color: "#7BB8D4", fontSize: 16, marginRight: isAr ? 0 : 0, marginLeft: isAr ? 0 : 0 }}>
-                  {isExpanded ? <AppIcons.ChevronUp size={16} /> : <AppIcons.ChevronDown size={16} />}
-                </span>
-              </button>
+                  <span style={{ color: "#7BB8D4", fontSize: 16 }}>
+                    {isExpanded ? <AppIcons.ChevronUp size={16} /> : <AppIcons.ChevronDown size={16} />}
+                  </span>
+                </button>
+
+                {/* Heart toggle button */}
+                <button
+                  onClick={(e) => toggleFav(e, ex.id)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "14px 14px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "transform 0.2s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.25)")}
+                  onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+                  title={isFav(ex.id) ? (isAr ? "إزالة من المفضلة" : "Remove from favorites") : (isAr ? "إضافة للمفضلة" : "Add to favorites")}
+                >
+                  <HeartIcon filled={isFav(ex.id)} size={18} />
+                </button>
+              </div>
 
               {/* Expanded Details */}
               {isExpanded && (
