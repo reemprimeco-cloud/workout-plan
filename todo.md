@@ -630,3 +630,20 @@
 - [x] Add AppIcons imports to all affected files
 - [x] Fix all JSX parse errors caused by emoji replacement (unclosed tags, missing braces)
 - [x] 0 TypeScript errors, 0 Vite errors after all replacements
+
+## Favorite Exercises Feature
+- [x] DB schema: add exercise_favorites table (id, userId, exerciseId, createdAt)
+- [x] Run pnpm db:push to push schema
+- [x] Server: addFavorite procedure (protectedProcedure, insert into exercise_favorites)
+- [x] Server: removeFavorite procedure (protectedProcedure, delete from exercise_favorites)
+- [x] Server: getFavorites procedure (protectedProcedure, return list of exerciseIds)
+- [x] Register favorites router in server/routers.ts
+- [x] ExerciseLibrary: rename "برنامجك" tab to "تماريني المفضلة" with heart SVG icon
+- [x] ExerciseLibrary: add heart toggle button to each exercise card in "كل التمارين" tab
+- [x] ExerciseLibrary: heart states — filled (favorite) vs outline (not favorite), SVG vectors only
+- [x] ExerciseLibrary: smooth CSS transition animation on heart toggle
+- [x] ExerciseLibrary: "تماريني المفضلة" tab shows only favorited exercises
+- [x] ExerciseLibrary: empty state when no favorites — Arabic message + heart icon
+- [x] ExerciseLibrary: optimistic UI updates for instant heart toggle feedback
+- [x] Write vitest tests for favorites procedures (13 tests)
+- [x] Verify 0 TypeScript errors after all changes

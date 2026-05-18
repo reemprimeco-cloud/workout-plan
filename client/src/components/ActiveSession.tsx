@@ -1,5 +1,6 @@
 // ActiveSession - Live workout session with editable exercises
 import { useState, useEffect } from 'react';
+import { trpc } from '@/lib/trpc';
 import type { GymSession } from '../hooks/useGymTracker';
 import type { useGymTracker } from '../hooks/useGymTracker';
 import { sessionTypes, masterExercises, upperBodyExercises, cardioTemplates, aquaExercises, saunaProtocol } from '../data/exercises';
@@ -812,6 +813,19 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
   );
 }
 
+// ── Heart Icon SVG (vector outline / filled) ─────────────────
+function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
+  return filled ? (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ) : (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
 // ── Add Exercise Panel ─────────────────────────────────────
 function AddExercisePanel({ color, gender, onAdd, isAr }: {
   color: string;
@@ -820,7 +834,19 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
   onAdd: (ex: typeof masterExercises[0]) => void;
 }) {
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'program' | 'all'>('program');
+  const [activeTab, setActiveTab] = useState<'favorites' | 'all'>('favorites');
+
+  // ── Favorites state (DB-backed via tRPC) ──
+  const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
+  const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
+  const removeFav = trpc.exerciseFavorites.removeFavorite.useMutation({ onSuccess: () => refetchFavs() });
+
+  const isFav = (id: string) => favIds.includes(id);
+  const toggleFav = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (isFav(id)) removeFav.mutate({ exerciseId: id });
+    else addFav.mutate({ exerciseId: id });
+  };
 
   // Build combined exercise list from exerciseData (gender-specific) + masterExercises + upperBodyExercises + cardio
   const genderProgram = getProgramByGender(gender);
@@ -878,9 +904,11 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
     (cardioAsExercises as unknown) as typeof programExercises[number][],
   ]);
 
-  const allExercises = activeTab === 'program' ? programExercises : allExercisesUnified;
+  // Favorites tab: exercises that the user has hearted
+  const favExercises = allExercisesUnified.filter(ex => favIds.includes(ex.id));
 
-  const filtered = allExercises.filter(e =>
+  const baseList = activeTab === 'favorites' ? favExercises : allExercisesUnified;
+  const filtered = baseList.filter(e =>
     e.nameAr.includes(search) || e.muscleGroup.includes(search) || e.nameEn.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -892,15 +920,18 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         <button
-          onClick={() => setActiveTab('program')}
+          onClick={() => setActiveTab('favorites')}
           style={{
             flex: 1, padding: '7px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: activeTab === 'program' ? '#1B2E5E' : '#F0F4FF',
-            color: activeTab === 'program' ? 'white' : '#1B2E5E',
+            background: activeTab === 'favorites' ? '#1B2E5E' : '#F0F4FF',
+            color: activeTab === 'favorites' ? 'white' : '#1B2E5E',
             fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
           }}
         >
-          <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Dumbbell size={14} />برنامجك</span>
+          <span style={{display:'flex',alignItems:'center',gap:6}}>
+            <HeartIcon filled={true} size={14} />
+            تماريني المفضلة
+          </span>
         </button>
         <button
           onClick={() => setActiveTab('all')}
@@ -914,49 +945,95 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
           <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />كل التمارين</span>
         </button>
       </div>
-      <input
-        type="text"
-        placeholder="ابحث عن تمرين..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{
-          width: '100%', padding: '10px 14px', borderRadius: 10,
-          border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
-          fontSize: 13, marginBottom: 10, outline: 'none',
-        }}
-      />
+
+      {/* Search — only shown in 'all' tab */}
+      {activeTab === 'all' && (
+        <input
+          type="text"
+          placeholder="ابحث عن تمرين..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{
+            width: '100%', padding: '10px 14px', borderRadius: 10,
+            border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+            fontSize: 13, marginBottom: 10, outline: 'none',
+          }}
+        />
+      )}
+
       <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-        {filtered.map(ex => (
-          <button
-            key={ex.id}
-            onClick={() => onAdd(ex)}
-            style={{
-              width: '100%', padding: '10px 12px', borderRadius: 10,
-              border: '1px solid #F0F0F0', background: 'white',
-              textAlign: 'right', cursor: 'pointer', marginBottom: 4,
-              fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: 10,
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = `${color}10`)}
-            onMouseLeave={e => (e.currentTarget.style.background = 'white')}
-          >
-            {ex.image && (
-              <img src={ex.image} alt={isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)} style={{
-                width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0,
-              }} />
-            )}
-            <div style={{ flex: 1, textAlign: 'right' }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
-              <div style={{ fontSize: 11, color: '#8A8AAA' }}>
-                {ex.muscleGroup} • {ex.defaultSets}×{ex.defaultReps}
-                {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${ex.defaultWeight}` : ''}
-              </div>
+        {/* Empty state for favorites tab */}
+        {activeTab === 'favorites' && filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '28px 16px' }}>
+            <div style={{ marginBottom: 10 }}>
+              <HeartIcon filled={false} size={36} />
             </div>
-            <span style={{ color, fontSize: 18, flexShrink: 0 }}>+</span>
-          </button>
+            <div style={{ color: '#1B2E5E', fontWeight: 700, fontSize: 14, marginBottom: 6, fontFamily: 'Cairo, sans-serif' }}>
+              لا توجد تمارين مفضلة بعد
+            </div>
+            <div style={{ color: '#8A8AAA', fontSize: 12, fontFamily: 'Cairo, sans-serif' }}>
+              اضغط على القلب لإضافة تمرينك المفضل
+            </div>
+          </div>
+        )}
+
+        {filtered.map(ex => (
+          <div
+            key={ex.id}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              borderRadius: 10, border: '1px solid #F0F0F0', background: 'white',
+              marginBottom: 4, overflow: 'hidden',
+            }}
+          >
+            {/* Main exercise button */}
+            <button
+              onClick={() => onAdd(ex)}
+              style={{
+                flex: 1, padding: '10px 12px',
+                border: 'none', background: 'transparent',
+                textAlign: 'right', cursor: 'pointer',
+                fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: 10,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = `${color}10`)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              {ex.image && (
+                <img src={ex.image} alt={isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)} style={{
+                  width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0,
+                }} />
+              )}
+              <div style={{ flex: 1, textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
+                <div style={{ fontSize: 11, color: '#8A8AAA' }}>
+                  {ex.muscleGroup} • {ex.defaultSets}×{ex.defaultReps}
+                  {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${ex.defaultWeight}` : ''}
+                </div>
+              </div>
+              <span style={{ color, fontSize: 18, flexShrink: 0 }}>+</span>
+            </button>
+
+            {/* Heart toggle button */}
+            <button
+              onClick={(e) => toggleFav(e, ex.id)}
+              style={{
+                flexShrink: 0, padding: '10px 12px',
+                border: 'none', background: 'transparent', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.2)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+              title={isFav(ex.id) ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
+            >
+              <HeartIcon filled={isFav(ex.id)} size={18} />
+            </button>
+          </div>
         ))}
-        {filtered.length === 0 && (
-          <p style={{ textAlign: 'center', color: '#8A8AAA', fontSize: 13, padding: '20px 0' }}>
+
+        {activeTab === 'all' && filtered.length === 0 && (
+          <p style={{ textAlign: 'center', color: '#8A8AAA', fontSize: 13, padding: '20px 0', fontFamily: 'Cairo, sans-serif' }}>
             لا توجد نتائج
           </p>
         )}
