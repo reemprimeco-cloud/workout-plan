@@ -271,7 +271,7 @@ export default function ProfileSetupPage() {
               marginTop: 8,
             }}
           >
-            {loading ? 'جاري الحفظ...' : 'ابدأ البرنامج 🚀'}
+            {loading ? 'جاري الحفظ...' : 'ابدأ البرنامج'}
           </button>
         </form>
       </div>

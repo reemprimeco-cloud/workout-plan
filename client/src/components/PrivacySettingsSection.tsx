@@ -129,7 +129,7 @@ export default function PrivacySettingsSection({ lang = "en" }: { lang?: string 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {saved && (
             <span style={{ color: "#10B981", fontSize: 12, fontWeight: 600 }}>
-              {lang === "ar" ? "✅ تم الحفظ" : "✅ Saved"}
+              {lang === "ar" ? "تم الحفظ" : "Saved"}
             </span>
           )}
           {open

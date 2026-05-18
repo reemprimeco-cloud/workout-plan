@@ -4,6 +4,7 @@
 // Access is granted by the admin assigning an active subscription
 // to the user's account via the Admin Panel → Users tab.
 // ============================================================
+import { AppIcons } from './AppIcons';
 import React from 'react';
 import { trpc } from '../lib/trpc';
 
@@ -105,7 +106,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
           border: `1.5px solid ${SKY_LIGHT}`,
           marginBottom: 24,
         }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:12}}><AppIcons.Lock size={40} /></div>
           <p style={{ margin: '0 0 8px', color: NAVY, fontWeight: 700, fontSize: 15 }}>
             الاشتراك غير مفعّل
           </p>

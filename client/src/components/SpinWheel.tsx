@@ -10,6 +10,7 @@
  * - Rarity-based glow effects
  * - Full Arabic/English support
  */
+import { AppIcons } from '../components/AppIcons';
 import { useRef, useEffect, useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 
@@ -453,12 +454,12 @@ export default function SpinWheel({ challengeId, lang, onClose }: SpinWheelProps
           borderRadius: "50%", width: 32, height: 32,
           color: "white", fontSize: 16, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
-        }}>✕</button>
+        }}><AppIcons.Close size={14} /></button>
 
         {/* Title */}
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <h2 style={{ color: "white", margin: 0, fontSize: 20, fontWeight: 900 }}>
-            {lang === "ar" ? "🎰 عجلة المكافآت" : "🎰 Reward Wheel"}
+            {lang === "ar" ? "عجلة المكافآت" : "Reward Wheel"}
           </h2>
           <p style={{ color: CYAN, fontSize: 12, margin: "4px 0 0" }}>
             {lang === "ar" ? "أكملت التحدي! دوّر العجلة للحصول على مكافأتك" : "Challenge complete! Spin to claim your reward"}
@@ -514,7 +515,7 @@ export default function SpinWheel({ challengeId, lang, onClose }: SpinWheelProps
           >
             {spinning ? (lang === "ar" ? "⏳ جاري الدوران..." : "⏳ Spinning...") :
              !eligibility?.eligible ? (lang === "ar" ? "تم الاستخدام" : "Already Used") :
-             (lang === "ar" ? "🎰 دوّر!" : "🎰 SPIN!")}
+             (lang === "ar" ? "دوّر!" : "SPIN!")}
           </button>
         )}
 
@@ -617,7 +618,7 @@ export default function SpinWheel({ challengeId, lang, onClose }: SpinWheelProps
                 animation: "pulse 1.5s ease-in-out infinite",
               }}
             >
-              {lang === "ar" ? "🎉 استلام المكافأة!" : "🎉 Claim Reward!"}
+              {lang === "ar" ? "استلام المكافأة!" : "Claim Reward!"}
             </button>
           </div>
         </div>

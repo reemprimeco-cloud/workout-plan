@@ -12,6 +12,7 @@ import { useGymTracker } from '@/hooks/useGymTracker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { getLoginUrl } from '@/const';
+import { AppIcons } from '../components/AppIcons';
 
 const NAVY      = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -23,28 +24,28 @@ interface ChatMsg { role: 'user' | 'assistant'; content: string; id: string }
 
 const QUICK_ACTIONS = {
   ar: [
-    { icon: '📊', label: 'حلّل تقدمي', prompt: 'حلّل تقدمي في التمارين والوزن وأعطني ملاحظاتك' },
-    { icon: '🏋️', label: 'ماذا أتمرن؟', prompt: 'ما هو التمرين المناسب لي اليوم؟' },
-    { icon: '⚖️', label: 'لماذا لا يتغير وزني؟', prompt: 'لماذا لا يتغير وزني رغم التمرين؟' },
-    { icon: '💪', label: 'حفّزني', prompt: 'أحتاج إلى تحفيز لمواصلة رحلتي الرياضية' },
-    { icon: '🧘', label: 'تعافٍ', prompt: 'اقترح لي تمرين تعافٍ خفيف لليوم' },
+    { icon: 'stats', label: 'حلّل تقدمي', prompt: 'حلّل تقدمي في التمارين والوزن وأعطني ملاحظاتك' },
+    { icon: 'dumbbell', label: 'ماذا أتمرن؟', prompt: 'ما هو التمرين المناسب لي اليوم؟' },
+    { icon: 'scale', label: 'لماذا لا يتغير وزني؟', prompt: 'لماذا لا يتغير وزني رغم التمرين؟' },
+    { icon: 'dumbbell', label: 'حفّزني', prompt: 'أحتاج إلى تحفيز لمواصلة رحلتي الرياضية' },
+    { icon: 'yoga', label: 'تعافٍ', prompt: 'اقترح لي تمرين تعافٍ خفيف لليوم' },
   ],
   en: [
-    { icon: '📊', label: 'Analyse', prompt: 'Analyse my workout and weight progress and give me feedback' },
-    { icon: '🏋️', label: 'What to train?', prompt: 'What workout is best for me today?' },
-    { icon: '⚖️', label: 'Weight stuck?', prompt: 'Why is my weight not changing despite working out?' },
-    { icon: '💪', label: 'Motivate me', prompt: 'I need motivation to continue my fitness journey' },
-    { icon: '🧘', label: 'Recovery', prompt: 'Suggest a light recovery workout for today' },
+    { icon: 'stats', label: 'Analyse', prompt: 'Analyse my workout and weight progress and give me feedback' },
+    { icon: 'dumbbell', label: 'What to train?', prompt: 'What workout is best for me today?' },
+    { icon: 'scale', label: 'Weight stuck?', prompt: 'Why is my weight not changing despite working out?' },
+    { icon: 'dumbbell', label: 'Motivate me', prompt: 'I need motivation to continue my fitness journey' },
+    { icon: 'yoga', label: 'Recovery', prompt: 'Suggest a light recovery workout for today' },
   ],
 };
 
-const RATING_EMOJIS = ['😞', '😕', '😐', '😊', '🤩'];
+const RATING_EMOJIS = ['1', '2', '3', '4', '5'];
 
 const INSIGHT_COLORS: Record<string, string> = {
   progress: '#10B981', warning: '#F59E0B', motivation: NAVY, recommendation: SKY,
 };
 const INSIGHT_ICONS: Record<string, string> = {
-  progress: '📈', warning: '⚠️', motivation: '💡', recommendation: '🎯',
+  progress: 'stats', warning: 'warning', motivation: 'info', recommendation: 'target',
 };
 
 function StatCard({ icon, value, label, color }: { icon: string; value: string | number; label: string; color: string }) {
@@ -63,14 +64,14 @@ function StatCard({ icon, value, label, color }: { icon: string; value: string |
 
 function InsightCard({ type, content }: { type: string; content: string }) {
   const color = INSIGHT_COLORS[type] ?? NAVY;
-  const icon  = INSIGHT_ICONS[type]  ?? '💬';
+  const iconKey = INSIGHT_ICONS[type] ?? 'message';
   return (
     <div style={{
       background: 'white', border: `1px solid #E2EAF4`, borderLeft: `4px solid ${color}`,
       borderRadius: 14, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start',
       boxShadow: '0 2px 6px rgba(27,46,94,0.06)',
     }}>
-      <span style={{ fontSize: 18, flexShrink: 0 }}>{icon}</span>
+      <span style={{ flexShrink: 0, display:'flex', alignItems:'center', justifyContent:'center' }}>{iconKey === 'stats' ? <AppIcons.Stats size={18} /> : iconKey === 'warning' ? <AppIcons.Warning size={18} /> : iconKey === 'info' ? <AppIcons.Info size={18} /> : iconKey === 'target' ? <AppIcons.Target size={18} /> : <AppIcons.Message size={18} />}</span>
       <p style={{ margin: 0, color: '#1E293B', fontSize: 13, lineHeight: 1.6 }}>{content}</p>
     </div>
   );
@@ -90,7 +91,7 @@ function ChatBubble({ msg, isRTL }: { msg: ChatMsg; isRTL: boolean }) {
           background: `linear-gradient(135deg, ${NAVY}, ${SKY})`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 14, flexShrink: 0,
-        }}>🤖</div>
+        }}><AppIcons.Robot size={24} /></div>
       )}
       <div style={{
         maxWidth: '75%',
@@ -115,7 +116,7 @@ function ChatBubble({ msg, isRTL }: { msg: ChatMsg; isRTL: boolean }) {
           width: 30, height: 30, borderRadius: '50%', background: SKY_LIGHT,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 14, flexShrink: 0,
-        }}>👤</div>
+        }}><AppIcons.Profile size={24} /></div>
       )}
     </div>
   );
@@ -128,7 +129,7 @@ function TypingIndicator() {
         width: 30, height: 30, borderRadius: '50%',
         background: `linear-gradient(135deg, ${NAVY}, ${SKY})`,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-      }}>🤖</div>
+      }}><AppIcons.Robot size={24} /></div>
       <div style={{
         background: 'white', border: '1px solid #E2EAF4',
         borderRadius: '16px 16px 16px 4px', padding: '9px 14px',
@@ -193,7 +194,7 @@ function CheckInCard({
     return (
       <div style={{ background: 'white', borderRadius: 16, padding: '18px 16px', border: `1px solid #E2EAF4`, boxShadow: '0 3px 12px rgba(27,46,94,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <span style={{ fontSize: 22 }}>🤖</span>
+          <AppIcons.Robot size={22} />
           <span style={{ color: NAVY, fontWeight: 800, fontSize: 14 }}>{isAr ? 'رأي مدربك' : 'Your Coach Says'}</span>
         </div>
         <p style={{ color: '#1E293B', fontSize: 13, lineHeight: 1.7, margin: 0, direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{aiResp}</p>
@@ -204,14 +205,14 @@ function CheckInCard({
   return (
     <div style={{ background: 'white', borderRadius: 16, padding: '18px 16px', border: '1px solid #E2EAF4', boxShadow: '0 3px 12px rgba(27,46,94,0.08)' }}>
       <h3 style={{ color: NAVY, fontWeight: 900, fontSize: 15, margin: '0 0 4px', textAlign: isRTL ? 'right' : 'left' }}>
-        {isAr ? '☀️ تسجيل الحضور اليومي' : '☀️ Daily Check-In'}
+        <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Sun size={18} />{isAr ? 'تسجيل الحضور اليومي' : 'Daily Check-In'}</span>
       </h3>
       <p style={{ color: '#64748B', fontSize: 12, margin: '0 0 16px', textAlign: isRTL ? 'right' : 'left' }}>
         {isAr ? 'أخبر مدربك كيف تشعر اليوم' : 'Tell your coach how you feel today'}
       </p>
-      <RatingRow label={isAr ? '😊 كيف تشعر؟' : '😊 How do you feel?'} value={feeling} onChange={setFeeling} />
-      <RatingRow label={isAr ? '⚡ مستوى الطاقة' : '⚡ Energy level'} value={energy} onChange={setEnergy} />
-      <RatingRow label={isAr ? '😴 جودة النوم' : '😴 Sleep quality'} value={sleep} onChange={setSleep} />
+      <RatingRow label={isAr ? 'كيف تشعر؟' : 'How do you feel?'} value={feeling} onChange={setFeeling} />
+      <RatingRow label={isAr ? 'مستوى الطاقة' : 'Energy level'} value={energy} onChange={setEnergy} />
+      <RatingRow label={isAr ? 'جودة النوم' : 'Sleep quality'} value={sleep} onChange={setSleep} />
       <button onClick={handleSubmit} disabled={loading} style={{
         width: '100%', padding: '12px',
         background: loading ? '#94A3B8' : `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`,
@@ -219,7 +220,7 @@ function CheckInCard({
         cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, transition: 'all 0.2s',
         boxShadow: loading ? 'none' : `0 4px 14px rgba(27,46,94,0.3)`,
       }}>
-        {loading ? (isAr ? '⏳ جاري التحليل...' : '⏳ Analysing...') : (isAr ? '🚀 احصل على توصية مدربك' : '🚀 Get Coach Recommendation')}
+        <span style={{display:'flex',alignItems:'center',gap:6}}>{loading ? <AppIcons.Spinner size={16} /> : <AppIcons.Lightning size={16} />}{loading ? (isAr ? 'جاري التحليل...' : 'Analysing...') : (isAr ? 'احصل على توصية مدربك' : 'Get Coach Recommendation')}</span>
       </button>
     </div>
   );
@@ -301,7 +302,7 @@ export default function MyCoach() {
   if (!isAuthenticated) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: BG, padding: 24, textAlign: 'center' }}>
-        <div style={{ width: 72, height: 72, borderRadius: 22, background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, marginBottom: 18, boxShadow: `0 8px 24px rgba(27,46,94,0.3)` }}>🤖</div>
+        <div style={{ width: 72, height: 72, borderRadius: 22, background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, marginBottom: 18, boxShadow: `0 8px 24px rgba(27,46,94,0.3)` }}><AppIcons.Robot size={24} /></div>
         <h2 style={{ color: NAVY, fontWeight: 900, fontSize: 20, margin: '0 0 8px' }}>{isAr ? 'مدربك الشخصي' : 'Your Personal Coach'}</h2>
         <p style={{ color: '#64748B', fontSize: 13, margin: '0 0 22px' }}>{isAr ? 'سجّل الدخول للوصول إلى مدربك الذكي' : 'Sign in to access your AI coach'}</p>
         <a href={getLoginUrl()} style={{ background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`, color: 'white', fontWeight: 900, fontSize: 14, padding: '12px 32px', borderRadius: 13, textDecoration: 'none', boxShadow: `0 4px 14px rgba(27,46,94,0.3)` }}>
@@ -322,7 +323,7 @@ export default function MyCoach() {
       {/* ── FIXED TOP: navy header ── */}
       <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY_DARK} 100%)`, padding: '12px 16px 14px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🤖</div>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><AppIcons.Robot size={24} /></div>
           <div style={{ flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
             <h1 style={{ margin: 0, color: 'white', fontSize: 18, fontWeight: 900, lineHeight: 1 }}>{isAr ? 'مدربي الذكي' : 'My AI Coach'}</h1>
             <p style={{ margin: '3px 0 0', color: SKY_LIGHT, fontSize: 11 }}>{isAr ? `مرحباً ${profile.name || ''}! كيف يمكنني مساعدتك؟` : `Hi ${profile.name || ''}! How can I help you today?`}</p>
@@ -333,19 +334,19 @@ export default function MyCoach() {
       {/* ── FIXED: stats row ── */}
       <div style={{ padding: '10px 12px 0', background: BG, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 7 }}>
-          <StatCard icon="🏋️" value={data.sessions.length} label={isAr ? 'جلسة' : 'Sessions'} color={NAVY} />
-          <StatCard icon={weightChange <= 0 ? '📉' : '📈'} value={`${weightChange > 0 ? '+' : ''}${weightChange}`} label={isAr ? 'تغيير الوزن' : 'Weight Δ'} color={weightChange <= 0 ? '#10B981' : '#F59E0B'} />
-          <StatCard icon="✅" value={`${weeklyCompletion}%`} label={isAr ? 'أسبوعي' : 'Weekly'} color="#10B981" />
-          <StatCard icon="🔥" value={stats.streak} label={isAr ? 'يوم متواصل' : 'Streak'} color="#E05A00" />
+          <StatCard icon="dumbbell" value={data.sessions.length} label={isAr ? 'جلسة' : 'Sessions'} color={NAVY} />
+          <StatCard icon={weightChange <= 0 ? 'trending_down' : 'stats'} value={`${weightChange > 0 ? '+' : ''}${weightChange}`} label={isAr ? 'تغيير الوزن' : 'Weight Δ'} color={weightChange <= 0 ? '#10B981' : '#F59E0B'} />
+          <StatCard icon="check" value={`${weeklyCompletion}%`} label={isAr ? 'أسبوعي' : 'Weekly'} color="#10B981" />
+          <StatCard icon="flame" value={stats.streak} label={isAr ? 'يوم متواصل' : 'Streak'} color="#E05A00" />
         </div>
       </div>
 
       {/* ── FIXED: section tabs ── */}
       <div style={{ display: 'flex', gap: 7, padding: '8px 12px', background: BG, flexShrink: 0 }}>
         {([
-          { id: 'chat' as const,     icon: '💬', label: isAr ? 'المحادثة' : 'Chat' },
-          { id: 'checkin' as const,  icon: '☀️', label: isAr ? 'تسجيل الحضور' : 'Check-In' },
-          { id: 'insights' as const, icon: '🧠', label: isAr ? 'الرؤى' : 'Insights' },
+          { id: 'chat' as const,     icon: 'message', label: isAr ? 'المحادثة' : 'Chat' },
+          { id: 'checkin' as const,  icon: 'sun', label: isAr ? 'تسجيل الحضور' : 'Check-In' },
+          { id: 'insights' as const, icon: 'brain', label: isAr ? 'الرؤى' : 'Insights' },
         ]).map(tab => (
           <button key={tab.id} onClick={() => setActiveSection(tab.id)} style={{
             flex: 1, padding: '8px 4px',
@@ -371,14 +372,14 @@ export default function MyCoach() {
             {messages.length === 0 && !isTyping && (
               <>
                 <div style={{ textAlign: 'center', padding: '20px 0 16px' }}>
-                  <div style={{ fontSize: 40, marginBottom: 10 }}>🤖</div>
+                  <div style={{ fontSize: 40, marginBottom: 10 }}><AppIcons.Robot size={24} /></div>
                   <p style={{ color: '#64748B', fontSize: 13, margin: 0 }}>
                     {isAr ? `مرحباً ${profile.name || ''}! أنا مدربك الشخصي. اسألني أي شيء.` : `Hi ${profile.name || ''}! I'm your personal coach. Ask me anything.`}
                   </p>
                 </div>
                 <div style={{ marginBottom: 8 }}>
                   <p style={{ color: '#64748B', fontSize: 11, margin: '0 0 7px', textAlign: isRTL ? 'right' : 'left', fontWeight: 600 }}>
-                    {isAr ? '⚡ أسئلة سريعة' : '⚡ Quick Actions'}
+                    <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lightning size={16} />{isAr ? 'أسئلة سريعة' : 'Quick Actions'}</span>
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {QUICK_ACTIONS[isAr ? 'ar' : 'en'].map((qa, i) => (
@@ -406,12 +407,12 @@ export default function MyCoach() {
             {todayCheckin.data ? (
               <div>
                 <div style={{ background: '#F0FDF4', border: `1px solid #86EFAC`, borderRadius: 13, padding: '11px 14px', marginBottom: 12, textAlign: 'center' }}>
-                  <span style={{ color: '#16A34A', fontWeight: 800, fontSize: 13 }}>{isAr ? '✅ لقد سجّلت حضورك اليوم!' : '✅ You already checked in today!'}</span>
+                  <span style={{ color: '#16A34A', fontWeight: 800, fontSize: 13 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Check size={14} />{isAr ? 'لقد سجّلت حضورك اليوم!' : 'You already checked in today!'}</span></span>
                 </div>
                 {todayCheckin.data.aiResponse && (
                   <div style={{ background: 'white', border: `1px solid #E2EAF4`, borderRadius: 14, padding: '14px', boxShadow: '0 2px 6px rgba(27,46,94,0.06)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
-                      <span style={{ fontSize: 18 }}>🤖</span>
+                      <AppIcons.Robot size={18} />
                       <span style={{ color: NAVY, fontWeight: 800, fontSize: 13 }}>{isAr ? 'توصية مدربك' : "Coach's Recommendation"}</span>
                     </div>
                     <p style={{ color: '#1E293B', fontSize: 13, lineHeight: 1.7, margin: 0, direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{todayCheckin.data.aiResponse}</p>
@@ -444,12 +445,12 @@ export default function MyCoach() {
                 boxShadow: insightsLoading ? 'none' : `0 4px 14px rgba(27,46,94,0.25)`,
               }}
             >
-              {insightsLoading ? (isAr ? '⏳ جاري التحليل...' : '⏳ Analysing...') : (isAr ? '🧠 توليد رؤى جديدة' : '🧠 Generate New Insights')}
+              <span style={{display:'flex',alignItems:'center',gap:6}}>{insightsLoading ? <AppIcons.Spinner size={16} /> : <AppIcons.Brain size={16} />}{insightsLoading ? (isAr ? 'جاري التحليل...' : 'Analysing...') : (isAr ? 'توليد رؤى جديدة' : 'Generate New Insights')}</span>
             </button>
             {insightsQuery.isLoading && <div style={{ textAlign: 'center', padding: 18, color: '#64748B', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</div>}
             {!insightsQuery.isLoading && (insightsQuery.data?.length ?? 0) === 0 && (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: 40, marginBottom: 10 }}>🧠</div>
+                <div style={{ marginBottom: 10, display:"flex", justifyContent:"center" }}><AppIcons.Brain size={40} /></div>
                 <p style={{ color: '#64748B', fontSize: 13 }}>{isAr ? 'لا توجد رؤى بعد. اضغط على الزر أعلاه لتوليد تحليل شخصي.' : 'No insights yet. Tap the button above to generate a personalised analysis.'}</p>
               </div>
             )}
@@ -467,7 +468,7 @@ export default function MyCoach() {
             <div style={{ textAlign: 'center', marginBottom: 6 }}>
               <button onClick={async () => { setMessages([]); try { await clearHistoryMutation.mutateAsync(); } catch { /* ignore */ } }}
                 style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: 11, cursor: 'pointer' }}>
-                {isAr ? '🗑 مسح المحادثة' : '🗑 Clear chat'}
+                <span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Trash size={14} />{isAr ? 'مسح المحادثة' : 'Clear chat'}</span>
               </button>
             </div>
           )}

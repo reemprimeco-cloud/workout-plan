@@ -226,7 +226,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           )}
           {selectedPlan === 'free' && (
             <div style={{ marginTop: 8, background: '#F0FDF4', borderRadius: 8, padding: '4px 12px', display: 'inline-block' }}>
-              <span style={{ color: '#16a34a', fontSize: 12, fontWeight: 700 }}>🎁 تجربة مجانية 7 أيام</span>
+              <span style={{ color: '#16a34a', fontSize: 12, fontWeight: 700 }}>تجربة مجانية 7 أيام</span>
             </div>
           )}
         </div>

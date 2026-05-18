@@ -56,7 +56,7 @@ const T = {
   trialDetails:   { en: "Start Your Free Trial",                    ar: "ابدأ تجربتك المجانية" },
   trialSubtitle:  { en: "Enter your details to get your free 7-day key", ar: "أدخل بياناتك للحصول على مفتاحك المجاني لمدة ٧ أيام" },
   orderSubtitle:  { en: "Please fill in your details before proceeding to payment", ar: "يرجى إدخال بياناتك قبل الانتقال للدفع" },
-  getMyKey:       { en: "🎁 Get My Free Key",                        ar: "🎁 احصل على مفتاحي المجاني" },
+  getMyKey:       { en: "Get My Free Key",                        ar: "احصل على مفتاحي المجاني" },
   keyReady:       { en: "Your Key is Ready!",                        ar: "مفتاحك جاهز!" },
   keyReadyNote:   { en: "Copy this key and paste it in the app to activate your 7-day trial.", ar: "انسخ هذا المفتاح والصقه في التطبيق لتفعيل تجربتك المجانية لمدة 7 أيام." },
   okThanks:       { en: "OK, Thanks!",                               ar: "حسناً، شكراً!" },
@@ -319,7 +319,7 @@ export default function Pricing() {
             boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
             animation: "slideUp 0.25s ease",
           }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:12}}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
             <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 900, color: NAVY }}>
               {t("keyReady")}
             </h2>
@@ -463,7 +463,7 @@ export default function Pricing() {
 
             {/* Error message for free trial */}
             {trialError && (selectedPlan as string) === "free" && (
-              <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+              <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>{trialError}</p>
             )}
 
             {/* Submit */}
@@ -482,7 +482,7 @@ export default function Pricing() {
                 ? <><Loader2 className="animate-spin mr-2" size={16} />{t("processing")}</>
                 : (selectedPlan as string) === "free"
                   ? t("getMyKey")
-                  : `🔒 ${t("proceedPayment")}`}
+                  : t("proceedPayment")}
             </Button>
 
             <button
@@ -572,7 +572,7 @@ export default function Pricing() {
                     background: NAVY, color: "white", borderRadius: 20, padding: "4px 18px",
                     fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
                   }}>
-                    ⭐ {lang === "ar" ? "الأكثر شيوعاً" : "Most Popular"}
+                    <span style={{display:"flex",alignItems:"center",gap:4}}><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>{lang === "ar" ? "الأكثر شيوعاً" : "Most Popular"}</span>
                   </div>
                 )}
 
@@ -627,19 +627,19 @@ export default function Pricing() {
                     trialKey ? (
                       /* Already generated — show static badge */
                       <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
-                        ✓ {t("current")}
+                        t("current")
                       </div>
                     ) : (
                       /* Not yet generated — show clickable button */
                       <div>
                         {trialError && (
-                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>{trialError}</p>
                         )}
                         <Button
                           onClick={() => handleUpgradeClick("free")}
                           style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
                         >
-                          🎁 {t("startTrial")}
+                          {t("startTrial")}
                         </Button>
                         <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
                           {t("trialNote")}
@@ -648,7 +648,7 @@ export default function Pricing() {
                     )
                   ) : (
                     <div style={{ textAlign: "center", padding: "10px", background: "#f0fdf4", borderRadius: 10, color: "#16a34a", fontWeight: 700, fontSize: 14 }}>
-                      ✓ {t("current")}
+                      t("current")
                     </div>
                   )
 
@@ -659,7 +659,7 @@ export default function Pricing() {
                       /* Key display after successful trial generation */
                       <div style={{ background: "#F0FDF4", borderRadius: 14, padding: 16, border: `1.5px solid ${GREEN}44` }}>
                         <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#166534", fontSize: 13 }}>
-                          🎉 {t("yourKey")}
+                          {t("yourKey")}
                         </p>
                         <div style={{
                           background: "white", borderRadius: 10, padding: "10px 14px",
@@ -704,13 +704,13 @@ export default function Pricing() {
                       /* Start trial button — opens same info modal as paid plans */
                       <div>
                         {trialError && (
-                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>⚠️ {trialError}</p>
+                          <p style={{ color: "#EF4444", fontSize: 12, margin: "0 0 8px", fontWeight: 600 }}>{trialError}</p>
                         )}
                         <Button
                           onClick={() => handleUpgradeClick("free")}
                           style={{ width: "100%", background: GREEN, color: "white", fontWeight: 700, borderRadius: 12, padding: "12px", fontFamily: "inherit" }}
                         >
-                          🎁 {t("startTrial")}
+                          {t("startTrial")}
                         </Button>
                         <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
                           {t("trialNote")}
@@ -736,7 +736,7 @@ export default function Pricing() {
         {/* Renewal note */}
         <div style={{ marginTop: 28, background: "rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 20px", textAlign: "center" }}>
           <p style={{ color: SKY_LIGHT, fontSize: 13, margin: 0 }}>
-            🔄 {t("renewNote")}
+            {t("renewNote")}
           </p>
         </div>
 

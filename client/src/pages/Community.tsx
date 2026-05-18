@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
+import { AppIcons } from "../components/AppIcons";
 import { useSocket } from "../contexts/SocketContext";
 import NotificationBell from "../components/NotificationBell";
 import { MentionInput } from "../components/MentionInput";
@@ -255,11 +256,11 @@ function PostCard({ post, lang, currentUserId, onProfileClick }: {
               <div style={{ position: "absolute", right: 0, top: 28, background: CARD, borderRadius: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.12)", zIndex: 50, minWidth: 130, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
                 <button onClick={() => { setEditingPost(true); setEditPostText(post.content); setShowPostMenu(false); }}
                   style={{ display: "block", width: "100%", padding: "10px 16px", background: "none", border: "none", color: NAVY, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
-                  ✏️ {lang === "ar" ? "تعديل" : "Edit"}
+                  <span style={{display:'inline-flex',alignItems:'center',gap:4}}><AppIcons.Edit size={12} />{lang === "ar" ? "تعديل" : "Edit"}</span>
                 </button>
                 <button onClick={() => { if (window.confirm(lang === "ar" ? "حذف المنشور؟" : "Delete post?")) { deletePostMutation.mutate({ postId: post.id }); setShowPostMenu(false); } }}
                   style={{ display: "block", width: "100%", padding: "10px 16px", background: "none", border: "none", color: "#EF4444", fontSize: 13, cursor: "pointer", textAlign: "left" }}>
-                  🗑️ {lang === "ar" ? "حذف" : "Delete"}
+                  <span style={{display:'inline-flex',alignItems:'center',gap:4}}><AppIcons.Trash size={12} />{lang === "ar" ? "حذف" : "Delete"}</span>
                 </button>
               </div>
             )}
@@ -377,7 +378,7 @@ function NewPostForm({ lang, onClose, currentUser }: { lang: string; onClose: ()
 
   const handleSubmit = () => {
     if (!content.trim() && !imageBase64) return;
-    createMutation.mutate({ type: postType, content: content.trim() || "📸", visibility, imageBase64: imageBase64 ?? undefined, imageMime: imageMime ?? undefined });
+    createMutation.mutate({ type: postType, content: content.trim() || "", visibility, imageBase64: imageBase64 ?? undefined, imageMime: imageMime ?? undefined });
   };
 
   return (
@@ -411,7 +412,7 @@ function NewPostForm({ lang, onClose, currentUser }: { lang: string; onClose: ()
         </div>
         <div style={{ padding: "0 16px 16px", borderTop: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", gap: 8, padding: "10px 0 6px", flexWrap: "wrap" }}>
-            {([["text", "💬", t("text", lang)], ["image", "📷", t("image", lang)], ["achievement", "🏆", t("achievement", lang)]] as const).map(([tp, icon, label]) => (
+            {([["text", "message", t("text", lang)], ["image", "camera", t("image", lang)], ["achievement", "trophy", t("achievement", lang)]] as const).map(([tp, icon, label]) => (
               <button key={tp} onClick={() => { setPostType(tp as any); if (tp === "image") fileRef.current?.click(); }}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${postType === tp ? NAVY : BORDER}`, background: postType === tp ? NAVY : "transparent", color: postType === tp ? "#fff" : MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 {icon} {label}
@@ -596,7 +597,7 @@ function LeaderboardPanel({ lang }: { lang: string }) {
       {isLoading ? <div style={{ color: MUTED }}>{t("loading", lang)}</div> : (
         (board ?? []).map((entry: any, i: number) => (
           <div key={entry.userId} style={{ background: CARD, border: `1px solid ${i < 3 ? rankColors[i] + "44" : BORDER}`, borderRadius: 14, padding: "12px 16px", marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 20, width: 28, textAlign: "center" }}>{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}</span>
+            <span style={{ fontSize: 20, width: 28, textAlign: "center" }}>{i === 0 ? <AppIcons.Medal size={20} className="text-yellow-500" /> : i === 1 ? <AppIcons.Medal size={20} className="text-gray-400" /> : i === 2 ? <AppIcons.Medal size={20} className="text-amber-600" /> : `#${i + 1}`}</span>
             <Avatar name={entry.userName} size={38} />
             <div style={{ flex: 1 }}>
               <div style={{ color: TEXT, fontWeight: 700, fontSize: 14 }}>{entry.userName}</div>
@@ -638,32 +639,32 @@ function ChallengesPanel({ lang }: { lang: string }) {
           const daysLeft = daysUntil(ch.endDate);
           return (
             <div key={ch.id} style={{ background: CARD, border: `1px solid ${completed ? ORANGE + "44" : joined ? GREEN + "44" : BORDER}`, borderRadius: 14, padding: "14px 16px", marginBottom: 10, position: "relative", overflow: "hidden" }}>
-              {completed && <div style={{ position: "absolute", top: 0, right: 0, background: `linear-gradient(135deg, ${ORANGE}, #FF4040)`, color: "white", fontSize: 9, fontWeight: 900, padding: "3px 10px", borderBottomLeftRadius: 8 }}>{lang === "ar" ? "✅ مكتمل" : "✅ DONE"}</div>}
+              {completed && <div style={{ position: "absolute", top: 0, right: 0, background: `linear-gradient(135deg, ${ORANGE}, #FF4040)`, color: "white", fontSize: 9, fontWeight: 900, padding: "3px 10px", borderBottomLeftRadius: 8, display:"flex", alignItems:"center", gap:3 }}><AppIcons.Check size={9} />{lang === "ar" ? "مكتمل" : "DONE"}</div>}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: TEXT, fontWeight: 800, fontSize: 14 }}>{lang === "ar" ? ch.titleAr : ch.title}</div>
                   <div style={{ color: MUTED, fontSize: 12, marginTop: 4 }}>{lang === "ar" ? ch.descriptionAr : ch.description}</div>
                   <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-                    <span style={{ color: ORANGE, fontSize: 11 }}>⚡ {ch.xpReward} XP</span>
-                    <span style={{ color: MUTED, fontSize: 11 }}>👥 {ch.participantsCount} {t("participants", lang)}</span>
-                    <span style={{ color: daysLeft < 3 ? ORANGE : MUTED, fontSize: 11 }}>⏳ {t("endsIn", lang)} {daysLeft} {t("days", lang)}</span>
+                    <span style={{display:"inline-flex",alignItems:"center",gap:4,color:ORANGE,fontSize:11}}><AppIcons.Lightning size={11} />{ch.xpReward} XP</span>
+                    <span style={{display:"inline-flex",alignItems:"center",gap:4,color:MUTED,fontSize:11}}><AppIcons.Users size={11} />{ch.participantsCount} {t("participants", lang)}</span>
+                    <span style={{display:"inline-flex",alignItems:"center",gap:4,color:daysLeft < 3 ? ORANGE : MUTED,fontSize:11}}><AppIcons.Timer size={11} />{t("endsIn", lang)} {daysLeft} {t("days", lang)}</span>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0, marginLeft: 12 }}>
                   <button onClick={() => !joined && joinMutation.mutate({ challengeId: ch.id })} disabled={joined || joinMutation.isPending}
                     style={{ background: joined ? `${GREEN}18` : NAVY, border: `1px solid ${joined ? GREEN : "transparent"}`, borderRadius: 10, padding: "8px 16px", color: joined ? GREEN : "#fff", fontWeight: 800, fontSize: 13, cursor: joined ? "default" : "pointer" }}>
-                    {joined ? `✅ ${t("joined", lang)}` : t("join", lang)}
+                    <span style={{display:"flex",alignItems:"center",gap:4}}>{joined ? <AppIcons.Check size={12} /> : null}{joined ? t("joined", lang) : t("join", lang)}</span>
                   </button>
                   {joined && !completed && (
                     <button onClick={() => completeMutation.mutate({ challengeId: ch.id })} disabled={completeMutation.isPending}
                       style={{ background: ORANGE, border: "none", borderRadius: 10, padding: "8px 16px", color: "white", fontWeight: 800, fontSize: 12, cursor: "pointer" }}>
-                      {lang === "ar" ? "🎰 أكملت!" : "🎰 Done!"}
+                      <span style={{display:"flex",alignItems:"center",gap:4}}><AppIcons.Check size={12} />{lang === "ar" ? "أكملت!" : "Done!"}</span>
                     </button>
                   )}
                   {completed && (
                     <button onClick={() => setSpinChallengeId(ch.id)}
                       style={{ background: `${ORANGE}12`, border: `1px solid ${ORANGE}44`, borderRadius: 10, padding: "8px 16px", color: ORANGE, fontWeight: 800, fontSize: 12, cursor: "pointer" }}>
-                      {lang === "ar" ? "🎁 مكافأة" : "🎁 Reward"}
+                      <span style={{display:"flex",alignItems:"center",gap:4}}><AppIcons.Gift size={12} />{lang === "ar" ? "مكافأة" : "Reward"}</span>
                     </button>
                   )}
                 </div>
@@ -707,12 +708,12 @@ function XPPanel({ lang, streak }: { lang: string; streak: number }) {
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>{nextLevelXp} XP</span>
         </div>
         <div style={{ marginTop: 8, color: "rgba(255,255,255,0.7)", fontSize: 12 }}>
-          📅 {t("weeklyXP", lang)}: <span style={{ color: GREEN, fontWeight: 700 }}>{weeklyXp}</span>
+          <span style={{display:"inline-flex",alignItems:"center",gap:6}}><AppIcons.Calendar size={14} />{t("weeklyXP", lang)}:</span> <span style={{ color: GREEN, fontWeight: 700 }}>{weeklyXp}</span>
         </div>
       </div>
       {badges.length > 0 && (
         <div>
-          <div style={{ color: MUTED, fontSize: 12, marginBottom: 10 }}>🎖️ {t("badges", lang)}</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,color:MUTED,fontSize:12,marginBottom:10}}><AppIcons.Award size={14} />{t("badges", lang)}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {badges.map((b: any) => (
               <div key={b.id} style={{ background: CARD, border: `1px solid ${ORANGE}33`, borderRadius: 10, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 }}>

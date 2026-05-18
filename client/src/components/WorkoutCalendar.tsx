@@ -1,15 +1,16 @@
 // WorkoutCalendar - Monthly calendar showing workout schedule
 // Design: RTL Arabic, color-coded by workout type
 import { useState } from 'react';
+import { AppIcons } from "./AppIcons";
 import { allWeeks } from '../data/workoutData';
 import { useProgress } from '../hooks/useProgress';
 
 const DAY_NAMES = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
 
 const TYPE_STYLES: Record<string, { bg: string; color: string; label: string; icon: string }> = {
-  training: { bg: '#FFF0E8', color: '#E05A00', label: 'تدريب', icon: '🏋️‍♀️' },
-  'active-rest': { bg: '#EEF4FF', color: '#1B2E5E', label: 'تمارين الكارديو', icon: '🏃' },
-  rest: { bg: '#F4F6F8', color: '#8A8AAA', label: 'راحة', icon: '😴' },
+  training: { bg: '#FFF0E8', color: '#E05A00', label: 'تدريب', icon: 'training' },
+  'active-rest': { bg: '#EEF4FF', color: '#1B2E5E', label: 'تمارين الكارديو', icon: 'cardio' },
+  rest: { bg: '#F4F6F8', color: '#8A8AAA', label: 'راحة', icon: 'rest' },
 };
 
 export function WorkoutCalendar() {
@@ -43,7 +44,7 @@ export function WorkoutCalendar() {
             width: 44, height: 44, borderRadius: 12,
             background: 'linear-gradient(135deg, #E05A00, #FF7A2E)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-          }}>📅</div>
+          }}><AppIcons.Calendar size={16} /></div>
           <div>
             <h3 style={{ margin: 0, fontFamily: 'Cairo, sans-serif', color: '#1A1A2E', fontSize: 18 }}>التقويم الشهري</h3>
             <p style={{ margin: 0, fontSize: 12, color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif' }}>
@@ -71,7 +72,7 @@ export function WorkoutCalendar() {
                 transition: 'all 0.2s',
               }}
             >
-              {m === 1 ? '🌱 الشهر الأول' : '🚀 الشهر الثاني'}
+              {m === 1 ? 'الشهر الأول' : 'الشهر الثاني'}
             </button>
           ))}
         </div>
@@ -114,7 +115,7 @@ export function WorkoutCalendar() {
             width: 14, height: 14, borderRadius: 4,
             background: '#E05A00', border: '2px solid #E05A00',
           }} />
-          <span style={{ fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>✅ مكتمل</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:12,color:'#4A4A6A',fontFamily:'Tajawal,sans-serif'}}><AppIcons.Check size={12} />مكتمل</span>
         </div>
       </div>
 
@@ -171,7 +172,7 @@ export function WorkoutCalendar() {
                   }}
                 >
                   <div style={{ fontSize: 16, lineHeight: 1 }}>
-                    {completed ? '✅' : style.icon}
+                    {completed ? <AppIcons.Check size={14} /> : style.icon === 'training' ? <AppIcons.Dumbbell size={14} /> : style.icon === 'cardio' ? <AppIcons.Running size={14} /> : <AppIcons.Sleep size={14} />}
                   </div>
                   <div style={{
                     fontSize: 10,
@@ -215,7 +216,7 @@ export function WorkoutCalendar() {
         borderRight: '3px solid #E05A00',
       }}>
         <p style={{ margin: 0, fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>
-          💡 انقري على أي يوم تدريب لتحديده كمكتمل. يتم حفظ تقدمك تلقائياً.
+          انقري على أي يوم تدريب لتحديده كمكتمل. يتم حفظ تقدمك تلقائياً.
         </p>
       </div>
     </div>
