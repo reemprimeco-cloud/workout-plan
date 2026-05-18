@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { trpc } from '../lib/trpc';
 import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
+import { AppIcons } from '../components/AppIcons';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -25,15 +26,15 @@ type Tab = 'dashboard' | 'users' | 'broadcast' | 'rewards' | 'challenges' | 'com
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
-  loginRequired: { ar: '🔒 يجب تسجيل الدخول', en: '🔒 Login Required' },
+  loginRequired: { ar: 'يجب تسجيل الدخول', en: 'Login Required' },
   loginBtn: { ar: 'تسجيل الدخول', en: 'Login' },
-  forbidden: { ar: '🚫 غير مصرح لك', en: '🚫 Access Denied' },
+  forbidden: { ar: 'غير مصرح لك', en: 'Access Denied' },
   backToApp: { ar: '← التطبيق', en: '← App' },
-  adminPanel: { ar: '🛡️ لوحة إدارة Prime Fit', en: '🛡️ Prime Fit Admin' },
-  tabDashboard: { ar: '📊 الإحصائيات', en: '📊 Dashboard' },
-  tabLicenses: { ar: '🔑 الأكواد', en: '🔑 Licenses' },
-  tabBroadcast: { ar: '📢 الإشعارات', en: '📢 Broadcast' },
-  tabProfile: { ar: '👤 الملف الشخصي', en: '👤 Profile' },
+  adminPanel: { ar: 'لوحة إدارة Prime Fit', en: 'Prime Fit Admin' },
+  tabDashboard: { ar: 'الإحصائيات', en: 'Dashboard' },
+  tabLicenses: { ar: 'الأكواد', en: 'Licenses' },
+  tabBroadcast: { ar: 'الإشعارات', en: 'Broadcast' },
+  tabProfile: { ar: 'الملف الشخصي', en: 'Profile' },
   // Dashboard
   totalLicenses: { ar: 'إجمالي الأكواد', en: 'Total Licenses' },
   activeLicenses: { ar: 'أكواد مفعّلة', en: 'Active Licenses' },
@@ -41,22 +42,22 @@ const T: Record<string, Record<Lang, string>> = {
   totalBroadcasts: { ar: 'إشعارات مُرسلة', en: 'Broadcasts Sent' },
   totalRecipients: { ar: 'إجمالي المستلمين', en: 'Total Recipients' },
   // Licenses
-  createCode: { ar: '➕ إنشاء كود جديد', en: '➕ Create New Code' },
-  codeLabel: { ar: '🔑 كود الوصول *', en: '🔑 Access Code *' },
-  autoGenerate: { ar: '🎲 توليد تلقائي', en: '🎲 Auto Generate' },
-  customerName: { ar: '👤 اسم العميل', en: '👤 Customer Name' },
-  customerEmail: { ar: '📧 البريد الإلكتروني', en: '📧 Email' },
-  note: { ar: '📝 ملاحظة', en: '📝 Note' },
-  expiryDate: { ar: '📅 تاريخ الانتهاء', en: '📅 Expiry Date' },
+  createCode: { ar: 'إنشاء كود جديد', en: 'Create New Code' },
+  codeLabel: { ar: 'كود الوصول *', en: 'Access Code *' },
+  autoGenerate: { ar: 'توليد تلقائي', en: 'Auto Generate' },
+  customerName: { ar: 'اسم العميل', en: 'Customer Name' },
+  customerEmail: { ar: 'البريد الإلكتروني', en: 'Email' },
+  note: { ar: 'ملاحظة', en: 'Note' },
+  expiryDate: { ar: 'تاريخ الانتهاء', en: 'Expiry Date' },
   neverExpires: { ar: 'لا ينتهي', en: 'Never expires' },
   colExpiry: { ar: 'ينتهي في', en: 'Expires' },
   expired: { ar: '⏰ منتهي', en: '⏰ Expired' },
   optional: { ar: 'اختياري', en: 'Optional' },
-  createBtn: { ar: '✅ إنشاء الكود', en: '✅ Create Code' },
+  createBtn: { ar: 'إنشاء الكود', en: 'Create Code' },
   creating: { ar: '⏳ جاري الإنشاء...', en: '⏳ Creating...' },
-  codeCreated: { ar: '✅ تم إنشاء الكود بنجاح!', en: '✅ Code created successfully!' },
-  codesTitle: { ar: '📋 أكواد الوصول', en: '📋 Access Codes' },
-  refresh: { ar: '🔄 تحديث', en: '🔄 Refresh' },
+  codeCreated: { ar: 'تم إنشاء الكود بنجاح!', en: 'Code created successfully!' },
+  codesTitle: { ar: 'أكواد الوصول', en: 'Access Codes' },
+  refresh: { ar: 'تحديث', en: 'Refresh' },
   noCodesYet: { ar: 'لا توجد أكواد بعد.', en: 'No codes yet.' },
   colCode: { ar: 'الكود', en: 'Code' },
   colCustomer: { ar: 'العميل', en: 'Customer' },
@@ -66,23 +67,23 @@ const T: Record<string, Record<Lang, string>> = {
   colUsed: { ar: 'تاريخ الاستخدام', en: 'Used At' },
   colCreated: { ar: 'تاريخ الإنشاء', en: 'Created At' },
   colActions: { ar: 'إجراءات', en: 'Actions' },
-  active: { ar: '✅ مفعّل', en: '✅ Active' },
-  inactive: { ar: '❌ معطّل', en: '❌ Inactive' },
-  disable: { ar: '🔕 تعطيل', en: '🔕 Disable' },
-  enable: { ar: '✅ تفعيل', en: '✅ Enable' },
-  delete: { ar: '🗑️ حذف', en: '🗑️ Delete' },
+  active: { ar: 'مفعّل', en: 'Active' },
+  inactive: { ar: 'معطّل', en: 'Inactive' },
+  disable: { ar: 'تعطيل', en: 'Disable' },
+  enable: { ar: 'تفعيل', en: 'Enable' },
+  delete: { ar: '<AppIcons.Trash size={14} /> حذف', en: '<AppIcons.Trash size={14} /> Delete' },
   confirmDelete: { ar: 'هل تريد حذف الكود', en: 'Delete code' },
   // Broadcast
-  broadcastTitle: { ar: '📢 إرسال إشعار للعملاء', en: '📢 Send Broadcast to Customers' },
-  broadcastSubject: { ar: '📌 عنوان الرسالة', en: '📌 Subject' },
-  broadcastBody: { ar: '✍️ نص الرسالة', en: '✍️ Message Body' },
-  broadcastType: { ar: '🏷️ نوع الإشعار', en: '🏷️ Notification Type' },
-  broadcastSend: { ar: '📤 إرسال للجميع', en: '📤 Send to All' },
-  broadcastSendOne: { ar: '📤 إرسال لعميل محدد', en: '📤 Send to One Customer' },
-  broadcastSendOneBtn: { ar: '📤 إرسال', en: '📤 Send' },
-  broadcastTargetEmail: { ar: '📧 البريد الإلكتروني للعميل', en: '📧 Customer Email' },
+  broadcastTitle: { ar: 'إرسال إشعار للعملاء', en: 'Send Broadcast to Customers' },
+  broadcastSubject: { ar: 'عنوان الرسالة', en: 'Subject' },
+  broadcastBody: { ar: 'نص الرسالة', en: 'Message Body' },
+  broadcastType: { ar: 'نوع الإشعار', en: 'Notification Type' },
+  broadcastSend: { ar: 'إرسال للجميع', en: 'Send to All' },
+  broadcastSendOne: { ar: 'إرسال لعميل محدد', en: 'Send to One Customer' },
+  broadcastSendOneBtn: { ar: 'إرسال', en: 'Send' },
+  broadcastTargetEmail: { ar: 'البريد الإلكتروني للعميل', en: 'Customer Email' },
   broadcastSending: { ar: '⏳ جاري الإرسال...', en: '⏳ Sending...' },
-  broadcastHistory: { ar: '📜 سجل الإشعارات', en: '📜 Broadcast History' },
+  broadcastHistory: { ar: 'سجل الإشعارات', en: 'Broadcast History' },
   noHistory: { ar: 'لا توجد إشعارات مُرسلة بعد.', en: 'No broadcasts sent yet.' },
   typeUpdate: { ar: 'تحديث', en: 'Update' },
   typeNews: { ar: 'أخبار', en: 'News' },
@@ -90,31 +91,31 @@ const T: Record<string, Record<Lang, string>> = {
   typeReminder: { ar: 'تذكير', en: 'Reminder' },
   typeOther: { ar: 'أخرى', en: 'Other' },
   // Profile
-  profileTitle: { ar: '👤 الملف الشخصي للمدير', en: '👤 Admin Profile' },
-  profileName: { ar: '👤 الاسم', en: '👤 Name' },
-  profilePhone: { ar: '📱 رقم الهاتف', en: '📱 Phone' },
-  profileEmail: { ar: '📧 البريد الإلكتروني', en: '📧 Email' },
-  profilePhoto: { ar: '🖼️ صورة الملف الشخصي', en: '🖼️ Profile Photo' },
-  profileSave: { ar: '💾 حفظ التغييرات', en: '💾 Save Changes' },
+  profileTitle: { ar: 'الملف الشخصي للمدير', en: 'Admin Profile' },
+  profileName: { ar: 'الاسم', en: 'Name' },
+  profilePhone: { ar: 'رقم الهاتف', en: 'Phone' },
+  profileEmail: { ar: 'البريد الإلكتروني', en: 'Email' },
+  profilePhoto: { ar: 'صورة الملف الشخصي', en: 'Profile Photo' },
+  profileSave: { ar: 'حفظ التغييرات', en: 'Save Changes' },
   profileSaving: { ar: '⏳ جاري الحفظ...', en: '⏳ Saving...' },
-  profileSaved: { ar: '✅ تم الحفظ بنجاح!', en: '✅ Saved successfully!' },
-  uploadPhoto: { ar: '📷 تغيير الصورة', en: '📷 Change Photo' },
+  profileSaved: { ar: 'تم الحفظ بنجاح!', en: 'Saved successfully!' },
+  uploadPhoto: { ar: 'تغيير الصورة', en: 'Change Photo' },
   // Subscriptions tab
   tabUsers: { ar: 'المستخدمون', en: 'Users' },
   tabSubscriptions: { ar: 'الاشتراكات', en: 'Subscriptions' },
   subNoData: { ar: 'لا توجد اشتراكات بعد.', en: 'No subscriptions yet.' },
-  subActive: { ar: '✅ نشط', en: '✅ Active' },
-  subTrialing: { ar: '🔵 تجريبي', en: '🔵 Trialing' },
+  subActive: { ar: 'نشط', en: 'Active' },
+  subTrialing: { ar: 'تجريبي', en: 'Trialing' },
   subExpired: { ar: '⏰ منتهي', en: '⏰ Expired' },
-  subCancelled: { ar: '❌ ملغي', en: '❌ Cancelled' },
+  subCancelled: { ar: 'ملغي', en: 'Cancelled' },
   subPending: { ar: '⏳ معلق', en: '⏳ Pending' },
   planFree: { ar: 'مجاني', en: 'Free' },
   planPrimePlus: { ar: 'برايم بلس', en: 'Prime Plus' },
   planPrimePro: { ar: 'برايم برو', en: 'Prime Pro' },
   // Rewards tab
-  tabRewards: { ar: '🎰 المكافآت', en: '🎰 Rewards' },
-  tabChallenges: { ar: '🏆 التحديات', en: '🏆 Challenges' },
-  tabCommunity: { ar: '🌐 المجتمع', en: '🌐 Community' },
+  tabRewards: { ar: 'المكافآت', en: 'Rewards' },
+  tabChallenges: { ar: 'التحديات', en: 'Challenges' },
+  tabCommunity: { ar: 'المجتمع', en: 'Community' },
   rewardName: { ar: 'اسم المكافأة', en: 'Reward Name' },
   rewardProbability: { ar: 'الاحتمالية %', en: 'Probability %' },
   rewardTier: { ar: 'المستوى', en: 'Tier' },
@@ -175,7 +176,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
       {/* Rewards list */}
       <div style={cardStyle}>
         <h3 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
-          {lang === 'ar' ? '🎰 قائمة المكافآت' : '🎰 Reward List'}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Gift size={18} />{lang === 'ar' ? 'قائمة المكافآت' : 'Reward List'}</span>
         </h3>
         {rewardsQuery.isLoading ? (
           <div style={{ color: '#7A9BB5' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
@@ -249,7 +250,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
                     <span style={{ fontWeight: 700, fontSize: 14, color: '#1B2E5E' }}>
                       {lang === 'ar' ? r.nameAr : r.name}
                     </span>
-                    {!r.isActive && <span style={{ color: '#DC2626', fontSize: 11 }}>⛔ Disabled</span>}
+                    {!r.isActive && <span style={{display:'inline-flex',alignItems:'center',gap:4,color:'#DC2626',fontSize:11}}><AppIcons.Close size={10} />Disabled</span>}
                   </div>
                   <div style={{ color: '#7A9BB5', fontSize: 12, marginTop: 2 }}>
                     {lang === 'ar' ? 'الاحتمالية:' : 'Probability:'} <strong>{r.probability}%</strong>
@@ -262,12 +263,12 @@ function AdminRewardsTab({ lang }: { lang: string }) {
                       setEditForm({ name: r.name, nameAr: r.nameAr, probability: r.probability, tier: r.tier, isActive: r.isActive });
                     }}
                     style={{ background: '#EFF6FF', color: '#1B2E5E', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>
-                    ✏️ {lang === 'ar' ? 'تعديل' : 'Edit'}
+                    <span style={{display:'inline-flex',alignItems:'center',gap:4}}><AppIcons.Edit size={12} />{lang === 'ar' ? 'تعديل' : 'Edit'}</span>
                   </button>
                   <button
                     onClick={() => deleteRewardMutation.mutate({ id: r.id })}
                     style={{ background: '#FEF2F2', color: '#DC2626', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 700 }}>
-                    🗑️
+                    <AppIcons.Trash size={14} />
                   </button>
                 </div>
               </>
@@ -280,7 +281,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
       {(jackpotQuery.data ?? []).length > 0 && (
         <div style={cardStyle}>
           <h3 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
-            🏆 {lang === 'ar' ? 'الفائزون بالجائزة الكبرى' : 'Jackpot Winners'}
+            <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Trophy size={18} />{lang === 'ar' ? 'الفائزون بالجائزة الكبرى' : 'Jackpot Winners'}</span>
           </h3>
           {(jackpotQuery.data ?? []).map((w: any) => (
             <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #F1F5F9' }}>
@@ -299,7 +300,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
       {/* Recent spin history */}
       <div style={cardStyle}>
         <h3 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
-          📋 {lang === 'ar' ? 'سجل الدورات الأخيرة' : 'Recent Spin History'}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={18} />{lang === 'ar' ? 'سجل الدورات الأخيرة' : 'Recent Spin History'}</span>
         </h3>
         {(historyQuery.data ?? []).length === 0 ? (
           <div style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد دورات بعد' : 'No spins yet'}</div>
@@ -333,10 +334,10 @@ function AdminChallengesTab({ lang }: { lang: string }) {
     onSuccess: () => {
       utils.community.getChallenges.invalidate();
       setForm({ title: '', titleAr: '', description: '', descriptionAr: '', xpReward: 100, endDate: '', type: 'custom', targetValue: 1 });
-      setMsg('✅ ' + (lang === 'ar' ? 'تم إنشاء التحدي بنجاح' : 'Challenge created successfully'));
+      setMsg('ok:' + (lang === 'ar' ? 'تم إنشاء التحدي بنجاح' : 'Challenge created successfully'));
       setTimeout(() => setMsg(''), 3000);
     },
-    onError: (e) => setMsg('❌ ' + e.message),
+    onError: (e) => setMsg('err:' + e.message),
   });
   const [form, setForm] = React.useState({
     title: '', titleAr: '', description: '', descriptionAr: '',
@@ -360,7 +361,7 @@ function AdminChallengesTab({ lang }: { lang: string }) {
       {/* Create Challenge Form */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 4px 20px rgba(27,46,94,0.08)' }}>
         <h2 style={{ margin: '0 0 20px', color: '#1B2E5E', fontSize: 16, fontWeight: 900 }}>
-          {lang === 'ar' ? '➕ إنشاء تحدي جديد' : '➕ Create New Challenge'}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Plus size={18} />{lang === 'ar' ? 'إنشاء تحدي جديد' : 'Create New Challenge'}</span>
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <div>
@@ -402,11 +403,11 @@ function AdminChallengesTab({ lang }: { lang: string }) {
             <input type="number" min={1} style={inputStyle} value={form.targetValue} onChange={e => setForm(f => ({ ...f, targetValue: Number(e.target.value) }))} />
           </div>
         </div>
-        {msg && <p style={{ color: msg.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{msg}</p>}
+        {msg && <p style={{ color: msg.startsWith('ok:') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{msg.replace(/^(ok:|err:)/, '')}</p>}
         <button
           onClick={() => {
             if (!form.title || !form.titleAr || !form.endDate) {
-              setMsg('❌ ' + (lang === 'ar' ? 'يرجى ملء الحقول المطلوبة' : 'Please fill required fields'));
+              setMsg('err:' + (lang === 'ar' ? 'يرجى ملء الحقول المطلوبة' : 'Please fill required fields'));
               return;
             }
             createMutation.mutate(form);
@@ -419,14 +420,14 @@ function AdminChallengesTab({ lang }: { lang: string }) {
             cursor: createMutation.isPending ? 'not-allowed' : 'pointer',
           }}
         >
-          {createMutation.isPending ? (lang === 'ar' ? 'جاري الإنشاء...' : 'Creating...') : (lang === 'ar' ? '✅ إنشاء التحدي' : '✅ Create Challenge')}
+          <span style={{display:'flex',alignItems:'center',gap:6}}>{createMutation.isPending ? <AppIcons.Spinner size={14} /> : <AppIcons.Check size={14} />}{createMutation.isPending ? (lang === 'ar' ? 'جاري الإنشاء...' : 'Creating...') : (lang === 'ar' ? 'إنشاء التحدي' : 'Create Challenge')}</span>
         </button>
       </div>
 
       {/* Existing Challenges List */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(27,46,94,0.08)' }}>
         <h2 style={{ margin: '0 0 16px', color: '#1B2E5E', fontSize: 15, fontWeight: 900 }}>
-          {lang === 'ar' ? '📋 التحديات الحالية' : '📋 Active Challenges'}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={18} />{lang === 'ar' ? 'التحديات الحالية' : 'Active Challenges'}</span>
         </h2>
         {challengesQuery.isLoading ? (
           <p style={{ color: '#94A3B8' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
@@ -549,7 +550,7 @@ function AdminCommunityTab({ lang }: { lang: string }) {
                     {post.isHidden && <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: 10, padding: '2px 6px', borderRadius: 8, fontWeight: 700 }}>{isRTL ? 'مخفي' : 'Hidden'}</span>}
                   </div>
                   <div style={{ fontSize: 13, color: '#374151', marginBottom: 4, wordBreak: 'break-word' }}>{post.content?.slice(0, 120)}{(post.content?.length ?? 0) > 120 ? '...' : ''}</div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>❤️ {post.likesCount} &nbsp; 💬 {post.commentsCount} &nbsp; {new Date(post.createdAt).toLocaleDateString()}</div>
+                  <div style={{fontSize:11,color:'#9CA3AF',display:'flex',alignItems:'center',gap:8}}><AppIcons.Heart size={11} />{post.likesCount} <AppIcons.Message size={11} />{post.commentsCount} {new Date(post.createdAt).toLocaleDateString()}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <button onClick={() => pinPostMut.mutate({ postId: post.id, isPinned: !post.isPinned })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #D97706', background: 'white', color: '#D97706', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
@@ -748,22 +749,22 @@ export default function AdminPanel() {
     onSuccess: () => {
       utils.admin.listBroadcasts.invalidate();
       utils.admin.getStats.invalidate();
-      setBResult(`✅ ${lang === 'ar' ? 'تم الإرسال بنجاح!' : 'Sent successfully!'}`);
+      setBResult(`ok:${lang === 'ar' ? 'تم الإرسال بنجاح!' : 'Sent successfully!'}`);
       setBSubject(''); setBBody(''); setBTargetEmail('');
       setTimeout(() => setBResult(''), 5000);
     },
-    onError: (err) => setBResult(`❌ ${err.message}`),
+    onError: (err) => setBResult(`err:${err.message}`),
   });
 
   const broadcastMutation = trpc.admin.sendBroadcast.useMutation({
     onSuccess: (data) => {
       utils.admin.listBroadcasts.invalidate();
       utils.admin.getStats.invalidate();
-      setBResult(`✅ ${lang === 'ar' ? `تم الإرسال إلى ${data.sent} من أصل ${data.total} عميل` : `Sent to ${data.sent} of ${data.total} customers`}`);
+      setBResult(`ok:${lang === 'ar' ? `تم الإرسال إلى ${data.sent} من أصل ${data.total} عميل` : `Sent to ${data.sent} of ${data.total} customers`}`);
       setBSubject(''); setBBody('');
       setTimeout(() => setBResult(''), 5000);
     },
-    onError: (err) => setBResult(`❌ ${err.message}`),
+    onError: (err) => setBResult(`err:${err.message}`),
   });
   const updateSubMutation = trpc.admin.updateUserSubscription.useMutation({
     onSuccess: () => {
@@ -772,7 +773,7 @@ export default function AdminPanel() {
       setSubMsg(lang === 'ar' ? 'تم تحديث الاشتراك بنجاح' : 'Subscription updated successfully');
       setTimeout(() => setSubMsg(''), 3000);
     },
-    onError: (err) => setSubMsg(`❌ ${err.message}`),
+    onError: (err) => setSubMsg(`err:${err.message}`),
   });
   const deleteUserMutation = trpc.admin.deleteUser.useMutation({
     onSuccess: () => usersQuery.refetch(),
@@ -782,21 +783,21 @@ export default function AdminPanel() {
     onSuccess: (data) => {
       utils.admin.listAdminNotifications.invalidate();
       utils.admin.getStats.invalidate();
-      setBResult(`✅ ${lang === 'ar' ? `تم الإرسال إلى ${data.recipientCount} مستخدم` : `Sent to ${data.recipientCount} users`}`);
+      setBResult(`ok:${lang === 'ar' ? `تم الإرسال إلى ${data.recipientCount} مستخدم` : `Sent to ${data.recipientCount} users`}`);
       setBSubject(''); setBBody(''); setBTargetEmail('');
       setTimeout(() => setBResult(''), 5000);
     },
-    onError: (err) => setBResult(`❌ ${err.message}`),
+    onError: (err) => setBResult(`err:${err.message}`),
   });
   const adminNotifsQuery = trpc.admin.listAdminNotifications.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
 
   const updateProfileMutation = trpc.admin.updateProfile.useMutation({
     onSuccess: () => { utils.admin.getProfile.invalidate(); setPMsg(t('profileSaved', lang)); setTimeout(() => setPMsg(''), 3000); },
-    onError: (err) => setPMsg(`❌ ${err.message}`),
+    onError: (err) => setPMsg(`err:${err.message}`),
   });
   const uploadPhotoMutation = trpc.admin.uploadPhoto.useMutation({
     onSuccess: (data) => { setPPhotoUrl(data.url); },
-    onError: (err) => setPMsg(`❌ ${err.message}`),
+    onError: (err) => setPMsg(`err:${err.message}`),
   });
 
   // ── Auth guards ───────────────────────────────────────────────────────────
@@ -818,7 +819,7 @@ export default function AdminPanel() {
   if (user.role !== 'admin') {
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-        <div style={{ fontSize: 48 }}>🚫</div>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><AppIcons.Close size={48} className="text-red-500" /></div>
         <div style={{ color: 'white', fontSize: 18, fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>{t('forbidden', lang)}</div>
         <div style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Cairo, sans-serif', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
           {lang === 'ar'
@@ -835,7 +836,7 @@ export default function AdminPanel() {
             marginTop: 4,
           }}
         >
-          {lang === 'ar' ? '🔓 تسجيل الخروج والدخول بحساب آخر' : '🔓 Sign Out & Switch Account'}
+          <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lock size={14} />{lang === 'ar' ? 'تسجيل الخروج والدخول بحساب آخر' : 'Sign Out & Switch Account'}</span>
         </button>
         <a href="/" style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Cairo, sans-serif' }}>← {lang === 'ar' ? 'العودة للتطبيق' : 'Back to App'}</a>
       </div>
@@ -946,14 +947,14 @@ export default function AdminPanel() {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
               {[
-                { label: lang === 'ar' ? 'إجمالي المستخدمين' : 'Total Users', value: stats?.totalUsers ?? '—', color: NAVY, icon: '👥' },
-                { label: lang === 'ar' ? 'مشتركون نشطون' : 'Active Subscribers', value: stats?.activeSubscribers ?? '—', color: '#16A34A', icon: '✅' },
-                { label: lang === 'ar' ? 'اشتراكات منتهية' : 'Expired Subscriptions', value: stats?.expiredSubscribers ?? '—', color: '#DC2626', icon: '❌' },
-                { label: lang === 'ar' ? 'إشعارات مُرسلة' : 'Broadcasts Sent', value: stats?.totalBroadcasts ?? '—', color: '#7C3AED', icon: '📢' },
-                { label: lang === 'ar' ? 'إجمالي المستلمين' : 'Total Recipients', value: stats?.totalRecipients ?? '—', color: '#0369A1', icon: '📨' },
+                { label: lang === 'ar' ? 'إجمالي المستخدمين' : 'Total Users', value: stats?.totalUsers ?? '—', color: NAVY, icon: 'users' },
+                { label: lang === 'ar' ? 'مشتركون نشطون' : 'Active Subscribers', value: stats?.activeSubscribers ?? '—', color: '#16A34A', icon: 'check' },
+                { label: lang === 'ar' ? 'اشتراكات منتهية' : 'Expired Subscriptions', value: stats?.expiredSubscribers ?? '—', color: '#DC2626', icon: 'expired' },
+                { label: lang === 'ar' ? 'إشعارات مُرسلة' : 'Broadcasts Sent', value: stats?.totalBroadcasts ?? '—', color: '#7C3AED', icon: 'broadcast' },
+                { label: lang === 'ar' ? 'إجمالي المستلمين' : 'Total Recipients', value: stats?.totalRecipients ?? '—', color: '#0369A1', icon: 'recipients' },
               ].map(({ label, value, color, icon }) => (
                 <div key={label} style={{ background: 'white', borderRadius: 16, padding: '20px 16px', textAlign: 'center', boxShadow: '0 2px 12px rgba(27,46,94,0.08)', border: `1px solid ${SKY_LIGHT}44` }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
+                  <div style={{ fontSize: 28, marginBottom: 8, display:'flex', justifyContent:'center' }}>{icon === 'users' ? <AppIcons.Users size={28} /> : icon === 'check' ? <AppIcons.Check size={28} /> : icon === 'expired' ? <AppIcons.Close size={28} /> : icon === 'broadcast' ? <AppIcons.Bell size={28} /> : <AppIcons.Message size={28} />}</div>
                   <div style={{ fontSize: 28, fontWeight: 900, color }}>{value}</div>
                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{label}</div>
                 </div>
@@ -1026,7 +1027,7 @@ export default function AdminPanel() {
                   <p style={{ margin: '4px 0 0', fontSize: 11, color: '#94A3B8' }}>{t('neverExpires', lang)}</p>
                 </div>
               </div>
-              {formError && <p style={{ color: '#EF4444', fontSize: 12, margin: '0 0 12px', fontWeight: 600 }}>⚠️ {formError}</p>}
+              {formError && <p style={{display:'flex',alignItems:'center',gap:6,color:'#EF4444',fontSize:12,margin:'0 0 12px',fontWeight:600}}><AppIcons.Warning size={12} />{formError}</p>}
               {successMsg && <p style={{ color: '#22C55E', fontSize: 13, margin: '0 0 12px', fontWeight: 700 }}>{successMsg}</p>}
               <button
                 onClick={() => {
@@ -1049,10 +1050,10 @@ export default function AdminPanel() {
                   {t('refresh', lang)}
                 </button>
               </div>
-              {codesQuery.isLoading && <div style={{ textAlign: 'center', color: '#7A9BB5', padding: '20px' }}>⏳</div>}
+              {codesQuery.isLoading && <div style={{ textAlign: 'center', color: '#7A9BB5', padding: '20px' }}>...</div>}
               {!codesQuery.isLoading && codes.length === 0 && (
                 <div style={{ textAlign: 'center', color: '#7A9BB5', padding: '32px', background: '#F8FBFF', borderRadius: 12 }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🔑</div>
+                  <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><AppIcons.Lock size={32} /></div>
                   <p style={{ margin: 0, fontSize: 13 }}>{t('noCodesYet', lang)}</p>
                 </div>
               )}
@@ -1083,7 +1084,7 @@ export default function AdminPanel() {
                                   transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 3,
                                 }}
                               >
-                                {copiedKey === c.code ? '✓' : '📋'}
+                                {copiedKey === c.code ? <AppIcons.Check size={14} /> : <AppIcons.Clipboard size={14} />}
                               </button>
                             </div>
                           </td>
@@ -1147,7 +1148,7 @@ export default function AdminPanel() {
             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
               <input
                 type="text"
-                placeholder={lang === 'ar' ? '🔍 بحث بالاسم أو البريد...' : '🔍 Search by name or email...'}
+                placeholder={lang === 'ar' ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'}
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
                 style={{ ...inputStyle, flex: 1, minWidth: 180 }}
@@ -1165,7 +1166,7 @@ export default function AdminPanel() {
               </select>
             </div>
 
-            {subMsg && <p style={{ color: subMsg.startsWith('❌') ? '#DC2626' : '#16A34A', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{subMsg}</p>}
+            {subMsg && <p style={{ color: subMsg.startsWith('err:') ? '#DC2626' : '#16A34A', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{subMsg}</p>}
             {usersQuery.isLoading ? (
               <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
             ) : !usersQuery.data?.length ? (
@@ -1325,7 +1326,7 @@ export default function AdminPanel() {
                 <div>
                   <label style={labelStyle}>{t('broadcastSubject', lang)}</label>
                   <input type="text" value={bSubject} onChange={e => setBSubject(e.target.value)}
-                    placeholder={lang === 'ar' ? 'مثال: تحديث جديد في Prime Fit 🎉' : 'e.g. New update in Prime Fit 🎉'}
+                    placeholder={lang === 'ar' ? 'مثال: تحديث جديد في Prime Fit' : 'e.g. New update in Prime Fit'}
                     style={inputStyle} />
                 </div>
                 <div>
@@ -1335,7 +1336,7 @@ export default function AdminPanel() {
                     style={{ ...inputStyle, resize: 'vertical' as const }} />
                 </div>
                 {bResult && (
-                  <p style={{ color: bResult.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult}</p>
+                  <p style={{ color: bResult.startsWith('ok:') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: 0 }}>{bResult.replace(/^(ok:|err:)/, '')}</p>
                 )}
                 {/* Channel selector */}
                 <div>
@@ -1352,7 +1353,7 @@ export default function AdminPanel() {
                 </div>
                 <button
                   onClick={() => {
-                    if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? '❌ يرجى ملء العنوان والرسالة' : '❌ Please fill subject and message'); return; }
+                    if (!bSubject.trim() || !bBody.trim()) { setBResult(lang === 'ar' ? 'err:يرجى ملء العنوان والرسالة' : 'err:Please fill subject and message'); return; }
                     if (!confirm(lang === 'ar' ? 'هل تريد إرسال هذا الإشعار؟' : 'Send this notification?')) return;
                     sendAdminNotifMutation.mutate({
                       title: bSubject.trim(),
@@ -1481,7 +1482,7 @@ export default function AdminPanel() {
                                     transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 3,
                                   }}
                                 >
-                                  {copiedKey === sub.licenseKey ? '✓' : '📋'}
+                                  {copiedKey === sub.licenseKey ? <AppIcons.Check size={14} /> : <AppIcons.Clipboard size={14} />}
                                 </button>
                               </div>
                             ) : '—'}
@@ -1514,7 +1515,7 @@ export default function AdminPanel() {
                 {pPhotoUrl ? (
                   <img src={pPhotoUrl} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${CYAN}` }} />
                 ) : (
-                  <div style={{ width: 80, height: 80, borderRadius: '50%', background: `linear-gradient(135deg, ${NAVY}, ${SKY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>👤</div>
+                  <div style={{ width: 80, height: 80, borderRadius: '50%', background: `linear-gradient(135deg, ${NAVY}, ${SKY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}><AppIcons.Profile size={36} /></div>
                 )}
               </div>
               <div>
@@ -1559,7 +1560,7 @@ export default function AdminPanel() {
             </div>
 
             {pMsg && (
-              <p style={{ color: pMsg.startsWith('✅') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: '16px 0 0' }}>{pMsg}</p>
+              <p style={{ color: pMsg.startsWith('ok:') ? '#16A34A' : '#DC2626', fontSize: 13, fontWeight: 700, margin: '16px 0 0' }}>{pMsg.replace(/^(ok:|err:)/, '')}</p>
             )}
 
             <button

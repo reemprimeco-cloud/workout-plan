@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
 
         {done ? (
           <div style={{ marginTop: 20 }}>
-            <div style={{ fontSize: 36, marginBottom: 12, color: '#16A34A' }}>✔</div>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:12}}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
             <h2 style={{ color: NAVY, fontSize: 18, fontWeight: 900 }}>تم تغيير كلمة المرور</h2>
             <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 20 }}>يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة</p>
             <button

@@ -15,6 +15,7 @@ import NutritionMealsTab from "../components/NutritionMealsTab";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getDailyCaloriesBurned } from "../lib/calorieCalc";
+import { AppIcons } from "../components/AppIcons";
 
 // ── Design tokens (matches main app light theme) ──────────────────────────────
 const PAGE_BG   = "#F0F4F8";
@@ -67,7 +68,7 @@ const T: Record<string, Record<string, string>> = {
   tryAgain:     { ar: "حاول مجدداً", en: "Try Again" },
   addToDiary:   { ar: "أضف للسجل", en: "Add to Diary" },
   saving:       { ar: "جاري الحفظ...", en: "Saving..." },
-  saved:        { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
+  saved:        { ar: "تم الحفظ!", en: "Saved!" },
   edit:         { ar: "تعديل", en: "Edit" },
   delete:       { ar: "حذف", en: "Delete" },
   noMeals:      { ar: "لا توجد وجبات بعد", en: "No meals logged yet" },
@@ -85,12 +86,12 @@ const T: Record<string, Record<string, string>> = {
   noInsights:   { ar: "اضغط لتوليد تحليلات مخصصة", en: "Tap to generate personalized insights" },
   saveGoals:    { ar: "حفظ الأهداف", en: "Save Goals" },
   savingGoals:  { ar: "جاري الحفظ...", en: "Saving..." },
-  savedGoals:   { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
+  savedGoals:   { ar: "تم الحفظ!", en: "Saved!" },
   ml:           { ar: "مل", en: "ml" },
 };
 const tl = (k: string, lang: string) => T[k]?.[lang] ?? T[k]?.en ?? k;
 
-const MEAL_ICONS: Record<string, string> = { breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎" };
+const MEAL_ICONS: Record<string, string> = { breakfast: "sunrise", lunch: "sun", dinner: "moon", snack: "apple" };
 
 // ── Shared card ───────────────────────────────────────────────────────────────
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({
@@ -114,7 +115,7 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 4 }}>
-        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>🔥 {tl("dailyCal", lang)}</span>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Flame size={18} className="text-orange-500" />{tl("dailyCal", lang)}</span>
       </div>
 
       {/* Ring */}
@@ -258,15 +259,15 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
 }) {
   const pct = Math.min(totalMl / Math.max(goalMl, 1), 1);
   const cups = [
-    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150, icon: "💧" },
-    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250, icon: "💧" },
-    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330, icon: "💧" },
-    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500, icon: "💧" },
+    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150, icon: "water" },
+    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250, icon: "water" },
+    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330, icon: "water" },
+    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500, icon: "water" },
   ];
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>💧 {tl("waterIntake", lang)}</span>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Water size={18} className="text-blue-500" />{tl("waterIntake", lang)}</span>
         <span style={{ color: C_WATER, fontSize: 13, fontWeight: 700 }}>
           {totalMl}{tl("ml", lang)} / {goalMl}{tl("ml", lang)}
         </span>
@@ -304,7 +305,7 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>📈 {tl("weeklyTrend", lang)}</span>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Stats size={18} />{tl("weeklyTrend", lang)}</span>
       </div>
 
       {/* Chart area */}
@@ -521,12 +522,12 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 900, margin: 0 }}>
-            🎯 {tl("goals", lang)}
+            <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Target size={18} />{tl("goals", lang)}</span>
           </h2>
           <button onClick={onClose} style={{
             background: PAGE_BG, border: "none", borderRadius: "50%",
             width: 32, height: 32, fontSize: 16, cursor: "pointer", color: TEXT2,
-          }}>✕</button>
+          }}><AppIcons.Close size={16} /></button>
         </div>
 
         {/* TDEE Auto-Calculator */}
@@ -540,8 +541,8 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           }}
         >
-          🧮 {lang === "ar" ? "احسب أهدافك تلقائياً (TDEE)" : "Auto-Calculate Goals (TDEE)"}
-          <span style={{ fontSize: 10, opacity: 0.7 }}>{showTDEE ? "▲" : "▼"}</span>
+          <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Stats size={16} />{lang === "ar" ? "احسب أهدافك تلقائياً (TDEE)" : "Auto-Calculate Goals (TDEE)"}</span>
+          <span style={{opacity:0.7}}>{showTDEE ? <AppIcons.ChevronUp size={12} /> : <AppIcons.ChevronDown size={12} />}</span>
         </button>
 
         {showTDEE && (() => {
@@ -566,9 +567,9 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
             }}>
               {!hasProfile ? (
                 <p style={{ color: "#F59E0B", fontSize: 12, margin: 0, textAlign: "center" }}>
-                  ⚠️ {lang === "ar"
+                  <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-red-500" />{lang === "ar"
                     ? "أكمل بيانات ملفك الشخصي (الوزن، الطول، العمر) أولاً"
-                    : "Complete your profile (weight, height, age) first"}
+                    : "Complete your profile (weight, height, age) first"}</span>
                 </p>
               ) : (
                 <>
@@ -666,7 +667,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
                       cursor: "pointer", fontFamily: "inherit",
                     }}
                   >
-                    ✅ {lang === "ar" ? "تطبيق هذه الأهداف" : "Apply These Goals"}
+                    <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Check size={14} />{lang === "ar" ? "تطبيق هذه الأهداف" : "Apply These Goals"}</span>
                   </button>
                 </>
               )}
@@ -720,8 +721,8 @@ function ExceedWarning({ lang, exceeded, onOpenGoals }: {
   if (items.length === 0) return null;
 
   const advice = lang === "ar"
-    ? `⚠️ تجاوزت الهدف اليومي في: ${items.join("، ")}. حاول تقليل الوجبات الدسمة وزيادة شرب الماء. تذكر أن الاتساق أهم من الكمال!`
-    : `⚠️ You exceeded your daily goal for: ${items.join(", ")}. Try reducing heavy meals and drink more water. Remember: consistency matters more than perfection!`;
+    ? `تجاوزت الهدف اليومي في: ${items.join("، ")}. حاول تقليل الوجبات الدسمة وزيادة شرب الماء. تذكر أن الاتساق أهم من الكمال!`
+    : `You exceeded your daily goal for: ${items.join(", ")}. Try reducing heavy meals and drink more water. Remember: consistency matters more than perfection!`;
 
   return (
     <div style={{
@@ -729,7 +730,7 @@ function ExceedWarning({ lang, exceeded, onOpenGoals }: {
       borderRadius: 16, padding: "14px 16px", marginBottom: 14,
       display: "flex", alignItems: "flex-start", gap: 10,
     }}>
-      <span style={{ fontSize: 22, flexShrink: 0 }}>🚨</span>
+      <span style={{flexShrink:0}}><AppIcons.Warning size={22} className="text-red-500" /></span>
       <div style={{ flex: 1 }}>
         <p style={{ color: "#DC2626", fontSize: 13, fontWeight: 800, margin: "0 0 6px" }}>
           {lang === "ar" ? "تجاوزت الهدف اليومي!" : "Daily Target Exceeded!"}
@@ -817,7 +818,7 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
       {/* Macronutrients card */}
       <div style={card()}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-          <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>🥩 {tl("macros", lang)}</span>
+          <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Protein size={18} />{tl("macros", lang)}</span>
         </div>
 
         {/* Progress bars */}
@@ -873,7 +874,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
             width: 44, height: 44, borderRadius: 12, background: "#FFF7ED",
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
           }}>
-            {MEAL_ICONS[meal.meal_type] ?? "🍽️"}
+            {MEAL_ICONS[meal.meal_type] === "sunrise" ? <AppIcons.Sunrise size={20} /> : MEAL_ICONS[meal.meal_type] === "sun" ? <AppIcons.Sun size={20} /> : MEAL_ICONS[meal.meal_type] === "moon" ? <AppIcons.Sleep size={20} /> : <AppIcons.Apple size={20} />}
           </div>
           <div>
             <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: 0 }}>
@@ -892,7 +893,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
           }}>
             {Math.round(meal.total_calories)} kcal
           </span>
-          <span style={{ color: MUTED, fontSize: 12 }}>{expanded ? "▲" : "▼"}</span>
+          <span style={{color:MUTED}}>{expanded ? <AppIcons.ChevronUp size={12} /> : <AppIcons.ChevronDown size={12} />}</span>
         </div>
       </div>
 
@@ -939,7 +940,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
               borderRadius: 10, padding: "10px 12px", marginTop: 10,
             }}>
               <p style={{ color: NAVY, fontSize: 11, margin: 0, lineHeight: 1.6 }}>
-                💡 {lang === "ar" ? meal.insight_ar : meal.insight_en}
+                <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Info size={12} className="text-blue-500" />{lang === "ar" ? meal.insight_ar : meal.insight_en}</span>
               </p>
             </div>
           )}
@@ -947,7 +948,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
             marginTop: 10, background: "#FEF2F2", border: "1px solid #FECACA",
             color: "#EF4444", borderRadius: 8, padding: "6px 14px", fontSize: 11,
             cursor: "pointer", fontFamily: "inherit",
-          }}>🗑️ {tl("delete", lang)}</button>
+          }}><span style={{display:"flex",alignItems:"center",gap:4}}><AppIcons.Trash size={12} />{tl("delete", lang)}</span></button>
         </div>
       )}
     </div>
@@ -1093,7 +1094,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               boxShadow: `0 4px 16px ${NAVY}44`,
             }}>
-              <span style={{ fontSize: 34 }}>📷</span>
+              <AppIcons.Camera size={34} />
               {tl("scan", lang)}
             </button>
             <button onClick={() => fileInputRef.current?.click()} style={{
@@ -1104,7 +1105,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               boxShadow: SHADOW,
             }}>
-              <span style={{ fontSize: 34 }}>🖼️</span>
+              <AppIcons.Image size={34} />
               {tl("upload", lang)}
             </button>
           </div>
@@ -1114,7 +1115,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             borderRadius: 14, padding: "12px 16px", marginBottom: 14,
             display: "flex", alignItems: "center", gap: 10,
           }}>
-            <span style={{ fontSize: 22 }}>📊</span>
+            <AppIcons.Stats size={22} />
             <span style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>
               {tl("barcodeHint", lang)}
             </span>
@@ -1133,7 +1134,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               borderRadius: 16, marginBottom: 16, opacity: 0.85,
             }} />
           )}
-          <div style={{ fontSize: 36, marginBottom: 12, animation: "spin 1s linear infinite" }}>🔍</div>
+          <div style={{ marginBottom: 12 }}><AppIcons.Search size={36} /></div>
           <p style={{ color: NAVY, fontSize: 14, fontWeight: 700 }}>{tl("analyzing", lang)}</p>
           <p style={{ color: MUTED, fontSize: 11 }}>
             {lang === "ar" ? "يتم تحليل الطعام بالذكاء الاصطناعي..." : "AI is identifying food items..."}
@@ -1168,7 +1169,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               borderRadius: 12, padding: "10px 14px", marginBottom: 12,
             }}>
               <p style={{ color: NAVY, fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                💡 {lang === "ar" ? analysis.insightAr : analysis.insightEn}
+                <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Info size={12} className="text-blue-500" />{lang === "ar" ? analysis.insightAr : analysis.insightEn}</span>
               </p>
             </div>
           )}
@@ -1204,7 +1205,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                 <button onClick={() => removeItem(idx)} style={{
                   background: "#FEF2F2", border: "1px solid #FECACA", color: "#EF4444",
                   borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
-                }}>✕</button>
+                }}><AppIcons.Close size={16} /></button>
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {[
@@ -1251,7 +1252,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                       )}
                       <div style={{ color: MUTED, fontSize: 9 }}>{m.unit}</div>
                       <div style={{ color: MUTED, fontSize: 9 }}>{m.label}</div>
-                      {!isEditing && <div style={{ color: m.color, fontSize: 7, opacity: 0.6, marginTop: 1 }}>✏️</div>}
+                      {!isEditing && <div style={{ color: m.color, opacity: 0.6, marginTop: 1 }}><AppIcons.Edit size={10} /></div>}
                     </div>
                   );
                 })}
@@ -1310,7 +1311,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
           }}>
             {saveStatus === "saved" ? tl("saved", lang)
               : saveStatus === "saving" ? tl("saving", lang)
-              : `💾 ${tl("addToDiary", lang)}`}
+              : tl("addToDiary", lang)}
           </button>
         </>
       )}
@@ -1337,36 +1338,36 @@ interface QuickMealItem {
 
 const QUICK_MEALS: Record<QuickMealCategory, QuickMealItem[]> = {
   meals: [
-    { nameAr: "كبسة دجاج",   nameEn: "Chicken Kabsa",   emoji: "🍚", calories: 520, protein: 32, carbs: 65, fat: 12, serving: "1 plate (350g)" },
-    { nameAr: "شاورما دجاج", nameEn: "Chicken Shawarma", emoji: "🌯", calories: 420, protein: 28, carbs: 42, fat: 14, serving: "1 wrap (250g)" },
-    { nameAr: "برغر",         nameEn: "Burger",           emoji: "🍔", calories: 550, protein: 30, carbs: 48, fat: 24, serving: "1 burger (220g)" },
-    { nameAr: "بيتزا",        nameEn: "Pizza",            emoji: "🍕", calories: 280, protein: 12, carbs: 34, fat: 10, serving: "1 slice (100g)" },
-    { nameAr: "سلطة خضراء",  nameEn: "Green Salad",      emoji: "🥗", calories: 80,  protein: 3,  carbs: 10, fat: 3,  serving: "1 bowl (200g)" },
-    { nameAr: "فول مدمس",    nameEn: "Foul Medames",     emoji: "🫘", calories: 180, protein: 10, carbs: 28, fat: 4,  serving: "1 cup (200g)" },
-    { nameAr: "تمر",          nameEn: "Dates",            emoji: "🌴", calories: 120, protein: 1,  carbs: 32, fat: 0,  serving: "4 dates (40g)" },
-    { nameAr: "خبز عربي",    nameEn: "Arabic Bread",     emoji: "🫓", calories: 165, protein: 5,  carbs: 34, fat: 1,  serving: "1 loaf (65g)" },
-    { nameAr: "أرز مع دجاج", nameEn: "Rice with Chicken",emoji: "🍗", calories: 480, protein: 35, carbs: 58, fat: 10, serving: "1 plate (350g)" },
-    { nameAr: "مكرونة",       nameEn: "Pasta",            emoji: "🍝", calories: 350, protein: 12, carbs: 65, fat: 6,  serving: "1 plate (250g)" },
+    { nameAr: "كبسة دجاج",   nameEn: "Chicken Kabsa",   emoji: "", calories: 520, protein: 32, carbs: 65, fat: 12, serving: "1 plate (350g)" },
+    { nameAr: "شاورما دجاج", nameEn: "Chicken Shawarma", emoji: "", calories: 420, protein: 28, carbs: 42, fat: 14, serving: "1 wrap (250g)" },
+    { nameAr: "برغر",         nameEn: "Burger",           emoji: "", calories: 550, protein: 30, carbs: 48, fat: 24, serving: "1 burger (220g)" },
+    { nameAr: "بيتزا",        nameEn: "Pizza",            emoji: "", calories: 280, protein: 12, carbs: 34, fat: 10, serving: "1 slice (100g)" },
+    { nameAr: "سلطة خضراء",  nameEn: "Green Salad",      emoji: "", calories: 80,  protein: 3,  carbs: 10, fat: 3,  serving: "1 bowl (200g)" },
+    { nameAr: "فول مدمس",    nameEn: "Foul Medames",     emoji: "", calories: 180, protein: 10, carbs: 28, fat: 4,  serving: "1 cup (200g)" },
+    { nameAr: "تمر",          nameEn: "Dates",            emoji: "", calories: 120, protein: 1,  carbs: 32, fat: 0,  serving: "4 dates (40g)" },
+    { nameAr: "خبز عربي",    nameEn: "Arabic Bread",     emoji: "", calories: 165, protein: 5,  carbs: 34, fat: 1,  serving: "1 loaf (65g)" },
+    { nameAr: "أرز مع دجاج", nameEn: "Rice with Chicken",emoji: "", calories: 480, protein: 35, carbs: 58, fat: 10, serving: "1 plate (350g)" },
+    { nameAr: "مكرونة",       nameEn: "Pasta",            emoji: "", calories: 350, protein: 12, carbs: 65, fat: 6,  serving: "1 plate (250g)" },
   ],
   coffee: [
-    { nameAr: "كابتشينو",      nameEn: "Cappuccino",       emoji: "☕", calories: 120, protein: 6,  carbs: 12, fat: 5,  serving: "1 cup (240ml)" },
-    { nameAr: "لاتيه",         nameEn: "Latte",            emoji: "🥛", calories: 190, protein: 10, carbs: 19, fat: 7,  serving: "1 cup (360ml)" },
-    { nameAr: "أمريكانو",      nameEn: "Americano",        emoji: "☕", calories: 15,  protein: 1,  carbs: 3,  fat: 0,  serving: "1 cup (240ml)" },
-    { nameAr: "شاي بالحليب",  nameEn: "Tea with Milk",    emoji: "🍵", calories: 80,  protein: 3,  carbs: 12, fat: 2,  serving: "1 cup (240ml)" },
-    { nameAr: "قهوة عربية",   nameEn: "Arabic Coffee",    emoji: "🫖", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 cup (100ml)" },
-    { nameAr: "ماتشا لاتيه",  nameEn: "Matcha Latte",     emoji: "🍵", calories: 160, protein: 6,  carbs: 22, fat: 5,  serving: "1 cup (360ml)" },
-    { nameAr: "إسبريسو",       nameEn: "Espresso",         emoji: "☕", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 shot (30ml)" },
-    { nameAr: "شوكولاتة ساخنة",nameEn: "Hot Chocolate",   emoji: "🍫", calories: 220, protein: 8,  carbs: 35, fat: 6,  serving: "1 cup (240ml)" },
+    { nameAr: "كابتشينو",      nameEn: "Cappuccino",       emoji: "", calories: 120, protein: 6,  carbs: 12, fat: 5,  serving: "1 cup (240ml)" },
+    { nameAr: "لاتيه",         nameEn: "Latte",            emoji: "", calories: 190, protein: 10, carbs: 19, fat: 7,  serving: "1 cup (360ml)" },
+    { nameAr: "أمريكانو",      nameEn: "Americano",        emoji: "", calories: 15,  protein: 1,  carbs: 3,  fat: 0,  serving: "1 cup (240ml)" },
+    { nameAr: "شاي بالحليب",  nameEn: "Tea with Milk",    emoji: "", calories: 80,  protein: 3,  carbs: 12, fat: 2,  serving: "1 cup (240ml)" },
+    { nameAr: "قهوة عربية",   nameEn: "Arabic Coffee",    emoji: "", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 cup (100ml)" },
+    { nameAr: "ماتشا لاتيه",  nameEn: "Matcha Latte",     emoji: "", calories: 160, protein: 6,  carbs: 22, fat: 5,  serving: "1 cup (360ml)" },
+    { nameAr: "إسبريسو",       nameEn: "Espresso",         emoji: "", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 shot (30ml)" },
+    { nameAr: "شوكولاتة ساخنة",nameEn: "Hot Chocolate",   emoji: "", calories: 220, protein: 8,  carbs: 35, fat: 6,  serving: "1 cup (240ml)" },
   ],
   drinks: [
-    { nameAr: "ماء",           nameEn: "Water",            emoji: "💧", calories: 0,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 bottle (500ml)" },
-    { nameAr: "عصير برتقال",  nameEn: "Orange Juice",     emoji: "🍊", calories: 110, protein: 2,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "كولا",          nameEn: "Cola",             emoji: "🥤", calories: 140, protein: 0,  carbs: 39, fat: 0,  serving: "1 can (355ml)" },
-    { nameAr: "لبن",           nameEn: "Milk",             emoji: "🥛", calories: 150, protein: 8,  carbs: 12, fat: 8,  serving: "1 glass (240ml)" },
-    { nameAr: "عصير تفاح",    nameEn: "Apple Juice",      emoji: "🍎", calories: 115, protein: 0,  carbs: 28, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "ليموناضة",      nameEn: "Lemonade",         emoji: "🍋", calories: 100, protein: 0,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "عصير مانجو",   nameEn: "Mango Juice",      emoji: "🥭", calories: 130, protein: 1,  carbs: 32, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "شاي أخضر",     nameEn: "Green Tea",        emoji: "🍵", calories: 2,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 cup (240ml)" },
+    { nameAr: "ماء",           nameEn: "Water",            emoji: "", calories: 0,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 bottle (500ml)" },
+    { nameAr: "عصير برتقال",  nameEn: "Orange Juice",     emoji: "", calories: 110, protein: 2,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "كولا",          nameEn: "Cola",             emoji: "", calories: 140, protein: 0,  carbs: 39, fat: 0,  serving: "1 can (355ml)" },
+    { nameAr: "لبن",           nameEn: "Milk",             emoji: "", calories: 150, protein: 8,  carbs: 12, fat: 8,  serving: "1 glass (240ml)" },
+    { nameAr: "عصير تفاح",    nameEn: "Apple Juice",      emoji: "", calories: 115, protein: 0,  carbs: 28, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "ليموناضة",      nameEn: "Lemonade",         emoji: "", calories: 100, protein: 0,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "عصير مانجو",   nameEn: "Mango Juice",      emoji: "", calories: 130, protein: 1,  carbs: 32, fat: 0,  serving: "1 glass (240ml)" },
+    { nameAr: "شاي أخضر",     nameEn: "Green Tea",        emoji: "", calories: 2,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 cup (240ml)" },
   ],
 };
 
@@ -1406,16 +1407,16 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
   };
 
   const catTabs: { id: QuickMealCategory; labelAr: string; labelEn: string; icon: string }[] = [
-    { id: "meals",  labelAr: "وجبات",    labelEn: "Meals",   icon: "🍽️" },
-    { id: "coffee", labelAr: "قهوة",     labelEn: "Coffee",  icon: "☕" },
-    { id: "drinks", labelAr: "مشروبات",  labelEn: "Drinks",  icon: "🥤" },
+    { id: "meals",  labelAr: "وجبات",    labelEn: "Meals",   icon: "fork" },
+    { id: "coffee", labelAr: "قهوة",     labelEn: "Coffee",  icon: "coffee" },
+    { id: "drinks", labelAr: "مشروبات",  labelEn: "Drinks",  icon: "water" },
   ];
 
   return (
     <div style={card()}>
       {/* Header */}
       <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 12px" }}>
-        ⚡ {lang === "ar" ? "إضافة سريعة" : "Quick Add"}
+        <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Lightning size={18} />{lang === "ar" ? "إضافة سريعة" : "Quick Add"}</span>
       </p>
 
       {/* Meal type selector */}
@@ -1473,7 +1474,7 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
-                <span style={{ fontSize: 22 }}>{isAdded ? "✅" : item.emoji}</span>
+                <span style={{display:"flex",alignItems:"center",justifyContent:"center"}}>{isAdded ? <AppIcons.Check size={22} className="text-green-500" /> : <AppIcons.Fork size={22} />}</span>
                 <span style={{ color: TEXT, fontSize: 12, fontWeight: 700, flex: 1, lineHeight: 1.2 }}>
                   {lang === "ar" ? item.nameAr : item.nameEn}
                 </span>
@@ -1483,7 +1484,7 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
                   background: "#FFF7ED", color: "#F97316",
                   borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 700,
                 }}>
-                  🔥 {item.calories}
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4}}><AppIcons.Flame size={12} className="text-orange-500" />{item.calories}</span>
                 </span>
                 <span style={{
                   background: "#FEF2F2", color: C_PROTEIN,
@@ -1543,7 +1544,7 @@ function ManualSearch({ lang, mealType, setMealType }: {
   return (
     <div style={card()}>
       <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 10px" }}>
-        🔍 {lang === "ar" ? "بحث يدوي" : "Manual Search"}
+        <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Search size={18} />{lang === "ar" ? "بحث يدوي" : "Manual Search"}</span>
       </p>
       <input
         type="text" placeholder={tl("searchFood", lang)} value={query}
@@ -1611,7 +1612,7 @@ function ManualSearch({ lang, mealType, setMealType }: {
             padding: "10px", fontSize: 13, fontWeight: 900,
             cursor: adding ? "not-allowed" : "pointer", fontFamily: "inherit",
           }}>
-            {added ? "✅ " + tl("saved", lang) : adding ? tl("saving", lang) : `+ ${tl("addFood", lang)}`}
+            <span style={{display:"flex",alignItems:"center",gap:4}}>{added ? <AppIcons.Check size={14} /> : <AppIcons.Plus size={14} />}{added ? tl("saved", lang) : adding ? tl("saving", lang) : tl("addFood", lang)}</span>
           </button>
         </div>
       )}
@@ -1636,8 +1637,8 @@ function InsightsTab({ lang }: { lang: string }) {
   });
 
   const insightIcons: Record<string, string> = {
-    protein: "💪", hydration: "💧", calories: "🔥",
-    macros: "🥗", recovery: "🛌", general: "💡", default: "💡",
+    protein: "dumbbell", hydration: "water", calories: "flame",
+    macros: "salad", recovery: "sleep", general: "info", default: "info",
   };
 
   return (
@@ -1660,7 +1661,7 @@ function InsightsTab({ lang }: { lang: string }) {
       >
         {generateInsights.isPending
           ? `⏳ ${tl("generating", lang)}`
-          : `🤖 ${tl("generateInsights", lang)}`}
+          : tl("generateInsights", lang)}
       </button>
 
       {genError && (
@@ -1668,7 +1669,7 @@ function InsightsTab({ lang }: { lang: string }) {
           background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12,
           padding: "10px 14px", marginBottom: 12, color: "#DC2626", fontSize: 13, fontWeight: 600,
         }}>
-          ⚠️ {genError}
+          <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-red-500" />{genError}</span>
         </div>
       )}
 
@@ -1684,7 +1685,7 @@ function InsightsTab({ lang }: { lang: string }) {
             width: 72, height: 72, borderRadius: "50%", background: SKY_LIGHT,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 36, margin: "0 auto 14px",
-          }}>🤖</div>
+          }}><AppIcons.Robot size={24} /></div>
           <p style={{ color: TEXT, fontSize: 14, fontWeight: 700, margin: "0 0 6px" }}>
             {lang === "ar" ? "لا توجد تحليلات بعد" : "No insights yet"}
           </p>
@@ -1748,10 +1749,10 @@ export default function Nutrition() {
   });
 
   const tabs: { id: NutritionTab; icon: string; label: string }[] = [
-    { id: "dashboard", icon: "📊", label: tl("dashboard", lang) },
-    { id: "meals",     icon: "🍽️", label: tl("meals",     lang) },
-    { id: "scanner",   icon: "📷", label: tl("scanner",   lang) },
-    { id: "insights",  icon: "🤖", label: tl("insights",  lang) },
+    { id: "dashboard", icon: "stats", label: tl("dashboard", lang) },
+    { id: "meals",     icon: "fork", label: tl("meals",     lang) },
+    { id: "scanner",   icon: "camera", label: tl("scanner",   lang) },
+    { id: "insights",  icon: "robot", label: tl("insights",  lang) },
   ];
 
   return (
@@ -1766,7 +1767,7 @@ export default function Nutrition() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
           <div>
             <h1 style={{ color: TEXT, fontSize: 24, fontWeight: 900, margin: 0 }}>
-              🥗 {tl("title", lang)}
+              <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Salad size={20} />{tl("title", lang)}</span>
             </h1>
             <p style={{ color: MUTED, fontSize: 12, margin: "3px 0 0" }}>{today}</p>
           </div>
@@ -1781,7 +1782,7 @@ export default function Nutrition() {
               boxShadow: SHADOW,
             }}
           >
-            🎯 {tl("goals", lang)}
+            <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Target size={18} />{tl("goals", lang)}</span>
           </button>
         </div>
 

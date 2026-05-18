@@ -9,6 +9,7 @@ import NotificationSettings from './NotificationSettings';
 import PrivacySettingsSection from './PrivacySettingsSection';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AppIcons } from './AppIcons';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -94,7 +95,7 @@ function WeightLogSection() {
           className="px-4 py-2.5 rounded-xl font-bold text-sm text-white transition-all"
           style={{ background: saved ? '#10B981' : '#E05A00' }}
         >
-          {saved ? '✔' : (lang === 'ar' ? 'سجّل' : 'Log')}
+          <span style={{display:'flex',alignItems:'center',gap:4}}>{saved ? <AppIcons.Check size={14} /> : null}{saved ? '' : (lang === 'ar' ? 'سجّل' : 'Log')}</span>
         </button>
       </div>
       {/* Last 5 entries */}
@@ -142,7 +143,7 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
           {lang === 'ar' ? 'دليل الاستخدام' : 'Help & User Guide'}
         </span>
         <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
-          ▾
+          <AppIcons.ChevronDown size={14} />
         </span>
       </button>
       {open && (
@@ -503,7 +504,7 @@ export function ProfilePanel() {
             background: 'rgba(255,255,255,0.1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 20, flexShrink: 0,
-          }}>◎</div>
+          }}><AppIcons.Target size={16} /></div>
         </div>
 
         {/* Description */}
@@ -739,7 +740,7 @@ export function ProfilePanel() {
                         transition: 'all 0.2s',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}>
-                      {g === 'male' ? '♂' : '♀'} {g === 'male' ? (lang === 'ar' ? 'ذكر' : 'Male') : (lang === 'ar' ? 'أنثى' : 'Female')}
+                      <span style={{display:'flex',alignItems:'center',gap:4}}>{g === 'male' ? <AppIcons.Male size={14} /> : <AppIcons.Female size={14} />}{g === 'male' ? (lang === 'ar' ? 'ذكر' : 'Male') : (lang === 'ar' ? 'أنثى' : 'Female')}</span>
                     </button>
                   ))}
                 </div>
@@ -794,7 +795,7 @@ export function ProfilePanel() {
                   {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                 </button>
                 <p style={{ textAlign: 'center', margin: '12px 0 0', fontSize: 11, color: '#9CA3AF' }}>
-                  🔒 {lang === 'ar' ? 'بياناتك آمنة وخاصة' : 'Your data is secure and private'}
+                  <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lock size={14} />{lang === 'ar' ? 'بياناتك آمنة وخاصة' : 'Your data is secure and private'}</span>
                 </p>
               </div>
             </div>
@@ -818,7 +819,7 @@ export function ProfilePanel() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
           }}>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 36, marginBottom: 8, color: '#DC2626' }}>⚠</div>
+              <div style={{ marginBottom: 8, display:"flex", justifyContent:"center" }}><AppIcons.Warning size={36} className="text-red-600" /></div>
               <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: '#DC2626' }}>
                 {t('resetData')}
               </h3>

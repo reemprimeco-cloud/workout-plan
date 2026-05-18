@@ -49,7 +49,7 @@ const T: Record<string, Record<string, string>> = {
   quickAdd:       { ar: "إضافة سريعة", en: "Quick Add" },
   recentlyUsed:   { ar: "المستخدمة مؤخراً", en: "Recently Used" },
   saveToFav:      { ar: "حفظ في المفضلة", en: "Save to Favorites" },
-  savedToFav:     { ar: "✓ تم الحفظ", en: "✓ Saved" },
+  savedToFav:     { ar: "تم الحفظ", en: "Saved" },
   removeFav:      { ar: "إزالة من المفضلة", en: "Remove Favorite" },
   noFavorites:    { ar: "لا توجد مفضلات بعد", en: "No favorites yet" },
   noMeals:        { ar: "لا توجد وجبات اليوم", en: "No meals logged today" },

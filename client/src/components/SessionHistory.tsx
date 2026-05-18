@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { GymSession } from '../hooks/useGymTracker';
 import { sessionTypes } from '../data/exercises';
 import { useLanguage } from '../contexts/LanguageContext';
+import { AppIcons } from './AppIcons';
 
 interface Props {
   sessions: GymSession[];
@@ -45,7 +46,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
         background: 'white', borderRadius: 20, padding: '40px 20px',
         textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
       }}>
-        <div style={{ fontSize: 60, marginBottom: 12 }}>📋</div>
+        <div style={{ marginBottom: 12, display:"flex", justifyContent:"center" }}><AppIcons.Clipboard size={60} className="text-gray-300" /></div>
         <h3 style={{ color: '#1A1A2E', fontFamily: 'Cairo, sans-serif' }}>{isAr ? 'لا توجد جلسات بعد' : 'No sessions yet'}</h3>
         <p style={{ color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif', fontSize: 14 }}>
           {isAr ? 'ابدئي أول جلسة من الصفحة الرئيسية وسيظهر سجلها هنا' : 'Start your first session from the home page and it will appear here'}
@@ -58,7 +59,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
     <div>
       <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ margin: 0, color: '#1A1A2E', fontFamily: 'Cairo, sans-serif', fontSize: 17, fontWeight: 900 }}>
-          📋 {isAr ? 'سجل الجلسات' : 'Session History'} ({completed.length})
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={20} />{isAr ? 'سجل الجلسات' : 'Session History'} ({completed.length})</span>
         </h3>
       </div>
 
@@ -85,7 +86,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                 justifyContent: 'center', fontSize: 22,
                 border: `2px solid ${typeDef.color}33`,
               }}>
-                {typeDef.icon}
+                <AppIcons.Dumbbell size={22} color={typeDef.color} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>
@@ -98,17 +99,23 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                <div style={{ fontSize: 16 }}>{session.mood}</div>
+                <div style={{ display:'flex', alignItems:'center' }}>
+                  {(session.mood as string) === 'sleep' || (session.mood as string) === '😴' ? <AppIcons.Moon size={16} /> :
+                   (session.mood as string) === 'neutral' || (session.mood as string) === '😐' ? <AppIcons.Minus size={16} /> :
+                   (session.mood as string) === 'strong' || (session.mood as string) === '💪' ? <AppIcons.Dumbbell size={16} /> :
+                   (session.mood as string) === 'fire' || (session.mood as string) === '🔥' ? <AppIcons.Flame size={16} /> :
+                   <AppIcons.Smile size={16} />}
+                </div>
                 {session.exercises.length > 0 && (
                   <div style={{
                     fontSize: 10, color: typeDef.color, fontWeight: 700,
                     background: typeDef.bgColor, borderRadius: 6, padding: '2px 6px',
                   }}>
-                    {completedExercises}/{session.exercises.length} ✓
+                    <span style={{display:'inline-flex',alignItems:'center',gap:4}}>{completedExercises}/{session.exercises.length}<AppIcons.Check size={12} /></span>
                   </div>
                 )}
               </div>
-              <span style={{ color: '#8A8AAA', fontSize: 14 }}>{isExpanded ? '▲' : '▼'}</span>
+              <span style={{ color: '#8A8AAA', fontSize: 14 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
             </div>
 
             {/* Expanded Detail */}
@@ -128,7 +135,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                         marginBottom: 4, border: '1px solid #F0F0F0',
                       }}>
                         <span style={{ color: ex.completed ? typeDef.color : '#D0D0E0', fontSize: 14 }}>
-                          {ex.completed ? '✅' : '⬜'}
+                          <span style={{display:'inline-flex'}}>{ex.completed ? <AppIcons.Check size={14} className='text-green-500' /> : <AppIcons.Square size={14} className='text-gray-300' />}</span>
                         </span>
                         <div style={{ flex: 1 }}>
                           <span style={{
@@ -138,7 +145,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                             {ex.sets}×{ex.reps} • {ex.weight}
                           </span>
                         </div>
-                        {ex.notes && <span style={{ fontSize: 10, color: '#8A8AAA' }}>📝 {ex.notes}</span>}
+                        {ex.notes && <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:10,color:'#8A8AAA'}}><AppIcons.Notes size={10} />{ex.notes}</span>}
                         {onDeleteExercise && (
                           <button
                             onClick={() => onDeleteExercise(session.id, i)}
@@ -149,7 +156,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                               color: '#E05A00', opacity: 0.7, flexShrink: 0,
                               lineHeight: 1,
                             }}
-                          >🗑️</button>
+                          ><AppIcons.Trash size={14} /></button>
                         )}
                       </div>
                     ))}
@@ -165,7 +172,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                   }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#1A1A2E' }}>
-                        🏃 {isAr ? session.cardio.nameAr : (session.cardio.nameEn || session.cardio.nameAr)}
+                        <span style={{display:'inline-flex',alignItems:'center',gap:6}}><AppIcons.Running size={14} />{isAr ? session.cardio.nameAr : (session.cardio.nameEn || session.cardio.nameAr)}</span>
                       </div>
                       <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 3 }}>
                         {session.cardio.duration} {isAr ? 'د' : 'min'} • {session.cardio.speed}
@@ -183,7 +190,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                         }}
                         title={isAr ? 'حذف الكارديو' : 'Remove cardio'}
                       >
-                        🗑️
+                        
                       </button>
                     )}
                   </div>
@@ -196,7 +203,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                     border: '1px solid #B2EBF2',
                   }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#0891B2' }}>
-                      🏊‍♀️ {isAr ? 'كلاس الأكوا' : 'Aqua Aerobics'} • {session.aqua.duration} {isAr ? 'دقيقة' : 'min'} • {session.aqua.intensity}
+                      <span style={{display:'inline-flex',alignItems:'center',gap:6}}><AppIcons.Swimming size={14} />{isAr ? 'كلاس الأكوا' : 'Aqua Aerobics'}</span> • {session.aqua.duration} {isAr ? 'دقيقة' : 'min'} • {session.aqua.intensity}
                     </div>
                   </div>
                 )}
@@ -208,7 +215,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                     border: '1px solid #FDE68A',
                   }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#B45309' }}>
-                      🧖‍♀️ {isAr ? 'السونا' : 'Sauna'} • {session.sauna.totalMinutes} {isAr ? 'دقيقة' : 'min'} • {session.sauna.rounds} {isAr ? 'جولات' : 'rounds'}
+                      <span style={{display:'inline-flex',alignItems:'center',gap:6}}><AppIcons.Spa size={14} />{isAr ? 'السونا' : 'Sauna'}</span> • {session.sauna.totalMinutes} {isAr ? 'دقيقة' : 'min'} • {session.sauna.rounds} {isAr ? 'جولات' : 'rounds'}
                     </div>
                   </div>
                 )}
@@ -220,7 +227,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                     fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif',
                     borderRight: '3px solid #E05A00',
                   }}>
-                    📝 {session.notes}
+                    <span style={{display:'inline-flex',alignItems:'center',gap:6}}><AppIcons.Notes size={12} />{session.notes}</span>
                   </div>
                 )}
 
@@ -253,7 +260,7 @@ export function SessionHistory({ sessions, onDelete, onDeleteExercise, onDeleteC
                       border: '1px solid #FFE0E0',
                       fontFamily: 'Cairo, sans-serif', fontSize: 12, cursor: 'pointer',
                     }}
-                  >🗑 {isAr ? 'حذف الجلسة' : 'Delete Session'}</button>
+                  ><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Trash size={14} />{isAr ? 'حذف الجلسة' : 'Delete Session'}</span></button>
                 )}
               </div>
             )}

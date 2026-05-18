@@ -19,6 +19,7 @@ import UserGuide from '../components/UserGuide';
 import ProfilePanel from '../components/ProfilePanel';
 import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
+import { AppIcons } from '../components/AppIcons';
 import MyCoach from './MyCoach';
 import Community from './Community';
 import Nutrition from './Nutrition';
@@ -155,7 +156,7 @@ export default function Home() {
               color: NAVY, fontSize: 12, fontWeight: 700,
               animation: 'pulse 2s infinite',
             }}>
-              🔴 {t('activeSession')}
+              <span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Flame size={14} className='text-red-500' /> {t('activeSession')}</span>
             </div>
           )}
           {(currentUser as any)?.role === 'admin' && (
@@ -176,7 +177,7 @@ export default function Home() {
                 backdropFilter: 'blur(4px)',
               }}
             >
-              ⚙️ {lang === 'ar' ? 'الإدارة' : 'Admin'}
+              <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Settings size={16} /> {lang === 'ar' ? 'الإدارة' : 'Admin'}</span>
             </a>
           )}
         </div>
@@ -228,7 +229,7 @@ export default function Home() {
                 fontSize: 13, cursor: 'pointer',
               }}
             >
-              {isRTL ? 'متابعة ◀' : '▶ Continue'}
+              <span style={{display:'flex',alignItems:'center',gap:4}}>{isRTL ? <AppIcons.ChevronLeft size={14}/> : <AppIcons.ChevronRight size={14}/>}{isRTL ? 'متابعة' : 'Continue'}</span>
             </button>
           </div>
         )}
@@ -251,7 +252,7 @@ export default function Home() {
           <div style={{ padding: '16px' }}>
             <div style={{ marginBottom: 16 }}>
               <h2 style={{ color: '#1B2E5E', fontWeight: 800, fontSize: 20, margin: 0 }}>
-                {isRTL ? '🏋️ قائمة التمارين' : '🏋️ Exercise Library'}
+                <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={20} className='text-[#1B2E5E]' />{isRTL ? 'قائمة التمارين' : 'Exercise Library'}</span>
               </h2>
               <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
                 {isRTL
@@ -397,16 +398,16 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
+          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}><span style={{display:'flex',alignItems:'center',gap:6}}>{greeting}<AppIcons.Wave size={16} /></span></p>
           <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
             {profile.name}
           </h2>
           <p style={{ margin: '0 0 0', color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
-              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
-              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: '📆' },
-              { label: t('total'), value: `${stats.totalSessions} ${t('session')}`, icon: '🏆' },
+              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: 'week' },
+              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: 'month' },
+              { label: t('total'), value: `${stats.totalSessions} ${t('session')}`, icon: 'total' },
             ].map(s => (
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
@@ -427,7 +428,7 @@ function CheckInPanel({ onStart, stats, profile }: {
         border: `1px solid ${SKY_LIGHT}55`,
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>⚖️ {t('weightProgress')}</span>
+          <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Scale size={16} />{t('weightProgress')}</span></span>
           <span style={{ fontSize: 12, color: '#7A9BB5' }}>
             {profile.currentWeight} {t('kg')} {isRTL ? '←' : '→'} {profile.targetWeight} {t('kg')}
           </span>
@@ -444,7 +445,7 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 11, color: '#7A9BB5' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
           <span style={{ fontSize: 11, color: NAVY, fontWeight: 700 }}>
-            {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 🎉
+            {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 
           </span>
         </div>
       </div>
@@ -454,7 +455,7 @@ function CheckInPanel({ onStart, stats, profile }: {
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
         <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 900 }}>
-          🏗️‍♀️ {t('chooseWorkout')}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={18} className='text-[#1B2E5E]' />{t('chooseWorkout')}</span>
         </h3>
         <p style={{ margin: '4px 0 0', color: '#7A9BB5', fontSize: 12 }}>
           {t('autoTime')}
@@ -520,7 +521,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                     )}
                   </div>
                   {sessionExercises.length > 0 && (
-                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? '▲' : '▼'}</span>
+                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
                   )}
                 </div>
               </button>
@@ -533,7 +534,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
                   <div style={{ marginBottom: 10, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
-                    {lang === 'ar' ? '🏃 أجهزة الكارديو — سجّل بياناتك بعد التمرين:' : '🏃 Cardio Machines — Log your data after each workout:'}
+                    {lang === 'ar' ? 'أجهزة الكارديو — سجّل بياناتك بعد التمرين:' : 'Cardio Machines — Log your data after workout:'}
                   </div>
 
                   {cardioMachines.map(machine => {
@@ -543,43 +544,43 @@ function CheckInPanel({ onStart, stats, profile }: {
 
                     // Define fields per machine
                     const machineIcons: Record<string, string> = {
-                      treadmill: '🏃',
-                      rower: '🚣',
-                      precor_bike: '🚴',
-                      climbmill: '🏔️',
+                      treadmill: 'running',
+                      rower: 'rowing',
+                      precor_bike: 'bike',
+                      climbmill: 'mountain',
                     };
-                    const icon = machineIcons[mid] || '💪';
+                    const iconKey = machineIcons[mid] || 'dumbbell';
 
                     // Fields config per machine
                     type FieldDef = { key: keyof typeof mData; labelAr: string; labelEn: string; placeholder: string; fullRow?: boolean };
                     const fieldsMap: Record<string, FieldDef[]> = {
                       treadmill: [
-                        { key: 'speed', labelAr: '⚡ السرعة (km/h)', labelEn: '⚡ Speed (km/h)', placeholder: 'e.g. 5.5' },
-                        { key: 'incline', labelAr: '📈 الانحدار (%)', labelEn: '📈 Incline (%)', placeholder: 'e.g. 3' },
+                        { key: 'speed', labelAr: 'السرعة (km/h)', labelEn: 'Speed (km/h)', placeholder: 'e.g. 5.5' },
+                        { key: 'incline', labelAr: 'الانحدار (%)', labelEn: 'Incline (%)', placeholder: 'e.g. 3' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
-                        { key: 'distance', labelAr: '📏 المسافة (km)', labelEn: '📏 Distance (km)', placeholder: 'e.g. 1.8' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 150', fullRow: true },
+                        { key: 'distance', labelAr: 'المسافة (km)', labelEn: 'Distance (km)', placeholder: 'e.g. 1.8' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 150', fullRow: true },
                       ],
                       rower: [
-                        { key: 'speed', labelAr: '🚣 الإيقاع (SPM)', labelEn: '🚣 Rate (SPM)', placeholder: 'e.g. 24' },
-                        { key: 'incline', labelAr: '🔧 المقاومة (Level)', labelEn: '🔧 Resistance', placeholder: 'e.g. 5' },
+                        { key: 'speed', labelAr: 'الإيقاع (SPM)', labelEn: 'Rate (SPM)', placeholder: 'e.g. 24' },
+                        { key: 'incline', labelAr: 'المقاومة (Level)', labelEn: 'Resistance', placeholder: 'e.g. 5' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 15' },
-                        { key: 'distance', labelAr: '📏 المسافة (m)', labelEn: '📏 Distance (m)', placeholder: 'e.g. 3100' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 120', fullRow: true },
+                        { key: 'distance', labelAr: 'المسافة (m)', labelEn: 'Distance (m)', placeholder: 'e.g. 3100' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 120', fullRow: true },
                       ],
                       precor_bike: [
-                        { key: 'speed', labelAr: '🚴 السرعة (RPM)', labelEn: '🚴 Speed (RPM)', placeholder: 'e.g. 80' },
-                        { key: 'incline', labelAr: '🔧 المقاومة (Level)', labelEn: '🔧 Resistance', placeholder: 'e.g. 8' },
+                        { key: 'speed', labelAr: 'السرعة (RPM)', labelEn: 'Speed (RPM)', placeholder: 'e.g. 80' },
+                        { key: 'incline', labelAr: 'المقاومة (Level)', labelEn: 'Resistance', placeholder: 'e.g. 8' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
-                        { key: 'distance', labelAr: '📏 المسافة (km)', labelEn: '📏 Distance (km)', placeholder: 'e.g. 5.0' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 180', fullRow: true },
+                        { key: 'distance', labelAr: 'المسافة (km)', labelEn: 'Distance (km)', placeholder: 'e.g. 5.0' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 180', fullRow: true },
                       ],
                       climbmill: [
-                        { key: 'speed', labelAr: '🏔️ السرعة (خطوة/د)', labelEn: '🏔️ Steps/min', placeholder: 'e.g. 60' },
-                        { key: 'incline', labelAr: '🔧 المستوى', labelEn: '🔧 Level', placeholder: 'e.g. 8' },
+                        { key: 'speed', labelAr: 'السرعة (خطوة/د)', labelEn: 'Steps/min', placeholder: 'e.g. 60' },
+                        { key: 'incline', labelAr: 'المستوى', labelEn: 'Level', placeholder: 'e.g. 8' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
-                        { key: 'distance', labelAr: '📏 الطوابق', labelEn: '📏 Floors', placeholder: 'e.g. 40' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 200', fullRow: true },
+                        { key: 'distance', labelAr: 'الطوابق', labelEn: 'Floors', placeholder: 'e.g. 40' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 200', fullRow: true },
                       ],
                     };
                     const fields = fieldsMap[mid] || [];
@@ -602,21 +603,21 @@ function CheckInPanel({ onStart, stats, profile }: {
                             padding: '16px 12px 10px',
                             color: 'white', fontWeight: 700, fontSize: 14,
                           }}>
-                            {icon} {lang === 'ar' ? machine.nameAr : machine.nameEn}
+                            <span style={{display:'inline-flex',alignItems:'center',gap:6}}>{iconKey === 'running' ? <AppIcons.Running size={16} /> : iconKey === 'mountain' ? <AppIcons.Mountain size={16} /> : <AppIcons.Cardio size={16} />}{lang === 'ar' ? machine.nameAr : machine.nameEn}</span>
                           </div>
                         </div>
 
                         {/* Tip */}
                         <div style={{ padding: '8px 12px 4px' }}>
                           <div style={{ color: '#7A9BB5', fontSize: 10, fontWeight: 600 }}>
-                            💡 {lang === 'ar' ? machine.tip : (machine.tipEn || machine.tip)}
+                            <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={14} className='text-blue-500' />{lang === 'ar' ? machine.tip : (machine.tipEn || machine.tip)}</span>
                           </div>
                         </div>
 
                         {/* Input fields */}
                         <div style={{ padding: '8px 12px 12px' }}>
                           <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 8, fontWeight: 600 }}>
-                            {lang === 'ar' ? '📊 سجّل بياناتك بعد التمرين:' : '📊 Log your data after workout:'}
+                            <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Stats size={14} />{lang === 'ar' ? 'سجّل بياناتك بعد التمرين:' : 'Log your data after workout:'}</span>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                             {fields.map(field => (
@@ -666,8 +667,8 @@ function CheckInPanel({ onStart, stats, profile }: {
                             }}
                           >
                             {isSaved
-                              ? (lang === 'ar' ? '✅ تم الحفظ!' : '✅ Saved!')
-                              : (lang === 'ar' ? `💾 حفظ بيانات ${machine.nameAr.split(' ')[0]}` : `💾 Save ${machine.nameEn} Data`)}
+                              ? (lang === 'ar' ? 'تم الحفظ!' : 'Saved!')
+                              : (lang === 'ar' ? `حفظ بيانات ${machine.nameAr.split(' ')[0]}` : `Save ${machine.nameEn} Data`)}
                           </button>
                         </div>
                       </div>
@@ -686,7 +687,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
                   <div style={{ marginBottom: 8, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
-                    {lang === 'ar' ? '📋 تمارين هذا القسم:' : '📋 Exercises in this section:'}
+                    <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{lang === 'ar' ? 'تمارين هذا القسم:' : 'Exercises in this section:'}</span>
                   </div>
                   {sessionExercises.map((ex, idx) => (
                     <div key={ex.id} style={{
@@ -774,7 +775,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                     gap: 6,
                   }}
                 >
-                  <span>▶</span>
+                  <AppIcons.ChevronRight size={14} />
                   <span>{isRTL ? (gender === 'female' ? 'ابدئي الآن' : 'ابدأ الآن') : 'Start Now'}</span>
                 </button>
               </div>
@@ -817,13 +818,13 @@ function NutritionSummaryCard() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <span style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>
-          🥗 {lang === 'ar' ? 'تغذية اليوم' : "Today's Nutrition"}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Salad size={18} className='text-green-600' />{lang === 'ar' ? 'تغذية اليوم' : "Today's Nutrition"}</span>
         </span>
       </div>
 
       {/* Calories row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: '#475569' }}>🔥 {lang === 'ar' ? 'سعرات' : 'Calories'}</span>
+        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#475569'}}><AppIcons.Flame size={12} className='text-orange-500' />{lang === 'ar' ? 'سعرات' : 'Calories'}</span>
         <span style={{ fontSize: 12, color: '#475569' }}>{calories} / {goalCal} kcal</span>
       </div>
       <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
@@ -846,7 +847,7 @@ function NutritionSummaryCard() {
 
       {/* Water row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: '#475569' }}>💧 {lang === 'ar' ? 'ماء' : 'Water'}</span>
+        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#475569'}}><AppIcons.Water size={12} className='text-blue-500' />{lang === 'ar' ? 'ماء' : 'Water'}</span>
         <span style={{ fontSize: 12, color: SKY, fontWeight: 700 }}>{water} / {goalWater} ml</span>
       </div>
       <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
@@ -931,7 +932,7 @@ function SetupForm({ tracker, onComplete: _onComplete }: { onComplete: () => voi
               background: form.gender === g ? NAVY : '#fff',
               color: form.gender === g ? '#fff' : '#3D5A80',
             }}>
-              {g === 'female' ? '♀ Female' : '♂ Male'}
+              <span style={{display:'flex',alignItems:'center',gap:4}}>{g === 'female' ? <AppIcons.Female size={14} /> : <AppIcons.Male size={14} />}{g === 'female' ? 'Female' : 'Male'}</span>
             </button>
           ))}
         </div>
@@ -943,13 +944,13 @@ function SetupForm({ tracker, onComplete: _onComplete }: { onComplete: () => voi
           <span style={{ fontSize: 12, color: '#3D5A80', marginLeft: 6 }}>{previewBMI < 18.5 ? 'Underweight' : previewBMI < 25 ? 'Normal' : previewBMI < 30 ? 'Overweight' : 'Obese'}</span>
         </div>
       )}
-      {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}>⚠️ {error}</p>}
+      {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Warning size={14} className='text-red-500' />{error}</span></p>}
       <button onClick={handleSubmit} style={{
         background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`, color: '#fff', border: 'none', borderRadius: 14,
         padding: '14px', fontSize: 16, fontWeight: 900, cursor: 'pointer', marginTop: 4,
         boxShadow: `0 4px 16px ${NAVY}44`,
       }}>
-        🚀 Start My Program
+        <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lightning size={16} />Start My Program</span>
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 // WorkoutTimer - Countdown timer for rest periods and exercise duration
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { AppIcons } from "./AppIcons";
 
 interface WorkoutTimerProps {
   defaultSeconds?: number;
@@ -107,7 +108,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               transition: 'all 0.2s',
             }}
           >
-            {m === 'rest' ? '😮‍💨 راحة' : '🏋️‍♀️ تمرين'}
+            {m === 'rest' ? 'راحة' : 'تمرين'}
           </button>
         ))}
       </div>
@@ -138,7 +139,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               color: isFinished ? '#DC2626' : isLow ? '#F59E0B' : '#1A1A2E',
               lineHeight: 1,
             }}>
-              {isFinished ? '✓' : formatTime(seconds)}
+              {isFinished ? <AppIcons.Check size={32} /> : formatTime(seconds)}
             </div>
             <div style={{ fontSize: 11, color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif', marginTop: 2 }}>
               {isFinished ? 'انتهى!' : modeLabel}
@@ -178,7 +179,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             cursor: 'pointer',
           }}
         >
-          ✏️ مخصص
+          مخصص
         </button>
       </div>
 
@@ -230,7 +231,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             boxShadow: isRunning ? 'none' : `0 4px 12px ${modeColor}44`,
           }}
         >
-          {isRunning ? '⏸ إيقاف' : isFinished ? '🔄 إعادة' : '▶ ابدأ'}
+          {isRunning ? 'إيقاف' : isFinished ? 'إعادة' : 'ابدأ'}
         </button>
         <button
           onClick={() => reset()}
@@ -255,7 +256,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
           fontFamily: 'Cairo, sans-serif', fontSize: 13,
           color: '#1A7A4A', fontWeight: 600,
         }}>
-          🎉 أحسنتِ! انتقلي للتمرين التالي
+          أحسنتِ! انتقلي للتمرين التالي
         </div>
       )}
     </div>

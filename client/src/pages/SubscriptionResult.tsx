@@ -71,7 +71,7 @@ export function SubscriptionSuccess() {
       >
         <CheckCircle size={64} color="#22c55e" style={{ marginBottom: 16 }} />
         <h1 style={{ fontSize: 26, fontWeight: 900, color: NAVY, margin: "0 0 8px" }}>
-          تم الدفع بنجاح! 🎉
+          تم الدفع بنجاح!
         </h1>
         <p style={{ color: "#64748b", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
           شكراً لاشتراكك في Prime Fit. كود التفعيل الخاص بك جاهز أدناه وقد أُرسل أيضاً إلى بريدك الإلكتروني.
@@ -277,7 +277,7 @@ export function SubscriptionError() {
               fontFamily: "Cairo, sans-serif",
             }}
           >
-            💬 تواصل معنا على واتساب
+            تواصل معنا على واتساب
           </a>
         </div>
       </div>

@@ -4,6 +4,7 @@
  * Integrated into ProfilePanel under a "Reminders" section.
  */
 
+import { AppIcons } from './AppIcons';
 import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -57,13 +58,13 @@ export default function NotificationSettings() {
     onSuccess: () => {
       refetch();
       setDirty(false);
-      setSuccessMsg(ar ? "✅ تم حفظ الإعدادات" : "✅ Settings saved");
+      setSuccessMsg(ar ? "تم حفظ الإعدادات" : "Settings saved");
       setTimeout(() => setSuccessMsg(""), 3000);
     },
   });
   const sendTestMutation = trpc.notifications.sendTest.useMutation({
     onSuccess: () => {
-      setSuccessMsg(ar ? "✅ تم إرسال إشعار تجريبي!" : "✅ Test notification sent!");
+      setSuccessMsg(ar ? "تم إرسال إشعار تجريبي!" : "Test notification sent!");
       setTimeout(() => setSuccessMsg(""), 4000);
     },
   });
@@ -167,8 +168,8 @@ export default function NotificationSettings() {
 
       setSuccessMsg(
         ar
-          ? "✅ تم تفعيل التذكيرات بنجاح!"
-          : "✅ Reminders enabled successfully!",
+          ? "تم تفعيل التذكيرات بنجاح!"
+          : "Reminders enabled successfully!",
       );
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err: unknown) {
@@ -191,7 +192,7 @@ export default function NotificationSettings() {
         }
       }
       await unsubscribeMutation.mutateAsync();
-      setSuccessMsg(ar ? "✅ تم إلغاء التذكيرات" : "✅ Reminders disabled");
+      setSuccessMsg(ar ? "تم إلغاء التذكيرات" : "Reminders disabled");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err: unknown) {
       const error = err as Error;
@@ -253,7 +254,7 @@ export default function NotificationSettings() {
               fontWeight: 800,
             }}
           >
-            🔔 {ar ? "تذكيرات التمرين" : "Workout Reminders"}
+            <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Bell size={18} />{ar ? "تذكيرات التمرين" : "Workout Reminders"}</span>
           </h3>
           <p style={{ margin: "3px 0 0", color: "#7A9BB5", fontSize: 12 }}>
             {ar
@@ -304,9 +305,9 @@ export default function NotificationSettings() {
           borderRadius: 10, padding: "10px 14px",
           fontSize: 12, color: "#92400E", marginBottom: 12,
         }}>
-          ⚠️ {ar
+          <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} />{ar
             ? "الإشعارات غير مفعّلة في الخادم. يرجى إضافة VAPID_PUBLIC_KEY و VAPID_PRIVATE_KEY في ملف .env"
-            : "Push notifications not configured on server. Add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to .env"}
+            : "Push notifications not configured on server. Add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to .env"}</span>
         </div>
       )}
 
@@ -323,7 +324,7 @@ export default function NotificationSettings() {
             marginBottom: 12,
           }}
         >
-          ⚠️{" "}
+          <AppIcons.Warning size={14} />{" "}
           {ar
             ? "تم حظر الإشعارات في إعدادات المتصفح. يرجى السماح بها يدوياً."
             : "Notifications are blocked in your browser settings. Please allow them manually."}
@@ -383,7 +384,7 @@ export default function NotificationSettings() {
                 marginBottom: 8,
               }}
             >
-              📅 {ar ? "أيام التذكير" : "Reminder Days"}
+              <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Calendar size={16} />{ar ? "أيام التذكير" : "Reminder Days"}</span>
             </label>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {[0, 1, 2, 3, 4, 5, 6].map((day) => {
@@ -432,7 +433,7 @@ export default function NotificationSettings() {
             >
               {isBusy
                 ? (ar ? "جارٍ الحفظ..." : "Saving...")
-                : (ar ? "💾 حفظ الإعدادات" : "💾 Save Settings")}
+                : (ar ? "حفظ الإعدادات" : "Save Settings")}
             </button>
           )}
 
@@ -455,7 +456,7 @@ export default function NotificationSettings() {
           >
             {sendTestMutation.isPending
               ? (ar ? "جارٍ الإرسال..." : "Sending...")
-              : (ar ? "🔔 إرسال إشعار تجريبي" : "🔔 Send Test Notification")}
+              : (ar ? "إرسال إشعار تجريبي" : "Send Test Notification")}
           </button>
         </div>
       )}
@@ -467,14 +468,14 @@ export default function NotificationSettings() {
         borderTop: `1px solid ${SKY_LIGHT}55`,
       }}>
         <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 800, color: NAVY }}>
-          {ar ? "🎛️ تفضيلات الإشعارات" : "🎛️ Notification Preferences"}
+          {ar ? "تفضيلات الإشعارات" : "Notification Preferences"}
         </p>
 
         {/* Community notifications toggle */}
         {[
           {
             key: "communityNotifs" as const,
-            icon: "👥",
+            icon: "users",
             labelAr: "إشعارات المجتمع",
             descAr: "الإعجابات والتعليقات على منشوراتك",
             labelEn: "Community Notifications",
@@ -483,7 +484,7 @@ export default function NotificationSettings() {
           },
           {
             key: "appUpdatesNotifs" as const,
-            icon: "🚀",
+            icon: "rocket",
             labelAr: "تحديثات التطبيق",
             descAr: "تمارين جديدة، تحديات، إنجازات",
             labelEn: "App Updates",
@@ -543,7 +544,7 @@ export default function NotificationSettings() {
               color: "#EF4444", cursor: "pointer",
             }}
           >
-            🔕 {ar ? "كتم جميع الإشعارات" : "Mute All Notifications"}
+            <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Bell size={14} />{ar ? "كتم جميع الإشعارات" : "Mute All Notifications"}</span>
           </button>
         )}
 
@@ -561,7 +562,7 @@ export default function NotificationSettings() {
               color: "#059669", cursor: "pointer",
             }}
           >
-            🔔 {ar ? "تفعيل جميع الإشعارات" : "Unmute All Notifications"}
+            <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Bell size={14} />{ar ? "تفعيل جميع الإشعارات" : "Unmute All Notifications"}</span>
           </button>
         )}
       </div>
@@ -596,7 +597,7 @@ export default function NotificationSettings() {
             fontWeight: 600,
           }}
         >
-          ⚠️ {errorMsg}
+          <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} />{errorMsg}</span>
         </div>
       )}
     </div>

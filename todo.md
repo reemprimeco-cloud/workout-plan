@@ -609,3 +609,24 @@
 
 ## Notification Bell / XP Panel Clipping Fix
 - [x] Move Community tab outside main element (like Coach tab) to fix overflow:hidden clipping of fixed-position panels
+
+## Full-Site Emoji Removal (May 18)
+- [x] Create AppIcons.tsx component with 100+ lucide-react icon wrappers
+- [x] Replace all emoji icons in Home.tsx (nav tabs, session cards, header)
+- [x] Replace all emoji icons in ActiveSession.tsx (mood buttons, cardio labels, rower fields)
+- [x] Replace all emoji icons in SessionHistory.tsx (session type icon, mood display)
+- [x] Replace all emoji icons in StatsPanel.tsx (stats cards, calorie cards, session type list)
+- [x] Replace all emoji icons in Nutrition.tsx (macro cards, scanner, insights)
+- [x] Replace all emoji icons in NutritionMealsTab.tsx
+- [x] Replace all emoji icons in MyCoach.tsx (rating array, insight cards)
+- [x] Replace all emoji icons in Community.tsx (badges, countdown, leaderboard)
+- [x] Replace all emoji icons in ProfilePanel.tsx (section headers, buttons)
+- [x] Replace all emoji icons in WorkoutGuide.tsx (tab icons, section headers)
+- [x] Replace all emoji icons in AdminPanel.tsx (stat cards, tab icons, broadcast)
+- [x] Replace all emoji icons in ExerciseLibrary.tsx (tips toggle, exercise expand arrows, category tabs)
+- [x] Replace all emoji icons in WorkoutCalendar.tsx (header, day cells, completed badge)
+- [x] Replace all emoji icons in WorkoutTimer.tsx (finish state)
+- [x] Replace all emoji icons in NotificationSettings.tsx (warning banners)
+- [x] Add AppIcons imports to all affected files
+- [x] Fix all JSX parse errors caused by emoji replacement (unclosed tags, missing braces)
+- [x] 0 TypeScript errors, 0 Vite errors after all replacements
