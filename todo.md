@@ -675,3 +675,9 @@
 - [x] Register /privacy and /terms routes in App.tsx (public pages, no auth required)
 - [x] Add Legal section to ProfilePanel HelpSection with Privacy Policy and Terms of Service links
 - [x] 0 TypeScript errors after all changes
+
+## Legal Pages Fix (May 18)
+- [x] Fix /privacy and /terms routes to bypass subscription gate (LicenseGate/SubscriptionGate)
+- [x] Fix back button on legal pages to navigate to home (profile tab)
+- [x] Update email from support@primefit.app to reemprimeco@gmail.com in legalContent.ts (8 occurrences)
+- [x] 0 TypeScript errors after changes
