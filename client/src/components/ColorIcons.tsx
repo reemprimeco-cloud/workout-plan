@@ -455,3 +455,230 @@ export function WaterCupIcon({ size = 32, ml = 250 }: IconProps & { ml?: number 
     </svg>
   );
 }
+
+// ── Food / Meal Icons ─────────────────────────────────────────────────────────
+
+/** Plate — colored plate with fork & knife for Meals tab */
+export function PlateIcon({ size = 24 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="13" r="7" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5" />
+      <circle cx="12" cy="13" r="4.5" fill="#fde68a" stroke="#f59e0b" strokeWidth="1" opacity="0.7" />
+      {/* Fork */}
+      <line x1="5" y1="4" x2="5" y2="8" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="4" y1="4" x2="4" y2="7" stroke="#16a34a" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="6" y1="4" x2="6" y2="7" stroke="#16a34a" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="5" y1="8" x2="5" y2="11" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Knife */}
+      <path d="M19 4 L19 9 Q18 10 19 11" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="19" y1="11" x2="19" y2="14" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Coffee Cup — brown/amber coffee cup for Coffee tab */
+export function CoffeeCupIcon({ size = 24 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <defs>
+        <linearGradient id="coffeeGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#92400e" />
+        </linearGradient>
+      </defs>
+      {/* Cup body */}
+      <path d="M5 8 L6.5 19 Q6.5 20 8 20 L14 20 Q15.5 20 15.5 19 L17 8 Z" fill="url(#coffeeGrad)" opacity="0.2" />
+      <path d="M5 8 L6.5 19 Q6.5 20 8 20 L14 20 Q15.5 20 15.5 19 L17 8 Z" stroke="#92400e" strokeWidth="1.8" strokeLinejoin="round" />
+      {/* Handle */}
+      <path d="M17 11 Q21 11 21 14 Q21 17 17 17" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      {/* Coffee fill */}
+      <path d="M6.5 12 L15.5 12 L14.5 19 Q14.5 19.5 14 19.5 L8 19.5 Q7.5 19.5 7.5 19 Z" fill="#92400e" opacity="0.35" />
+      {/* Steam */}
+      <path d="M9 5 Q9.5 3.5 9 2" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.7" />
+      <path d="M12 5 Q12.5 3.5 12 2" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.7" />
+    </svg>
+  );
+}
+
+/** Juice / Drinks Cup — colorful cup with straw for Drinks tab */
+export function JuiceCupIcon({ size = 24 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <defs>
+        <linearGradient id="juiceGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fb923c" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+        <linearGradient id="juiceFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fdba74" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+      </defs>
+      {/* Cup body */}
+      <path d="M6 6 L7.5 20 Q7.5 21 9 21 L15 21 Q16.5 21 16.5 20 L18 6 Z" fill="url(#juiceGrad)" opacity="0.15" />
+      <path d="M6 6 L7.5 20 Q7.5 21 9 21 L15 21 Q16.5 21 16.5 20 L18 6 Z" stroke="#f97316" strokeWidth="1.8" strokeLinejoin="round" />
+      {/* Juice fill */}
+      <path d="M7.8 13 L16.2 13 L15.5 20 Q15.5 20.5 15 20.5 L9 20.5 Q8.5 20.5 8.5 20 Z" fill="url(#juiceFill)" opacity="0.5" />
+      {/* Top rim */}
+      <line x1="6" y1="6" x2="18" y2="6" stroke="#f97316" strokeWidth="1.8" strokeLinecap="round" />
+      {/* Straw */}
+      <line x1="14" y1="2" x2="13" y2="13" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" />
+      {/* Bubble */}
+      <circle cx="10" cy="15" r="1" fill="#fdba74" opacity="0.6" />
+      <circle cx="13" cy="17" r="0.8" fill="#fdba74" opacity="0.5" />
+    </svg>
+  );
+}
+
+/** Food-specific icons for individual meal cards */
+export function MealFoodIcon({ name, size = 22 }: { name: string; size?: number }) {
+  const n = name.toLowerCase();
+
+  // Chicken / Kabsa / Shawarma / Rice with Chicken
+  if (n.includes("chicken") || n.includes("kabsa") || n.includes("shawarma") || n.includes("rice")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="14" r="6" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5" />
+        <circle cx="12" cy="14" r="3.5" fill="#fde68a" />
+        {/* Chicken leg shape */}
+        <path d="M9 10 Q12 7 15 10" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        <circle cx="12" cy="8" r="1.5" fill="#d97706" />
+      </svg>
+    );
+  }
+  // Burger
+  if (n.includes("burger")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        {/* Top bun */}
+        <path d="M5 10 Q12 5 19 10" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
+        {/* Lettuce */}
+        <rect x="4" y="10" width="16" height="2" rx="1" fill="#22c55e" />
+        {/* Patty */}
+        <rect x="4" y="12" width="16" height="3" rx="1.5" fill="#92400e" />
+        {/* Bottom bun */}
+        <path d="M4 15 L4 17 Q4 18 5 18 L19 18 Q20 18 20 17 L20 15 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+      </svg>
+    );
+  }
+  // Pizza
+  if (n.includes("pizza")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M12 3 L21 20 L3 20 Z" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5" />
+        <path d="M12 3 L21 20 L3 20 Z" fill="#f97316" opacity="0.2" />
+        <circle cx="10" cy="15" r="1.2" fill="#dc2626" />
+        <circle cx="14" cy="13" r="1.2" fill="#dc2626" />
+        <circle cx="12" cy="17" r="1" fill="#dc2626" />
+        <line x1="3" y1="20" x2="21" y2="20" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  // Salad
+  if (n.includes("salad")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <ellipse cx="12" cy="15" rx="8" ry="5" fill="#dcfce7" stroke="#16a34a" strokeWidth="1.5" />
+        <path d="M8 12 Q10 8 12 12 Q14 8 16 12" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        <circle cx="10" cy="14" r="1" fill="#dc2626" />
+        <circle cx="14" cy="15" r="1" fill="#f59e0b" />
+        <circle cx="12" cy="13" r="0.8" fill="#dc2626" />
+      </svg>
+    );
+  }
+  // Foul Medames / Beans
+  if (n.includes("foul") || n.includes("bean")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <ellipse cx="12" cy="14" rx="7" ry="5" fill="#fef3c7" stroke="#d97706" strokeWidth="1.5" />
+        <ellipse cx="10" cy="13" rx="2" ry="1.5" fill="#92400e" opacity="0.7" />
+        <ellipse cx="14" cy="14" rx="2" ry="1.5" fill="#92400e" opacity="0.7" />
+        <ellipse cx="12" cy="16" rx="2" ry="1.5" fill="#78350f" opacity="0.6" />
+      </svg>
+    );
+  }
+  // Dates
+  if (n.includes("date")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <ellipse cx="9" cy="14" rx="2.5" ry="3.5" fill="#92400e" />
+        <ellipse cx="15" cy="14" rx="2.5" ry="3.5" fill="#78350f" />
+        <ellipse cx="12" cy="12" rx="2.5" ry="3.5" fill="#a16207" />
+        <path d="M12 8 Q12 6 11 5" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  // Arabic Bread / Bread
+  if (n.includes("bread") || n.includes("loaf")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path d="M4 14 Q4 9 12 9 Q20 9 20 14 L19 18 Q19 19 18 19 L6 19 Q5 19 5 18 Z" fill="#fde68a" stroke="#d97706" strokeWidth="1.5" />
+        <path d="M6 12 Q12 10 18 12" stroke="#f59e0b" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.7" />
+      </svg>
+    );
+  }
+  // Pasta
+  if (n.includes("pasta")) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <ellipse cx="12" cy="15" rx="7" ry="4" fill="#fef9c3" stroke="#ca8a04" strokeWidth="1.5" />
+        <path d="M7 13 Q9 11 11 13 Q13 11 15 13 Q17 11 17 13" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        <circle cx="10" cy="15" r="1" fill="#dc2626" opacity="0.7" />
+        <circle cx="14" cy="15" r="1" fill="#dc2626" opacity="0.7" />
+      </svg>
+    );
+  }
+
+  // Default: generic plate
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="13" r="7" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.5" />
+      <circle cx="12" cy="13" r="4" fill="#fde68a" opacity="0.7" />
+    </svg>
+  );
+}
+
+/** Coffee drink icon for individual coffee cards */
+export function CoffeeDrinkIcon({ name, size = 22 }: { name: string; size?: number }) {
+  const n = name.toLowerCase();
+  const isHot = n.includes("espresso") || n.includes("americano") || n.includes("arabic") || n.includes("tea") || n.includes("hot") || n.includes("matcha");
+  const color = n.includes("matcha") ? "#16a34a" : n.includes("tea") ? "#d97706" : n.includes("chocolate") ? "#7c3aed" : "#92400e";
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <defs>
+        <linearGradient id={`coffeeCard${n.slice(0,4)}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.7" />
+        </linearGradient>
+      </defs>
+      <path d="M5 8 L6.5 19 Q6.5 20 8 20 L14 20 Q15.5 20 15.5 19 L17 8 Z" fill={`url(#coffeeCard${n.slice(0,4)})`} />
+      <path d="M5 8 L6.5 19 Q6.5 20 8 20 L14 20 Q15.5 20 15.5 19 L17 8 Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M17 11 Q21 11 21 14 Q21 17 17 17" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <line x1="5" y1="8" x2="17" y2="8" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      {isHot && <path d="M9 5 Q9.5 3.5 9 2" stroke={color} strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />}
+      {isHot && <path d="M12 5 Q12.5 3.5 12 2" stroke={color} strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />}
+    </svg>
+  );
+}
+
+/** Drink icon for individual drink cards */
+export function DrinkIcon({ name, size = 22 }: { name: string; size?: number }) {
+  const n = name.toLowerCase();
+  const color = n.includes("orange") ? "#f97316" : n.includes("apple") ? "#22c55e" : n.includes("mango") ? "#eab308" : n.includes("cola") ? "#7c3aed" : n.includes("milk") ? "#93c5fd" : n.includes("lemon") ? "#facc15" : n.includes("green tea") ? "#16a34a" : "#38bdf8";
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <defs>
+        <linearGradient id={`drinkCard${n.slice(0,4)}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.6" />
+        </linearGradient>
+      </defs>
+      <path d="M6 6 L7.5 20 Q7.5 21 9 21 L15 21 Q16.5 21 16.5 20 L18 6 Z" fill={`url(#drinkCard${n.slice(0,4)})`} />
+      <path d="M6 6 L7.5 20 Q7.5 21 9 21 L15 21 Q16.5 21 16.5 20 L18 6 Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+      <line x1="6" y1="6" x2="18" y2="6" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="14" y1="2" x2="13" y2="10" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}

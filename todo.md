@@ -659,3 +659,9 @@
 - [x] Community leaderboard: gold medal (rank 1), silver medal (rank 2), bronze medal (rank 3) — colored SVG
 - [x] Exercise categories: colored icons for Lower Body, Upper Body, Core, Cardio, etc.
 - [x] 0 TypeScript errors after all changes
+
+## Water Cards & Meal Food Icons (May 18)
+- [x] Water intake cards: replace "water" text with water drop SVG vector (small cup, cup, can, bottle)
+- [x] Meal cards: replace generic fork icon with food-specific colored SVG per meal name (plate/coffee cup/juice cup per category; food-specific per item)
+- [x] Category tabs: Meals = plate icon, Coffee = coffee cup icon, Drinks = juice cup icon
+- [x] 0 TypeScript errors after changes
