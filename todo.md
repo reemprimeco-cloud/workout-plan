@@ -803,3 +803,11 @@
 - [x] Add Edit button to each gym row in the admin list
 - [x] Edit modal: change gym name and/or re-upload logo (96x96 preview, click to change)
 - [x] Home page gym card: shows uploaded logo image; falls back to colored initial if no logo
+
+## Gym Classes — Branch Expand/Collapse & Join Sync
+- [x] Branch expand/collapse inside gym card (each branch is collapsible)
+- [x] Show calories on class card row (next to duration)
+- [x] joinClass creates a linked workout session in the sessions table
+- [x] leaveClass procedure: removes join record, deletes linked session
+- [x] Joined class row shows Leave/Undo button; tapping removes join and session
+- [x] Join state persists correctly after undo (button returns to Join)

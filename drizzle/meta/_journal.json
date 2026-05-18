@@ -239,6 +239,13 @@
       "when": 1779141263696,
       "tag": "0033_flowery_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1779145919602,
+      "tag": "0034_silky_cannonball",
+      "breakpoints": true
     }
   ]
 }
