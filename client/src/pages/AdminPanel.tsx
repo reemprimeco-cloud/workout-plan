@@ -879,7 +879,7 @@ export default function AdminPanel() {
       {/* ── Header ── */}
       <header style={{
         background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-        padding: '14px 20px',
+        padding: '14px clamp(20px, 4vw, 48px)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 4px 20px rgba(27,46,94,0.35)',
         position: 'sticky', top: 0, zIndex: 100,
@@ -916,6 +916,8 @@ export default function AdminPanel() {
         background: 'white', borderBottom: `2px solid ${SKY_LIGHT}44`,
         display: 'flex', overflowX: 'auto',
         boxShadow: '0 2px 8px rgba(27,46,94,0.06)',
+        paddingLeft: 'clamp(0px, 2vw, 28px)',
+        paddingRight: 'clamp(0px, 2vw, 28px)',
       }}>
         {([
           ['dashboard', t('tabDashboard', lang)],
@@ -944,12 +946,12 @@ export default function AdminPanel() {
         ))}
       </nav>
 
-      <main style={{ padding: '20px', maxWidth: 960, margin: '0 auto' }}>
+      <main style={{ padding: '20px clamp(20px, 4vw, 48px)', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
         {/* ── DASHBOARD TAB ── */}
         {activeTab === 'dashboard' && (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
               {[
                 { label: lang === 'ar' ? 'إجمالي المستخدمين' : 'Total Users', value: stats?.totalUsers ?? '—', color: NAVY, icon: 'users' },
                 { label: lang === 'ar' ? 'مشتركون نشطون' : 'Active Subscribers', value: stats?.activeSubscribers ?? '—', color: '#16A34A', icon: 'check' },
@@ -1190,7 +1192,7 @@ export default function AdminPanel() {
               return filtered.length === 0 ? (
                 <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد نتائج.' : 'No results found.'}</p>
               ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', gap: 12 }}>
                 {filtered.map((u) => {
                   const sub = u.subscription;
                   const statusColor: Record<string, string> = { active: '#16A34A', trialing: '#D97706', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706' };
