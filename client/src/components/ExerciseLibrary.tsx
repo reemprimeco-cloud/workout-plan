@@ -3,6 +3,7 @@
 // Shows gender-specific exercises with YouTube links, grouped by category
 
 import { AppIcons } from "./AppIcons";
+import { LowerBodyIcon, UpperBodyIcon, CoreIcon, CardioIcon, FullBodyIcon } from "./ColorIcons";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
@@ -223,7 +224,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             whiteSpace: "nowrap",
           }}
         >
-          <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Running size={14} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
+          <span style={{display:'flex',alignItems:'center',gap:6}}><CardioIcon size={16} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
         </button>
         {categories.map((cat) => {
           const ex = grouped[cat][0];
@@ -257,7 +258,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                 transition: "all 0.2s",
               }}
             >
-              <span style={{display:'inline-flex',alignItems:'center'}}>{iconKey === 'cardio' ? <AppIcons.Running size={14} /> : iconKey === 'back' ? <AppIcons.Body size={14} /> : iconKey === 'core' ? <AppIcons.Target size={14} /> : <AppIcons.Dumbbell size={14} />}</span>
+              <span style={{display:'inline-flex',alignItems:'center'}}>{iconKey === 'cardio' ? <CardioIcon size={16} /> : iconKey === 'legs' ? <LowerBodyIcon size={16} /> : iconKey === 'core' ? <CoreIcon size={16} /> : iconKey === 'back' ? <UpperBodyIcon size={16} /> : iconKey === 'shoulders' ? <UpperBodyIcon size={16} /> : iconKey === 'arms' ? <UpperBodyIcon size={16} /> : iconKey === 'chest' ? <UpperBodyIcon size={16} /> : <FullBodyIcon size={16} />}</span>
               <span>{label}</span>
               <span
                 style={{
@@ -284,7 +285,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             borderRadius: 14, padding: "14px 16px", marginBottom: 14,
           }}>
             <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-              <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Running size={14} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
+              <span style={{display:'flex',alignItems:'center',gap:6}}><CardioIcon size={16} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
             </div>
             <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>
               {isAr
