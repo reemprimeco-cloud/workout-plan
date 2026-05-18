@@ -10,12 +10,13 @@
  *  - Meals: meal history cards
  *  - Insights: AI insights
  */
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import NutritionMealsTab from "../components/NutritionMealsTab";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getDailyCaloriesBurned } from "../lib/calorieCalc";
 import { AppIcons } from "../components/AppIcons";
+import { NutritionDashboardIcon, NutritionMealsIcon, NutritionScannerIcon, NutritionRobotIcon, WaterDropIcon, MacroCloudIcon, FlameIcon } from "../components/ColorIcons";
 
 // ── Design tokens (matches main app light theme) ──────────────────────────────
 const PAGE_BG   = "#F0F4F8";
@@ -115,7 +116,7 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 4 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Flame size={18} className="text-orange-500" />{tl("dailyCal", lang)}</span>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><FlameIcon size={18} />{tl("dailyCal", lang)}</span>
       </div>
 
       {/* Ring */}
@@ -267,7 +268,7 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Water size={18} className="text-blue-500" />{tl("waterIntake", lang)}</span>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><WaterDropIcon size={18} />{tl("waterIntake", lang)}</span>
         <span style={{ color: C_WATER, fontSize: 13, fontWeight: 700 }}>
           {totalMl}{tl("ml", lang)} / {goalMl}{tl("ml", lang)}
         </span>
@@ -818,7 +819,7 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
       {/* Macronutrients card */}
       <div style={card()}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-          <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Protein size={18} />{tl("macros", lang)}</span>
+          <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><MacroCloudIcon size={18} />{tl("macros", lang)}</span>
         </div>
 
         {/* Progress bars */}
@@ -1748,11 +1749,11 @@ export default function Nutrition() {
     weekday: "long", month: "long", day: "numeric",
   });
 
-  const tabs: { id: NutritionTab; icon: string; label: string }[] = [
-    { id: "dashboard", icon: "stats", label: tl("dashboard", lang) },
-    { id: "meals",     icon: "fork", label: tl("meals",     lang) },
-    { id: "scanner",   icon: "camera", label: tl("scanner",   lang) },
-    { id: "insights",  icon: "robot", label: tl("insights",  lang) },
+  const tabs: { id: NutritionTab; icon: React.ReactNode; label: string }[] = [
+    { id: "dashboard", icon: <NutritionDashboardIcon size={22} />, label: tl("dashboard", lang) },
+    { id: "meals",     icon: <NutritionMealsIcon size={22} />,     label: tl("meals",     lang) },
+    { id: "scanner",   icon: <NutritionScannerIcon size={22} />,   label: tl("scanner",   lang) },
+    { id: "insights",  icon: <NutritionRobotIcon size={22} />,     label: tl("insights",  lang) },
   ];
 
   return (
@@ -1807,7 +1808,7 @@ export default function Nutrition() {
                 transition: "all 0.2s",
               }}
             >
-              <span style={{ fontSize: 18 }}>{tab.icon}</span>
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", opacity: activeTab === tab.id ? 1 : 0.6 }}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}

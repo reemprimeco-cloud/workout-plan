@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { AppIcons } from "../components/AppIcons";
+import { GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon, RankBadgeIcon } from "../components/ColorIcons";
 import { useSocket } from "../contexts/SocketContext";
 import NotificationBell from "../components/NotificationBell";
 import { MentionInput } from "../components/MentionInput";
@@ -597,7 +598,7 @@ function LeaderboardPanel({ lang }: { lang: string }) {
       {isLoading ? <div style={{ color: MUTED }}>{t("loading", lang)}</div> : (
         (board ?? []).map((entry: any, i: number) => (
           <div key={entry.userId} style={{ background: CARD, border: `1px solid ${i < 3 ? rankColors[i] + "44" : BORDER}`, borderRadius: 14, padding: "12px 16px", marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 20, width: 28, textAlign: "center" }}>{i === 0 ? <AppIcons.Medal size={20} className="text-yellow-500" /> : i === 1 ? <AppIcons.Medal size={20} className="text-gray-400" /> : i === 2 ? <AppIcons.Medal size={20} className="text-amber-600" /> : `#${i + 1}`}</span>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28 }}>{i === 0 ? <GoldMedalIcon size={26} /> : i === 1 ? <SilverMedalIcon size={26} /> : i === 2 ? <BronzeMedalIcon size={26} /> : <RankBadgeIcon rank={i + 1} size={22} />}</span>
             <Avatar name={entry.userName} size={38} />
             <div style={{ flex: 1 }}>
               <div style={{ color: TEXT, fontWeight: 700, fontSize: 14 }}>{entry.userName}</div>

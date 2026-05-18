@@ -13,6 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { getLoginUrl } from '@/const';
 import { AppIcons } from '../components/AppIcons';
+import { CoachRobotIcon, ChatMessageIcon, SunCheckInIcon, BrainInsightsIcon, DumbbellStatIcon, StatsUpIcon, CheckCircleIcon, StreakFlameIcon } from '../components/ColorIcons';
 
 const NAVY      = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -49,13 +50,18 @@ const INSIGHT_ICONS: Record<string, string> = {
 };
 
 function StatCard({ icon, value, label, color }: { icon: string; value: string | number; label: string; color: string }) {
+  const iconEl = icon === 'dumbbell' ? <DumbbellStatIcon size={22} /> :
+    icon === 'stats' || icon === 'trending_down' ? <StatsUpIcon size={22} /> :
+    icon === 'check' ? <CheckCircleIcon size={22} /> :
+    icon === 'flame' ? <StreakFlameIcon size={22} /> :
+    <DumbbellStatIcon size={22} />;
   return (
     <div style={{
       background: 'white', borderRadius: 14, padding: '10px 6px',
       textAlign: 'center', border: '1px solid #E2EAF4', flex: 1,
       boxShadow: '0 2px 6px rgba(27,46,94,0.07)',
     }}>
-      <div style={{ fontSize: 18, marginBottom: 3 }}>{icon}</div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 3 }}>{iconEl}</div>
       <div style={{ color, fontSize: 15, fontWeight: 900, lineHeight: 1 }}>{value}</div>
       <div style={{ color: '#64748B', fontSize: 9, marginTop: 3, lineHeight: 1.3 }}>{label}</div>
     </div>
@@ -323,7 +329,7 @@ export default function MyCoach() {
       {/* ── FIXED TOP: navy header ── */}
       <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY_DARK} 100%)`, padding: '12px 16px 14px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><AppIcons.Robot size={24} /></div>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}><CoachRobotIcon size={40} /></div>
           <div style={{ flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
             <h1 style={{ margin: 0, color: 'white', fontSize: 18, fontWeight: 900, lineHeight: 1 }}>{isAr ? 'مدربي الذكي' : 'My AI Coach'}</h1>
             <p style={{ margin: '3px 0 0', color: SKY_LIGHT, fontSize: 11 }}>{isAr ? `مرحباً ${profile.name || ''}! كيف يمكنني مساعدتك؟` : `Hi ${profile.name || ''}! How can I help you today?`}</p>
@@ -344,9 +350,9 @@ export default function MyCoach() {
       {/* ── FIXED: section tabs ── */}
       <div style={{ display: 'flex', gap: 7, padding: '8px 12px', background: BG, flexShrink: 0 }}>
         {([
-          { id: 'chat' as const,     icon: 'message', label: isAr ? 'المحادثة' : 'Chat' },
-          { id: 'checkin' as const,  icon: 'sun', label: isAr ? 'تسجيل الحضور' : 'Check-In' },
-          { id: 'insights' as const, icon: 'brain', label: isAr ? 'الرؤى' : 'Insights' },
+          { id: 'chat' as const,     icon: <ChatMessageIcon size={20} />, label: isAr ? 'المحادثة' : 'Chat' },
+          { id: 'checkin' as const,  icon: <SunCheckInIcon size={20} />, label: isAr ? 'تسجيل الحضور' : 'Check-In' },
+          { id: 'insights' as const, icon: <BrainInsightsIcon size={20} />, label: isAr ? 'الرؤى' : 'Insights' },
         ]).map(tab => (
           <button key={tab.id} onClick={() => setActiveSection(tab.id)} style={{
             flex: 1, padding: '8px 4px',
@@ -357,7 +363,7 @@ export default function MyCoach() {
             fontSize: 11, fontWeight: 700, transition: 'all 0.2s',
             boxShadow: activeSection === tab.id ? `0 3px 10px rgba(27,46,94,0.25)` : '0 1px 3px rgba(27,46,94,0.06)',
           }}>
-            <div style={{ fontSize: 15, marginBottom: 2 }}>{tab.icon}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2, opacity: activeSection === tab.id ? 1 : 0.6 }}>{tab.icon}</div>
             {tab.label}
           </button>
         ))}
