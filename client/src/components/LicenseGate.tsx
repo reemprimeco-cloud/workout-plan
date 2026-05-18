@@ -62,6 +62,15 @@ export function LicenseGate({ children }: LicenseGateProps) {
     return <>{children}</>;
   }
 
+  // No subscription row at all — redirect to pricing (not just show blocked screen)
+  if (subscriptionStatus.data?.status === 'none') {
+    // Clear any stale session storage and send to pricing
+    sessionStorage.removeItem('primefit_selected_plan');
+    sessionStorage.removeItem('primefit_selected_period');
+    window.location.replace('/pricing');
+    return null;
+  }
+
   // No active subscription — show a clean "contact admin" screen
   return (
     <div dir="rtl" style={{

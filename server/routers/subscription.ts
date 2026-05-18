@@ -116,9 +116,9 @@ export const subscriptionRouter = router({
     const database = await getDb();
     if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-    // If not authenticated, return free plan
+    // If not authenticated, return none — unauthenticated users cannot access the app
     if (!ctx.user) {
-      return { plan: "free", status: "active", expiresAt: null, licenseKey: null };
+      return { plan: "free", status: "none", expiresAt: null, licenseKey: null };
     }
 
     const userId = ctx.user.openId;
@@ -129,7 +129,8 @@ export const subscriptionRouter = router({
       .limit(1);
 
     if (rows.length === 0) {
-      return { plan: "free", status: "active", expiresAt: null, licenseKey: null };
+      // No subscription row at all — user must subscribe before accessing the app
+      return { plan: "free", status: "none", expiresAt: null, licenseKey: null };
     }
 
     const sub = rows[0];
@@ -336,6 +337,7 @@ export const subscriptionRouter = router({
 
   // Activate a free subscription directly (no license key required)
   // Called after login/signup when user selected the free plan on the pricing page
+  // ONE free trial per account — any previous subscription row (even expired) blocks re-use
   activateFreeSubscription: protectedProcedure
     .mutation(async ({ ctx }) => {
       const database = await getDb();
@@ -343,7 +345,8 @@ export const subscriptionRouter = router({
 
       const userId = ctx.user.openId;
 
-      // Check if user already has an active subscription — don't overwrite it
+      // Block if user already has ANY subscription row (active, expired, cancelled, etc.)
+      // This prevents re-using the free trial after it expires
       const existing = await database
         .select()
         .from(subscriptions)
@@ -356,6 +359,11 @@ export const subscriptionRouter = router({
           // Already has active subscription — return current state
           return { success: true, alreadyActive: true, plan: sub.plan, status: sub.status };
         }
+        // Previously had a subscription (expired/cancelled) — block free trial re-use
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "لقد استخدمت تجربتك المجانية مسبقاً. يرجى الاشتراك للاستمرار — Your free trial has already been used. Please subscribe to continue.",
+        });
       }
 
       const now = new Date();
