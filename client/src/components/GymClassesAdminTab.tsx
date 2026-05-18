@@ -89,63 +89,226 @@ export default function GymClassesAdminTab({ lang }: Props) {
 // ─── GYMS TAB ────────────────────────────────────────────────────────────────
 function GymsTab({ isAr }: { isAr: boolean }) {
   const utils = trpc.useUtils();
-  const { data: gyms = [], isLoading } = trpc.gymClasses.getGyms.useQuery();
-  const createGym   = trpc.gymClasses.createGym.useMutation({ onSuccess: () => utils.gymClasses.getGyms.invalidate() });
-  const deleteGym   = trpc.gymClasses.deleteGym.useMutation({ onSuccess: () => utils.gymClasses.getGyms.invalidate() });
+  const { data: gymList = [], isLoading } = trpc.gymClasses.getGyms.useQuery();
+  const createGym    = trpc.gymClasses.createGym.useMutation({ onSuccess: () => utils.gymClasses.getGyms.invalidate() });
+  const updateGym    = trpc.gymClasses.updateGym.useMutation({ onSuccess: () => { utils.gymClasses.getGyms.invalidate(); setEditGym(null); } });
+  const uploadLogo   = trpc.gymClasses.uploadGymLogo.useMutation();
+  const deleteGym    = trpc.gymClasses.deleteGym.useMutation({ onSuccess: () => utils.gymClasses.getGyms.invalidate() });
 
+  // Add form state
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#1B2E5E');
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+  const [logoMime, setLogoMime] = useState<string>('image/png');
   const [msg, setMsg] = useState('');
+  const addFileRef = useRef<HTMLInputElement>(null);
+
+  // Edit modal state
+  const [editGym, setEditGym] = useState<any | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editLogoPreview, setEditLogoPreview] = useState<string | null>(null);
+  const [editLogoBase64, setEditLogoBase64] = useState<string | null>(null);
+  const [editLogoMime, setEditLogoMime] = useState<string>('image/png');
+  const [editMsg, setEditMsg] = useState('');
+  const editFileRef = useRef<HTMLInputElement>(null);
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<{ base64: string; mime: string }> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1];
+        resolve({ base64, mime: file.type });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>, mode: 'add' | 'edit') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { base64, mime } = await fileToBase64(file);
+    const previewUrl = URL.createObjectURL(file);
+    if (mode === 'add') {
+      setLogoPreview(previewUrl); setLogoBase64(base64); setLogoMime(mime);
+    } else {
+      setEditLogoPreview(previewUrl); setEditLogoBase64(base64); setEditLogoMime(mime);
+    }
+  };
 
   const handleCreate = async () => {
     if (!name.trim()) return;
     try {
-      await createGym.mutateAsync({ name: name.trim(), brandColor: color });
-      setName(''); setMsg(isAr ? 'تم إنشاء الجيم بنجاح!' : 'Gym created!');
+      const result = await createGym.mutateAsync({ name: name.trim() });
+      // Upload logo after gym is created
+      if (logoBase64 && result.id) {
+        await uploadLogo.mutateAsync({ base64: logoBase64, mimeType: logoMime, gymId: result.id });
+        utils.gymClasses.getGyms.invalidate();
+      }
+      setName(''); setLogoPreview(null); setLogoBase64(null);
+      setMsg(isAr ? 'تم إنشاء الجيم بنجاح!' : 'Gym created!');
     } catch { setMsg(isAr ? 'حدث خطأ' : 'Error occurred'); }
+  };
+
+  const openEdit = (g: any) => {
+    setEditGym(g);
+    setEditName(g.name);
+    setEditLogoPreview(g.logoUrl || null);
+    setEditLogoBase64(null);
+    setEditMsg('');
+  };
+
+  const handleUpdate = async () => {
+    if (!editGym || !editName.trim()) return;
+    try {
+      // Upload new logo first if changed
+      let newLogoUrl: string | undefined;
+      if (editLogoBase64) {
+        const res = await uploadLogo.mutateAsync({ base64: editLogoBase64, mimeType: editLogoMime, gymId: editGym.id });
+        newLogoUrl = res.url;
+      }
+      await updateGym.mutateAsync({
+        id: editGym.id,
+        name: editName.trim(),
+        ...(newLogoUrl ? { logoUrl: newLogoUrl } : {}),
+      });
+      setEditMsg(isAr ? 'تم التحديث!' : 'Updated!');
+    } catch { setEditMsg(isAr ? 'حدث خطأ' : 'Error'); }
   };
 
   return (
     <div>
+      {/* ── Add gym form ── */}
       <div style={card}>
         <p style={sectionTitle}>{isAr ? 'إضافة جيم جديد' : 'Add New Gym'}</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px auto', gap: 12, alignItems: 'end' }}>
-          <div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          {/* Logo upload area */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{isAr ? 'شعار الجيم' : 'Gym Logo'}</label>
+            <div
+              onClick={() => addFileRef.current?.click()}
+              style={{
+                width: 72, height: 72, borderRadius: 12, border: '2px dashed #D1D9E6',
+                background: '#F8FAFC', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              {logoPreview ? (
+                <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+                  <path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="3" y="3" width="18" height="18" rx="4" stroke="#D1D9E6" strokeWidth="1.5" />
+                </svg>
+              )}
+            </div>
+            <input ref={addFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleLogoChange(e, 'add')} />
+            <span style={{ fontSize: 10, color: '#94A3B8' }}>{isAr ? 'انقر للرفع' : 'Click to upload'}</span>
+          </div>
+
+          {/* Name input */}
+          <div style={{ flex: 1, minWidth: 160 }}>
             <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الجيم *' : 'Gym Name *'}</label>
             <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder={isAr ? 'مثال: Prime Fit' : 'e.g. Prime Fit'} />
           </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'لون العلامة' : 'Brand Color'}</label>
-            <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ ...inputStyle, padding: 4, height: 40, cursor: 'pointer' }} />
-          </div>
-          <button onClick={handleCreate} disabled={createGym.isPending} style={btn()}>
-            {createGym.isPending ? '...' : (isAr ? 'إضافة' : 'Add')}
+
+          <button onClick={handleCreate} disabled={createGym.isPending || uploadLogo.isPending} style={btn()}>
+            {(createGym.isPending || uploadLogo.isPending) ? '...' : (isAr ? 'إضافة' : 'Add')}
           </button>
         </div>
         {msg && <p style={{ color: '#16A34A', fontSize: 12, marginTop: 8 }}>{msg}</p>}
       </div>
 
+      {/* ── Gym list ── */}
       <div style={card}>
         <p style={sectionTitle}>{isAr ? 'الجيمات المسجّلة' : 'Registered Gyms'}</p>
-        {isLoading ? <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : gyms.length === 0 ? (
+        {isLoading ? <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : gymList.length === 0 ? (
           <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'لا توجد جيمات بعد.' : 'No gyms yet.'}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {gyms.map((g: any) => (
+            {gymList.map((g: any) => (
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #E2E8F0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 16, height: 16, borderRadius: 4, background: g.brandColor || NAVY }} />
-                  <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{g.name}</span>
-                  <span style={{ fontSize: 11, color: '#94A3B8' }}>ID: {g.id}</span>
+                  {/* Logo or initial */}
+                  {g.logoUrl ? (
+                    <img src={g.logoUrl} alt={g.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid #E2E8F0' }} />
+                  ) : (
+                    <div style={{ width: 40, height: 40, borderRadius: 8, background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: 16 }}>
+                      {g.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{g.name}</span>
+                    <div style={{ fontSize: 11, color: '#94A3B8' }}>ID: {g.id}</div>
+                  </div>
                 </div>
-                <button onClick={() => { if (confirm(isAr ? `حذف "${g.name}"؟` : `Delete "${g.name}"?`)) deleteGym.mutate({ id: g.id }); }} style={dangerBtn}>
-                  {isAr ? 'حذف' : 'Delete'}
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => openEdit(g)} style={{ ...btn(false), padding: '6px 14px', fontSize: 12 }}>
+                    {isAr ? 'تعديل' : 'Edit'}
+                  </button>
+                  <button onClick={() => { if (confirm(isAr ? `حذف "${g.name}"؟` : `Delete "${g.name}"?`)) deleteGym.mutate({ id: g.id }); }} style={dangerBtn}>
+                    {isAr ? 'حذف' : 'Delete'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* ── Edit modal ── */}
+      {editGym && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }} onClick={e => { if (e.target === e.currentTarget) setEditGym(null); }}>
+          <div style={{ background: 'white', borderRadius: 20, padding: '28px 24px', width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+            <h3 style={{ margin: '0 0 20px', color: NAVY, fontSize: 17, fontWeight: 900 }}>
+              {isAr ? `تعديل: ${editGym.name}` : `Edit: ${editGym.name}`}
+            </h3>
+
+            {/* Logo upload */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 20 }}>
+              <div
+                onClick={() => editFileRef.current?.click()}
+                style={{
+                  width: 96, height: 96, borderRadius: 16, border: '2px dashed #D1D9E6',
+                  background: '#F8FAFC', cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8,
+                }}
+              >
+                {editLogoPreview ? (
+                  <img src={editLogoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <svg width={32} height={32} viewBox="0 0 24 24" fill="none">
+                    <path d="M12 16V8m0 0l-3 3m3-3l3 3" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect x="3" y="3" width="18" height="18" rx="4" stroke="#D1D9E6" strokeWidth="1.5" />
+                  </svg>
+                )}
+              </div>
+              <input ref={editFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleLogoChange(e, 'edit')} />
+              <span style={{ fontSize: 11, color: '#94A3B8' }}>{isAr ? 'انقر لتغيير الشعار' : 'Click to change logo'}</span>
+            </div>
+
+            {/* Name input */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الجيم' : 'Gym Name'}</label>
+              <input style={inputStyle} value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+
+            {editMsg && <p style={{ color: '#16A34A', fontSize: 12, marginBottom: 12 }}>{editMsg}</p>}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setEditGym(null)} style={btn(false)}>{isAr ? 'إلغاء' : 'Cancel'}</button>
+              <button onClick={handleUpdate} disabled={updateGym.isPending || uploadLogo.isPending} style={btn()}>
+                {(updateGym.isPending || uploadLogo.isPending) ? '...' : (isAr ? 'حفظ' : 'Save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
