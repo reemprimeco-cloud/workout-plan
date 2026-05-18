@@ -833,6 +833,7 @@ export const joinedClasses = mysqlTable("joined_classes", {
   joinedAt:       timestamp("joinedAt").defaultNow().notNull(),
   caloriesBurned: int("caloriesBurned").notNull().default(0),
   xpAwarded:      int("xpAwarded").notNull().default(0),
+  sessionId:      int("sessionId"),  // linked gym_sessions row (null if not yet synced)
 });
 export type JoinedClass = typeof joinedClasses.$inferSelect;
 export type InsertJoinedClass = typeof joinedClasses.$inferInsert;

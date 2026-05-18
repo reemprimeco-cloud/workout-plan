@@ -824,11 +824,15 @@ function TodayGymClasses() {
     { enabled: isAuthenticated }
   );
   const joinMutation = trpc.gymClasses.joinClass.useMutation();
+  const leaveMutation = trpc.gymClasses.leaveClass.useMutation();
 
   const [joinedIds, setJoinedIds] = React.useState<Set<number>>(new Set());
   const [joiningId, setJoiningId] = React.useState<number | null>(null);
+  const [leavingId, setLeavingId] = React.useState<number | null>(null);
   // Track which gym cards are expanded — default: all expanded
   const [expandedGyms, setExpandedGyms] = React.useState<Set<number>>(new Set());
+  // Track which branches are expanded — default: all expanded
+  const [expandedBranches, setExpandedBranches] = React.useState<Set<number>>(new Set());
 
   // Group classes by gymId, then by branchId
   const gymGroups = React.useMemo(() => {
@@ -858,10 +862,13 @@ function TodayGymClasses() {
     return Array.from(map.values());
   }, [classes]);
 
-  // Auto-expand all gyms when data first loads
+  // Auto-expand all gyms and branches when data first loads
   React.useEffect(() => {
     if (gymGroups.length > 0) {
       setExpandedGyms(new Set(gymGroups.map(g => g.gymId)));
+      const allBranchIds: number[] = [];
+      gymGroups.forEach(g => g.branches.forEach(b => allBranchIds.push(b.branchId)));
+      setExpandedBranches(new Set(allBranchIds));
     }
   }, [gymGroups.length]);
 
@@ -878,10 +885,40 @@ function TodayGymClasses() {
     }
   };
 
+  const handleLeave = async (classId: number) => {
+    if (leavingId === classId) return;
+    setLeavingId(classId);
+    try {
+      await leaveMutation.mutateAsync({ classId });
+      setJoinedIds(prev => {
+        const next = new Set(Array.from(prev));
+        next.delete(classId);
+        return next;
+      });
+    } catch {
+      // If server returns NOT_FOUND, still remove from local state
+      setJoinedIds(prev => {
+        const next = new Set(Array.from(prev));
+        next.delete(classId);
+        return next;
+      });
+    } finally {
+      setLeavingId(null);
+    }
+  };
+
   const toggleGym = (gymId: number) => {
     setExpandedGyms(prev => {
       const next = new Set(Array.from(prev));
       if (next.has(gymId)) next.delete(gymId); else next.add(gymId);
+      return next;
+    });
+  };
+
+  const toggleBranch = (branchId: number) => {
+    setExpandedBranches(prev => {
+      const next = new Set(Array.from(prev));
+      if (next.has(branchId)) next.delete(branchId); else next.add(branchId);
       return next;
     });
   };
@@ -987,23 +1024,36 @@ function TodayGymClasses() {
             {/* Expanded content: branches + classes */}
             {isExpanded && (
               <div style={{ padding: '8px 16px 14px' }}>
-                {Array.from(gym.branches.values()).map((branch, bIdx) => (
+                {Array.from(gym.branches.values()).map((branch, bIdx) => {
+                  const isBranchExpanded = expandedBranches.has(branch.branchId);
+                  return (
                   <div key={branch.branchId} style={{ marginTop: bIdx > 0 ? 14 : 6 }}>
-                    {/* Branch label */}
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 11, fontWeight: 700, color: '#7A9BB5',
-                      textTransform: 'uppercase', letterSpacing: '0.06em',
-                      marginBottom: 8,
-                    }}>
+                    {/* Branch header — tap to expand/collapse */}
+                    <button
+                      onClick={() => toggleBranch(branch.branchId)}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        padding: '6px 0', display: 'flex', alignItems: 'center', gap: 6,
+                        marginBottom: isBranchExpanded ? 8 : 0,
+                      }}
+                    >
                       <AppIcons.Location size={11} />
-                      {branch.branchName || (lang === 'ar' ? 'الفرع الرئيسي' : 'Main Branch')}
-                    </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#7A9BB5', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1, textAlign: 'left' }}>
+                        {branch.branchName || (lang === 'ar' ? 'الفرع الرئيسي' : 'Main Branch')}
+                      </span>
+                      <span style={{ fontSize: 10, color: '#94A3B8', marginRight: 4 }}>
+                        {branch.classes.length} {lang === 'ar' ? 'حصة' : branch.classes.length === 1 ? 'class' : 'classes'}
+                      </span>
+                      <svg width={13} height={13} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: 'transform 0.2s', transform: isBranchExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        <path d="M6 9l6 6 6-6" stroke="#7A9BB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
 
-                    {/* Class rows */}
-                    {branch.classes.map((cls: any, cIdx: number) => {
+                    {/* Class rows — only shown when branch is expanded */}
+                    {isBranchExpanded && branch.classes.map((cls: any, cIdx: number) => {
                       const joined = joinedIds.has(cls.id) || cls.alreadyJoined;
                       const ic = intensityColor(cls.intensity);
+                      const kcal = cls.caloriesOverride ?? (cls.intensity === 'Beginner' ? 200 : cls.intensity === 'Intermediate' ? 300 : 400);
                       return (
                         <div
                           key={cls.id}
@@ -1037,47 +1087,79 @@ function TodayGymClasses() {
                               <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
                                 <AppIcons.Timer size={11} />{cls.time} · {cls.durationMin}{lang === 'ar' ? 'د' : 'min'}
                               </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#F97316', fontWeight: 600 }}>
+                                🔥 {kcal} {lang === 'ar' ? 'سعرة' : 'kcal'}
+                              </span>
                             </div>
                             {cls.notes && (
                               <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2 }}>{cls.notes}</div>
                             )}
                           </div>
 
-                          {/* Join button */}
-                          <button
-                            onClick={() => handleJoin(cls.id)}
-                            disabled={joined || joiningId === cls.id}
-                            style={{
-                              flexShrink: 0,
-                              padding: '7px 13px',
-                              borderRadius: 9,
-                              border: 'none',
-                              cursor: joined ? 'default' : 'pointer',
-                              fontSize: 11,
-                              fontWeight: 700,
-                              background: joined
-                                ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                                : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-                              color: 'white',
-                              transition: 'background 0.3s',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4,
-                            }}
-                          >
-                            {joiningId === cls.id ? (
-                              <><AppIcons.Spinner size={12} /> ...</>
-                            ) : joined ? (
-                              <><AppIcons.Check size={12} /> {lang === 'ar' ? 'مسجّل' : 'Joined'}</>
-                            ) : (
-                              <><AppIcons.Plus size={12} /> {lang === 'ar' ? 'انضم' : 'Join'}</>
-                            )}
-                          </button>
+                          {/* Join / Leave button */}
+                          {joined ? (
+                            <button
+                              onClick={() => handleLeave(cls.id)}
+                              disabled={leavingId === cls.id}
+                              style={{
+                                flexShrink: 0,
+                                padding: '7px 13px',
+                                borderRadius: 9,
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: leavingId === cls.id
+                                  ? '#94A3B8'
+                                  : 'linear-gradient(135deg, #EF4444, #DC2626)',
+                                color: 'white',
+                                transition: 'background 0.3s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              {leavingId === cls.id ? (
+                                <><AppIcons.Spinner size={12} /> ...</>
+                              ) : (
+                                <>{lang === 'ar' ? 'إلغاء' : 'Leave'}</>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleJoin(cls.id)}
+                              disabled={joiningId === cls.id}
+                              style={{
+                                flexShrink: 0,
+                                padding: '7px 13px',
+                                borderRadius: 9,
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: joiningId === cls.id
+                                  ? '#94A3B8'
+                                  : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+                                color: 'white',
+                                transition: 'background 0.3s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              {joiningId === cls.id ? (
+                                <><AppIcons.Spinner size={12} /> ...</>
+                              ) : (
+                                <><AppIcons.Plus size={12} /> {lang === 'ar' ? 'انضم' : 'Join'}</>
+                              )}
+                            </button>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -11,6 +11,7 @@ import {
   gymBranches,
   gymClasses,
   joinedClasses,
+  gymSessions,
 } from "../../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { storagePut } from "../storage";
@@ -428,14 +429,74 @@ export const gymClassesRouter = router({
       const caloriesBurned = cls.caloriesOverride ?? CALORIE_MAP[cls.intensity ?? "Beginner"] ?? 300;
       const xpAwarded = XP_MAP[cls.intensity ?? "Beginner"] ?? 20;
 
+      // Create a linked gym session so the class appears in History & Stats
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+      const timeStr = cls.time ?? now.toTimeString().slice(0, 5); // HH:MM
+      const sessionClientId = `gym-class-${input.classId}-${userId}-${Date.now()}`;
+
+      const [sessionResult] = await db.insert(gymSessions).values({
+        userId,
+        clientId: sessionClientId,
+        date: dateStr,
+        checkInTime: timeStr,
+        checkOutTime: timeStr, // same — class time is fixed
+        sessionType: `gym_class:${cls.className}`,
+        exercises: JSON.stringify([]),
+        notes: `Gym class: ${cls.className} — Coach: ${cls.coach}`,
+        caloriesBurned,
+        isActive: false,
+      });
+      const sessionId = (sessionResult as any).insertId as number;
+
       await db.insert(joinedClasses).values({
         userId,
         classId: input.classId,
         caloriesBurned,
         xpAwarded,
+        sessionId,
       });
 
-      return { caloriesBurned, xpAwarded };
+      return { caloriesBurned, xpAwarded, sessionId };
+    }),
+
+  // Undo a class join — removes the join record and deletes the linked session
+  leaveClass: protectedProcedure
+    .input(z.object({ classId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = dbRequired(await getDb());
+      const userId = ctx.user.id;
+
+      // Find today's join record for this class
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayMs = today.getTime();
+      const tomorrowMs = todayMs + 86400000;
+
+      const joins = await db
+        .select()
+        .from(joinedClasses)
+        .where(and(eq(joinedClasses.userId, userId), eq(joinedClasses.classId, input.classId)));
+
+      const todayJoin = joins.find((j: typeof joins[0]) => {
+        if (!j.joinedAt) return false;
+        const t = new Date(j.joinedAt).getTime();
+        return t >= todayMs && t < tomorrowMs;
+      });
+
+      if (!todayJoin) throw new TRPCError({ code: "NOT_FOUND", message: "No join record found for today" });
+
+      // Delete the linked gym session if it exists
+      if (todayJoin.sessionId) {
+        await db.delete(gymSessions).where(
+          and(eq(gymSessions.id, todayJoin.sessionId), eq(gymSessions.userId, userId))
+        );
+      }
+
+      // Delete the join record
+      await db.delete(joinedClasses).where(eq(joinedClasses.id, todayJoin.id));
+
+      return { success: true };
     }),
 
   // Get today's joined class IDs for the current user
