@@ -16,7 +16,7 @@ import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getDailyCaloriesBurned } from "../lib/calorieCalc";
 import { AppIcons } from "../components/AppIcons";
-import { NutritionDashboardIcon, NutritionMealsIcon, NutritionScannerIcon, NutritionRobotIcon, WaterDropIcon, MacroCloudIcon, FlameIcon } from "../components/ColorIcons";
+import { NutritionDashboardIcon, NutritionMealsIcon, NutritionScannerIcon, NutritionRobotIcon, WaterDropIcon, MacroCloudIcon, FlameIcon, PlateIcon, CoffeeCupIcon, JuiceCupIcon, MealFoodIcon, CoffeeDrinkIcon, DrinkIcon } from "../components/ColorIcons";
 
 // ── Design tokens (matches main app light theme) ──────────────────────────────
 const PAGE_BG   = "#F0F4F8";
@@ -260,10 +260,10 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
 }) {
   const pct = Math.min(totalMl / Math.max(goalMl, 1), 1);
   const cups = [
-    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150, icon: "water" },
-    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250, icon: "water" },
-    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330, icon: "water" },
-    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500, icon: "water" },
+    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150 },
+    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250 },
+    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330 },
+    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500 },
   ];
   return (
     <div style={card()}>
@@ -288,7 +288,7 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
             display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
             cursor: "pointer", fontFamily: "inherit",
           }}>
-            <span style={{ fontSize: 22 }}>{c.icon}</span>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><WaterDropIcon size={28} /></span>
             <span style={{ color: TEXT, fontSize: 11, fontWeight: 700 }}>{c.label}</span>
             <span style={{ color: C_WATER, fontSize: 10 }}>{c.ml}{tl("ml", lang)}</span>
           </button>
@@ -1407,10 +1407,10 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
     setTimeout(() => setAddedId(null), 1500);
   };
 
-  const catTabs: { id: QuickMealCategory; labelAr: string; labelEn: string; icon: string }[] = [
-    { id: "meals",  labelAr: "وجبات",    labelEn: "Meals",   icon: "fork" },
-    { id: "coffee", labelAr: "قهوة",     labelEn: "Coffee",  icon: "coffee" },
-    { id: "drinks", labelAr: "مشروبات",  labelEn: "Drinks",  icon: "water" },
+  const catTabs: { id: QuickMealCategory; labelAr: string; labelEn: string; icon: React.ReactNode }[] = [
+    { id: "meals",  labelAr: "وجبات",    labelEn: "Meals",   icon: <PlateIcon size={22} /> },
+    { id: "coffee", labelAr: "قهوة",     labelEn: "Coffee",  icon: <CoffeeCupIcon size={22} /> },
+    { id: "drinks", labelAr: "مشروبات",  labelEn: "Drinks",  icon: <JuiceCupIcon size={22} /> },
   ];
 
   return (
@@ -1475,7 +1475,7 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
-                <span style={{display:"flex",alignItems:"center",justifyContent:"center"}}>{isAdded ? <AppIcons.Check size={22} className="text-green-500" /> : <AppIcons.Fork size={22} />}</span>
+                <span style={{display:"flex",alignItems:"center",justifyContent:"center"}}>{isAdded ? <AppIcons.Check size={22} className="text-green-500" /> : category === "meals" ? <MealFoodIcon name={item.nameEn} size={22} /> : category === "coffee" ? <CoffeeDrinkIcon name={item.nameEn} size={22} /> : <DrinkIcon name={item.nameEn} size={22} />}</span>
                 <span style={{ color: TEXT, fontSize: 12, fontWeight: 700, flex: 1, lineHeight: 1.2 }}>
                   {lang === "ar" ? item.nameAr : item.nameEn}
                 </span>
