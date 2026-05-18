@@ -795,3 +795,11 @@
 - [x] Joined state per class row: green checkmark, disabled button, green background
 - [x] Bilingual labels (AR/EN) preserved
 - [x] Fixed setState-in-useMemo anti-pattern: auto-expand uses useEffect instead
+
+## Gym Logo Upload & Edit
+- [x] Replace brand color picker in Gyms admin tab with logo image upload button (72x72 click-to-upload area)
+- [x] updateGym tRPC procedure already existed; wired to Edit modal
+- [x] uploadGymLogo tRPC procedure: converts base64 to Buffer, stores in S3, updates gym.logoUrl
+- [x] Add Edit button to each gym row in the admin list
+- [x] Edit modal: change gym name and/or re-upload logo (96x96 preview, click to change)
+- [x] Home page gym card: shows uploaded logo image; falls back to colored initial if no logo
