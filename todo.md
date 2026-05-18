@@ -732,3 +732,25 @@
 - [x] Admin Panel: Show fee calculation: gross - net = fee amount per transaction
 - [x] Admin Panel: Color-coded status badges (paid=green, pending=orange, failed=red, refunded=grey)
 - [x] Admin Panel: Summary stats row at top: total gross, total fees, total net received
+
+## English Translation — Phase 2 (All Exercises & Pages)
+- [x] Fix ActiveSession.tsx: AquaSessionPanel Arabic-only labels translated
+- [x] Fix ActiveSession.tsx: SaunaSessionPanel Arabic-only labels translated
+- [x] Fix ActiveSession.tsx: CardioCard speed/incline/calories labels translated
+- [x] Fix ActiveSession.tsx: ExerciseCard cardio machine labels translated
+- [x] Fix ActiveSession.tsx: AddExercisePanel tab labels, search placeholder, no-results message translated
+- [x] Fix ActiveSession.tsx: muscleGroup display uses English translation map (muscleGroupEn)
+- [x] Fix ActiveSession.tsx: defaultReps/defaultWeight display uses translateReps/translateWeight helpers
+- [x] Fix ActiveSession.tsx: cardioAsExercises mapping uses bilingual muscleGroup/defaultReps
+- [x] Fix WorkoutTimer.tsx: all timer labels and buttons translated
+- [x] Fix WorkoutCalendar.tsx: session type labels and completed badge translated
+- [x] Fix WorkoutGuide.tsx: muscleGroupEn map exported and extended with all muscle groups
+- [x] Fix ExerciseLibrary.tsx: speedLabel/inclineLabel use speedLabelEn/inclineLabelEn
+- [x] Fix exercises.ts: CardioTemplate interface extended with speedLabelEn/inclineLabelEn
+- [x] Fix AuthPage.tsx: all Arabic-only strings translated (labels, placeholders, errors, buttons)
+- [x] Fix PricingBeforeAuth.tsx: loading/processing screen translated
+- [x] Fix LegalPage.tsx: default language now follows app language context (not hardcoded Arabic)
+- [x] Fix SubscriptionResult.tsx: SubscriptionSuccess and SubscriptionError fully translated
+- [x] Fix ProfileSetupPage.tsx: all Arabic-only strings translated
+- [x] Fix ResetPasswordPage.tsx: all Arabic-only strings translated
+- [x] All 135 vitest tests still passing after translation changes

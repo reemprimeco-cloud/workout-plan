@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { trpc } from '../lib/trpc';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -10,6 +11,9 @@ const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 
 export default function ProfileSetupPage() {
   const [, setLocation] = useLocation();
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+
   const [fullName, setFullName] = useState('');
   const [age, setAge] = useState('');
   const [height, setHeight] = useState('');
@@ -27,7 +31,7 @@ export default function ProfileSetupPage() {
     setLoading(true);
 
     if (!fullName.trim()) {
-      setError('الرجاء إدخال الاسم');
+      setError(isAr ? 'الرجاء إدخال الاسم' : 'Please enter your name');
       setLoading(false);
       return;
     }
@@ -45,17 +49,21 @@ export default function ProfileSetupPage() {
       // Redirect to home after successful profile setup
       setLocation('/');
     } catch (err: any) {
-      setError((err?.data?.zodError?.fieldErrors?.fullName?.[0]) || err?.message || 'حدث خطأ أثناء حفظ البيانات');
+      setError(
+        (err?.data?.zodError?.fieldErrors?.fullName?.[0]) ||
+        err?.message ||
+        (isAr ? 'حدث خطأ أثناء حفظ البيانات' : 'An error occurred while saving your data')
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div dir="rtl" style={{
+    <div dir={isAr ? 'rtl' : 'ltr'} style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-      fontFamily: 'Cairo, Tajawal, sans-serif',
+      fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -77,10 +85,10 @@ export default function ProfileSetupPage() {
             style={{ height: 52, objectFit: 'contain', marginBottom: 12 }}
           />
           <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: 0 }}>
-            مرحباً بك في Prime Fit
+            {isAr ? 'مرحباً بك في Prime Fit' : 'Welcome to Prime Fit'}
           </h1>
           <p style={{ color: '#7A9BB5', fontSize: 13, marginTop: 6 }}>
-            أكمل ملفك الشخصي للبدء
+            {isAr ? 'أكمل ملفك الشخصي للبدء' : 'Complete your profile to get started'}
           </p>
         </div>
 
@@ -102,13 +110,13 @@ export default function ProfileSetupPage() {
           {/* Full Name */}
           <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
-              الاسم الكامل
+              {isAr ? 'الاسم الكامل' : 'Full Name'}
             </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="مثال: سارة"
+              placeholder={isAr ? 'مثال: سارة' : 'e.g. Sarah'}
               style={{
                 width: '100%',
                 padding: '12px 16px',
@@ -125,13 +133,13 @@ export default function ProfileSetupPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
-                العمر
+                {isAr ? 'العمر' : 'Age'}
               </label>
               <input
                 type="number"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                placeholder="مثال: 30"
+                placeholder={isAr ? 'مثال: 30' : 'e.g. 30'}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -145,13 +153,13 @@ export default function ProfileSetupPage() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
-                الطول (سم)
+                {isAr ? 'الطول (سم)' : 'Height (cm)'}
               </label>
               <input
                 type="number"
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
-                placeholder="مثال: 165"
+                placeholder={isAr ? 'مثال: 165' : 'e.g. 165'}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -169,14 +177,14 @@ export default function ProfileSetupPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
-                الوزن الحالي (كغ)
+                {isAr ? 'الوزن الحالي (كغ)' : 'Current Weight (kg)'}
               </label>
               <input
                 type="number"
                 step="0.1"
                 value={currentWeight}
                 onChange={(e) => setCurrentWeight(e.target.value)}
-                placeholder="مثال: 72.5"
+                placeholder={isAr ? 'مثال: 72.5' : 'e.g. 72.5'}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -190,14 +198,14 @@ export default function ProfileSetupPage() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 6 }}>
-                الوزن المستهدف (كغ)
+                {isAr ? 'الوزن المستهدف (كغ)' : 'Target Weight (kg)'}
               </label>
               <input
                 type="number"
                 step="0.1"
                 value={targetWeight}
                 onChange={(e) => setTargetWeight(e.target.value)}
-                placeholder="مثال: 65"
+                placeholder={isAr ? 'مثال: 65' : 'e.g. 65'}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -214,7 +222,7 @@ export default function ProfileSetupPage() {
           {/* Gender */}
           <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>
-              الجنس
+              {isAr ? 'الجنس' : 'Gender'}
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button
@@ -232,7 +240,7 @@ export default function ProfileSetupPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                أنثى
+                {isAr ? 'أنثى' : 'Female'}
               </button>
               <button
                 type="button"
@@ -249,7 +257,7 @@ export default function ProfileSetupPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                ذكر
+                {isAr ? 'ذكر' : 'Male'}
               </button>
             </div>
           </div>
@@ -271,7 +279,7 @@ export default function ProfileSetupPage() {
               marginTop: 8,
             }}
           >
-            {loading ? 'جاري الحفظ...' : 'ابدأ البرنامج'}
+            {loading ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'ابدأ البرنامج' : 'Start My Program')}
           </button>
         </form>
       </div>

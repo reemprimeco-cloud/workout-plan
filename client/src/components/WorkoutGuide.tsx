@@ -8,7 +8,7 @@ import { AppIcons } from './AppIcons';
 type GuideTab = 'plan' | 'exercises' | 'aqua' | 'sauna' | 'nutrition';
 
 // Translate Arabic muscle group names to English
-const muscleGroupEn: Record<string, string> = {
+export const muscleGroupEn: Record<string, string> = {
   'الأرداف والفخذين': 'Glutes & Thighs',
   'الأرداف': 'Glutes',
   'الفخذ الخلفي والأرداف': 'Hamstrings & Glutes',
@@ -32,6 +32,26 @@ const muscleGroupEn: Record<string, string> = {
   'عضلات البطن الجانبية': 'Obliques',
   'البطن والكور والكارديو': 'Core & Cardio',
   'الجسم كله — ظهر، أكتاف، ذراعين، أرداف': 'Full Body',
+  'الجسم كله': 'Full Body',
+  'الكور': 'Core',
+  'الكور والعمود الفقري': 'Core & Spine',
+  'الكور والفخذ': 'Core & Hip Flexors',
+  'الكور والكارديو': 'Core & Cardio',
+  'الصدر والكتف': 'Chest & Shoulders',
+  'الظهر والكور': 'Back & Core',
+  'الظهر والورك': 'Back & Hips',
+  'العمود الفقري': 'Spine',
+  'العمود الفقري الصدري': 'Thoracic Spine',
+  'العمود الفقري والكور': 'Spine & Core',
+  'الفخذ الأمامي': 'Quadriceps',
+  'الكاحل': 'Ankle',
+  'الكتف': 'Shoulder',
+  'الورك': 'Hips',
+  'الورك الأمامي': 'Hip Flexors',
+  'الورك والأرداف': 'Hips & Glutes',
+  'الورك والفخذ': 'Hips & Thighs',
+  'الرقبة': 'Neck',
+  'كارديو': 'Cardio',
 };
 
 // English names for session types (sessionTypes only has nameAr)

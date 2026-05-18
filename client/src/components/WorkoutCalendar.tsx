@@ -1,21 +1,26 @@
-// WorkoutCalendar - Monthly calendar showing workout schedule
+// WorkoutCalendar - Monthly calendar showin// WorkoutCalendar
 // Design: RTL Arabic, color-coded by workout type
 import { useState } from 'react';
 import { AppIcons } from "./AppIcons";
 import { allWeeks } from '../data/workoutData';
 import { useProgress } from '../hooks/useProgress';
+import { useLanguage } from '../contexts/LanguageContext';
 
-const DAY_NAMES = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+const DAY_NAMES_AR = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+const DAY_NAMES_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const TYPE_STYLES: Record<string, { bg: string; color: string; label: string; icon: string }> = {
-  training: { bg: '#FFF0E8', color: '#E05A00', label: 'تدريب', icon: 'training' },
-  'active-rest': { bg: '#EEF4FF', color: '#1B2E5E', label: 'تمارين الكارديو', icon: 'cardio' },
-  rest: { bg: '#F4F6F8', color: '#8A8AAA', label: 'راحة', icon: 'rest' },
+const TYPE_STYLES: Record<string, { bg: string; color: string; label: string; labelEn: string; icon: string }> = {
+  training: { bg: '#FFF0E8', color: '#E05A00', label: 'تدريب', labelEn: 'Training', icon: 'training' },
+  'active-rest': { bg: '#EEF4FF', color: '#1B2E5E', label: 'تمارين الكارديو', labelEn: 'Cardio', icon: 'cardio' },
+  rest: { bg: '#F4F6F8', color: '#8A8AAA', label: 'راحة', labelEn: 'Rest', icon: 'rest' },
 };
 
 export function WorkoutCalendar() {
   const [activeMonth, setActiveMonth] = useState(1);
   const { isDayCompleted, toggleDay } = useProgress();
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+  const DAY_NAMES = isAr ? DAY_NAMES_AR : DAY_NAMES_EN;
 
   const weeks = allWeeks.filter(w => w.month === activeMonth);
 
@@ -46,9 +51,9 @@ export function WorkoutCalendar() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
           }}><AppIcons.Calendar size={16} /></div>
           <div>
-            <h3 style={{ margin: 0, fontFamily: 'Cairo, sans-serif', color: '#1A1A2E', fontSize: 18 }}>التقويم الشهري</h3>
+            <h3 style={{ margin: 0, fontFamily: 'Cairo, sans-serif', color: '#1A1A2E', fontSize: 18 }}>{isAr ? 'التقويم الشهري' : 'Monthly Calendar'}</h3>
             <p style={{ margin: 0, fontSize: 12, color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif' }}>
-              أنجزتِ {completedCount} من {trainingDays} يوم تدريب
+              {isAr ? `أنجزتِ ${completedCount} من ${trainingDays} يوم تدريب` : `Completed ${completedCount} of ${trainingDays} training days`}
             </p>
           </div>
         </div>
@@ -72,7 +77,7 @@ export function WorkoutCalendar() {
                 transition: 'all 0.2s',
               }}
             >
-              {m === 1 ? 'الشهر الأول' : 'الشهر الثاني'}
+              {isAr ? (m === 1 ? 'الشهر الأول' : 'الشهر الثاني') : (m === 1 ? 'Month 1' : 'Month 2')}
             </button>
           ))}
         </div>
@@ -81,7 +86,7 @@ export function WorkoutCalendar() {
       {/* Progress bar */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>تقدم التمارين</span>
+          <span style={{ fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>{isAr ? 'تقدم التمارين' : 'Workout Progress'}</span>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#E05A00', fontFamily: 'Cairo, sans-serif' }}>
             {completedCount}/{trainingDays} ({Math.round((completedCount / trainingDays) * 100)}%)
           </span>
@@ -106,7 +111,7 @@ export function WorkoutCalendar() {
               background: style.bg, border: `2px solid ${style.color}`,
             }} />
             <span style={{ fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>
-              {style.icon} {style.label}
+              {style.icon} {isAr ? style.label : style.labelEn}
             </span>
           </div>
         ))}
@@ -115,7 +120,7 @@ export function WorkoutCalendar() {
             width: 14, height: 14, borderRadius: 4,
             background: '#E05A00', border: '2px solid #E05A00',
           }} />
-          <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:12,color:'#4A4A6A',fontFamily:'Tajawal,sans-serif'}}><AppIcons.Check size={12} />مكتمل</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:12,color:'#4A4A6A',fontFamily:'Tajawal,sans-serif'}}><AppIcons.Check size={12} />{isAr ? 'مكتمل' : 'Done'}</span>
         </div>
       </div>
 
@@ -191,7 +196,7 @@ export function WorkoutCalendar() {
                     marginTop: 2,
                     lineHeight: 1.2,
                   }}>
-                    أ{day.weekNum}
+                    {isAr ? `أ${day.weekNum}` : `W${day.weekNum}`}
                   </div>
                   {day.type === 'training' && !completed && (
                     <div style={{
@@ -216,7 +221,7 @@ export function WorkoutCalendar() {
         borderRight: '3px solid #E05A00',
       }}>
         <p style={{ margin: 0, fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>
-          انقري على أي يوم تدريب لتحديده كمكتمل. يتم حفظ تقدمك تلقائياً.
+          {isAr ? 'انقري على أي يوم تدريب لتحديده كمكتمل. يتم حفظ تقدمك تلقائياً.' : 'Tap any training day to mark it as completed. Your progress is saved automatically.'}
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@
 // ============================================================
 import React, { useState } from 'react';
 import { trpc } from '../lib/trpc';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -12,6 +13,9 @@ const SKY_LIGHT = '#A8D4E8';
 const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 
 export default function ResetPasswordPage() {
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,18 +29,18 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError('');
     if (password !== confirmPassword) {
-      setError('كلمتا المرور غير متطابقتين');
+      setError(isAr ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
       return;
     }
     if (password.length < 8) {
-      setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+      setError(isAr ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters');
       return;
     }
     try {
       await resetMutation.mutateAsync({ token, newPassword: password });
       setDone(true);
     } catch (err: any) {
-      setError(err.message || 'فشل إعادة التعيين. قد يكون الرابط منتهي الصلاحية.');
+      setError(err.message || (isAr ? 'فشل إعادة التعيين. قد يكون الرابط منتهي الصلاحية.' : 'Reset failed. The link may have expired.'));
     }
   };
 
@@ -46,7 +50,7 @@ export default function ResetPasswordPage() {
     border: `1.5px solid ${SKY_LIGHT}`,
     borderRadius: 12,
     fontSize: 14,
-    fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+    fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
     outline: 'none',
     color: NAVY,
     background: '#F8FAFC',
@@ -56,10 +60,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div dir="rtl" style={{
+    <div dir={isAr ? 'rtl' : 'ltr'} style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-      fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+      fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }}>
       <div style={{
@@ -74,8 +78,8 @@ export default function ResetPasswordPage() {
         {done ? (
           <div style={{ marginTop: 20 }}>
             <div style={{display:"flex",justifyContent:"center",marginBottom:12}}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <h2 style={{ color: NAVY, fontSize: 18, fontWeight: 900 }}>تم تغيير كلمة المرور</h2>
-            <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 20 }}>يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة</p>
+            <h2 style={{ color: NAVY, fontSize: 18, fontWeight: 900 }}>{isAr ? 'تم تغيير كلمة المرور' : 'Password Changed'}</h2>
+            <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 20 }}>{isAr ? 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة' : 'You can now log in with your new password'}</p>
             <button
               onClick={() => window.location.href = '/'}
               style={{
@@ -83,19 +87,19 @@ export default function ResetPasswordPage() {
                 background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
                 color: 'white', border: 'none', borderRadius: 14,
                 fontSize: 14, fontWeight: 900, cursor: 'pointer',
-                fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+                fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
               }}
             >
-              تسجيل الدخول
+              {isAr ? 'تسجيل الدخول' : 'Log In'}
             </button>
           </div>
         ) : (
           <>
-            <p style={{ color: '#7A9BB5', fontSize: 13, margin: '4px 0 24px' }}>أدخل كلمة المرور الجديدة</p>
+            <p style={{ color: '#7A9BB5', fontSize: 13, margin: '4px 0 24px' }}>{isAr ? 'أدخل كلمة المرور الجديدة' : 'Enter your new password'}</p>
 
             {!token && (
               <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '10px 14px', marginBottom: 16, color: '#DC2626', fontSize: 13 }}>
-                رابط غير صالح. يرجى طلب رابط جديد.
+                {isAr ? 'رابط غير صالح. يرجى طلب رابط جديد.' : 'Invalid link. Please request a new one.'}
               </div>
             )}
 
@@ -106,14 +110,14 @@ export default function ResetPasswordPage() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: 14, textAlign: 'right' }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 6 }}>كلمة المرور الجديدة</label>
+              <div style={{ marginBottom: 14, textAlign: isAr ? 'right' : 'left' }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 6 }}>{isAr ? 'كلمة المرور الجديدة' : 'New Password'}</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="8 أحرف على الأقل"
+                    placeholder={isAr ? '8 أحرف على الأقل' : 'At least 8 characters'}
                     required
                     disabled={!token}
                     style={{ ...inputStyle, paddingLeft: 44 }}
@@ -122,18 +126,18 @@ export default function ResetPasswordPage() {
                     position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                     background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 16,
                   }}>
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? (isAr ? 'إخفاء' : 'Hide') : (isAr ? 'إظهار' : 'Show')}
                   </button>
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20, textAlign: 'right' }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 6 }}>تأكيد كلمة المرور</label>
+              <div style={{ marginBottom: 20, textAlign: isAr ? 'right' : 'left' }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: NAVY, marginBottom: 6 }}>{isAr ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="أعد كتابة كلمة المرور"
+                  placeholder={isAr ? 'أعد كتابة كلمة المرور' : 'Re-enter your password'}
                   required
                   disabled={!token}
                   style={inputStyle}
@@ -148,11 +152,11 @@ export default function ResetPasswordPage() {
                   background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
                   color: 'white', border: 'none', borderRadius: 14,
                   fontSize: 15, fontWeight: 900, cursor: resetMutation.isPending ? 'not-allowed' : 'pointer',
-                  fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+                  fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
                   opacity: resetMutation.isPending ? 0.7 : 1,
                 }}
               >
-                {resetMutation.isPending ? 'جاري الحفظ...' : 'تغيير كلمة المرور'}
+                {resetMutation.isPending ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'تغيير كلمة المرور' : 'Change Password')}
               </button>
             </form>
           </>

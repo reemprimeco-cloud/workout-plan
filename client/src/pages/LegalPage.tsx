@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { privacyPolicy, termsOfService } from "./legalContent";
+import { useLanguage } from "../contexts/LanguageContext";
 
 type Lang = "en" | "ar";
 
@@ -9,7 +10,8 @@ interface LegalPageProps {
 }
 
 export default function LegalPage({ type }: LegalPageProps) {
-  const [lang, setLang] = useState<Lang>("ar");
+  const { lang: appLang } = useLanguage();
+  const [lang, setLang] = useState<Lang>(appLang === 'ar' ? 'ar' : 'en');
   const [, navigate] = useLocation();
 
   const content = type === "privacy" ? privacyPolicy : termsOfService;

@@ -2,6 +2,7 @@
 // Design: Energetic Sports RTL, Primary #E05A00, Secondary #1A7A4A
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppIcons } from "./AppIcons";
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface WorkoutTimerProps {
   defaultSeconds?: number;
@@ -15,14 +16,16 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
   const [showInput, setShowInput] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
 
   const presets = [
-    { label: '30 ث', seconds: 30 },
-    { label: '45 ث', seconds: 45 },
-    { label: '60 ث', seconds: 60 },
-    { label: '90 ث', seconds: 90 },
-    { label: '2 د', seconds: 120 },
-    { label: '3 د', seconds: 180 },
+    { label: isAr ? '30 ث' : '30s', seconds: 30 },
+    { label: isAr ? '45 ث' : '45s', seconds: 45 },
+    { label: isAr ? '60 ث' : '60s', seconds: 60 },
+    { label: isAr ? '90 ث' : '90s', seconds: 90 },
+    { label: isAr ? '2 د' : '2m', seconds: 120 },
+    { label: isAr ? '3 د' : '3m', seconds: 180 },
   ];
 
   const playBeep = useCallback(() => {
@@ -79,7 +82,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
   const isLow = seconds <= 10 && seconds > 0;
 
   const modeColor = mode === 'rest' ? '#1A7A4A' : '#E05A00';
-  const modeLabel = mode === 'rest' ? 'راحة' : 'تمرين';
+  const modeLabel = mode === 'rest' ? (isAr ? 'راحة' : 'Rest') : (isAr ? 'تمرين' : 'Workout');
 
   return (
     <div style={{
@@ -108,7 +111,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               transition: 'all 0.2s',
             }}
           >
-            {m === 'rest' ? 'راحة' : 'تمرين'}
+            {m === 'rest' ? (isAr ? 'راحة' : 'Rest') : (isAr ? 'تمرين' : 'Workout')}
           </button>
         ))}
       </div>
@@ -142,7 +145,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               {isFinished ? <AppIcons.Check size={32} /> : formatTime(seconds)}
             </div>
             <div style={{ fontSize: 11, color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif', marginTop: 2 }}>
-              {isFinished ? 'انتهى!' : modeLabel}
+              {isFinished ? (isAr ? 'انتهى!' : 'Done!') : modeLabel}
             </div>
           </div>
         </div>
@@ -179,7 +182,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             cursor: 'pointer',
           }}
         >
-          مخصص
+          {isAr ? 'مخصص' : 'Custom'}
         </button>
       </div>
 
@@ -188,7 +191,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
         <div style={{ display: 'flex', gap: 6, marginBottom: 12, justifyContent: 'center' }}>
           <input
             type="number"
-            placeholder="ثواني"
+            placeholder={isAr ? 'ثواني' : 'seconds'}
             value={customInput}
             onChange={e => setCustomInput(e.target.value)}
             style={{
@@ -206,7 +209,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               fontFamily: 'Cairo, sans-serif', fontWeight: 600, fontSize: 13,
             }}
           >
-            تعيين
+            {isAr ? 'تعيين' : 'Set'}
           </button>
         </div>
       )}
@@ -231,7 +234,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             boxShadow: isRunning ? 'none' : `0 4px 12px ${modeColor}44`,
           }}
         >
-          {isRunning ? 'إيقاف' : isFinished ? 'إعادة' : 'ابدأ'}
+          {isRunning ? (isAr ? 'إيقاف' : 'Pause') : isFinished ? (isAr ? 'إعادة' : 'Restart') : (isAr ? 'ابدأ' : 'Start')}
         </button>
         <button
           onClick={() => reset()}
@@ -256,7 +259,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
           fontFamily: 'Cairo, sans-serif', fontSize: 13,
           color: '#1A7A4A', fontWeight: 600,
         }}>
-          أحسنتِ! انتقلي للتمرين التالي
+          {isAr ? 'أحسنتِ! انتقلي للتمرين التالي' : 'Well done! Move to the next exercise'}
         </div>
       )}
     </div>
