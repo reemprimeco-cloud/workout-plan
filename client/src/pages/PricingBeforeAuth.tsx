@@ -93,11 +93,12 @@ function PostAuthActivator({
       utils.subscription.getStatus.invalidate();
       window.location.reload();
     },
-    onError: () => {
-      // Even if activation fails, let user into the app (getStatus returns free/active for no-row users)
+    onError: (err) => {
+      // Free trial already used or blocked — send to pricing, NOT into the app
       sessionStorage.removeItem(PLAN_KEY);
       sessionStorage.removeItem(PERIOD_KEY);
-      window.location.reload();
+      // Redirect to pricing so user must choose a paid plan
+      window.location.replace('/pricing');
     },
   });
 
@@ -108,10 +109,10 @@ function PostAuthActivator({
       window.location.href = data.invoiceUrl;
     },
     onError: () => {
-      // Fallback: go to app
+      // Checkout failed — send back to pricing, NOT into the app
       sessionStorage.removeItem(PLAN_KEY);
       sessionStorage.removeItem(PERIOD_KEY);
-      window.location.reload();
+      window.location.replace('/pricing');
     },
   });
 
