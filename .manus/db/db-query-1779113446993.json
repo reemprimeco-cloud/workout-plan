@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, status, amount, plan FROM billing_history ORDER BY id DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SELECT id, status, amount, plan FROM billing_history ORDER BY id DESC;",
+  "rows": [
+    {
+      "id": "120001",
+      "status": "paid",
+      "amount": "2.500",
+      "plan": "prime_plus"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstatus\tamount\tplan\n120001\tpaid\t2.500\tprime_plus\n",
+  "stderr": "",
+  "execution_time_ms": 1836
+}

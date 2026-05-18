@@ -9,7 +9,7 @@
  *   4. Upserts the subscription record in the DB
  */
 import type { Request, Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { ENV } from "../_core/env";
 import { getPaymentStatus } from "../_core/myfatoorah";
 import { getDb, getAccessCodeByEmail, extendSubscription, createAccessCode } from "../db";
@@ -179,6 +179,18 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
           email: email || null,
         });
       }
+
+      // Remove any pending records for the same user or invoice before inserting paid record
+      await db.delete(billingHistory)
+        .where(
+          and(
+            eq(billingHistory.status, 'pending'),
+            or(
+              eq(billingHistory.userId, userId),
+              eq(billingHistory.invoiceId, invoiceId)
+            )
+          )
+        );
 
       await db.insert(billingHistory).values({
         userId, plan, period,
