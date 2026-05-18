@@ -22,7 +22,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'profile';
+type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -103,6 +103,7 @@ const T: Record<string, Record<Lang, string>> = {
   // Subscriptions tab
   tabUsers: { ar: 'المستخدمون', en: 'Users' },
   tabSubscriptions: { ar: 'الاشتراكات', en: 'Subscriptions' },
+  tabTransactions: { ar: 'المعاملات', en: 'Transactions' },
   subNoData: { ar: 'لا توجد اشتراكات بعد.', en: 'No subscriptions yet.' },
   subActive: { ar: 'نشط', en: 'Active' },
   subTrialing: { ar: 'تجريبي', en: 'Trialing' },
@@ -716,6 +717,7 @@ export default function AdminPanel() {
   const codesQuery = trpc.license.list.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const broadcastsQuery = trpc.admin.listBroadcasts.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const subscriptionsQuery = trpc.admin.listSubscriptions.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
+  const billingHistoryQuery = trpc.admin.listBillingHistory.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const usersQuery = trpc.admin.listUsers.useQuery(undefined, { enabled: !!user && user.role === 'admin' });
   const profileQuery = trpc.admin.getProfile.useQuery(undefined, {
     enabled: !!user && user.role === 'admin',
@@ -919,6 +921,7 @@ export default function AdminPanel() {
           ['dashboard', t('tabDashboard', lang)],
           ['users', t('tabUsers', lang)],
           ['subscriptions', t('tabSubscriptions', lang)],
+          ['transactions', t('tabTransactions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
@@ -1567,6 +1570,119 @@ export default function AdminPanel() {
                                 </button>
                               </div>
                             ) : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TRANSACTIONS TAB ── */}
+        {activeTab === 'transactions' && (
+          <div style={cardStyle}>
+            <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>
+              {lang === 'ar' ? 'سجل المعاملات' : 'Payment Transactions'}
+            </h2>
+
+            {/* Summary Stats */}
+            {!billingHistoryQuery.isLoading && (billingHistoryQuery.data ?? []).length > 0 && (() => {
+              const rows = billingHistoryQuery.data ?? [];
+              const paidRows = rows.filter(r => r.status === 'paid');
+              const totalGross = paidRows.reduce((sum, r) => sum + parseFloat(r.amount || '0'), 0);
+              const totalFees = paidRows.reduce((sum, r) => {
+                const gross = parseFloat(r.amount || '0');
+                return sum + Math.round((gross * 0.01 + 0.100) * 1000) / 1000;
+              }, 0);
+              const totalNet = Math.round((totalGross - totalFees) * 1000) / 1000;
+              return (
+                <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+                  {[
+                    { label: lang === 'ar' ? 'إجمالي المدفوعات' : 'Total Gross', value: `${totalGross.toFixed(3)} KWD`, color: '#1B2E5E' },
+                    { label: lang === 'ar' ? 'إجمالي الرسوم' : 'Total Fees', value: `${totalFees.toFixed(3)} KWD`, color: '#DC2626' },
+                    { label: lang === 'ar' ? 'صافي المستلم' : 'Net Received', value: `${totalNet.toFixed(3)} KWD`, color: '#16A34A' },
+                    { label: lang === 'ar' ? 'عدد المعاملات' : 'Transactions', value: `${paidRows.length}`, color: '#7BB8D4' },
+                  ].map(stat => (
+                    <div key={stat.label} style={{ background: '#F8FBFF', border: `1px solid ${SKY_LIGHT}`, borderRadius: 10, padding: '12px 18px', minWidth: 140 }}>
+                      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>{stat.label}</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: stat.color }}>{stat.value}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {billingHistoryQuery.isLoading ? (
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+            ) : (billingHistoryQuery.data ?? []).length === 0 ? (
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد معاملات بعد.' : 'No transactions yet.'}</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: NAVY, color: 'white' }}>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'التاريخ' : 'Date'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'المستخدم' : 'User'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'البريد' : 'Email'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الخطة' : 'Plan'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'دورة الفوترة' : 'Cycle'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'المبلغ' : 'Gross'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الرسوم' : 'Fee'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'صافي' : 'Net'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الحالة' : 'Status'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'المرجع' : 'Reference'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(billingHistoryQuery.data ?? []).map((tx, i) => {
+                      const gross = parseFloat(tx.amount || '0');
+                      const fee = Math.round((gross * 0.01 + 0.100) * 1000) / 1000;
+                      const net = Math.round((gross - fee) * 1000) / 1000;
+                      const statusColor: Record<string, string> = { paid: '#16A34A', failed: '#DC2626', refunded: '#64748b', pending: '#D97706' };
+                      const statusBg: Record<string, string> = { paid: '#F0FDF4', failed: '#FEF2F2', refunded: '#F8FAFC', pending: '#FFFBEB' };
+                      const planLabel: Record<string, string> = { free: 'Free', prime_plus: 'Prime Plus', prime_pro: 'Prime Pro' };
+                      const periodLabel: Record<string, string> = { monthly: lang === 'ar' ? 'شهري' : 'Monthly', yearly: lang === 'ar' ? 'سنوي' : 'Yearly' };
+                      const displayName = tx.userFullName || tx.userName || '—';
+                      const displayEmail = tx.userEmail || '—';
+                      return (
+                        <tr key={tx.id} style={{ background: i % 2 === 0 ? '#F8FBFF' : 'white', borderBottom: `1px solid ${SKY_LIGHT}44` }}>
+                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
+                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('en-GB') : '—'}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, fontSize: 12, whiteSpace: 'nowrap' }}>
+                            {displayName}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#334155', fontSize: 11, direction: 'ltr' }}>
+                            {displayEmail.length > 22 ? displayEmail.slice(0, 22) + '…' : displayEmail}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, whiteSpace: 'nowrap' }}>
+                            {planLabel[tx.plan] ?? tx.plan}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#475569', fontSize: 11, whiteSpace: 'nowrap' }}>
+                            {periodLabel[tx.period] ?? tx.period}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: NAVY, whiteSpace: 'nowrap' }}>
+                            {gross.toFixed(3)} {tx.currency}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', color: '#DC2626', fontSize: 11, whiteSpace: 'nowrap' }}>
+                            -{fee.toFixed(3)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#16A34A', whiteSpace: 'nowrap' }}>
+                            {net.toFixed(3)} {tx.currency}
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <span style={{ background: statusBg[tx.status] ?? '#F8FAFC', color: statusColor[tx.status] ?? '#64748b', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11, border: `1px solid ${statusColor[tx.status] ?? '#64748b'}33` }}>
+                              {tx.status === 'paid' ? (lang === 'ar' ? '✓ مدفوع' : '✓ Paid') :
+                               tx.status === 'pending' ? (lang === 'ar' ? '◑ معلق' : '◑ Pending') :
+                               tx.status === 'failed' ? (lang === 'ar' ? '✗ فشل' : '✗ Failed') :
+                               tx.status === 'refunded' ? (lang === 'ar' ? '↺ مسترد' : '↺ Refunded') : tx.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 10, fontFamily: 'monospace', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {tx.paymentRef || tx.invoiceId || '—'}
                           </td>
                         </tr>
                       );

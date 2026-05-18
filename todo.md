@@ -722,3 +722,13 @@
 - [x] Server: listSubscriptions — join with users table to return user name and email
 - [x] Server: listUsers — ensure subscription object includes period, paymentStatus, paymentProvider, startsAt, expiresAt
 - [x] DB: Verify subscriptions table has all required columns (already has: plan, status, period, paymentStatus, paymentProvider, startsAt, expiresAt, licenseKey, email)
+
+## Manual Subscription Activation & Transactions Tab (May 18)
+- [x] DB: Find user with email 2qxs5qbdzd@privaterelay.appleid.com and get their openId/userId
+- [x] DB: Upsert subscription row for Reem: plan=prime_plus, period=monthly, status=active, paymentStatus=paid, paymentProvider=myfatoorah, startsAt=now, expiresAt=+30days, email=2qxs5qbdzd@privaterelay.appleid.com
+- [x] DB: Insert billing_history row: plan=prime_plus, period=monthly, amount=2.500, currency=KWD, status=paid, paymentProvider=myfatoorah, note="Manual entry - MyFatoorah deposit 2.380 KD received (fee: 0.120 KD)"
+- [x] Admin Panel: Add "Transactions" tab to Tab type and tab navigation
+- [x] Admin Panel: Build Transactions tab UI showing billing_history with user name (join users), plan, billing cycle, amount, currency, fee deducted, net received, payment provider, date, status badge
+- [x] Admin Panel: Show fee calculation: gross - net = fee amount per transaction
+- [x] Admin Panel: Color-coded status badges (paid=green, pending=orange, failed=red, refunded=grey)
+- [x] Admin Panel: Summary stats row at top: total gross, total fees, total net received
