@@ -72,7 +72,9 @@ function AppWithSocket() {
   }
 
   // For unauthenticated users on non-public pages: show Pricing first, then Auth
-  if (!authLoading && !currentUser && !isPublicPage && !isAdminPage) {
+  // Legal pages (/privacy, /terms) are always accessible without login
+  const isLegalPage = ["/privacy", "/terms"].includes(window.location.pathname);
+  if (!authLoading && !currentUser && !isPublicPage && !isAdminPage && !isLegalPage) {
     return (
       <TooltipProvider>
         <Toaster />
@@ -98,8 +100,8 @@ function AppWithSocket() {
       <SubscriptionProvider>
         <TooltipProvider>
           <Toaster />
-          {/* Subscription gate: admin and public pages bypass it */}
-          {isAdminPage || isPublicPage
+          {/* Subscription gate: admin, public pages, and legal pages bypass it */}
+          {isAdminPage || isPublicPage || isLegalPage
             ? <Router />
             : <LicenseGate><Router /></LicenseGate>
           }

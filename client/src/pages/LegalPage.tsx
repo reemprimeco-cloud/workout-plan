@@ -43,7 +43,7 @@ export default function LegalPage({ type }: LegalPageProps) {
       >
         {/* Back button */}
         <button
-          onClick={() => navigate("/profile")}
+          onClick={() => navigate("/")}
           style={{
             background: "rgba(255,255,255,0.12)",
             border: "none",

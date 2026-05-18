@@ -52,7 +52,7 @@ export const privacyPolicy = {
       },
       {
         heading: "12. Contact Information",
-        body: `If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us at:\n\nPrime Printing Co.\nKuwait\nEmail: support@primefit.app\n\nWe are committed to addressing your concerns promptly and transparently.`,
+        body: `If you have any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us at:\n\nPrime Printing Co.\nKuwait\nEmail: reemprimeco@gmail.com\n\nWe are committed to addressing your concerns promptly and transparently.`,
       },
       {
         heading: "13. Updates to This Policy",
@@ -110,7 +110,7 @@ export const privacyPolicy = {
       },
       {
         heading: "١٢. معلومات التواصل",
-        body: `إذا كانت لديك أي أسئلة أو مخاوف أو طلبات تتعلق بسياسة الخصوصية هذه أو بياناتك الشخصية، يُرجى التواصل معنا على:\n\nشركة برايم برينتنج\nالكويت\nالبريد الإلكتروني: support@primefit.app\n\nنحن ملتزمون بمعالجة مخاوفك بسرعة وشفافية.`,
+        body: `إذا كانت لديك أي أسئلة أو مخاوف أو طلبات تتعلق بسياسة الخصوصية هذه أو بياناتك الشخصية، يُرجى التواصل معنا على:\n\nشركة برايم برينتنج\nالكويت\nالبريد الإلكتروني: reemprimeco@gmail.com\n\nنحن ملتزمون بمعالجة مخاوفك بسرعة وشفافية.`,
       },
       {
         heading: "١٣. تحديثات هذه السياسة",
@@ -131,7 +131,7 @@ export const termsOfService = {
       },
       {
         heading: "2. User Accounts",
-        body: `To access most features of Prime Fit, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must provide accurate and complete information when creating your account and keep this information up to date. You must be at least 16 years of age to create an account. If you become aware of any unauthorized use of your account, you must notify us immediately at support@primefit.app.`,
+        body: `To access most features of Prime Fit, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must provide accurate and complete information when creating your account and keep this information up to date. You must be at least 16 years of age to create an account. If you become aware of any unauthorized use of your account, you must notify us immediately at reemprimeco@gmail.com.`,
       },
       {
         heading: "3. Subscription & Billing",
@@ -159,7 +159,7 @@ export const termsOfService = {
       },
       {
         heading: "9. Account Suspension",
-        body: `We reserve the right to suspend or terminate your account at any time if we determine that you have violated these Terms, engaged in fraudulent activity, or if your account poses a risk to the security or integrity of the Application or other users. In cases of serious violations, suspension may be immediate and without prior notice. You may appeal a suspension by contacting us at support@primefit.app. We will review appeals in good faith and respond within a reasonable timeframe.`,
+        body: `We reserve the right to suspend or terminate your account at any time if we determine that you have violated these Terms, engaged in fraudulent activity, or if your account poses a risk to the security or integrity of the Application or other users. In cases of serious violations, suspension may be immediate and without prior notice. You may appeal a suspension by contacting us at reemprimeco@gmail.com. We will review appeals in good faith and respond within a reasonable timeframe.`,
       },
       {
         heading: "10. Cancellation & Refunds",
@@ -175,7 +175,7 @@ export const termsOfService = {
       },
       {
         heading: "13. Contact Information",
-        body: `If you have any questions about these Terms of Service, or if you need to report a violation or submit a complaint, please contact us at:\n\nPrime Printing Co.\nKuwait\nEmail: support@primefit.app\n\nWe aim to respond to all inquiries within 3 business days.`,
+        body: `If you have any questions about these Terms of Service, or if you need to report a violation or submit a complaint, please contact us at:\n\nPrime Printing Co.\nKuwait\nEmail: reemprimeco@gmail.com\n\nWe aim to respond to all inquiries within 3 business days.`,
       },
     ],
   },
@@ -189,7 +189,7 @@ export const termsOfService = {
       },
       {
         heading: "٢. حسابات المستخدمين",
-        body: `للوصول إلى معظم ميزات برايم فت، يجب عليك إنشاء حساب. أنت مسؤول عن الحفاظ على سرية بيانات اعتماد حسابك وعن جميع الأنشطة التي تجري تحت حسابك. يجب عليك تقديم معلومات دقيقة وكاملة عند إنشاء حسابك والحفاظ على تحديث هذه المعلومات. يجب أن يكون عمرك 16 عامًا على الأقل لإنشاء حساب. إذا علمت بأي استخدام غير مصرح به لحسابك، يجب عليك إخطارنا فورًا على support@primefit.app.`,
+        body: `للوصول إلى معظم ميزات برايم فت، يجب عليك إنشاء حساب. أنت مسؤول عن الحفاظ على سرية بيانات اعتماد حسابك وعن جميع الأنشطة التي تجري تحت حسابك. يجب عليك تقديم معلومات دقيقة وكاملة عند إنشاء حسابك والحفاظ على تحديث هذه المعلومات. يجب أن يكون عمرك 16 عامًا على الأقل لإنشاء حساب. إذا علمت بأي استخدام غير مصرح به لحسابك، يجب عليك إخطارنا فورًا على reemprimeco@gmail.com.`,
       },
       {
         heading: "٣. الاشتراك والفوترة",
@@ -217,7 +217,7 @@ export const termsOfService = {
       },
       {
         heading: "٩. تعليق الحساب",
-        body: `نحتفظ بالحق في تعليق حسابك أو إنهائه في أي وقت إذا تبيّن لنا أنك انتهكت هذه الشروط أو انخرطت في نشاط احتيالي، أو إذا كان حسابك يُشكّل خطرًا على أمن التطبيق أو سلامته أو على المستخدمين الآخرين. في حالات الانتهاكات الجسيمة، قد يكون التعليق فوريًا ودون إشعار مسبق. يمكنك الاعتراض على التعليق بالتواصل معنا على support@primefit.app. سنراجع الاعتراضات بحسن نية ونردّ في غضون فترة زمنية معقولة.`,
+        body: `نحتفظ بالحق في تعليق حسابك أو إنهائه في أي وقت إذا تبيّن لنا أنك انتهكت هذه الشروط أو انخرطت في نشاط احتيالي، أو إذا كان حسابك يُشكّل خطرًا على أمن التطبيق أو سلامته أو على المستخدمين الآخرين. في حالات الانتهاكات الجسيمة، قد يكون التعليق فوريًا ودون إشعار مسبق. يمكنك الاعتراض على التعليق بالتواصل معنا على reemprimeco@gmail.com. سنراجع الاعتراضات بحسن نية ونردّ في غضون فترة زمنية معقولة.`,
       },
       {
         heading: "١٠. الإلغاء والاسترداد",
@@ -233,7 +233,7 @@ export const termsOfService = {
       },
       {
         heading: "١٣. معلومات التواصل",
-        body: `إذا كانت لديك أي أسئلة حول شروط الخدمة هذه، أو إذا كنت بحاجة إلى الإبلاغ عن انتهاك أو تقديم شكوى، يُرجى التواصل معنا على:\n\nشركة برايم برينتنج\nالكويت\nالبريد الإلكتروني: support@primefit.app\n\nنهدف إلى الردّ على جميع الاستفسارات في غضون 3 أيام عمل.`,
+        body: `إذا كانت لديك أي أسئلة حول شروط الخدمة هذه، أو إذا كنت بحاجة إلى الإبلاغ عن انتهاك أو تقديم شكوى، يُرجى التواصل معنا على:\n\nشركة برايم برينتنج\nالكويت\nالبريد الإلكتروني: reemprimeco@gmail.com\n\nنهدف إلى الردّ على جميع الاستفسارات في غضون 3 أيام عمل.`,
       },
     ],
   },
