@@ -31,7 +31,10 @@ export default function LegalPage({ type }: LegalPageProps) {
       <header
         style={{
           background: "linear-gradient(135deg, #0F1E3D 0%, #1B2E5E 100%)",
-          padding: "14px 20px",
+          paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))',
+          paddingBottom: '14px',
+          paddingLeft: '20px',
+          paddingRight: '20px',
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",

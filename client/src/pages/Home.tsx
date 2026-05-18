@@ -137,7 +137,10 @@ export default function Home() {
       {/* ── Top Header ── */}
       <header style={{
         background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        padding: '12px 20px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
+        paddingBottom: '12px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',

@@ -879,7 +879,10 @@ export default function AdminPanel() {
       {/* ── Header ── */}
       <header style={{
         background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-        padding: '14px clamp(20px, 4vw, 48px)',
+        paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))',
+        paddingBottom: '14px',
+        paddingLeft: 'clamp(20px, 4vw, 48px)',
+        paddingRight: 'clamp(20px, 4vw, 48px)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         boxShadow: '0 4px 20px rgba(27,46,94,0.35)',
         position: 'sticky', top: 0, zIndex: 100,
