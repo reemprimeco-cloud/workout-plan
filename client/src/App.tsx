@@ -19,6 +19,25 @@ import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
 import PricingBeforeAuth from "./pages/PricingBeforeAuth";
 import LegalPage from "./pages/LegalPage";
+import { useEffect } from "react";
+
+// Keyboard-aware layout: update CSS var when iOS keyboard opens/closes
+function useKeyboardAwareLayout() {
+  useEffect(() => {
+    const vv = (window as any).visualViewport;
+    if (!vv) return;
+    const update = () => {
+      document.documentElement.style.setProperty('--keyboard-height', `${window.innerHeight - vv.height}px`);
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+}
 
 function Router() {
   return (
@@ -39,6 +58,7 @@ function Router() {
 }
 
 function AppWithSocket() {
+  useKeyboardAwareLayout();
   const { data: currentUser, isLoading: authLoading } = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,

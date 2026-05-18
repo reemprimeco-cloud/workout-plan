@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useGymTracker } from '@/hooks/useGymTracker';
-import NotificationSettings from './NotificationSettings';
 import PrivacySettingsSection from './PrivacySettingsSection';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';

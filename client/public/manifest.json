@@ -1,12 +1,18 @@
 {
   "name": "Prime Fit — Workout Tracker",
   "short_name": "Prime Fit",
-  "description": "برنامج تمارين 8 أسابيع مع تتبع الوزن والإحصائيات",
+  "description": "برنامج تمارين شخصي مع تتبع الوزن والتغذية والمجتمع — Personal workout tracker with nutrition, AI coaching, and community",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#1B2E5E",
   "theme_color": "#1B2E5E",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["health", "fitness", "sports"],
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/manus-storage/logo192_cf9ccb65.png",
@@ -19,6 +25,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "تسجيل تمرين",
+      "short_name": "تمرين",
+      "description": "ابدأ جلسة تمرين جديدة",
+      "url": "/?tab=home",
+      "icons": [{ "src": "/manus-storage/logo192_cf9ccb65.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "مجتمعي",
+      "short_name": "مجتمع",
+      "description": "تصفح منشورات المجتمع",
+      "url": "/?tab=community",
+      "icons": [{ "src": "/manus-storage/logo192_cf9ccb65.png", "sizes": "192x192" }]
     }
   ]
 }
