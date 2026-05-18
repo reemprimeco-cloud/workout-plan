@@ -18,6 +18,7 @@ import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
 import PricingBeforeAuth from "./pages/PricingBeforeAuth";
+import LegalPage from "./pages/LegalPage";
 
 function Router() {
   return (
@@ -29,6 +30,8 @@ function Router() {
       <Route path={"/subscription/error"} component={SubscriptionError} />
       <Route path={"/reset-password"} component={ResetPasswordPage} />
       <Route path={"/profile-setup"} component={ProfileSetupPage} />
+      <Route path={"/privacy"} component={() => <LegalPage type="privacy" />} />
+      <Route path={"/terms"} component={() => <LegalPage type="terms" />} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -42,7 +45,7 @@ function AppWithSocket() {
   });
   // /profile-setup is NOT a public page — users must be logged in to access it.
   // Unauthenticated visitors hitting /profile-setup will be redirected to AuthPage first.
-  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password"].includes(window.location.pathname);
+  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname);
   const isAdminPage = window.location.pathname === "/admin";
 
   // While auth check is in progress, show a full-screen spinner to prevent

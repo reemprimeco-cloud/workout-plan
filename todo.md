@@ -665,3 +665,13 @@
 - [x] Meal cards: replace generic fork icon with food-specific colored SVG per meal name (plate/coffee cup/juice cup per category; food-specific per item)
 - [x] Category tabs: Meals = plate icon, Coffee = coffee cup icon, Drinks = juice cup icon
 - [x] 0 TypeScript errors after changes
+
+## Legal Pages (Privacy Policy & Terms of Service)
+- [x] Write full Privacy Policy content in English (13 sections)
+- [x] Write full Privacy Policy content in Arabic (13 sections, Kuwaiti dialect)
+- [x] Write full Terms of Service content in English (13 sections)
+- [x] Write full Terms of Service content in Arabic (13 sections, Kuwaiti dialect)
+- [x] Build shared LegalPage.tsx component with AR/EN language toggle, clean white layout, Prime Fit branding
+- [x] Register /privacy and /terms routes in App.tsx (public pages, no auth required)
+- [x] Add Legal section to ProfilePanel HelpSection with Privacy Policy and Terms of Service links
+- [x] 0 TypeScript errors after all changes
