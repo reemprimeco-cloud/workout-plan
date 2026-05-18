@@ -10,6 +10,7 @@ import PrivacySettingsSection from './PrivacySettingsSection';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AppIcons } from './AppIcons';
+import { useLocation } from 'wouter';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -132,25 +133,125 @@ function WeightLogSection() {
 // ── Help Section Sub-component ──────────────────────────────────────────────
 function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
   const [open, setOpen] = useState(false);
+  const [, navigate] = useLocation();
+  const isRTL = lang === 'ar';
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
-        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* User Guide accordion */}
+      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center justify-between px-5 py-4 text-left"
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          <span className="font-bold text-gray-800 text-sm">
+            {isRTL ? 'دليل الاستخدام' : 'Help & User Guide'}
+          </span>
+          <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
+            <AppIcons.ChevronDown size={14} />
+          </span>
+        </button>
+        {open && (
+          <div className="border-t border-gray-100">
+            <UserGuide />
+          </div>
+        )}
+      </div>
+
+      {/* Legal links */}
+      <div
+        style={{
+          background: 'white',
+          borderRadius: 16,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}
       >
-        <span className="font-bold text-gray-800 text-sm">
-          {lang === 'ar' ? 'دليل الاستخدام' : 'Help & User Guide'}
-        </span>
-        <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
-          <AppIcons.ChevronDown size={14} />
-        </span>
-      </button>
-      {open && (
-        <div className="border-t border-gray-100">
-          <UserGuide />
+        <div
+          style={{
+            padding: '12px 20px 8px',
+            color: '#9CA3AF',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {isRTL ? 'قانوني' : 'Legal'}
         </div>
-      )}
+        {/* Privacy Policy */}
+        <button
+          onClick={() => navigate('/privacy')}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '13px 20px',
+            background: 'none',
+            border: 'none',
+            borderTop: '1px solid #F3F4F6',
+            cursor: 'pointer',
+            textAlign: isRTL ? 'right' : 'left',
+            direction: isRTL ? 'rtl' : 'ltr',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 32, height: 32,
+              background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+              borderRadius: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#1F2937' }}>
+              {isRTL ? 'سياسة الخصوصية' : 'Privacy Policy'}
+            </span>
+          </div>
+          <AppIcons.ChevronRight size={14} style={{ color: '#9CA3AF', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
+        </button>
+        {/* Terms of Service */}
+        <button
+          onClick={() => navigate('/terms')}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '13px 20px',
+            background: 'none',
+            border: 'none',
+            borderTop: '1px solid #F3F4F6',
+            cursor: 'pointer',
+            textAlign: isRTL ? 'right' : 'left',
+            direction: isRTL ? 'rtl' : 'ltr',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 32, height: 32,
+              background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)',
+              borderRadius: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#1F2937' }}>
+              {isRTL ? 'شروط الخدمة' : 'Terms of Service'}
+            </span>
+          </div>
+          <AppIcons.ChevronRight size={14} style={{ color: '#9CA3AF', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
+        </button>
+      </div>
     </div>
   );
 }
