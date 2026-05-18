@@ -786,3 +786,12 @@
 - [x] Home page: Section hidden when no classes scheduled for today
 - [x] Home page: Bilingual labels (AR/EN) on class cards
 - [x] Vitest tests for gymClasses router (14 tests, all passing)
+
+## Gym Classes Card Redesign
+- [x] Redesign Today's Classes section: 1 card per gym (collapsed by default, auto-expands on load)
+- [x] Gym card header: gym name, logo/initial, total classes count, branch count, expand/collapse chevron
+- [x] Expanded gym card: branches as sub-sections with location icon, each branch lists its today's classes
+- [x] Each class row: class name, intensity badge, coach, time, duration, Join button
+- [x] Joined state per class row: green checkmark, disabled button, green background
+- [x] Bilingual labels (AR/EN) preserved
+- [x] Fixed setState-in-useMemo anti-pattern: auto-expand uses useEffect instead

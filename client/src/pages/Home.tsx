@@ -814,10 +814,9 @@ function CheckInPanel({ onStart, stats, profile }: {
 
 // ── Today's Gym Classes (shown on Home below check-in title, above exercise cards) ─────────────────────────
 function TodayGymClasses() {
-  const { lang, isRTL } = useLanguage();
+  const { lang } = useLanguage();
   const { isAuthenticated } = useAuth();
 
-  // Get today's day name (Monday, Tuesday, etc.)
   const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
   const { data: classes = [], isLoading } = trpc.gymClasses.getTodayClasses.useQuery(
@@ -825,10 +824,46 @@ function TodayGymClasses() {
     { enabled: isAuthenticated }
   );
   const joinMutation = trpc.gymClasses.joinClass.useMutation();
-  const utils = trpc.useUtils();
 
   const [joinedIds, setJoinedIds] = React.useState<Set<number>>(new Set());
   const [joiningId, setJoiningId] = React.useState<number | null>(null);
+  // Track which gym cards are expanded — default: all expanded
+  const [expandedGyms, setExpandedGyms] = React.useState<Set<number>>(new Set());
+
+  // Group classes by gymId, then by branchId
+  const gymGroups = React.useMemo(() => {
+    const map = new Map<number, {
+      gymId: number;
+      gymName: string;
+      gymBrandColor: string | null;
+      gymLogoUrl: string | null;
+      branches: Map<number, { branchId: number; branchName: string; classes: any[] }>;
+    }>();
+    for (const cls of classes as any[]) {
+      if (!map.has(cls.gymId)) {
+        map.set(cls.gymId, {
+          gymId: cls.gymId,
+          gymName: cls.gymName,
+          gymBrandColor: cls.gymBrandColor,
+          gymLogoUrl: cls.gymLogoUrl ?? null,
+          branches: new Map(),
+        });
+      }
+      const gym = map.get(cls.gymId)!;
+      if (!gym.branches.has(cls.branchId)) {
+        gym.branches.set(cls.branchId, { branchId: cls.branchId, branchName: cls.branchName ?? '', classes: [] });
+      }
+      gym.branches.get(cls.branchId)!.classes.push(cls);
+    }
+    return Array.from(map.values());
+  }, [classes]);
+
+  // Auto-expand all gyms when data first loads
+  React.useEffect(() => {
+    if (gymGroups.length > 0) {
+      setExpandedGyms(new Set(gymGroups.map(g => g.gymId)));
+    }
+  }, [gymGroups.length]);
 
   const handleJoin = async (classId: number) => {
     if (joinedIds.has(classId) || joiningId === classId) return;
@@ -837,11 +872,18 @@ function TodayGymClasses() {
       await joinMutation.mutateAsync({ classId });
       setJoinedIds(prev => new Set(Array.from(prev).concat(classId)));
     } catch {
-      // already joined or error — mark as joined anyway
       setJoinedIds(prev => new Set(Array.from(prev).concat(classId)));
     } finally {
       setJoiningId(null);
     }
+  };
+
+  const toggleGym = (gymId: number) => {
+    setExpandedGyms(prev => {
+      const next = new Set(Array.from(prev));
+      if (next.has(gymId)) next.delete(gymId); else next.add(gymId);
+      return next;
+    });
   };
 
   const intensityColor = (i: string) => {
@@ -850,7 +892,6 @@ function TodayGymClasses() {
     return { bg: '#FEE2E2', text: '#DC2626' };
   };
 
-  // Don't render section if no classes and not loading
   if (!isLoading && classes.length === 0) return null;
 
   return (
@@ -863,110 +904,182 @@ function TodayGymClasses() {
             {lang === 'ar' ? 'حصص اليوم' : "Today's Classes"}
           </span>
         </h3>
-        <span style={{ fontSize: 11, color: '#7A9BB5', fontWeight: 600 }}>
-          {lang === 'ar' ? todayDay : todayDay}
-        </span>
+        <span style={{ fontSize: 11, color: '#7A9BB5', fontWeight: 600 }}>{todayDay}</span>
       </div>
 
       {/* Loading skeleton */}
       {isLoading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2].map(i => (
-            <div key={i} style={{ height: 88, background: '#E2E8F0', borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
+            <div key={i} style={{ height: 72, background: '#E2E8F0', borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
           ))}
         </div>
       )}
 
-      {/* Class cards — wide format, one per row */}
-      {!isLoading && classes.map((cls: any) => {
-        const joined = joinedIds.has(cls.id) || cls.alreadyJoined;
-        const ic = intensityColor(cls.intensity);
+      {/* One card per gym */}
+      {!isLoading && gymGroups.map(gym => {
+        const isExpanded = expandedGyms.has(gym.gymId);
+        const accentColor = gym.gymBrandColor || NAVY;
+        const totalClasses = Array.from(gym.branches.values()).reduce((s, b) => s + b.classes.length, 0);
         return (
           <div
-            key={cls.id}
+            key={gym.gymId}
             style={{
               background: 'white',
-              border: `2px solid ${joined ? '#BBF7D0' : SKY_LIGHT}`,
-              borderRadius: 16,
-              padding: '14px 16px',
-              marginBottom: 10,
-              boxShadow: '0 2px 12px rgba(27,46,94,0.07)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-              transition: 'border-color 0.3s',
+              borderRadius: 18,
+              marginBottom: 12,
+              boxShadow: '0 3px 16px rgba(27,46,94,0.09)',
+              overflow: 'hidden',
+              border: `1.5px solid ${SKY_LIGHT}`,
             }}
           >
-            {/* Left: brand color accent bar */}
-            <div style={{
-              width: 5, alignSelf: 'stretch', borderRadius: 4,
-              background: cls.gymBrandColor || NAVY,
-              flexShrink: 0,
-            }} />
-
-            {/* Center: class info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontWeight: 900, color: NAVY, fontSize: 14 }}>{cls.className}</span>
-                <span style={{ ...ic, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ic.bg, color: ic.text }}>
-                  {cls.intensity}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
-                  <AppIcons.Coach size={13} />{cls.coach}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#475569' }}>
-                  <AppIcons.Timer size={13} />{cls.time} · {cls.durationMin}{lang === 'ar' ? 'د' : 'min'}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#94A3B8' }}>
-                  <AppIcons.Location size={12} />{cls.gymName}{cls.branchName ? ` · ${cls.branchName}` : ''}
-                </span>
-              </div>
-              {cls.notes && (
-                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>{cls.notes}</div>
-              )}
-            </div>
-
-            {/* Right: join button */}
+            {/* Gym header — tap to expand/collapse */}
             <button
-              onClick={() => handleJoin(cls.id)}
-              disabled={joined || joiningId === cls.id}
+              onClick={() => toggleGym(gym.gymId)}
               style={{
-                flexShrink: 0,
-                padding: '8px 16px',
-                borderRadius: 10,
+                width: '100%',
+                background: 'none',
                 border: 'none',
-                cursor: joined ? 'default' : 'pointer',
-                fontSize: 12,
-                fontWeight: 700,
-                background: joined
-                  ? 'linear-gradient(135deg, #22C55E, #16A34A)'
-                  : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
-                color: 'white',
-                transition: 'background 0.3s',
+                cursor: 'pointer',
+                padding: '14px 16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: 12,
+                borderBottom: isExpanded ? `1.5px solid ${SKY_LIGHT}` : 'none',
               }}
             >
-              {joiningId === cls.id ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <AppIcons.Spinner size={13} />
-                  {lang === 'ar' ? '...' : '...'}
-                </span>
-              ) : joined ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <AppIcons.Check size={13} />
-                  {lang === 'ar' ? 'مسجّل' : 'Joined'}
-                </span>
+              {/* Accent bar */}
+              <div style={{ width: 5, height: 42, borderRadius: 4, background: accentColor, flexShrink: 0 }} />
+
+              {/* Gym logo or initial */}
+              {gym.gymLogoUrl ? (
+                <img src={gym.gymLogoUrl} alt={gym.gymName}
+                  style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
               ) : (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <AppIcons.Plus size={13} />
-                  {lang === 'ar' ? 'انضم' : 'Join'}
-                </span>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                  background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontWeight: 900, fontSize: 18,
+                }}>
+                  {gym.gymName.charAt(0).toUpperCase()}
+                </div>
               )}
+
+              {/* Gym name + class count */}
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontWeight: 900, color: NAVY, fontSize: 15 }}>{gym.gymName}</div>
+                <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>
+                  {totalClasses} {lang === 'ar' ? 'حصة اليوم' : totalClasses === 1 ? 'class today' : 'classes today'}
+                  {' · '}{gym.branches.size} {lang === 'ar' ? 'فرع' : gym.branches.size === 1 ? 'branch' : 'branches'}
+                </div>
+              </div>
+
+              {/* Chevron */}
+              <svg
+                width={18} height={18} viewBox="0 0 24 24" fill="none"
+                style={{ flexShrink: 0, transition: 'transform 0.25s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              >
+                <path d="M6 9l6 6 6-6" stroke={NAVY} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
+
+            {/* Expanded content: branches + classes */}
+            {isExpanded && (
+              <div style={{ padding: '8px 16px 14px' }}>
+                {Array.from(gym.branches.values()).map((branch, bIdx) => (
+                  <div key={branch.branchId} style={{ marginTop: bIdx > 0 ? 14 : 6 }}>
+                    {/* Branch label */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: 11, fontWeight: 700, color: '#7A9BB5',
+                      textTransform: 'uppercase', letterSpacing: '0.06em',
+                      marginBottom: 8,
+                    }}>
+                      <AppIcons.Location size={11} />
+                      {branch.branchName || (lang === 'ar' ? 'الفرع الرئيسي' : 'Main Branch')}
+                    </div>
+
+                    {/* Class rows */}
+                    {branch.classes.map((cls: any, cIdx: number) => {
+                      const joined = joinedIds.has(cls.id) || cls.alreadyJoined;
+                      const ic = intensityColor(cls.intensity);
+                      return (
+                        <div
+                          key={cls.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: '10px 12px',
+                            borderRadius: 12,
+                            background: joined ? '#F0FDF4' : '#F8FAFC',
+                            marginBottom: cIdx < branch.classes.length - 1 ? 6 : 0,
+                            border: `1px solid ${joined ? '#BBF7D0' : '#E2E8F0'}`,
+                            transition: 'background 0.3s, border-color 0.3s',
+                          }}
+                        >
+                          {/* Left accent dot */}
+                          <div style={{ width: 4, height: 36, borderRadius: 3, background: accentColor, flexShrink: 0 }} />
+
+                          {/* Class info */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 800, color: NAVY, fontSize: 13 }}>{cls.className}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ic.bg, color: ic.text }}>
+                                {cls.intensity}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, flexWrap: 'wrap' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
+                                <AppIcons.Coach size={11} />{cls.coach}
+                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
+                                <AppIcons.Timer size={11} />{cls.time} · {cls.durationMin}{lang === 'ar' ? 'د' : 'min'}
+                              </span>
+                            </div>
+                            {cls.notes && (
+                              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2 }}>{cls.notes}</div>
+                            )}
+                          </div>
+
+                          {/* Join button */}
+                          <button
+                            onClick={() => handleJoin(cls.id)}
+                            disabled={joined || joiningId === cls.id}
+                            style={{
+                              flexShrink: 0,
+                              padding: '7px 13px',
+                              borderRadius: 9,
+                              border: 'none',
+                              cursor: joined ? 'default' : 'pointer',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: joined
+                                ? 'linear-gradient(135deg, #22C55E, #16A34A)'
+                                : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+                              color: 'white',
+                              transition: 'background 0.3s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            {joiningId === cls.id ? (
+                              <><AppIcons.Spinner size={12} /> ...</>
+                            ) : joined ? (
+                              <><AppIcons.Check size={12} /> {lang === 'ar' ? 'مسجّل' : 'Joined'}</>
+                            ) : (
+                              <><AppIcons.Plus size={12} /> {lang === 'ar' ? 'انضم' : 'Join'}</>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
