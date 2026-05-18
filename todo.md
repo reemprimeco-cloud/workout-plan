@@ -705,3 +705,20 @@
 - [x] index.css: Improve touch target sizes (min 44px for all interactive elements)
 - [x] index.css: Disable text selection on UI elements (user-select: none on buttons/nav)
 - [x] PWA: Update manifest.json with better app metadata (description, categories, screenshots)
+
+## Subscription System Visibility & Automation Fix (May 18)
+- [x] Admin Users tab: Replace compact subscription badge with rich subscription card showing plan name, billing cycle, payment status, start date, expiry date, days remaining, colored status badge
+- [x] Admin Users tab: Show "Free Trial — 7 Days" badge with expiry for trialing users
+- [x] Admin Users tab: Show "Prime Plus — Monthly/Yearly", "Prime Pro — Monthly/Yearly" for paid users
+- [x] Admin Users tab: Color-coded badges: Green=Active, Orange=Trial, Red=Expired, Grey=No subscription
+- [x] Admin Subscriptions tab: Re-enable the subscriptions tab (currently wrapped in {false &&}) with full details
+- [x] Admin Subscriptions tab: Add user name column (join with users table via userId)
+- [x] Admin Subscriptions tab: Show billing_cycle (period) clearly as "Monthly" / "Yearly" / "Free Trial"
+- [x] Admin Subscriptions tab: Show payment_status column (paid/free/pending/failed)
+- [x] Admin Subscriptions tab: Show days remaining with color coding
+- [x] Server: Ensure myfatoorahWebhook sets paymentStatus="paid" on subscription upsert (already does via paymentStatus field)
+- [x] Server: Ensure activateFreeSubscription sets period="free_trial" and paymentStatus="free" correctly
+- [x] Server: Ensure activateFreeTrial (license key) sets period="free_trial" and paymentStatus="free"
+- [x] Server: listSubscriptions — join with users table to return user name and email
+- [x] Server: listUsers — ensure subscription object includes period, paymentStatus, paymentProvider, startsAt, expiresAt
+- [x] DB: Verify subscriptions table has all required columns (already has: plan, status, period, paymentStatus, paymentProvider, startsAt, expiresAt, licenseKey, email)
