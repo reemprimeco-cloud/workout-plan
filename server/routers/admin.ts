@@ -188,8 +188,28 @@ export const adminRouter = router({
     const database = await getDb();
     if (!database) return [];
     const rows = await database
-      .select()
+      .select({
+        id: subscriptions.id,
+        userId: subscriptions.userId,
+        plan: subscriptions.plan,
+        status: subscriptions.status,
+        period: subscriptions.period,
+        paymentStatus: subscriptions.paymentStatus,
+        paymentProvider: subscriptions.paymentProvider,
+        startsAt: subscriptions.startsAt,
+        expiresAt: subscriptions.expiresAt,
+        licenseKey: subscriptions.licenseKey,
+        email: subscriptions.email,
+        invoiceId: subscriptions.invoiceId,
+        autoRenew: subscriptions.autoRenew,
+        createdAt: subscriptions.createdAt,
+        updatedAt: subscriptions.updatedAt,
+        userName: users.name,
+        userFullName: users.fullName,
+        userEmail: users.email,
+      })
       .from(subscriptions)
+      .leftJoin(users, eq(subscriptions.userId, users.openId))
       .orderBy(desc(subscriptions.createdAt))
       .limit(200);
     return rows;

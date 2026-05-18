@@ -22,7 +22,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'profile';
+type Tab = 'dashboard' | 'users' | 'subscriptions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -918,6 +918,7 @@ export default function AdminPanel() {
         {([
           ['dashboard', t('tabDashboard', lang)],
           ['users', t('tabUsers', lang)],
+          ['subscriptions', t('tabSubscriptions', lang)],
           ['broadcast', t('tabBroadcast', lang)],
           ['rewards', t('tabRewards', lang)],
           ['challenges', t('tabChallenges', lang)],
@@ -1189,9 +1190,23 @@ export default function AdminPanel() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {filtered.map((u) => {
                   const sub = u.subscription;
-                  const statusColor: Record<string, string> = { active: '#16A34A', trialing: '#2563EB', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706' };
+                  const statusColor: Record<string, string> = { active: '#16A34A', trialing: '#D97706', expired: '#DC2626', cancelled: '#64748b', pending: '#D97706' };
+                  const statusBg: Record<string, string> = { active: '#F0FDF4', trialing: '#FFFBEB', expired: '#FEF2F2', cancelled: '#F8FAFC', pending: '#FFFBEB' };
                   const planLabel: Record<string, string> = { free: lang === 'ar' ? 'مجاني' : 'Free', prime_plus: 'Prime Plus', prime_pro: 'Prime Pro' };
+                  const periodLabel: Record<string, string> = { monthly: lang === 'ar' ? 'شهري' : 'Monthly', yearly: lang === 'ar' ? 'سنوي' : 'Yearly', lifetime: lang === 'ar' ? 'مدى الحياة' : 'Lifetime', free_trial: lang === 'ar' ? 'تجربة مجانية 7 أيام' : 'Free Trial 7 Days' };
+                  const payStatusLabel: Record<string, string> = { paid: lang === 'ar' ? 'مدفوع' : 'Paid', free: lang === 'ar' ? 'مجاني' : 'Free', pending: lang === 'ar' ? 'معلق' : 'Pending', failed: lang === 'ar' ? 'فشل' : 'Failed', refunded: lang === 'ar' ? 'مسترد' : 'Refunded' };
+                  const payStatusColor: Record<string, string> = { paid: '#16A34A', free: '#2563EB', pending: '#D97706', failed: '#DC2626', refunded: '#64748b' };
+                  const daysLeft = sub?.expiresAt ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / 86400000) : null;
+                  const daysColor = daysLeft === null ? '#64748b' : daysLeft <= 0 ? '#DC2626' : daysLeft <= 7 ? '#D97706' : '#16A34A';
                   const isEditing = editingUser === u.openId;
+                  // Build human-readable subscription label
+                  const getSubLabel = () => {
+                    if (!sub) return null;
+                    const plan = planLabel[sub.plan] ?? sub.plan;
+                    const period = periodLabel[sub.period] ?? sub.period;
+                    if (sub.status === 'trialing' || sub.period === 'free_trial') return `${lang === 'ar' ? 'تجربة مجانية' : 'Free Trial'} — 7 ${lang === 'ar' ? 'أيام' : 'Days'}`;
+                    return `${plan} — ${period}`;
+                  };
                   return (
                     <div key={u.id} style={{ border: `1.5px solid ${SKY_LIGHT}44`, borderRadius: 14, padding: '14px 18px', background: '#FAFBFF' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
@@ -1205,10 +1220,42 @@ export default function AdminPanel() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           {sub ? (
-                            <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}18`, color: statusColor[sub.status] ?? '#64748b', borderRadius: 6, padding: '4px 10px', fontWeight: 700, fontSize: 11 }}>
-                              {planLabel[sub.plan] ?? sub.plan} · {sub.status}
-                              {sub.expiresAt ? ` · ${new Date(sub.expiresAt).toLocaleDateString('en-GB')}` : ''}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                              {/* Main plan badge */}
+                              <span style={{ background: statusBg[sub.status] ?? '#F8FAFC', color: statusColor[sub.status] ?? '#64748b', borderRadius: 8, padding: '5px 12px', fontWeight: 800, fontSize: 12, border: `1.5px solid ${statusColor[sub.status] ?? '#64748b'}44` }}>
+                                {getSubLabel()}
+                              </span>
+                              {/* Status + Payment row */}
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}15`, color: statusColor[sub.status] ?? '#64748b', borderRadius: 5, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                                  {sub.status === 'active' ? (lang === 'ar' ? '✓ نشط' : '✓ Active') :
+                                   sub.status === 'trialing' ? (lang === 'ar' ? '◑ تجريبي' : '◑ Trial') :
+                                   sub.status === 'expired' ? (lang === 'ar' ? '✗ منتهي' : '✗ Expired') :
+                                   sub.status === 'cancelled' ? (lang === 'ar' ? '✗ ملغي' : '✗ Cancelled') : sub.status}
+                                </span>
+                                <span style={{ background: `${payStatusColor[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor[sub.paymentStatus] ?? '#64748b', borderRadius: 5, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                                  {payStatusLabel[sub.paymentStatus] ?? sub.paymentStatus}
+                                </span>
+                              </div>
+                              {/* Dates row */}
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                {sub.startsAt && (
+                                  <span style={{ color: '#94A3B8', fontSize: 10 }}>
+                                    {lang === 'ar' ? 'بدأ:' : 'Start:'} {new Date(sub.startsAt).toLocaleDateString('en-GB')}
+                                  </span>
+                                )}
+                                {sub.expiresAt && (
+                                  <span style={{ color: '#94A3B8', fontSize: 10 }}>
+                                    {lang === 'ar' ? 'ينتهي:' : 'Exp:'} {new Date(sub.expiresAt).toLocaleDateString('en-GB')}
+                                  </span>
+                                )}
+                                {daysLeft !== null && (
+                                  <span style={{ color: daysColor, fontSize: 10, fontWeight: 700 }}>
+                                    {daysLeft <= 0 ? (lang === 'ar' ? 'منتهي' : 'Expired') : `${daysLeft} ${lang === 'ar' ? 'يوم' : 'days left'}`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           ) : (
                             <span style={{ background: '#F1F5F9', color: '#94A3B8', borderRadius: 6, padding: '4px 10px', fontSize: 11 }}>{lang === 'ar' ? 'بدون اشتراك' : 'No subscription'}</span>
                           )}
@@ -1398,12 +1445,12 @@ export default function AdminPanel() {
           </>
         )}
 
-        {/* Subscriptions tab removed */}
-        {false && (
+        {/* ── SUBSCRIPTIONS TAB ── */}
+        {activeTab === 'subscriptions' && (
           <div style={cardStyle}>
             <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('tabSubscriptions', lang)}</h2>
             {subscriptionsQuery.isLoading ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
             ) : (subscriptionsQuery.data ?? []).length === 0 ? (
               <p style={{ color: '#7A9BB5', fontSize: 13 }}>{t('subNoData', lang)}</p>
             ) : (
@@ -1411,11 +1458,14 @@ export default function AdminPanel() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ background: NAVY, color: 'white' }}>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'المستخدم' : 'User'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'البريد الإلكتروني' : 'Email'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الخطة' : 'Plan'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'دورة الفوترة' : 'Billing Cycle'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الحالة' : 'Status'}</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'المزود' : 'Provider'}</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الدفع' : 'Payment'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'تاريخ البدء' : 'Start Date'}</th>
+                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'الأيام المتبقية' : 'Days Left'}</th>
                       <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, whiteSpace: 'nowrap' }}>{lang === 'ar' ? 'مفتاح الترخيص' : 'License Key'}</th>
                     </tr>
@@ -1423,49 +1473,80 @@ export default function AdminPanel() {
                   <tbody>
                     {(subscriptionsQuery.data ?? []).map((sub, i) => {
                       const statusColor: Record<string, string> = {
-                        active: '#16A34A', trialing: '#2563EB', expired: '#DC2626',
+                        active: '#16A34A', trialing: '#D97706', expired: '#DC2626',
                         cancelled: '#64748b', pending: '#D97706',
                       };
-                      const planLabel: Record<string, string> = {
-                        free: t('planFree', lang),
-                        prime_plus: t('planPrimePlus', lang),
-                        prime_pro: t('planPrimePro', lang),
+                      const statusBg2: Record<string, string> = {
+                        active: '#F0FDF4', trialing: '#FFFBEB', expired: '#FEF2F2',
+                        cancelled: '#F8FAFC', pending: '#FFFBEB',
                       };
-                      const statusLabel: Record<string, string> = {
-                        active: t('subActive', lang),
-                        trialing: t('subTrialing', lang),
-                        expired: t('subExpired', lang),
-                        cancelled: t('subCancelled', lang),
-                        pending: t('subPending', lang),
-                      };
-                      const daysLeft = sub.expiresAt ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
-                      const daysColor = daysLeft === null ? '#64748b' : daysLeft <= 0 ? '#DC2626' : daysLeft <= 7 ? '#F59E0B' : '#16A34A';
-                      const providerLabel: Record<string, string> = {
-                        myfatoorah: 'MyFatoorah',
-                        manual: lang === 'ar' ? 'يدوي' : 'Manual',
+                      const planLabel2: Record<string, string> = {
                         free: lang === 'ar' ? 'مجاني' : 'Free',
+                        prime_plus: 'Prime Plus',
+                        prime_pro: 'Prime Pro',
                       };
+                      const periodLabel2: Record<string, string> = {
+                        monthly: lang === 'ar' ? 'شهري' : 'Monthly',
+                        yearly: lang === 'ar' ? 'سنوي' : 'Yearly',
+                        lifetime: lang === 'ar' ? 'مدى الحياة' : 'Lifetime',
+                        free_trial: lang === 'ar' ? 'تجربة مجانية' : 'Free Trial',
+                      };
+                      const payStatusLabel2: Record<string, string> = {
+                        paid: lang === 'ar' ? 'مدفوع' : 'Paid',
+                        free: lang === 'ar' ? 'مجاني' : 'Free',
+                        pending: lang === 'ar' ? 'معلق' : 'Pending',
+                        failed: lang === 'ar' ? 'فشل' : 'Failed',
+                        refunded: lang === 'ar' ? 'مسترد' : 'Refunded',
+                      };
+                      const payStatusColor2: Record<string, string> = {
+                        paid: '#16A34A', free: '#2563EB', pending: '#D97706', failed: '#DC2626', refunded: '#64748b',
+                      };
+                      const daysLeft2 = sub.expiresAt ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / 86400000) : null;
+                      const daysColor2 = daysLeft2 === null ? '#64748b' : daysLeft2 <= 0 ? '#DC2626' : daysLeft2 <= 7 ? '#D97706' : '#16A34A';
+                      const displayName = sub.userFullName || sub.userName || '—';
+                      const displayEmail = sub.userEmail || sub.email || '—';
+                      // Build plan + cycle label
+                      const planCycleLabel = (() => {
+                        if (sub.status === 'trialing' || sub.period === 'free_trial') {
+                          return lang === 'ar' ? 'تجربة مجانية — 7 أيام' : 'Free Trial — 7 Days';
+                        }
+                        return `${planLabel2[sub.plan] ?? sub.plan} — ${periodLabel2[sub.period] ?? sub.period}`;
+                      })();
                       return (
                         <tr key={sub.id} style={{ background: i % 2 === 0 ? '#F8FBFF' : 'white', borderBottom: `1px solid ${SKY_LIGHT}44` }}>
-                          <td style={{ padding: '10px 12px', color: '#334155', fontSize: 11 }}>
-                            {sub.email ? (sub.email.length > 20 ? sub.email.slice(0, 20) + '…' : sub.email) : '—'}
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, fontSize: 12, whiteSpace: 'nowrap' }}>
+                            {displayName}
                           </td>
-                          <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY }}>
-                            {planLabel[sub.plan] ?? sub.plan}
+                          <td style={{ padding: '10px 12px', color: '#334155', fontSize: 11, direction: 'ltr' }}>
+                            {displayEmail.length > 24 ? displayEmail.slice(0, 24) + '…' : displayEmail}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, whiteSpace: 'nowrap' }}>
+                            {planLabel2[sub.plan] ?? sub.plan}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#475569', fontSize: 11, whiteSpace: 'nowrap' }}>
+                            {periodLabel2[sub.period] ?? sub.period}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}18`, color: statusColor[sub.status] ?? '#64748b', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11 }}>
-                              {statusLabel[sub.status] ?? sub.status}
+                            <span style={{ background: statusBg2[sub.status] ?? '#F8FAFC', color: statusColor[sub.status] ?? '#64748b', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11, border: `1px solid ${statusColor[sub.status] ?? '#64748b'}33` }}>
+                              {sub.status === 'active' ? (lang === 'ar' ? '✓ نشط' : '✓ Active') :
+                               sub.status === 'trialing' ? (lang === 'ar' ? '◑ تجريبي' : '◑ Trial') :
+                               sub.status === 'expired' ? (lang === 'ar' ? '✗ منتهي' : '✗ Expired') :
+                               sub.status === 'cancelled' ? (lang === 'ar' ? '✗ ملغي' : '✗ Cancelled') : sub.status}
                             </span>
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
-                            {providerLabel[sub.paymentProvider] ?? sub.paymentProvider}
+                          <td style={{ padding: '10px 12px' }}>
+                            <span style={{ background: `${payStatusColor2[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor2[sub.paymentStatus] ?? '#64748b', borderRadius: 5, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>
+                              {payStatusLabel2[sub.paymentStatus] ?? sub.paymentStatus}
+                            </span>
                           </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
-                            {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
+                            {sub.startsAt ? new Date(sub.startsAt).toLocaleDateString('en-GB') : '—'}
                           </td>
-                          <td style={{ padding: '10px 12px', color: daysColor, fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}>
-                            {daysLeft === null ? (lang === 'ar' ? '∞' : '∞') : daysLeft <= 0 ? (lang === 'ar' ? 'منتهي' : 'Expired') : `${daysLeft}d`}
+                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
+                            {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB') : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: daysColor2, fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}>
+                            {daysLeft2 === null ? '∞' : daysLeft2 <= 0 ? (lang === 'ar' ? 'منتهي' : 'Expired') : `${daysLeft2}d`}
                           </td>
                           <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: 11, color: sub.licenseKey ? '#1B2E5E' : '#CBD5E1' }}>
                             {sub.licenseKey ? (

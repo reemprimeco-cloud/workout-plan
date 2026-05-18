@@ -150,13 +150,33 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
         .where(eq(subscriptions.userId, userId)).limit(1);
       if (existingSub.length > 0) {
         await db.update(subscriptions)
-          .set({ plan, status: "active", period, startsAt: new Date(), expiresAt: expiry, invoiceId, licenseKey: licenseCode })
+          .set({
+            plan,
+            status: "active",
+            period,
+            paymentStatus: "paid",
+            paymentProvider: "myfatoorah",
+            startsAt: new Date(),
+            expiresAt: expiry,
+            invoiceId,
+            licenseKey: licenseCode,
+            email: email || existingSub[0].email,
+            updatedAt: new Date(),
+          })
           .where(eq(subscriptions.userId, userId));
       } else {
         await db.insert(subscriptions).values({
-          userId, plan, status: "active", period,
-          startsAt: new Date(), expiresAt: expiry,
-          invoiceId, licenseKey: licenseCode,
+          userId,
+          plan,
+          status: "active",
+          period,
+          paymentStatus: "paid",
+          paymentProvider: "myfatoorah",
+          startsAt: new Date(),
+          expiresAt: expiry,
+          invoiceId,
+          licenseKey: licenseCode,
+          email: email || null,
         });
       }
 
