@@ -223,10 +223,10 @@ function DailySummaryCard({ lang, goals }: { lang: string; goals: any }) {
     };
   }, [todayMeals]);
 
-  const calGoal     = goals?.dailyCalories || 2000;
-  const proteinGoal = goals?.dailyProtein  || 150;
-  const carbsGoal   = goals?.dailyCarbs    || 250;
-  const fatGoal     = goals?.dailyFat      || 65;
+  const calGoal     = goals?.calories  || 2000;
+  const proteinGoal = goals?.proteinG  || 150;
+  const carbsGoal   = goals?.carbsG    || 250;
+  const fatGoal     = goals?.fatG      || 65;
   const remaining   = Math.max(calGoal - totals.cal, 0);
   const calPct      = Math.min((totals.cal / calGoal) * 100, 100);
   const ringColor   = totals.cal > calGoal ? "#EF4444" : NAVY;
@@ -248,7 +248,8 @@ function DailySummaryCard({ lang, goals }: { lang: string; goals: any }) {
           <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center" }}>
             <div style={{ fontSize: 20, fontWeight: 900, color: ringColor, lineHeight: 1 }}>{totals.cal}</div>
             <div style={{ fontSize: 9, color: MUTED, marginTop: 2 }}>{tl("kcal", lang)}</div>
-            <div style={{ fontSize: 9, color: MUTED }}>{tl("consumed", lang)}</div>
+            <div style={{ fontSize: 9, color: MUTED, fontWeight: 700 }}>{tl("consumed", lang)}</div>
+            <div style={{ fontSize: 8, color: MUTED }}>{lang === "ar" ? "أكلته اليوم" : "Eaten today"}</div>
           </div>
         </div>
 
@@ -256,12 +257,23 @@ function DailySummaryCard({ lang, goals }: { lang: string; goals: any }) {
         <div style={{ flex: 1 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
             {[
-              { label: tl("goal", lang),      val: calGoal,   color: TEXT2 },
-              { label: tl("remaining", lang),  val: remaining, color: remaining === 0 ? DANGER : C_GREEN },
-            ].map(({ label, val, color }) => (
+              {
+                label:    tl("goal", lang),
+                sublabel: lang === "ar" ? "هدفك اليومي" : "Your daily target",
+                val:      calGoal,
+                color:    TEXT2,
+              },
+              {
+                label:    tl("remaining", lang),
+                sublabel: lang === "ar" ? "الهدف − المستهلك" : "Goal − Consumed",
+                val:      remaining,
+                color:    remaining === 0 ? DANGER : C_GREEN,
+              },
+            ].map(({ label, sublabel, val, color }) => (
               <div key={label} style={{ background: PAGE_BG, borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color }}>{val}</div>
-                <div style={{ fontSize: 10, color: MUTED }}>{label}</div>
+                <div style={{ fontSize: 10, color: MUTED, fontWeight: 700 }}>{label}</div>
+                <div style={{ fontSize: 9, color: MUTED, marginTop: 1 }}>{sublabel}</div>
               </div>
             ))}
           </div>

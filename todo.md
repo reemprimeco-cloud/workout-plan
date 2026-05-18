@@ -754,3 +754,12 @@
 - [x] Fix ProfileSetupPage.tsx: all Arabic-only strings translated
 - [x] Fix ResetPasswordPage.tsx: all Arabic-only strings translated
 - [x] All 135 vitest tests still passing after translation changes
+
+## Nutrition Daily Reset
+- [x] Meals and water intake are keyed by calendar date — server queries by today's date window, auto-resets at midnight
+- [x] At midnight (new day), today's data automatically becomes history; fresh empty day starts
+- [x] History tab shows all past days' meal logs (getDailyHistory procedure)
+- [x] Water intake also resets daily (waterLogs keyed by date string)
+- [x] Fix DailySummaryCard: use correct field names (goals.calories/proteinG/carbsG/fatG instead of goals.dailyCalories etc.)
+- [x] Meals Today summary labels clarified: "kcal Consumed" = eaten today, "Goal" = daily calorie target, "Remaining" = Goal − Consumed
+- [x] Add short explanatory subtitles under each summary number so users understand what each value means
