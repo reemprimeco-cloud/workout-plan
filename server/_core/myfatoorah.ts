@@ -2,10 +2,14 @@ import { ENV } from "./env";
 
 const BASE = ENV.myfatoorahApiUrl.replace(/\/+$/, "");
 
-// Plan prices in KWD
+// Gross prices are set so that after MyFatoorah fee (1% + 0.100 KWD)
+// the net received equals the target amounts:
+//   Prime Plus: monthly net 2.500 KWD, yearly net 25.000 KWD
+//   Prime Pro:  monthly net 4.500 KWD, yearly net 45.000 KWD
+// Formula: gross = (net + 0.100) / 0.99
 export const PLAN_PRICES = {
-  prime_plus: { monthly: 2.5, yearly: 25 },
-  prime_pro:  { monthly: 4.5, yearly: 45 },
+  prime_plus: { monthly: 2.626, yearly: 25.354 },
+  prime_pro:  { monthly: 4.646, yearly: 45.556 },
 } as const;
 
 export type PlanId = "prime_plus" | "prime_pro";

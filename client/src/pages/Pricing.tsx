@@ -101,8 +101,8 @@ const PLANS = [
     nameAr: "برايم بلس",
     descEn: "Full access with AI coaching",
     descAr: "وصول كامل مع المدرب الذكي",
-    monthly: 2.5,
-    yearly: 25,
+    monthly: 2.626,
+    yearly: 25.354,
     color: NAVY,
     popular: true,
     features: [
@@ -120,8 +120,8 @@ const PLANS = [
     nameAr: "برايم برو",
     descEn: "Everything + priority support",
     descAr: "كل شيء + دعم أولوية",
-    monthly: 4.5,
-    yearly: 45,
+    monthly: 4.646,
+    yearly: 45.556,
     color: GOLD,
     features: [
       { en: "Everything in Plus",        ar: "كل شيء في بلس" },
