@@ -468,7 +468,7 @@
 
 ## Profile & Auth UI Fixes (May 17)
 - [x] ProfilePanel: Remove "Change Key" button, keep only Logout (already removed in previous batch)
-- [ ] ProfilePanel: Show subscription card (plan, expiry, days left, status color)
+- [x] ProfilePanel: Show subscription card (plan, expiry, days left, status color) (already done - SubscriptionCard component)
 - [x] ProfilePanel: Remove notification preferences section (unused import removed)
 - [x] ProfilePanel: Remove workout reminder section (not present in current code)
 - [x] ProfilePanel: Remove "Started: 17 May 2026", "Data saved locally", "Auto save enabled" text (not present in current code)
@@ -541,10 +541,10 @@
 - [x] Filter out admin users from the Users tab (only show role = 'user' accounts)
 
 ## Delete User Button in Admin Users Tab
-- [ ] Add Delete button to each user row in the admin Users tab
-- [ ] Show confirmation dialog before deleting
-- [ ] Wire to existing deleteUser tRPC procedure
-- [ ] Refresh user list after successful deletion
+- [x] Add Delete button to each user row in the admin Users tab (already done)
+- [x] Show confirmation dialog before deleting (already done)
+- [x] Wire to existing deleteUser tRPC procedure (already done)
+- [x] Refresh user list after successful deletion (already done)
 
 ## Admin Panel — Remove Licenses Tab & Update Dashboard
 - [x] Remove the Licenses tab from the admin panel tab bar
