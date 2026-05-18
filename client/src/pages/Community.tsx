@@ -973,7 +973,7 @@ export default function Community({
     <div dir={isRTL ? "rtl" : "ltr"} style={{ minHeight: "100vh", background: BG, fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif" }}>
 
       {/* ── Top Bar ── */}
-      <div style={{ background: CARD, borderBottom: `1px solid ${BORDER}`, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+      <div style={{ background: CARD, borderBottom: `1px solid ${BORDER}`, paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))', paddingBottom: '12px', paddingLeft: '16px', paddingRight: '16px', display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
         <span style={{ fontWeight: 900, fontSize: 20, color: NAVY }}>{t("community", lang)}</span>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <button onClick={() => setShowSearch(p => !p)} style={{ background: "none", border: "none", cursor: "pointer", color: NAVY, padding: 6 }}><Search size={20} /></button>
