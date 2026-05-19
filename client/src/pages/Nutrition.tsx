@@ -1737,7 +1737,7 @@ function InsightsTab({ lang }: { lang: string }) {
 }
 
 // ── Main Nutrition Page ───────────────────────────────────────────────────────
-type NutritionTab = "dashboard" | "meals" | "scanner" | "insights";
+type NutritionTab = "dashboard" | "meals" | "scanner";
 
 export default function Nutrition() {
   const { lang, isRTL } = useLanguage();
@@ -1753,7 +1753,6 @@ export default function Nutrition() {
     { id: "dashboard", icon: <NutritionDashboardIcon size={22} />, label: tl("dashboard", lang) },
     { id: "meals",     icon: <NutritionMealsIcon size={22} />,     label: tl("meals",     lang) },
     { id: "scanner",   icon: <NutritionScannerIcon size={22} />,   label: tl("scanner",   lang) },
-    { id: "insights",  icon: <NutritionRobotIcon size={22} />,     label: tl("insights",  lang) },
   ];
 
   return (
@@ -1820,7 +1819,7 @@ export default function Nutrition() {
         {activeTab === "dashboard" && <DashboardTab lang={lang} onOpenGoals={() => setShowGoals(true)} />}
         {activeTab === "meals"     && <MealsTab lang={lang} />}
         {activeTab === "scanner"   && <ScannerTab lang={lang} onSaved={() => setActiveTab("meals")} />}
-        {activeTab === "insights"  && <InsightsTab lang={lang} />}
+
       </div>
 
       {/* Goals modal */}
