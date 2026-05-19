@@ -11,7 +11,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Crown, Zap, Star, Copy, CheckCheck, X, User, Mail, Phone } from "lucide-react";
+import { Check, Loader2, Crown, Zap, Star, Copy, CheckCheck, X, User, Mail } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
@@ -62,15 +62,13 @@ const T = {
   okThanks:       { en: "OK, Thanks!",                               ar: "حسناً، شكراً!" },
   fullName:       { en: "Full Name",                                 ar: "الاسم الكامل" },
   emailAddr:      { en: "Email Address",                             ar: "البريد الإلكتروني" },
-  phoneNum:       { en: "Phone Number",                              ar: "رقم الهاتف" },
   namePlaceholder:{ en: "Your full name",                            ar: "اسمك الكامل" },
   emailPlaceholder:{ en: "your@email.com",                           ar: "بريدك@الإلكتروني.com" },
-  phonePlaceholder:{ en: "+965 XXXX XXXX",                           ar: "+965 XXXX XXXX" },
   proceedPayment: { en: "Proceed to Payment",                        ar: "المتابعة للدفع" },
   cancel:         { en: "Cancel",                                    ar: "إلغاء" },
   nameRequired:   { en: "Name is required",                          ar: "الاسم مطلوب" },
   emailRequired:  { en: "Valid email is required",                   ar: "البريد الإلكتروني مطلوب" },
-  phoneRequired:  { en: "Phone number is required",                  ar: "رقم الهاتف مطلوب" },
+
   orderSummary:   { en: "Order Summary",                             ar: "ملخص الطلب" },
 };
 
@@ -192,10 +190,8 @@ export default function Pricing() {
   const [selectedPlan, setSelectedPlan]     = useState<"prime_plus" | "prime_pro" | "free" | null>(null);
   const [custName, setCustName]             = useState("");
   const [custEmail, setCustEmail]           = useState("");
-  const [custPhone, setCustPhone]           = useState("");
   const [custNameErr, setCustNameErr]       = useState("");
   const [custEmailErr, setCustEmailErr]     = useState("");
-  const [custPhoneErr, setCustPhoneErr]     = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const { isAuthenticated, user } = useAuth();
@@ -220,8 +216,7 @@ export default function Pricing() {
     // Pre-fill with user data if available
     setCustName(user?.name ?? "");
     setCustEmail(user?.email ?? "");
-    setCustPhone("");
-    setCustNameErr(""); setCustEmailErr(""); setCustPhoneErr("");
+    setCustNameErr(""); setCustEmailErr("");
     setShowInfoModal(true);
   };
 
@@ -231,7 +226,6 @@ export default function Pricing() {
     if (!custName.trim()) { setCustNameErr(t("nameRequired")); valid = false; } else setCustNameErr("");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!custEmail.trim() || !emailRegex.test(custEmail.trim())) { setCustEmailErr(t("emailRequired")); valid = false; } else setCustEmailErr("");
-    if (!custPhone.trim()) { setCustPhoneErr(t("phoneRequired")); valid = false; } else setCustPhoneErr("");
     if (!valid || !selectedPlan) return;
 
     setCheckoutLoading(true);
@@ -241,7 +235,6 @@ export default function Pricing() {
         const result = await startFreeTrial.mutateAsync({
           customerName: custName.trim(),
           customerEmail: custEmail.trim(),
-          customerPhone: custPhone.trim(),
         });
         setTrialKey(result.licenseKey);
         setTrialExpiry(result.expiresAt);
@@ -259,7 +252,6 @@ export default function Pricing() {
         origin: window.location.origin,
         customerName: custName.trim(),
         customerEmail: custEmail.trim(),
-        customerPhone: custPhone.trim(),
       });
     }
   };
@@ -455,10 +447,6 @@ export default function Pricing() {
             <InfoField
               icon={Mail} label={t("emailAddr")} placeholder={t("emailPlaceholder")}
               value={custEmail} onChange={setCustEmail} type="email" error={custEmailErr} isRTL={isRTL}
-            />
-            <InfoField
-              icon={Phone} label={t("phoneNum")} placeholder={t("phonePlaceholder")}
-              value={custPhone} onChange={setCustPhone} type="tel" error={custPhoneErr} isRTL={isRTL}
             />
 
             {/* Error message for free trial */}
