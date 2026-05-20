@@ -862,15 +862,7 @@ function TodayGymClasses() {
     return Array.from(map.values());
   }, [classes]);
 
-  // Auto-expand all gyms and branches when data first loads
-  React.useEffect(() => {
-    if (gymGroups.length > 0) {
-      setExpandedGyms(new Set(gymGroups.map(g => g.gymId)));
-      const allBranchIds: number[] = [];
-      gymGroups.forEach(g => g.branches.forEach(b => allBranchIds.push(b.branchId)));
-      setExpandedBranches(new Set(allBranchIds));
-    }
-  }, [gymGroups.length]);
+  // Gyms and branches start collapsed; user taps to expand
 
   const handleJoin = async (classId: number) => {
     if (joinedIds.has(classId) || joiningId === classId) return;
