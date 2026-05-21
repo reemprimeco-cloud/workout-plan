@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 
-const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
+const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG';
 const STORAGE_KEY = 'pwa_prompt_dismissed';
 
 type Platform = 'android' | 'ios' | null;
