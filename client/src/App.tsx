@@ -19,7 +19,9 @@ import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
 import PricingBeforeAuth from "./pages/PricingBeforeAuth";
 import LegalPage from "./pages/LegalPage";
+import InstallPromptBanner from "./components/InstallPromptBanner";
 import { useEffect } from "react";
+import { useLanguage } from "./contexts/LanguageContext";
 
 // Keyboard-aware layout: update CSS var when iOS keyboard opens/closes
 function useKeyboardAwareLayout() {
@@ -55,6 +57,12 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+// Reads language from context and passes it to the banner
+function InstallBannerWithLang() {
+  const { lang } = useLanguage();
+  return <InstallPromptBanner lang={lang as 'ar' | 'en'} />;
 }
 
 function AppWithSocket() {
@@ -127,6 +135,8 @@ function AppWithSocket() {
           }
           {/* In-app admin notification popups — shown to all authenticated users */}
           {currentUser && !isAdminPage && <AdminNotificationPopup />}
+          {/* PWA install prompt — shown once on first visit, not on admin page */}
+          {!isAdminPage && <InstallBannerWithLang />}
         </TooltipProvider>
       </SubscriptionProvider>
     </SocketProvider>
