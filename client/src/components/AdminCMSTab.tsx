@@ -10,25 +10,23 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-
-// ── Session types list ────────────────────────────────────────────────────────
+// ── Session types list ────────────────────────────────────────────────────────────────────────────
 const SESSION_TYPES = [
-  { id: 'lower_body',      label: 'Lower Body',       labelAr: 'الجزء السفلي' },
-  { id: 'upper_arms',      label: 'Upper Arms & Back', labelAr: 'الأذرع والظهر' },
-  { id: 'chest_shoulders', label: 'Chest & Shoulders', labelAr: 'الصدر والأكتاف' },
-  { id: 'core_cardio',     label: 'Core & Cardio',     labelAr: 'الكور والكارديو' },
-  { id: 'full_body',       label: 'Full Body',         labelAr: 'الجسم كامل' },
-  { id: 'aqua',            label: 'Aqua',              labelAr: 'الأكوا' },
-  { id: 'sauna',           label: 'Sauna',             labelAr: 'الساونا' },
-  { id: 'active_rest',     label: 'Active Rest',       labelAr: 'الراحة النشطة' },
-  { id: 'warm_up',         label: 'Warm Up',           labelAr: 'الإحماء' },
-  { id: 'stretching',      label: 'Stretching',        labelAr: 'التمدد' },
-  { id: 'home_workouts',   label: 'Home Workouts',     labelAr: 'تمارين المنزل' },
-  { id: 'pilates',         label: 'Pilates',           labelAr: 'البيلاتس' },
-  { id: 'mobility',        label: 'Mobility',          labelAr: 'المرونة' },
-  { id: 'quick_workouts',  label: 'Quick Workouts',    labelAr: 'تمارين سريعة' },
+  { id: 'lower_body',      label: 'Lower Body',       labelAr: 'الجزء السفلي',   defaultIcon: '/manus-storage/icon_lower_body_59f81631.png' },
+  { id: 'upper_arms',      label: 'Upper Arms & Back', labelAr: 'الأذرع والظهر',  defaultIcon: '/manus-storage/icon_upper_body_bbd91e5d.png' },
+  { id: 'chest_shoulders', label: 'Chest & Shoulders', labelAr: 'الصدر والأكتاف', defaultIcon: '/manus-storage/icon_chest_shoulders_8582f4ac.png' },
+  { id: 'core_cardio',     label: 'Core & Cardio',     labelAr: 'الكور والكارديو', defaultIcon: '/manus-storage/icon_core_cardio_5e8c3914.png' },
+  { id: 'full_body',       label: 'Full Body',         labelAr: 'الجسم كامل',   defaultIcon: '/manus-storage/icon_full_body_55a7cc7f.png' },
+  { id: 'aqua',            label: 'Aqua',              labelAr: 'الأكوا',         defaultIcon: '/manus-storage/icon_aqua_6436dff1.png' },
+  { id: 'sauna',           label: 'Sauna',             labelAr: 'الساونا',        defaultIcon: '/manus-storage/icon_sauna_24076898.png' },
+  { id: 'active_rest',     label: 'Active Rest',       labelAr: 'الراحة النشطة', defaultIcon: '/manus-storage/icon_cardio_d3fdaaba.png' },
+  { id: 'warm_up',         label: 'Warm Up',           labelAr: 'الإحماء',        defaultIcon: '/manus-storage/icon_warm_up_6ff9052b.png' },
+  { id: 'stretching',      label: 'Stretching',        labelAr: 'التمدد',        defaultIcon: '/manus-storage/icon_stretching_59c73b13.png' },
+  { id: 'home_workouts',   label: 'Home Workouts',     labelAr: 'تمارين المنزل', defaultIcon: '/manus-storage/icon_home_workouts_10e4a4f7.png' },
+  { id: 'pilates',         label: 'Pilates',           labelAr: 'البيلاتس',       defaultIcon: '/manus-storage/icon_pilates_1a0c0196.png' },
+  { id: 'mobility',        label: 'Mobility',          labelAr: 'المرونة',        defaultIcon: '/manus-storage/icon_mobility_e968ef5f.png' },
+  { id: 'quick_workouts',  label: 'Quick Workouts',    labelAr: 'تمارين سريعة', defaultIcon: '/manus-storage/icon_quick_workouts_2e09574e.png' },
 ];
-
 // ── Exercise list (all IDs + names) ──────────────────────────────────────────
 const EXERCISES = [
   // Women
@@ -228,26 +226,27 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
             {SESSION_TYPES.map(st => {
-              const currentUrl = iconMap[st.id];
+              const customUrl = iconMap[st.id];
+              const displayUrl = customUrl || st.defaultIcon;
+              const isCustom = !!customUrl;
               const isUploading = uploadingId === st.id;
               return (
                 <div key={st.id} style={{ ...cardStyle, padding: 16, marginBottom: 0, textAlign: 'center' }}>
-                  <div style={{ width: 72, height: 72, borderRadius: 12, background: '#F0F4F8', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                    {currentUrl
-                      ? <img src={currentUrl} alt={st.label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                      : <span style={{ fontSize: 28, opacity: 0.3 }}>🖼️</span>}
+                  <div style={{ width: 72, height: 72, borderRadius: 12, background: '#F0F4F8', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                    <img src={displayUrl} alt={st.label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    {isCustom && <div style={{ position: 'absolute', top: 2, right: 2, background: '#16A34A', borderRadius: 4, width: 10, height: 10 }} />}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 4 }}>{lang === 'ar' ? st.labelAr : st.label}</div>
                   <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 10 }}>{st.id}</div>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                     <label style={{ ...btnStyle('primary'), padding: '7px 12px', fontSize: 11, cursor: 'pointer', display: 'inline-block' }}>
-                      {isUploading ? '⏳' : (lang === 'ar' ? 'رفع' : 'Upload')}
+                      {isUploading ? '...' : (lang === 'ar' ? 'رفع' : 'Upload')}
                       <input type="file" accept="image/*" style={{ display: 'none' }}
                         onChange={e => { const f = e.target.files?.[0]; if (f) handleIconUpload(st.id, f); e.target.value = ''; }}
                         disabled={isUploading}
                       />
                     </label>
-                    {currentUrl && (
+                    {isCustom && (
                       <button style={{ ...btnStyle('danger'), padding: '7px 10px', fontSize: 11 }}
                         onClick={() => deleteIconMutation.mutate({ sessionType: st.id })}>
                         ✕
