@@ -26,6 +26,7 @@ import Nutrition from './Nutrition';
 import { useGymSync } from '../hooks/useGymSync';
 import { useHaptic } from '../hooks/useHaptic';
 import { NavHomeIcon, NavStatsIcon, NavExercisesIcon, NavCoachIcon, NavCommunityIcon, NavProfileIcon, WorkoutIcon } from '../components/InlineSVGIcons';
+import { useCMS } from '../contexts/CMSContext';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -357,6 +358,7 @@ function CheckInPanel({ onStart, stats, profile }: {
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
 }) {
   const { lang, t, isRTL } = useLanguage();
+  const { sessionIconOverrides } = useCMS();
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? t('greetingMorning') : hour < 17 ? t('greetingAfternoon') : t('greetingEvening');
@@ -366,8 +368,8 @@ function CheckInPanel({ onStart, stats, profile }: {
   const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
-  // Icon URLs for each session type (original detailed illustrations)
-  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+  // Icon URLs for each session type — defaults merged with CMS overrides
+  const DEFAULT_SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
     lower_body: '/manus-storage/icon_lower_body_59f81631.png',
     upper_arms: '/manus-storage/icon_upper_body_bbd91e5d.png',
     core_cardio: '/manus-storage/icon_core_cardio_5e8c3914.png',
@@ -382,6 +384,11 @@ function CheckInPanel({ onStart, stats, profile }: {
     pilates: '/manus-storage/icon_pilates_1a0c0196.png',
     mobility: '/manus-storage/icon_mobility_e968ef5f.png',
     quick_workouts: '/manus-storage/icon_quick_workouts_2e09574e.png',
+  };
+  // Merge defaults with CMS overrides (CMS overrides take priority)
+  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+    ...DEFAULT_SESSION_ICON_URLS,
+    ...sessionIconOverrides as Partial<Record<SessionType, string>>,
   };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
