@@ -31,7 +31,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
+const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG';
 
 // Inline SVG logo — renders on all browsers without image loading issues
 function PrimeFitLogo({ size = 40 }: { size?: number }) {
@@ -116,13 +116,13 @@ export default function Home() {
     ),
   };
   const tabs: { id: Tab; iconUrl?: string; label: string }[] = [
-    { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
-    { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
+    { id: 'home', iconUrl: '/manus-storage/nav_home_7d9a8832.png', label: t('navHome') },
+    { id: 'stats', iconUrl: '/manus-storage/nav_stats_173ec95c.png', label: t('navStats') },
     { id: 'nutrition', label: isRTL ? 'تغذية' : 'Nutrition' },
-    { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
-    { id: 'coach', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp', label: isRTL ? 'مدربي' : 'Coach' },
-    { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
-    { id: 'profile', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_profile-4Skb4HPfvUiSWNBfKW6iLX.webp', label: t('navProfile') },
+    { id: 'exercises', iconUrl: '/manus-storage/nav_exercises_8bed55b4.png', label: isRTL ? 'التمارين' : 'Exercises' },
+    { id: 'coach', iconUrl: '/manus-storage/nav_coach_82877c0a.png', label: isRTL ? 'مدربي' : 'Coach' },
+    { id: 'community', iconUrl: '/manus-storage/nav_community_a9df8d01.png', label: isRTL ? 'المجتمع' : 'Community' },
+    { id: 'profile', iconUrl: '/manus-storage/nav_profile_7e156c5d.png', label: t('navProfile') },
   ];
 
   return (
@@ -377,20 +377,20 @@ function CheckInPanel({ onStart, stats, profile }: {
 
   // Icon URLs for each session type
   const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
-    lower_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_lower_body-MuCkSzyesxhQdyW2sjXWAq.webp',
-    upper_arms: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_upper_body-d4Fkcsb5PVaBtsoBf7kR6u.webp',
-    core_cardio: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_core_cardio-2XKA22my7CHNgVpQZBhzVC.webp',
-    chest_shoulders: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_chest_shoulders-7n7FKiPHKydZoJhE4L2Y2a.webp',
-    full_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_full_body-DTurmyGnhh2FK22ddoLwZJ.webp',
-    aqua: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_aqua-CTdfNbHhgUmSuEDYAYZErP.webp',
-    sauna: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_sauna-euKmrDgyW3kcnrExDVuZEj.webp',
-    active_rest: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_cardio-JgDT6bvc8LxDoDkZC3MFmL.webp',
-    warm_up: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_warm_up-QRSEACQjVrSnzzkfpSfCPF.webp',
-    stretching: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_stretching-F4ZvDFQRX2KXtbCduArTqe.webp',
-    home_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_home_workouts-8TAShRf99uAcBdK8sVxufW.webp',
-    pilates: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_pilates-hfeJyx2Mk2XJHngo6SaSmM.webp',
-    mobility: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_mobility-M3ZmtXZ8badZAeB5P6DYgH.webp',
-    quick_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_quick_workouts-WYyiQ3V9SSSK3mS8Ett7pm.webp',
+    lower_body: '/manus-storage/icon_lower_body_59f81631.png',
+    upper_arms: '/manus-storage/icon_upper_body_bbd91e5d.png',
+    core_cardio: '/manus-storage/icon_core_cardio_5e8c3914.png',
+    chest_shoulders: '/manus-storage/icon_chest_shoulders_8582f4ac.png',
+    full_body: '/manus-storage/icon_full_body_55a7cc7f.png',
+    aqua: '/manus-storage/icon_aqua_6436dff1.png',
+    sauna: '/manus-storage/icon_sauna_24076898.png',
+    active_rest: '/manus-storage/icon_cardio_d3fdaaba.png',
+    warm_up: '/manus-storage/icon_warm_up_6ff9052b.png',
+    stretching: '/manus-storage/icon_stretching_59c73b13.png',
+    home_workouts: '/manus-storage/icon_home_workouts_10e4a4f7.png',
+    pilates: '/manus-storage/icon_pilates_1a0c0196.png',
+    mobility: '/manus-storage/icon_mobility_e968ef5f.png',
+    quick_workouts: '/manus-storage/icon_quick_workouts_2e09574e.png',
   };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
