@@ -4,19 +4,18 @@
  * On successful payment:
  *   1. Validates webhook secret
  *   2. Verifies payment with MyFatoorah API
- *   3a. NEW customer → auto-generates PRIME-XXXX-XXXX key, saves to DB, emails it
- *   3b. RETURNING customer → extends existing key expiry, emails renewal
- *   4. Upserts the subscription record in the DB
+ *   3. Finds existing license key by customer email
+ *   4. Extends expiresAt on the SAME key (no new key generated)
+ *   5. Emails the customer their existing key with new expiry
+ *   6. Upserts the subscription record in the DB
  */
 import type { Request, Response } from "express";
-import { eq, and, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { ENV } from "../_core/env";
 import { getPaymentStatus } from "../_core/myfatoorah";
-import { getDb, getAccessCodeByEmail, extendSubscription, createAccessCode } from "../db";
+import { getDb, getAccessCodeByEmail, extendSubscription } from "../db";
 import { subscriptions, billingHistory } from "../../drizzle/schema";
 import { sendRenewalEmail } from "../_core/email";
-import { sendLicenseEmail } from "../_core/email";
-import { generateLicenseKey } from "./licenseUtils";
 
 type SubscriptionPlan = "free" | "prime_plus" | "prime_pro";
 type BillingPeriod = "monthly" | "yearly";
@@ -93,14 +92,13 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
       plan = d.plan; period = d.period;
     }
 
-    // Extend existing key OR auto-generate a new one for new customers
+    // Extend existing license key by email
     let licenseCode: string | null = null;
     let newExpiry:   Date   | null = null;
 
     if (email) {
       const existing = await getAccessCodeByEmail(email);
       if (existing) {
-        // Returning customer — extend their existing key
         const dbPlan = (period === "yearly" ? "yearly" : "monthly") as "monthly" | "yearly";
         newExpiry   = await extendSubscription(existing.id, dbPlan);
         licenseCode = existing.code;
@@ -117,28 +115,7 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
           });
         }
       } else {
-        // New customer — auto-generate a fresh PRIME-XXXX-XXXX license key
-        const newKey = generateLicenseKey();
-        const expiryDays = period === "yearly" ? 365 : 30;
-        const keyExpiry = new Date(Date.now() + expiryDays * 86400_000);
-        await createAccessCode({
-          code: newKey,
-          customerName,
-          customerEmail: email,
-          note: `Auto-generated via MyFatoorah payment. Invoice: ${invoiceId}`,
-          isActive: true,
-          expiresAt: keyExpiry,
-        });
-        licenseCode = newKey;
-        newExpiry   = keyExpiry;
-        console.log(`[MFWebhook] Generated new key ${licenseCode} for ${email}, expires ${keyExpiry.toDateString()}`);
-        // Email the new license key to the customer
-        await sendLicenseEmail({
-          to: email,
-          customerName,
-          licenseKey: licenseCode,
-          orderNumber: invoiceId,
-        });
+        console.warn(`[MFWebhook] No license key found for ${email}`);
       }
     }
 
@@ -150,47 +127,15 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
         .where(eq(subscriptions.userId, userId)).limit(1);
       if (existingSub.length > 0) {
         await db.update(subscriptions)
-          .set({
-            plan,
-            status: "active",
-            period,
-            paymentStatus: "paid",
-            paymentProvider: "myfatoorah",
-            startsAt: new Date(),
-            expiresAt: expiry,
-            invoiceId,
-            licenseKey: licenseCode,
-            email: email || existingSub[0].email,
-            updatedAt: new Date(),
-          })
+          .set({ plan, status: "active", period, startsAt: new Date(), expiresAt: expiry, invoiceId, licenseKey: licenseCode })
           .where(eq(subscriptions.userId, userId));
       } else {
         await db.insert(subscriptions).values({
-          userId,
-          plan,
-          status: "active",
-          period,
-          paymentStatus: "paid",
-          paymentProvider: "myfatoorah",
-          startsAt: new Date(),
-          expiresAt: expiry,
-          invoiceId,
-          licenseKey: licenseCode,
-          email: email || null,
+          userId, plan, status: "active", period,
+          startsAt: new Date(), expiresAt: expiry,
+          invoiceId, licenseKey: licenseCode,
         });
       }
-
-      // Remove any pending records for the same user or invoice before inserting paid record
-      await db.delete(billingHistory)
-        .where(
-          and(
-            eq(billingHistory.status, 'pending'),
-            or(
-              eq(billingHistory.userId, userId),
-              eq(billingHistory.invoiceId, invoiceId)
-            )
-          )
-        );
 
       await db.insert(billingHistory).values({
         userId, plan, period,

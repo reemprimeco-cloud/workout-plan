@@ -134,79 +134,7 @@ async function detectFoodsFromImage(imageBase64: string, mimeType: string): Prom
   return parsed;
 }
 
-/** Ask LLM to estimate nutrition for items that USDA couldn't find */
-async function estimateNutritionWithLLM(
-  items: Array<{ name: string; estimatedGrams: number }>
-): Promise<NutritionPer100g[]> {
-  const schema = {
-    type: "object",
-    properties: {
-      items: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            calories:    { type: "number" },
-            protein:     { type: "number" },
-            carbs:       { type: "number" },
-            fat:         { type: "number" },
-            fiber:       { type: "number" },
-            sugar:       { type: "number" },
-            sodium:      { type: "number" },
-            cholesterol: { type: "number" },
-          },
-          required: ["calories", "protein", "carbs", "fat", "fiber", "sugar", "sodium", "cholesterol"],
-          additionalProperties: false,
-        },
-      },
-    },
-    required: ["items"],
-    additionalProperties: false,
-  };
-
-  const itemsList = items.map((it, i) =>
-    `${i + 1}. ${it.name} (${it.estimatedGrams}g portion)`
-  ).join("\n");
-
-  try {
-    const result = await invokeLLM({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a professional nutritionist. Estimate the nutritional values for the given food portions. " +
-            "Return ONLY the JSON with estimated values for each item in the SAME ORDER as given. " +
-            "Values should be for the ACTUAL PORTION SIZE given (not per 100g). " +
-            "Be realistic — use standard nutritional databases as reference.",
-        },
-        {
-          role: "user",
-          content: `Estimate nutrition for these food portions:\n${itemsList}`,
-        },
-      ],
-      response_format: { type: "json_schema", json_schema: { name: "nutrition_estimates", strict: true, schema } } as any,
-    });
-    const content = result.choices?.[0]?.message?.content ?? "";
-    const jsonStr = typeof content === "string"
-      ? content.replace(/```json|```/g, "").trim()
-      : JSON.stringify(content);
-    const parsed = JSON.parse(jsonStr);
-    return (parsed.items ?? []).map((it: any) => ({
-      calories:    Math.round((it.calories    ?? 0) * 10) / 10,
-      protein:     Math.round((it.protein     ?? 0) * 10) / 10,
-      carbs:       Math.round((it.carbs       ?? 0) * 10) / 10,
-      fat:         Math.round((it.fat         ?? 0) * 10) / 10,
-      fiber:       Math.round((it.fiber       ?? 0) * 10) / 10,
-      sugar:       Math.round((it.sugar       ?? 0) * 10) / 10,
-      sodium:      Math.round((it.sodium      ?? 0) * 10) / 10,
-      cholesterol: Math.round((it.cholesterol ?? 0) * 10) / 10,
-    }));
-  } catch {
-    return items.map(() => ({ calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0, cholesterol: 0 }));
-  }
-}
-
-/** Full analysis: vision detection + USDA nutrition lookup + LLM fallback */
+/** Full analysis: vision detection + USDA nutrition lookup */
 export async function analyzeFoodImage(imageBase64: string, mimeType = "image/jpeg"): Promise<MealAnalysis> {
   // Step 1 — Detect foods from image
   const vision = await detectFoodsFromImage(imageBase64, mimeType);
@@ -228,45 +156,10 @@ export async function analyzeFoodImage(imageBase64: string, mimeType = "image/jp
     vision.items.map(i => ({ name: i.name, estimatedGrams: i.estimatedGrams }))
   );
 
-  // Step 3 — Identify items that need LLM fallback (USDA returned null or all-zero nutrition)
-  const needsFallback = vision.items.map((vItem, idx) => {
-    const usda = usdaResults[idx];
-    if (!usda) return true;
-    const total = usda.portion.calories + usda.portion.protein + usda.portion.carbs + usda.portion.fat;
-    return total === 0;
-  });
-
-  // Step 4 — Run LLM fallback for items that need it
-  const fallbackItems = vision.items
-    .map((vItem, idx) => needsFallback[idx] ? { name: vItem.name, estimatedGrams: vItem.estimatedGrams } : null)
-    .filter(Boolean) as Array<{ name: string; estimatedGrams: number }>;
-
-  let llmEstimates: NutritionPer100g[] = [];
-  if (fallbackItems.length > 0) {
-    llmEstimates = await estimateNutritionWithLLM(fallbackItems);
-  }
-
-  // Step 5 — Merge vision + USDA + LLM fallback data
-  let llmIdx = 0;
+  // Step 3 — Merge vision + USDA data
   const items: FoodAnalysisItem[] = vision.items.map((vItem, idx) => {
     const usda = usdaResults[idx];
-    let portion: NutritionPer100g;
-    let per100g: NutritionPer100g;
-
-    if (needsFallback[idx]) {
-      // Use LLM estimate (already scaled to portion size)
-      portion = llmEstimates[llmIdx] ?? { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0, cholesterol: 0 };
-      // Back-calculate per100g from portion
-      const factor = vItem.estimatedGrams > 0 ? 100 / vItem.estimatedGrams : 1;
-      per100g = Object.fromEntries(
-        Object.entries(portion).map(([k, v]) => [k, Math.round((v as number) * factor * 10) / 10])
-      ) as unknown as NutritionPer100g;
-      llmIdx++;
-    } else {
-      per100g = usda!.per100g;
-      portion  = usda!.portion;
-    }
-
+    const fallbackPer100g: NutritionPer100g = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0, cholesterol: 0 };
     return {
       name:           vItem.name,
       nameAr:         vItem.nameAr,
@@ -275,8 +168,8 @@ export async function analyzeFoodImage(imageBase64: string, mimeType = "image/jp
       portionDescAr:  vItem.portionDescAr,
       confidence:     vItem.confidence,
       fdcId:          usda?.fdcId,
-      per100g,
-      portion,
+      per100g:        usda?.per100g  ?? fallbackPer100g,
+      portion:        usda?.portion  ?? fallbackPer100g,
     };
   });
 

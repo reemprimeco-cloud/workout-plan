@@ -27,5 +27,7 @@ export const ENV = {
   myfatoorahApiUrl:     process.env.MYFATOORAH_API_URL ?? "https://api.myfatoorah.com",  // prod
   myfatoorahWebhookKey: process.env.MYFATOORAH_WEBHOOK_SECRET ?? "",
   appDomain:            process.env.APP_DOMAIN ?? "primefit.app",
-  googleClientId:       process.env.VITE_GOOGLE_CLIENT_ID ?? "",
+  // ── Google OAuth ──────────────────────────────────────────────────────────
+  googleClientId:       process.env.GOOGLE_CLIENT_ID ?? "",
+  googleClientSecret:   process.env.GOOGLE_CLIENT_SECRET ?? "",
 };
