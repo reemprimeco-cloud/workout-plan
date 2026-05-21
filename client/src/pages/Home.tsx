@@ -19,6 +19,7 @@ import UserGuide from '../components/UserGuide';
 import ProfilePanel from '../components/ProfilePanel';
 import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCMS } from '../contexts/CMSContext';
 import { AppIcons } from '../components/AppIcons';
 import MyCoach from './MyCoach';
 import Community from './Community';
@@ -366,6 +367,7 @@ function CheckInPanel({ onStart, stats, profile }: {
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
 }) {
   const { lang, t, isRTL } = useLanguage();
+  const { sessionIconOverrides } = useCMS();
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? t('greetingMorning') : hour < 17 ? t('greetingAfternoon') : t('greetingEvening');
@@ -375,8 +377,8 @@ function CheckInPanel({ onStart, stats, profile }: {
   const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
-  // Icon URLs for each session type
-  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+  // Icon URLs for each session type — CMS overrides take priority over defaults
+  const DEFAULT_SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
     lower_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_lower_body-MuCkSzyesxhQdyW2sjXWAq.webp',
     upper_arms: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_upper_body-d4Fkcsb5PVaBtsoBf7kR6u.webp',
     core_cardio: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_core_cardio-2XKA22my7CHNgVpQZBhzVC.webp',
@@ -391,6 +393,13 @@ function CheckInPanel({ onStart, stats, profile }: {
     pilates: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_pilates-hfeJyx2Mk2XJHngo6SaSmM.webp',
     mobility: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_mobility-M3ZmtXZ8badZAeB5P6DYgH.webp',
     quick_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_quick_workouts-WYyiQ3V9SSSK3mS8Ett7pm.webp',
+  };
+  // Merge defaults with CMS overrides — CMS wins when set
+  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+    ...DEFAULT_SESSION_ICON_URLS,
+    ...Object.fromEntries(
+      Object.entries(sessionIconOverrides).filter(([, v]) => !!v)
+    ) as Partial<Record<SessionType, string>>,
   };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
