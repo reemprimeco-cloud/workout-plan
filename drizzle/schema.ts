@@ -837,3 +837,55 @@ export const joinedClasses = mysqlTable("joined_classes", {
 });
 export type JoinedClass = typeof joinedClasses.$inferSelect;
 export type InsertJoinedClass = typeof joinedClasses.$inferInsert;
+
+// ── CMS Tables ──────────────────────────────────────────────────────────────
+export const siteAppearance = mysqlTable("site_appearance", {
+  id:             int("id").autoincrement().primaryKey(),
+  primaryColor:   varchar("primaryColor", { length: 20 }).notNull().default('#1B2E5E'),
+  accentColor:    varchar("accentColor", { length: 20 }).notNull().default('#7BB8D4'),
+  bgColor:        varchar("bgColor", { length: 20 }).notNull().default('#F0F4F8'),
+  textColor:      varchar("textColor", { length: 20 }).notNull().default('#1B2E5E'),
+  fontFamily:     varchar("fontFamily", { length: 100 }).notNull().default('Inter'),
+  logoUrl:        text("logoUrl"),
+  bannerUrl:      text("bannerUrl"),
+  footerText:     text("footerText"),
+  footerLinks:    text("footerLinks"),
+  updatedAt:      timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SiteAppearance = typeof siteAppearance.$inferSelect;
+
+export const exerciseOverrides = mysqlTable("exercise_overrides", {
+  id:           int("id").autoincrement().primaryKey(),
+  exerciseId:   varchar("exerciseId", { length: 100 }).notNull().unique(),
+  imageUrl:     text("imageUrl"),
+  youtubeUrl:   text("youtubeUrl"),
+  nameEn:       varchar("nameEn", { length: 255 }),
+  nameAr:       varchar("nameAr", { length: 255 }),
+  sets:         int("sets"),
+  reps:         int("reps"),
+  restSec:      int("restSec"),
+  notes:        text("notes"),
+  updatedAt:    timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ExerciseOverride = typeof exerciseOverrides.$inferSelect;
+
+export const sessionIconOverrides = mysqlTable("session_icon_overrides", {
+  id:           int("id").autoincrement().primaryKey(),
+  sessionType:  varchar("sessionType", { length: 100 }).notNull().unique(),
+  iconUrl:      text("iconUrl").notNull(),
+  updatedAt:    timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SessionIconOverride = typeof sessionIconOverrides.$inferSelect;
+
+export const appErrorLogs = mysqlTable("app_error_logs", {
+  id:           int("id").autoincrement().primaryKey(),
+  severity:     mysqlEnum("severity", ["error", "warning", "info"]).notNull().default("error"),
+  message:      text("message").notNull(),
+  stack:        text("stack"),
+  url:          text("url"),
+  userId:       int("userId"),
+  userEmail:    varchar("userEmail", { length: 255 }),
+  resolved:     boolean("resolved").notNull().default(false),
+  createdAt:    timestamp("createdAt").defaultNow().notNull(),
+});
+export type AppErrorLog = typeof appErrorLogs.$inferSelect;
