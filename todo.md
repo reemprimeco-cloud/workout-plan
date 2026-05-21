@@ -811,3 +811,7 @@
 - [x] leaveClass procedure: removes join record, deletes linked session
 - [x] Joined class row shows Leave/Undo button; tapping removes join and session
 - [x] Join state persists correctly after undo (button returns to Join)
+
+## Exercise Card Icons & Images Fix (May 22)
+- [x] Restore original exercise card icons (workout type icons on check-in cards) to match old design style
+- [x] Fix missing exercise images inside expanded workout cards (machine images not showing)
