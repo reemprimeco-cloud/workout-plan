@@ -427,15 +427,15 @@ function CheckInPanel({ onStart, stats, profile }: {
           <p style={{ margin: '0 0 0', color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
-              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: 'week' },
-              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: 'month' },
-              { label: t('total'), value: `${stats.totalSessions} ${t('session')}`, icon: 'total' },
+              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}` },
+              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}` },
+              { label: t('total'), value: `${stats.totalSessions} ${t('session')}` },
             ].map(s => (
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
                 border: `1px solid ${SKY}33`,
               }}>
-                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.icon} {s.label}</div>
+                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.label}</div>
                 <div style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>{s.value}</div>
               </div>
             ))}

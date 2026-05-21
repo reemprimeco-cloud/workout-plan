@@ -811,3 +811,9 @@
 - [x] leaveClass procedure: removes join record, deletes linked session
 - [x] Joined class row shows Leave/Undo button; tapping removes join and session
 - [x] Join state persists correctly after undo (button returns to Join)
+
+## PWA Install Prompt (May 22)
+- [x] Build InstallPromptBanner component — Android/Chrome native beforeinstallprompt, iOS Safari manual guide
+- [x] Show once on first visit (localStorage flag), dismiss forever on close
+- [x] Bilingual: Arabic + English
+- [x] Integrate into App.tsx
