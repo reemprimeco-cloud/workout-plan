@@ -386,7 +386,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(8,145,178,0.2)',
           }}>
-            <img src="/manus-storage/aqua_690009c3.jpg" alt="Aqua Aerobics" style={{
+            <img src="/manus-storage/aqua_690009c3.jpg?v=2" alt="Aqua Aerobics" style={{
               width: '100%', height: 180, objectFit: 'cover',
             }} />
           </div>
@@ -453,7 +453,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(180,83,9,0.2)',
           }}>
-            <img src="/manus-storage/sauna_b9935cdb.jpg" alt="Sauna" style={{
+            <img src="/manus-storage/sauna_b9935cdb.jpg?v=2" alt="Sauna" style={{
               width: '100%', height: 180, objectFit: 'cover',
             }} />
           </div>

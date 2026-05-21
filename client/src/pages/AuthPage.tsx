@@ -11,7 +11,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG';
+const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG?v=2';
 
 
 type Mode = 'login' | 'signup' | 'forgot' | 'reset-sent';

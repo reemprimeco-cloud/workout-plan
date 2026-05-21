@@ -15,7 +15,7 @@ const SKY       = "#7BB8D4";
 const SKY_LIGHT = "#A8D4E8";
 const GREEN     = "#22C55E";
 const GOLD      = "#F59E0B";
-const LOGO_URL  = '/manus-storage/primefit_logo_befced15.PNG';
+const LOGO_URL  = '/manus-storage/primefit_logo_befced15.PNG?v=2';
 
 type Lang = "en" | "ar";
 
