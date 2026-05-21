@@ -837,3 +837,73 @@ export const joinedClasses = mysqlTable("joined_classes", {
 });
 export type JoinedClass = typeof joinedClasses.$inferSelect;
 export type InsertJoinedClass = typeof joinedClasses.$inferInsert;
+
+// ── CMS: Site Appearance ─────────────────────────────────────────────────────
+// One row (id=1) stores global site appearance settings
+export const siteAppearance = mysqlTable("site_appearance", {
+  id:              int("id").autoincrement().primaryKey(),
+  primaryColor:    varchar("primaryColor", { length: 32 }).default("#1B2E5E").notNull(),
+  accentColor:     varchar("accentColor", { length: 32 }).default("#7BB8D4").notNull(),
+  bgColor:         varchar("bgColor", { length: 32 }).default("#F0F4F8").notNull(),
+  textColor:       varchar("textColor", { length: 32 }).default("#1B2E5E").notNull(),
+  fontFamily:      varchar("fontFamily", { length: 128 }).default("Inter").notNull(),
+  logoUrl:         text("logoUrl"),
+  logoKey:         text("logoKey"),
+  bannerUrl:       text("bannerUrl"),
+  bannerKey:       text("bannerKey"),
+  footerText:      text("footerText"),
+  footerLinks:     text("footerLinks"),   // JSON array: [{label, url}]
+  updatedAt:       timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SiteAppearance = typeof siteAppearance.$inferSelect;
+export type InsertSiteAppearance = typeof siteAppearance.$inferInsert;
+
+// ── CMS: Exercise Overrides ───────────────────────────────────────────────────
+// One row per exercise ID — overrides the hardcoded exerciseData.ts values
+export const exerciseOverrides = mysqlTable("exercise_overrides", {
+  id:          int("id").autoincrement().primaryKey(),
+  exerciseId:  varchar("exerciseId", { length: 64 }).notNull().unique(),
+  name:        varchar("name", { length: 255 }),
+  nameAr:      varchar("nameAr", { length: 255 }),
+  sets:        varchar("sets", { length: 32 }),
+  reps:        varchar("reps", { length: 32 }),
+  rest:        varchar("rest", { length: 32 }),
+  notes:       text("notes"),
+  notesAr:     text("notesAr"),
+  imageUrl:    text("imageUrl"),
+  imageKey:    text("imageKey"),
+  youtubeUrl:  text("youtubeUrl"),
+  updatedAt:   timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ExerciseOverride = typeof exerciseOverrides.$inferSelect;
+export type InsertExerciseOverride = typeof exerciseOverrides.$inferInsert;
+
+// ── CMS: Session Icon Overrides ───────────────────────────────────────────────
+// One row per session type — overrides the default workout card icon
+export const sessionIconOverrides = mysqlTable("session_icon_overrides", {
+  id:          int("id").autoincrement().primaryKey(),
+  sessionType: varchar("sessionType", { length: 64 }).notNull().unique(),
+  iconUrl:     text("iconUrl").notNull(),
+  iconKey:     text("iconKey"),
+  updatedAt:   timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SessionIconOverride = typeof sessionIconOverrides.$inferSelect;
+export type InsertSessionIconOverride = typeof sessionIconOverrides.$inferInsert;
+
+// ── CMS: App Error Logs ───────────────────────────────────────────────────────
+// Stores client-side and server-side errors reported from the app
+export const appErrorLogs = mysqlTable("app_error_logs", {
+  id:          int("id").autoincrement().primaryKey(),
+  severity:    mysqlEnum("severity", ["error", "warning", "info"]).default("error").notNull(),
+  source:      mysqlEnum("source", ["client", "server"]).default("client").notNull(),
+  message:     text("message").notNull(),
+  stack:       text("stack"),
+  url:         text("url"),
+  userId:      int("userId"),
+  userEmail:   varchar("userEmail", { length: 320 }),
+  resolved:    boolean("resolved").default(false).notNull(),
+  resolvedAt:  timestamp("resolvedAt"),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+});
+export type AppErrorLog = typeof appErrorLogs.$inferSelect;
+export type InsertAppErrorLog = typeof appErrorLogs.$inferInsert;

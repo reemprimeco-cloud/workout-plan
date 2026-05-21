@@ -8,6 +8,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
 import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
+import { useCMS } from "@/contexts/CMSContext";
 
 // ── Heart Icon SVG (vector outline / filled) ─────────────────
 function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
@@ -57,6 +58,26 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const [showGoalAlert, setShowGoalAlert] = useState(true);
   const [showTipsAlert, setShowTipsAlert] = useState(false);
 
+  // ── CMS overrides ──
+  const { exerciseOverrides } = useCMS();
+  // Merge static exercise data with CMS overrides
+  const applyOverride = (ex: Exercise): Exercise => {
+    const ov = exerciseOverrides[ex.id];
+    if (!ov) return ex;
+    return {
+      ...ex,
+      ...(ov.name       ? { name:       ov.name }       : {}),
+      ...(ov.nameAr     ? { nameAr:     ov.nameAr }     : {}),
+      ...(ov.sets       ? { sets:       ov.sets }       : {}),
+      ...(ov.reps       ? { reps:       ov.reps }       : {}),
+      ...(ov.rest       ? { rest:       ov.rest }       : {}),
+      ...(ov.notes      ? { notes:      ov.notes }      : {}),
+      ...(ov.notesAr    ? { notesAr:    ov.notesAr }    : {}),
+      ...(ov.imageUrl   ? { imageUrl:   ov.imageUrl }   : {}),
+      ...(ov.youtubeUrl ? { youtubeUrl: ov.youtubeUrl } : {}),
+    };
+  };
+
   // ── Favorites state (DB-backed via tRPC) ──
   const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
   const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
@@ -69,7 +90,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
     else addFav.mutate({ exerciseId: id });
   };
 
-  const exercises = grouped[activeCategory] || [];
+  const exercises = (grouped[activeCategory] || []).map(applyOverride);
 
   return (
     <div
