@@ -2,6 +2,11 @@
  * InlineSVGIcons — All app icons rendered as inline SVG.
  * No external images, no network requests, no caching issues.
  * These always render immediately on all browsers.
+ * 
+ * IMPORTANT: These icons match the original design exactly:
+ * - Navy blue (#1B2E5E) outline/stroke style
+ * - No fill, clean geometric shapes
+ * - Same visual weight and proportions as the original webp icons
  */
 import React from 'react';
 
@@ -25,71 +30,114 @@ export function PrimeFitLogoSVG({ size = 60 }: { size?: number }) {
   );
 }
 
-// ─── Navigation Bar Icons ───
+// ─── Navigation Bar Icons (matching original webp designs) ───
+
+// HOME: Simple house — triangle roof, square body, rectangular door
 export function NavHomeIcon({ active, size = 26 }: { active: boolean; size?: number }) {
   const color = active ? NAVY : '#7A9BB5';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
-      <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15"
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.45 }}>
+      {/* Triangle roof */}
+      <path d="M4 11L12 4L20 11" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      {/* House body */}
+      <path d="M5 11V19C5 19.5523 5.44772 20 6 20H18C18.5523 20 19 19.5523 19 19V11" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      {/* Door */}
+      <path d="M10 20V15C10 14.4477 10.4477 14 11 14H13C13.5523 14 14 14.4477 14 15V20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
     </svg>
   );
 }
 
+// STATS: Three ascending bars on a baseline (bar chart)
 export function NavStatsIcon({ active, size = 26 }: { active: boolean; size?: number }) {
   const color = active ? NAVY : '#7A9BB5';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
-      <rect x="4" y="14" width="4" height="7" rx="1" fill={active ? NAVY : 'none'} stroke={color} strokeWidth="1.8"/>
-      <rect x="10" y="9" width="4" height="12" rx="1" fill={active ? NAVY : 'none'} stroke={color} strokeWidth="1.8"/>
-      <rect x="16" y="4" width="4" height="17" rx="1" fill={active ? NAVY : 'none'} stroke={color} strokeWidth="1.8"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.45 }}>
+      {/* Baseline */}
+      <path d="M3 20H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      {/* Short bar (left) */}
+      <rect x="4" y="13" width="4" height="7" rx="1" stroke={color} strokeWidth="2" fill="none"/>
+      {/* Medium bar (center) */}
+      <rect x="10" y="8" width="4" height="12" rx="1" stroke={color} strokeWidth="2" fill="none"/>
+      {/* Tall bar (right) */}
+      <rect x="16" y="4" width="4" height="16" rx="1" stroke={color} strokeWidth="2" fill="none"/>
     </svg>
   );
 }
 
+// EXERCISES: Classic dumbbell with weight plates on each side
 export function NavExercisesIcon({ active, size = 26 }: { active: boolean; size?: number }) {
   const color = active ? NAVY : '#7A9BB5';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
-      <path d="M6.5 6.5L6.5 17.5M17.5 6.5V17.5M6.5 12H17.5M4 8.5V15.5M20 8.5V15.5"
-        stroke={color} strokeWidth="2.2" strokeLinecap="round"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.45 }}>
+      {/* Center bar */}
+      <path d="M7.5 12H16.5" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      {/* Left inner plate (taller) */}
+      <rect x="5.5" y="8" width="2" height="8" rx="1" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Left outer plate (shorter) */}
+      <rect x="3" y="9.5" width="2.5" height="5" rx="1" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Right inner plate (taller) */}
+      <rect x="16.5" y="8" width="2" height="8" rx="1" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Right outer plate (shorter) */}
+      <rect x="18.5" y="9.5" width="2.5" height="5" rx="1" stroke={color} strokeWidth="1.8" fill="none"/>
     </svg>
   );
 }
 
+// COACH: Person with cap, whistle, and clipboard (upper body)
 export function NavCoachIcon({ active, size = 26 }: { active: boolean; size?: number }) {
   const color = active ? NAVY : '#7A9BB5';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
-      <circle cx="12" cy="8" r="4" stroke={color} strokeWidth="1.8"/>
-      <path d="M5 20C5 17.2386 8.13401 15 12 15C15.866 15 19 17.2386 19 20"
-        stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
-      <path d="M16 4L18 6L16 8" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.45 }}>
+      {/* Head */}
+      <circle cx="12" cy="6.5" r="3" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Cap visor */}
+      <path d="M9 5.5C9 5.5 9.5 4 12 4C14.5 4 15 5.5 15 5.5" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M8.5 5.5H15.5" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+      {/* Body (t-shirt) */}
+      <path d="M7 21V16C7 13.7909 9.23858 12 12 12C14.7614 12 17 13.7909 17 16V21" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      {/* Whistle lanyard */}
+      <path d="M12 9.5V13" stroke={color} strokeWidth="1.2" strokeLinecap="round"/>
+      {/* Whistle */}
+      <circle cx="12" cy="13.5" r="1" stroke={color} strokeWidth="1.2" fill="none"/>
+      {/* Clipboard */}
+      <rect x="15" y="14" width="3.5" height="4.5" rx="0.5" stroke={color} strokeWidth="1.4" fill="none"/>
+      <path d="M15.8 14V13.5C15.8 13.2 16 13 16.3 13H17.2C17.5 13 17.7 13.2 17.7 13.5V14" stroke={color} strokeWidth="1" strokeLinecap="round"/>
     </svg>
   );
 }
 
+// COMMUNITY: Three people (2 in back, 1 in front center)
 export function NavCommunityIcon({ active, size = 26 }: { active: boolean; size?: number }) {
   const color = active ? NAVY : '#7A9BB5';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
-      <circle cx="9" cy="7" r="3" stroke={color} strokeWidth="1.8"/>
-      <circle cx="17" cy="9" r="2.5" stroke={color} strokeWidth="1.5"/>
-      <path d="M3 19C3 16.7909 5.68629 15 9 15C10.4 15 11.7 15.3 12.7 15.8"
-        stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
-      <path d="M14 19C14 17.3431 15.3431 16 17 16C18.6569 16 20 17.3431 20 19"
-        stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.45 }}>
+      {/* Back left person - head */}
+      <circle cx="7" cy="7" r="2.5" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Back left person - body */}
+      <path d="M2.5 18C2.5 15.5 4.5 13.5 7 13.5C8 13.5 8.9 13.8 9.6 14.3" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+      {/* Back right person - head */}
+      <circle cx="17" cy="7" r="2.5" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Back right person - body */}
+      <path d="M21.5 18C21.5 15.5 19.5 13.5 17 13.5C16 13.5 15.1 13.8 14.4 14.3" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+      {/* Front center person - head */}
+      <circle cx="12" cy="10" r="2.8" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Front center person - body */}
+      <path d="M6.5 21C6.5 18 9 15.5 12 15.5C15 15.5 17.5 18 17.5 21" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none"/>
     </svg>
   );
 }
 
+// PROFILE: Circle with person silhouette inside (avatar)
 export function NavProfileIcon({ active, size = 26 }: { active: boolean; size?: number }) {
   const color = active ? NAVY : '#7A9BB5';
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
-      <circle cx="12" cy="8" r="4" stroke={color} strokeWidth="1.8"/>
-      <path d="M5 20C5 17.2386 8.13401 15 12 15C15.866 15 19 17.2386 19 20"
-        stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.45 }}>
+      {/* Outer circle */}
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Head */}
+      <circle cx="12" cy="9" r="3" stroke={color} strokeWidth="1.8" fill="none"/>
+      {/* Shoulders/body arc clipped by circle */}
+      <path d="M6.5 19.5C7 16.5 9.2 14.5 12 14.5C14.8 14.5 17 16.5 17.5 19.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none"/>
     </svg>
   );
 }
