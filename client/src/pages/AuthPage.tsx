@@ -11,7 +11,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-import { PrimeFitLogoSVG } from '@/components/InlineSVGIcons';
+const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 
 
 type Mode = 'login' | 'signup' | 'forgot' | 'reset-sent';
@@ -229,7 +229,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <PrimeFitLogoSVG size={90} />
+          <img src={LOGO_URL} alt="Prime Fit" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 18, marginBottom: 10 }} />
           <h1 style={{ fontSize: 24, fontWeight: 900, color: NAVY, margin: '0 0 4px' }}>Prime Fit</h1>
           <p style={{ color: '#7A9BB5', fontSize: 12, margin: 0 }}>
             {mode === 'login'

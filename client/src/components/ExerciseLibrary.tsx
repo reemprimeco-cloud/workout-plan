@@ -8,7 +8,6 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
 import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
-import { useCMS } from "@/contexts/CMSContext";
 
 // ── Heart Icon SVG (vector outline / filled) ─────────────────
 function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
@@ -58,26 +57,6 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const [showGoalAlert, setShowGoalAlert] = useState(true);
   const [showTipsAlert, setShowTipsAlert] = useState(false);
 
-  // ── CMS overrides ──
-  const { exerciseOverrides } = useCMS();
-  // Merge static exercise data with CMS overrides
-  const applyOverride = (ex: Exercise): Exercise => {
-    const ov = exerciseOverrides[ex.id];
-    if (!ov) return ex;
-    return {
-      ...ex,
-      ...(ov.name       ? { name:       ov.name }       : {}),
-      ...(ov.nameAr     ? { nameAr:     ov.nameAr }     : {}),
-      ...(ov.sets       ? { sets:       ov.sets }       : {}),
-      ...(ov.reps       ? { reps:       ov.reps }       : {}),
-      ...(ov.rest       ? { rest:       ov.rest }       : {}),
-      ...(ov.notes      ? { notes:      ov.notes }      : {}),
-      ...(ov.notesAr    ? { notesAr:    ov.notesAr }    : {}),
-      ...(ov.imageUrl   ? { imageUrl:   ov.imageUrl }   : {}),
-      ...(ov.youtubeUrl ? { youtubeUrl: ov.youtubeUrl } : {}),
-    };
-  };
-
   // ── Favorites state (DB-backed via tRPC) ──
   const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
   const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
@@ -90,7 +69,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
     else addFav.mutate({ exerciseId: id });
   };
 
-  const exercises = (grouped[activeCategory] || []).map(applyOverride);
+  const exercises = grouped[activeCategory] || [];
 
   return (
     <div
@@ -561,11 +540,11 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           <span style={{
             background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
             padding: "4px 10px", fontSize: 11, fontWeight: 600,
-          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Lightning size={12} />{isAr ? (machine.speedLabel || 'السرعة') : (machine.speedLabel || machine.speedLabel || 'Speed')}: {machine.defaultSpeed}</span></span>
+          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Lightning size={12} />{isAr ? (machine.speedLabel || 'السرعة') : (machine.speedLabelEn || machine.speedLabel || 'Speed')}: {machine.defaultSpeed}</span></span>
           <span style={{
             background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
             padding: "4px 10px", fontSize: 11, fontWeight: 600,
-          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Mountain size={12} />{isAr ? (machine.inclineLabel || 'الانحدار') : (machine.inclineLabel || machine.inclineLabel || 'Incline')}: {machine.defaultIncline}</span></span>
+          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Mountain size={12} />{isAr ? (machine.inclineLabel || 'الانحدار') : (machine.inclineLabelEn || machine.inclineLabel || 'Incline')}: {machine.defaultIncline}</span></span>
           {machine.showCalories && (
             <span style={{
               background: "#FFF3E0", color: "#E65100", borderRadius: 8,
@@ -608,8 +587,8 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           <div style={{ marginTop: 10 }}>
             <div style={{ fontSize: 12, color: "#4A4A6A", lineHeight: 1.8 }}>
               <div><strong>{isAr ? "المدة الافتراضية:" : "Default Duration:"}</strong> {machine.defaultDuration} {isAr ? "دقيقة" : "min"}</div>
-              <div><strong>{isAr ? (machine.speedLabel || 'السرعة:') : (machine.speedLabel || machine.speedLabel || 'Speed:')}:</strong> {machine.defaultSpeed}</div>
-              <div><strong>{isAr ? (machine.inclineLabel || 'الانحدار:') : (machine.inclineLabel || machine.inclineLabel || 'Incline:')}:</strong> {machine.defaultIncline}</div>
+              <div><strong>{isAr ? (machine.speedLabel || 'السرعة:') : (machine.speedLabelEn || machine.speedLabel || 'Speed:')}:</strong> {machine.defaultSpeed}</div>
+              <div><strong>{isAr ? (machine.inclineLabel || 'الانحدار:') : (machine.inclineLabelEn || machine.inclineLabel || 'Incline:')}:</strong> {machine.defaultIncline}</div>
               {machine.showCalories && <div><strong>{isAr ? "الكالوريز:" : "Calories:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
               {machine.showDistance && <div><strong>{isAr ? "المسافة:" : "Distance:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
             </div>

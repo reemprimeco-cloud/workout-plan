@@ -1,11 +1,16 @@
 // ActiveSession - Live workout session with editable exercises
 import { useState, useEffect } from 'react';
+import { trpc } from '@/lib/trpc';
 import type { GymSession } from '../hooks/useGymTracker';
 import type { useGymTracker } from '../hooks/useGymTracker';
 import { sessionTypes, masterExercises, upperBodyExercises, cardioTemplates, aquaExercises, saunaProtocol } from '../data/exercises';
 import { getProgramByGender } from '../lib/exerciseData';
 import { WorkoutTimer } from './WorkoutTimer';
 import { useLanguage } from '../contexts/LanguageContext';
+import { calcSessionCalories } from '../lib/calorieCalc';
+import { AppIcons } from './AppIcons';
+import { muscleGroupEn } from './WorkoutGuide';
+import { translateWeight, translateReps } from '../lib/exerciseTranslations';
 
 interface Props {
   session: GymSession;
@@ -46,12 +51,23 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
   const totalCount = session.exercises.length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  // Live calorie estimate
+  const liveCalories = calcSessionCalories(
+    session.exercises,
+    session.cardio,
+    session.sessionType,
+    weightKg,
+    session.checkInTime,
+    session.checkOutTime,
+  );
+
   const handleCheckOut = () => {
     setCheckingOut(true);
     tracker.checkOut(session.id, {
       mood: session.mood,
       energyLevel: session.energyLevel,
       notes: session.notes,
+      caloriesBurned: liveCalories,
     });
   };
 
@@ -119,6 +135,14 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
             <div style={{ fontSize: 11, marginTop: 4, opacity: 0.85 }}>
               {completedCount} / {totalCount} {isAr ? 'تمرين مكتمل' : 'exercises done'}
             </div>
+            {/* Live Calorie Counter */}
+            <div style={{
+              marginTop: 10, background: 'rgba(255,255,255,0.18)', borderRadius: 10,
+              padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: 12, opacity: 0.9 }}><span style={{display:'inline-flex',alignItems:'center',gap:4}}><AppIcons.Flame size={12} className='text-orange-400' />{isAr ? 'السعرات المحروقة التقديرية' : 'Est. Calories Burned'}</span></span>
+              <span style={{ fontSize: 18, fontWeight: 900 }}>{liveCalories} kcal</span>
+            </div>
           </div>
         )}
       </div>
@@ -164,7 +188,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
       {session.exercises.length > 0 && (
         <div style={{ marginBottom: 14 }}>
           <h3 style={{ margin: '0 0 10px', color: '#1A1A2E', fontSize: 15, fontWeight: 900 }}>
-            🏷️‍♀️ {isAr ? 'التمارين' : 'Exercises'} ({session.exercises.length})
+            <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={16} />{isAr ? 'التمارين' : 'Exercises'} ({session.exercises.length})</span>
           </h3>
           {session.exercises.map((ex, idx) => {
             const exData = masterExercises.find(e => e.id === ex.exerciseId);
@@ -254,18 +278,21 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}>
         <h4 style={{ margin: '0 0 12px', color: '#1A1A2E', fontSize: 14, fontWeight: 700 }}>
-          📝 {isAr ? 'ملاحظات الجلسة' : 'Session Notes'}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Notes size={16} />{isAr ? 'ملاحظات الجلسة' : 'Session Notes'}</span>
         </h4>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>{isAr ? 'المزاج' : 'Mood'}:</span>
-          {(['😴', '😐', '😊', '💪', '🔥'] as const).map(m => (
-            <button key={m} onClick={() => tracker.updateSessionMeta(session.id, { mood: m })}
+          {(['sleep', 'neutral', 'happy', 'strong', 'fire'] as const).map((m, idx) => {
+            const moodIcons = [<AppIcons.Moon size={22} />, <AppIcons.Minus size={22} />, <AppIcons.Smile size={22} />, <AppIcons.Dumbbell size={22} />, <AppIcons.Flame size={22} />];
+            return (
+            <button key={m} onClick={() => tracker.updateSessionMeta(session.id, { mood: m as any })}
               style={{
-                fontSize: 22, border: `2px solid ${session.mood === m ? typeDef.color : '#E2E8F0'}`,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                border: `2px solid ${(session.mood as string) === m ? typeDef.color : '#E2E8F0'}` ,
                 borderRadius: 10, padding: '4px 8px', cursor: 'pointer',
-                background: session.mood === m ? `${typeDef.color}15` : 'white',
-              }}>{m}</button>
-          ))}
+                background: (session.mood as string) === m ? `${typeDef.color}15` : 'white',
+              }}>{moodIcons[idx]}</button>
+          );})}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>{isAr ? 'الطاقة' : 'Energy'}:</span>
@@ -306,7 +333,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
           boxShadow: '0 6px 20px rgba(26,122,74,0.4)',
         }}
       >
-        {checkingOut ? (isAr ? '⏳ جاري الحفظ...' : '⏳ Saving...') : (isAr ? '✅ إنهاء الجلسة وحفظ التقدم' : '✅ Finish & Save Progress')}
+        <span style={{display:'flex',alignItems:'center',gap:6}}>{checkingOut ? <AppIcons.Spinner size={16} /> : <AppIcons.Check size={16} />}{checkingOut ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'إنهاء الجلسة وحفظ التقدم' : 'Finish & Save Progress')}</span>
       </button>
     </div>
   );
@@ -343,7 +370,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
             fontSize: 14, transition: 'all 0.2s',
           }}
         >
-          {exercise.completed ? '✓' : ''}
+          {exercise.completed ? <AppIcons.Check size={14} /> : null}
         </button>
 
         {/* Info */}
@@ -371,7 +398,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                 color: '#FF0000', fontSize: 12, textDecoration: 'none',
                 display: 'flex', alignItems: 'center', fontWeight: 700,
               }}>
-              ▶
+              <AppIcons.ChevronRight size={12} />
             </a>
           )}
           <button onClick={onEdit} style={{
@@ -380,12 +407,12 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
             background: isEditing ? `${color}15` : 'white',
             color: isEditing ? color : '#8A8AAA',
             fontSize: 12, cursor: 'pointer',
-          }}>✏️</button>
+          }}><AppIcons.Edit size={14} /></button>
           <button onClick={onRemove} style={{
             padding: '4px 8px', borderRadius: 8,
             border: '1px solid #FFE0E0', background: '#FFF5F5',
             color: '#DC2626', fontSize: 12, cursor: 'pointer',
-          }}>🗑</button>
+          }}><AppIcons.Trash size={14} /></button>
         </div>
       </div>
 
@@ -405,9 +432,15 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
           const calVal = exercise.notes.match(/cal:([\.\d]+)/)?.[1] ?? '';
           const distVal = exercise.notes.match(/dist:([\.\d]+)/)?.[1] ?? '';
 
-          const speedLabel = isRowerMachine ? '🚣 الإيقاع (SPM)' : isBike ? '🚴 السرعة (RPM)' : isClimbmill ? '🏔️ خطوة/د' : '🚀 السرعة (كم/ساعة)';
-          const inclineLabel = isRowerMachine ? '🔧 المقاومة (Level)' : isBike ? '🔧 المقاومة (Level)' : isClimbmill ? '🔧 المستوى' : '📈 الانحدار (%)';
-          const distLabel = isRowerMachine ? '📏 المسافة (m)' : isClimbmill ? '📏 الطوابق' : '📏 المسافة (كم)';
+          const speedLabel = isAr
+            ? (isRowerMachine ? 'الإيقاع (SPM)' : isBike ? 'السرعة (RPM)' : isClimbmill ? 'خطوة/د' : 'السرعة (كم/ساعة)')
+            : (isRowerMachine ? 'Pace (SPM)' : isBike ? 'Speed (RPM)' : isClimbmill ? 'Steps/min' : 'Speed (km/h)');
+          const inclineLabel = isAr
+            ? (isRowerMachine ? 'المقاومة (Level)' : isBike ? 'المقاومة (Level)' : isClimbmill ? 'المستوى' : 'الانحدار (%)')
+            : (isRowerMachine ? 'Resistance (Level)' : isBike ? 'Resistance (Level)' : isClimbmill ? 'Level' : 'Incline (%)');
+          const distLabel = isAr
+            ? (isRowerMachine ? 'المسافة (m)' : isClimbmill ? 'الطوابق' : 'المسافة (كم)')
+            : (isRowerMachine ? 'Distance (m)' : isClimbmill ? 'Floors' : 'Distance (km)');
 
           const saveNotes = (inc: string, cal: string, dist: string) => {
             const parts = [];
@@ -422,10 +455,10 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {/* Duration */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>⏱ المدة (دقيقة)</label>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{isAr ? '⛱ المدة (دقيقة)' : '⛱ Duration (min)'}</label>
                   <input
                     type="number"
-                    value={exercise.sets === 1 && exercise.reps.includes('دقيقة') ? exercise.reps.replace(/[^\d]/g, '') : exercise.sets}
+                    value={exercise.sets === 1 && (exercise.reps.includes('دقيقة') || exercise.reps.includes('min')) ? exercise.reps.replace(/[^\d]/g, '') : exercise.sets}
                     onChange={e => onUpdate({ reps: `${e.target.value} دقيقة` })}
                     placeholder="20"
                     style={{
@@ -467,7 +500,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                 </div>
                 {/* Calories */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>🔥 الكالوريز</label>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{isAr ? 'الكالوريز' : 'Calories'}</label>
                   <input
                     type="text"
                     value={calVal}
@@ -507,10 +540,10 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
             background: '#FAFAFA', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
           }}>
             {[
-              { label: 'الجولات', field: 'sets' as const, type: 'number', value: String(exercise.sets) },
-              { label: 'التكرارات', field: 'reps' as const, type: 'text', value: exercise.reps },
-              { label: 'الوزن', field: 'weight' as const, type: 'text', value: exercise.weight },
-              { label: 'راحة (ث)', field: 'restSeconds' as const, type: 'number', value: String(exercise.restSeconds) },
+              { label: isAr ? 'الجولات' : 'Sets', field: 'sets' as const, type: 'number', value: String(exercise.sets) },
+              { label: isAr ? 'التكرارات' : 'Reps', field: 'reps' as const, type: 'text', value: exercise.reps },
+              { label: isAr ? 'الوزن' : 'Weight', field: 'weight' as const, type: 'text', value: exercise.weight },
+              { label: isAr ? 'راحة (ث)' : 'Rest (s)', field: 'restSeconds' as const, type: 'number', value: String(exercise.restSeconds) },
             ].map(f => (
               <div key={f.field}>
                 <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{f.label}</label>
@@ -527,12 +560,12 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
               </div>
             ))}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>ملاحظة</label>
+              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? 'ملاحظة' : 'Notes'}</label>
               <input
                 type="text"
                 value={exercise.notes}
                 onChange={e => onUpdate({ notes: e.target.value })}
-                placeholder="أي ملاحظة..."
+                placeholder={isAr ? 'أي ملاحظة...' : 'Any notes...'}
                 style={{
                   width: '100%', padding: '6px 10px', borderRadius: 8,
                   border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
@@ -557,7 +590,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
   const [expanded, setExpanded] = useState(false);
   const isRower = cardio.cardioId === 'rower';
   const isTreadmill = cardio.cardioId === 'treadmill';
-  const icon = isRower ? '🚣' : isTreadmill ? '🏃' : '🚴';
+  const cardioIconKey = isRower ? 'rowing' : isTreadmill ? 'running' : 'bike';
   return (
     <div style={{
       background: cardio.completed ? `${color}08` : 'white',
@@ -576,25 +609,25 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 14, color: 'white', transition: 'all 0.2s',
           }}>
-          {cardio.completed ? '✓' : ''}
+          {cardio.completed ? <AppIcons.Check size={14} /> : null}
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{icon} {isAr ? cardio.nameAr : (cardio.nameEn || cardio.nameAr)}</div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}><span style={{display:'inline-flex',alignItems:'center',gap:6}}>{cardioIconKey === 'running' ? <AppIcons.Running size={16} /> : cardioIconKey === 'rowing' ? <AppIcons.Rowing size={16} /> : <AppIcons.Cardio size={16} />}{isAr ? cardio.nameAr : (cardio.nameEn || cardio.nameAr)}</span></div>
           <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
             {isRower ? (
               <>
-                ⏱ {cardio.duration} دقيقة
-                {cardio.speed && ` • 🚣 ${cardio.speed} SPM`}
-                {cardio.distanceKm && ` • 📏 ${cardio.distanceKm}m`}
-                {cardio.pace && ` • ⚡ ${cardio.pace}/500m`}
-                {cardio.caloriesBurned && ` • 🔥 ${cardio.caloriesBurned} cal`}
+                ⏱ {cardio.duration} {isAr ? 'دقيقة' : 'min'}
+                {cardio.speed && ` • ${cardio.speed} SPM`}
+                {cardio.distanceKm && ` • ${cardio.distanceKm}m`}
+                {cardio.pace && ` • ${cardio.pace}/500m`}
+                {cardio.caloriesBurned && ` • ${cardio.caloriesBurned} cal`}
               </>
             ) : (
               <>
-                ⏱ {cardio.duration} دقيقة
-                {cardio.speed && ` • 🚀 ${cardio.speed}`}
-                {cardio.incline && ` • 📐 ${cardio.incline}`}
-                {cardio.caloriesBurned && ` • 🔥 ${cardio.caloriesBurned} كال`}
+                ⏱ {cardio.duration} {isAr ? 'دقيقة' : 'min'}
+                {cardio.speed && ` • ${cardio.speed}`}
+                {cardio.incline && ` • ${cardio.incline}`}
+                {cardio.caloriesBurned && ` • ${cardio.caloriesBurned} ${isAr ? 'كال' : 'cal'}`}
               </>
             )}
           </div>
@@ -604,7 +637,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
           border: `1px solid ${expanded ? color : '#E2E8F0'}`,
           background: expanded ? `${color}15` : 'white',
           color: expanded ? color : '#8A8AAA', fontSize: 12, cursor: 'pointer',
-        }}>✏️</button>
+        }}><AppIcons.Edit size={14} /></button>
       </div>
       {/* Expanded Edit Form */}
       {expanded && (
@@ -617,7 +650,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {/* TIME - Elapsed */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>⏱ TIME (دقيقة)</label>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>{isAr ? '⛱ TIME (دقيقة)' : '⛱ TIME (min)'}</label>
                 <input
                   type="number"
                   value={String(cardio.duration)}
@@ -633,7 +666,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* RATE - Strokes/min */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>🚣 RATE (Strokes/min)</label>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>RATE (Strokes/min)</label>
                 <input
                   type="text"
                   value={cardio.speed}
@@ -649,7 +682,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* DISTANCE - Meters */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>📏 DISTANCE (Meters)</label>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>DISTANCE (Meters)</label>
                 <input
                   type="text"
                   value={cardio.distanceKm}
@@ -665,7 +698,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* PACE - /500 Meters */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>⚡ PACE (/500m)</label>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>PACE (/500m)</label>
                 <input
                   type="text"
                   value={cardio.pace ?? ''}
@@ -681,7 +714,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* CALORIES - full width */}
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>🔥 CALORIES</label>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>CALORIES</label>
                 <input
                   type="text"
                   value={cardio.caloriesBurned}
@@ -702,7 +735,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                 {/* Duration */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>⏱ المدة (دقيقة)</label>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? '⛱ المدة (دقيقة)' : '⛱ Duration (min)'}</label>
                   <input
                     type="number"
                     value={String(cardio.duration)}
@@ -718,7 +751,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                 {/* Speed */}
                 <div>
                   <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
-                    🚀 {isTreadmill ? 'السرعة (كم/ساعة)' : 'المقاومة (Level)'}
+                    {isAr ? (isTreadmill ? 'السرعة (كم/ساعة)' : 'المقاومة (Level)') : (isTreadmill ? 'Speed (km/h)' : 'Resistance (Level)')}
                   </label>
                   <input
                     type="text"
@@ -735,7 +768,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                 {/* Incline */}
                 <div>
                   <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
-                    📐 {isTreadmill ? 'الانحدار (%)' : 'الانحدار (Level)'}
+                    {isAr ? (isTreadmill ? 'الانحدار (%)' : 'الانحدار (Level)') : (isTreadmill ? 'Incline (%)' : 'Incline (Level)')}
                   </label>
                   <input
                     type="text"
@@ -751,7 +784,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                 </div>
                 {/* Calories */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>🔥 الكالوريز</label>
+                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? 'الكالوريز' : 'Calories'}</label>
                   <input
                     type="text"
                     value={cardio.caloriesBurned}
@@ -767,7 +800,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* Distance - full width */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>📏 المسافة (كم)</label>
+                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? 'المسافة (كم)' : 'Distance (km)'}</label>
                 <input
                   type="text"
                   value={cardio.distanceKm}
@@ -788,6 +821,19 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
   );
 }
 
+// ── Heart Icon SVG (vector outline / filled) ─────────────────
+function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
+  return filled ? (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ) : (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
 // ── Add Exercise Panel ─────────────────────────────────────
 function AddExercisePanel({ color, gender, onAdd, isAr }: {
   color: string;
@@ -796,7 +842,19 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
   onAdd: (ex: typeof masterExercises[0]) => void;
 }) {
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<'program' | 'all'>('program');
+  const [activeTab, setActiveTab] = useState<'favorites' | 'all'>('favorites');
+
+  // ── Favorites state (DB-backed via tRPC) ──
+  const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
+  const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
+  const removeFav = trpc.exerciseFavorites.removeFavorite.useMutation({ onSuccess: () => refetchFavs() });
+
+  const isFav = (id: string) => favIds.includes(id);
+  const toggleFav = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (isFav(id)) removeFav.mutate({ exerciseId: id });
+    else addFav.mutate({ exerciseId: id });
+  };
 
   // Build combined exercise list from exerciseData (gender-specific) + masterExercises + upperBodyExercises + cardio
   const genderProgram = getProgramByGender(gender);
@@ -825,6 +883,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
     muscleGroup: 'كارديو',
     defaultSets: 1,
     defaultReps: `${c.defaultDuration} دقيقة`,
+    defaultRepsEn: `${c.defaultDuration} min`,
     defaultWeight: '—',
     restSeconds: 0,
     image: c.image,
@@ -854,9 +913,11 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
     (cardioAsExercises as unknown) as typeof programExercises[number][],
   ]);
 
-  const allExercises = activeTab === 'program' ? programExercises : allExercisesUnified;
+  // Favorites tab: exercises that the user has hearted
+  const favExercises = allExercisesUnified.filter(ex => favIds.includes(ex.id));
 
-  const filtered = allExercises.filter(e =>
+  const baseList = activeTab === 'favorites' ? favExercises : allExercisesUnified;
+  const filtered = baseList.filter(e =>
     e.nameAr.includes(search) || e.muscleGroup.includes(search) || e.nameEn.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -868,15 +929,18 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
         <button
-          onClick={() => setActiveTab('program')}
+          onClick={() => setActiveTab('favorites')}
           style={{
             flex: 1, padding: '7px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: activeTab === 'program' ? '#1B2E5E' : '#F0F4FF',
-            color: activeTab === 'program' ? 'white' : '#1B2E5E',
+            background: activeTab === 'favorites' ? '#1B2E5E' : '#F0F4FF',
+            color: activeTab === 'favorites' ? 'white' : '#1B2E5E',
             fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
           }}
         >
-          🏋️ برنامجك
+          <span style={{display:'flex',alignItems:'center',gap:6}}>
+            <HeartIcon filled={true} size={14} />
+            {isAr ? 'تماريني المفضلة' : 'My Favorites'}
+          </span>
         </button>
         <button
           onClick={() => setActiveTab('all')}
@@ -887,53 +951,99 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
             fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
           }}
         >
-          📋 كل التمارين
+          <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{isAr ? 'كل التمارين' : 'All Exercises'}</span>
         </button>
       </div>
-      <input
-        type="text"
-        placeholder="🔍 ابحث عن تمرين..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{
-          width: '100%', padding: '10px 14px', borderRadius: 10,
-          border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
-          fontSize: 13, marginBottom: 10, outline: 'none',
-        }}
-      />
+
+      {/* Search — only shown in 'all' tab */}
+      {activeTab === 'all' && (
+        <input
+          type="text"
+          placeholder={isAr ? 'ابحث عن تمرين...' : 'Search exercise...'}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{
+            width: '100%', padding: '10px 14px', borderRadius: 10,
+            border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+            fontSize: 13, marginBottom: 10, outline: 'none',
+          }}
+        />
+      )}
+
       <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-        {filtered.map(ex => (
-          <button
-            key={ex.id}
-            onClick={() => onAdd(ex)}
-            style={{
-              width: '100%', padding: '10px 12px', borderRadius: 10,
-              border: '1px solid #F0F0F0', background: 'white',
-              textAlign: 'right', cursor: 'pointer', marginBottom: 4,
-              fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: 10,
-              transition: 'all 0.15s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = `${color}10`)}
-            onMouseLeave={e => (e.currentTarget.style.background = 'white')}
-          >
-            {ex.image && (
-              <img src={ex.image} alt={isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)} style={{
-                width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0,
-              }} />
-            )}
-            <div style={{ flex: 1, textAlign: 'right' }}>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
-              <div style={{ fontSize: 11, color: '#8A8AAA' }}>
-                {ex.muscleGroup} • {ex.defaultSets}×{ex.defaultReps}
-                {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${ex.defaultWeight}` : ''}
-              </div>
+        {/* Empty state for favorites tab */}
+        {activeTab === 'favorites' && filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '28px 16px' }}>
+            <div style={{ marginBottom: 10 }}>
+              <HeartIcon filled={false} size={36} />
             </div>
-            <span style={{ color, fontSize: 18, flexShrink: 0 }}>+</span>
-          </button>
+            <div style={{ color: '#1B2E5E', fontWeight: 700, fontSize: 14, marginBottom: 6, fontFamily: 'Cairo, sans-serif' }}>
+              {isAr ? 'لا توجد تمارين مفضلة بعد' : 'No favorites yet'}
+            </div>
+            <div style={{ color: '#8A8AAA', fontSize: 12, fontFamily: 'Cairo, sans-serif' }}>
+              {isAr ? 'اضغط على القلب لإضافة تمرينك المفضل' : 'Tap the heart icon to add favorites'}
+            </div>
+          </div>
+        )}
+
+        {filtered.map(ex => (
+          <div
+            key={ex.id}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              borderRadius: 10, border: '1px solid #F0F0F0', background: 'white',
+              marginBottom: 4, overflow: 'hidden',
+            }}
+          >
+            {/* Main exercise button */}
+            <button
+              onClick={() => onAdd(ex)}
+              style={{
+                flex: 1, padding: '10px 12px',
+                border: 'none', background: 'transparent',
+                textAlign: 'right', cursor: 'pointer',
+                fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: 10,
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = `${color}10`)}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              {ex.image && (
+                <img src={ex.image} alt={isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)} style={{
+                  width: 44, height: 44, borderRadius: 8, objectFit: 'cover', flexShrink: 0,
+                }} />
+              )}
+              <div style={{ flex: 1, textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
+                <div style={{ fontSize: 11, color: '#8A8AAA' }}>
+                  {isAr ? ex.muscleGroup : (muscleGroupEn[ex.muscleGroup] || ex.muscleGroup)} • {ex.defaultSets}×{isAr ? ex.defaultReps : ((ex as any).defaultRepsEn || translateReps(ex.defaultReps))}
+                  {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${isAr ? ex.defaultWeight : translateWeight(ex.defaultWeight)}` : ''}
+                </div>
+              </div>
+              <span style={{ color, fontSize: 18, flexShrink: 0 }}>+</span>
+            </button>
+
+            {/* Heart toggle button */}
+            <button
+              onClick={(e) => toggleFav(e, ex.id)}
+              style={{
+                flexShrink: 0, padding: '10px 12px',
+                border: 'none', background: 'transparent', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.2)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+              title={isFav(ex.id) ? (isAr ? 'إزالة من المفضلة' : 'Remove from favorites') : (isAr ? 'إضافة للمفضلة' : 'Add to favorites')}
+            >
+              <HeartIcon filled={isFav(ex.id)} size={18} />
+            </button>
+          </div>
         ))}
-        {filtered.length === 0 && (
-          <p style={{ textAlign: 'center', color: '#8A8AAA', fontSize: 13, padding: '20px 0' }}>
-            لا توجد نتائج
+
+        {activeTab === 'all' && filtered.length === 0 && (
+          <p style={{ textAlign: 'center', color: '#8A8AAA', fontSize: 13, padding: '20px 0', fontFamily: 'Cairo, sans-serif' }}>
+            {isAr ? 'لا توجد نتائج' : 'No results found'}
           </p>
         )}
       </div>
@@ -954,29 +1064,33 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
       border: '2px solid #0891B2',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=640&q=80" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
+        <img src="/manus-storage/aqua_690009c3.jpg" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
         <div>
-          <h3 style={{ margin: 0, color: '#0891B2', fontSize: 15, fontWeight: 900 }}>🏊‍♀️ كلاس الأكوا</h3>
-          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#0891B2' }}>تمارين مائية لحرق الدهون</p>
+          <h3 style={{ margin: 0, color: '#0891B2', fontSize: 15, fontWeight: 900 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Swimming size={18} />{isAr ? 'كلاس الأكوا' : 'Aqua Class'}</span></h3>
+          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#0891B2' }}>{isAr ? 'تمارين مائية لحرق الدهون' : 'Water exercises for fat burn'}</p>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 11, color: '#0891B2', display: 'block', marginBottom: 4 }}>المدة (دقيقة)</label>
+          <label style={{ fontSize: 11, color: '#0891B2', display: 'block', marginBottom: 4 }}>{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</label>
           <input type="number" value={aqua.duration}
             onChange={e => onUpdate({ duration: Number(e.target.value) })}
             style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #B2EBF2', fontFamily: 'Cairo, sans-serif', fontSize: 14 }}
           />
         </div>
         <div>
-          <label style={{ fontSize: 11, color: '#0891B2', display: 'block', marginBottom: 4 }}>الشدة</label>
+          <label style={{ fontSize: 11, color: '#0891B2', display: 'block', marginBottom: 4 }}>{isAr ? 'الشدة' : 'Intensity'}</label>
           <select value={aqua.intensity} onChange={e => onUpdate({ intensity: e.target.value as any })}
             style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #B2EBF2', fontFamily: 'Cairo, sans-serif', fontSize: 13 }}>
-            <option>خفيف</option><option>متوسط</option><option>مكثف</option>
+            {isAr ? (
+              <><option value="خفيف">خفيف</option><option value="متوسط">متوسط</option><option value="مكثف">مكثف</option></>
+            ) : (
+              <><option value="خفيف">Light</option><option value="متوسط">Medium</option><option value="مكثف">Intense</option></>
+            )}
           </select>
         </div>
       </div>
-      <h4 style={{ margin: '0 0 8px', color: '#0891B2', fontSize: 13 }}>تمارين الكلاس:</h4>
+      <h4 style={{ margin: '0 0 8px', color: '#0891B2', fontSize: 13 }}>{isAr ? 'تمارين الكلاس:' : 'Class Exercises:'}</h4>
       {aquaExercises.map((ex, i) => (
         <div key={i} style={{
           background: 'white', borderRadius: 10, padding: '10px 12px', marginBottom: 6,
@@ -996,7 +1110,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
           fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}
       >
-        {aqua.completed ? '✅ مكتمل' : 'تحديد كمكتمل'}
+        <span style={{display:'flex',alignItems:'center',gap:4}}>{aqua.completed ? <AppIcons.Check size={14} /> : null}{aqua.completed ? (isAr ? 'مكتمل' : 'Completed') : (isAr ? 'تحديد كمكتمل' : 'Mark as Complete')}</span>
       </button>
     </div>
   );
@@ -1008,46 +1122,48 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
   gender?: 'male' | 'female';
   onUpdate: (u: Partial<import('../hooks/useGymTracker').SaunaLog>) => void;
 }) {
+  const { lang: saunaLang } = useLanguage();
+  const isSaunaAr = saunaLang === 'ar';
   return (
     <div style={{
       background: '#FEF3C7', borderRadius: 16, padding: '16px', marginBottom: 14,
       border: '2px solid #B45309',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <img src="https://images.unsplash.com/photo-1554488383-03f54e78a87c?w=640&q=80" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
+        <img src="/manus-storage/sauna_b9935cdb.jpg" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} />
         <div>
-          <h3 style={{ margin: 0, color: '#B45309', fontSize: 15, fontWeight: 900 }}>🧖‍♀️ جلسة السونا</h3>
-          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#B45309' }}>تعافٍ وحرق سعرات وإزالة سموم</p>
+          <h3 style={{ margin: 0, color: '#B45309', fontSize: 15, fontWeight: 900 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Spa size={18} />{isSaunaAr ? 'جلسة السونا' : 'Sauna Session'}</span></h3>
+          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#B45309' }}>{isSaunaAr ? 'تعافٍ وحرق سعرات وإزالة سموم' : 'Recovery, calorie burn & detox'}</p>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 11, color: '#B45309', display: 'block', marginBottom: 4 }}>إجمالي الدقائق</label>
+          <label style={{ fontSize: 11, color: '#B45309', display: 'block', marginBottom: 4 }}>{isSaunaAr ? 'إجمالي الدقائق' : 'Total Minutes'}</label>
           <input type="number" value={sauna.totalMinutes}
             onChange={e => onUpdate({ totalMinutes: Number(e.target.value) })}
             style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A', fontFamily: 'Cairo, sans-serif', fontSize: 14 }}
           />
         </div>
         <div>
-          <label style={{ fontSize: 11, color: '#B45309', display: 'block', marginBottom: 4 }}>عدد الجولات</label>
+          <label style={{ fontSize: 11, color: '#B45309', display: 'block', marginBottom: 4 }}>{isSaunaAr ? 'عدد الجولات' : 'Rounds'}</label>
           <input type="number" value={sauna.rounds}
             onChange={e => onUpdate({ rounds: Number(e.target.value) })}
             style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A', fontFamily: 'Cairo, sans-serif', fontSize: 14 }}
           />
         </div>
       </div>
-      <h4 style={{ margin: '0 0 8px', color: '#B45309', fontSize: 13 }}>بروتوكول السونا:</h4>
+      <h4 style={{ margin: '0 0 8px', color: '#B45309', fontSize: 13 }}>{isSaunaAr ? 'بروتوكول السونا:' : 'Sauna Protocol:'}</h4>
       {saunaProtocol.map((p, i) => (
         <div key={i} style={{
           background: 'white', borderRadius: 10, padding: '10px 12px', marginBottom: 6,
           border: '1px solid #FDE68A',
         }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: '#B45309' }}>{p.phase} ({p.duration})</div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>🌡 {p.temp} • {gender === 'male' && (p as any).tipMale ? (p as any).tipMale : p.tip}</div>
+          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>{p.temp} • {gender === 'male' && (p as any).tipMale ? (p as any).tipMale : p.tip}</div>
         </div>
       ))}
       <textarea value={sauna.notes} onChange={e => onUpdate({ notes: e.target.value })}
-        placeholder="ملاحظات الجلسة..."
+        placeholder={isSaunaAr ? 'ملاحظات الجلسة...' : 'Session notes...'}
         rows={2}
         style={{
           width: '100%', marginTop: 8, padding: '8px 10px', borderRadius: 8,
@@ -1064,7 +1180,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
           fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}
       >
-        {sauna.completed ? '✅ مكتمل' : 'تحديد كمكتمل'}
+        <span style={{display:'flex',alignItems:'center',gap:4}}>{sauna.completed ? <AppIcons.Check size={14} /> : null}{sauna.completed ? (isSaunaAr ? 'مكتمل' : 'Completed') : (isSaunaAr ? 'تحديد كمكتمل' : 'Mark as Complete')}</span>
       </button>
     </div>
   );
