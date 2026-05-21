@@ -18,6 +18,7 @@ import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
 import PricingBeforeAuth from "./pages/PricingBeforeAuth";
+import AddToHomeScreenPrompt from "./components/AddToHomeScreenPrompt";
 import LegalPage from "./pages/LegalPage";
 import { useEffect } from "react";
 
@@ -127,6 +128,7 @@ function AppWithSocket() {
           }
           {/* In-app admin notification popups — shown to all authenticated users */}
           {currentUser && !isAdminPage && <AdminNotificationPopup />}
+          <AddToHomeScreenPrompt />
         </TooltipProvider>
       </SubscriptionProvider>
     </SocketProvider>
