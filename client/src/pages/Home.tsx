@@ -366,8 +366,23 @@ function CheckInPanel({ onStart, stats, profile }: {
   const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
-  // Icon URLs for each session type
-  // Workout icons are now rendered as inline SVGs via <WorkoutIcon type={...} />
+  // Icon URLs for each session type (original detailed illustrations)
+  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+    lower_body: '/manus-storage/icon_lower_body_59f81631.png',
+    upper_arms: '/manus-storage/icon_upper_body_bbd91e5d.png',
+    core_cardio: '/manus-storage/icon_core_cardio_5e8c3914.png',
+    chest_shoulders: '/manus-storage/icon_chest_shoulders_8582f4ac.png',
+    full_body: '/manus-storage/icon_full_body_55a7cc7f.png',
+    aqua: '/manus-storage/icon_aqua_6436dff1.png',
+    sauna: '/manus-storage/icon_sauna_24076898.png',
+    active_rest: '/manus-storage/icon_cardio_d3fdaaba.png',
+    warm_up: '/manus-storage/icon_warm_up_6ff9052b.png',
+    stretching: '/manus-storage/icon_stretching_59c73b13.png',
+    home_workouts: '/manus-storage/icon_home_workouts_10e4a4f7.png',
+    pilates: '/manus-storage/icon_pilates_1a0c0196.png',
+    mobility: '/manus-storage/icon_mobility_e968ef5f.png',
+    quick_workouts: '/manus-storage/icon_quick_workouts_2e09574e.png',
+  };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
   type CardioFields = { speed: string; incline: string; time: string; distance: string; calories: string };
@@ -503,7 +518,11 @@ function CheckInPanel({ onStart, stats, profile }: {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: 6 }}>
-                      <WorkoutIcon type={type} size={56} />
+                      {SESSION_ICON_URLS[type] ? (
+                        <img src={SESSION_ICON_URLS[type]} alt={nameDisplay} style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }} />
+                      ) : (
+                        <WorkoutIcon type={type} size={56} />
+                      )}
                     </div>
                     <div style={{ fontWeight: 900, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
                       {nameDisplay.split(' - ')[0]}
