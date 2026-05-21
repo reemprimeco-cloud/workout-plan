@@ -386,9 +386,9 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(8,145,178,0.2)',
           }}>
-            <div style={{ width: '100%', height: 180, background: 'linear-gradient(135deg, #0891B2 0%, #06B6D4 50%, #67E8F9 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="60" height="60" viewBox="0 0 24 24" fill="none"><path d="M2 12c2-3 5-5 10-5s8 2 10 5" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="14" r="3" stroke="white" strokeWidth="2" fill="none"/><path d="M7 18c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            </div>
+            <img src="/manus-storage/aqua_690009c3.jpg" alt="Aqua Aerobics" style={{
+              width: '100%', height: 180, objectFit: 'cover',
+            }} />
           </div>
           <div style={{
             background: '#E0F7FA', borderRadius: 14, padding: '14px 16px', marginBottom: 14,
@@ -453,9 +453,9 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(180,83,9,0.2)',
           }}>
-            <div style={{ width: '100%', height: 180, background: 'linear-gradient(135deg, #B45309 0%, #D97706 50%, #FCD34D 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="60" height="60" viewBox="0 0 24 24" fill="none"><path d="M8 4c0 2 2 3 2 5s-2 3-2 5" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M12 4c0 2 2 3 2 5s-2 3-2 5" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M16 4c0 2 2 3 2 5s-2 3-2 5" stroke="white" strokeWidth="2" strokeLinecap="round"/><rect x="4" y="16" width="16" height="5" rx="2" stroke="white" strokeWidth="2" fill="none"/></svg>
-            </div>
+            <img src="/manus-storage/sauna_b9935cdb.jpg" alt="Sauna" style={{
+              width: '100%', height: 180, objectFit: 'cover',
+            }} />
           </div>
           <div style={{
             background: '#FEF3C7', borderRadius: 14, padding: '14px 16px', marginBottom: 14,

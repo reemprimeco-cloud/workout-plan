@@ -15,7 +15,7 @@ const SKY       = "#7BB8D4";
 const SKY_LIGHT = "#A8D4E8";
 const GREEN     = "#22C55E";
 const GOLD      = "#F59E0B";
-import { PrimeFitLogoSVG } from '@/components/InlineSVGIcons';
+const LOGO_URL  = '/manus-storage/primefit_logo_11f9ef29.PNG';
 
 type Lang = "en" | "ar";
 
@@ -125,7 +125,7 @@ export default function PricingSelector({ onPlanSelected }: PricingSelectorProps
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <PrimeFitLogoSVG size={40} />
+            <img src={LOGO_URL} alt="Prime Fit" style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain", background: "white", padding: 4 }} />
             <span style={{ color: "white", fontWeight: 900, fontSize: 18 }}>Prime Fit</span>
           </div>
           <button

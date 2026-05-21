@@ -9,7 +9,6 @@ import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
 import { AppIcons } from '../components/AppIcons';
 import GymClassesAdminTab from '../components/GymClassesAdminTab';
-import AdminCMSTab from '../components/AdminCMSTab';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -24,7 +23,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'gymClasses' | 'profile' | 'cms';
+type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'gymClasses' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -935,7 +934,6 @@ export default function AdminPanel() {
           ['challenges', t('tabChallenges', lang)],
           ['community', t('tabCommunity', lang)],
           ['gymClasses', t('tabGymClasses', lang)],
-          ['cms', lang === 'ar' ? '⚙️ CMS' : '⚙️ CMS'],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
           <button
@@ -1782,10 +1780,6 @@ export default function AdminPanel() {
         {/* ── GYM CLASSES TAB ── */}
         {activeTab === 'gymClasses' && (
           <GymClassesAdminTab lang={lang} />
-        )}
-
-        {activeTab === 'cms' && (
-          <AdminCMSTab lang={lang} />
         )}
 
       </main>

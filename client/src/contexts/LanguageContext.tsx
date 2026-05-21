@@ -1,6 +1,5 @@
 // LanguageContext - Full Arabic/English translation system
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { safeStorage } from '../lib/safeStorage';
 
 export type Lang = 'ar' | 'en';
 
@@ -25,7 +24,7 @@ export const translations = {
     activeSession: 'جلسة نشطة',
     thisWeek: 'هذا الأسبوع',
     thisMonth: 'هذا الشهر',
-    total: 'إجمالي الجلسات',
+    total: 'المجموع',
     session: 'جلسة',
     sessions: 'جلسات',
     weightProgress: 'تقدم الوزن',
@@ -34,8 +33,8 @@ export const translations = {
     lostKg: 'خسرت',
     chooseWorkout: 'اختر نوع تمرين اليوم',
     autoTime: 'سيتم تسجيل الوقت تلقائياً عند الضغط',
-    startNow: 'ابدأ الآن ▶',
-    continueSession: 'متابعة ◀',
+    startNow: 'ابدأ الآن',
+    continueSession: 'متابعة',
     // Session
     activeNow: 'جلسة نشطة الآن',
     started: 'بدأت',
@@ -49,7 +48,7 @@ export const translations = {
     mood: 'المزاج',
     energy: 'الطاقة',
     notesPlaceholder: 'ملاحظات، إصابات، تحسينات...',
-    endSession: '✅ إنهاء الجلسة وحفظ التقدم',
+    endSession: 'إنهاء الجلسة وحفظ التقدم',
     saving: '⏳ جاري الحفظ...',
     sets: 'جولات',
     reps: 'التكرارات',
@@ -58,10 +57,10 @@ export const translations = {
     note: 'ملاحظة',
     notePlaceholder: 'أي ملاحظة...',
     remove: 'حذف',
-    searchExercise: '🔍 ابحث عن تمرين...',
+    searchExercise: 'ابحث عن تمرين...',
     noResults: 'لا توجد نتائج',
     markComplete: 'تحديد كمكتمل',
-    markDone: '✅ مكتمل',
+    markDone: 'مكتمل',
     // Aqua
     aquaTitle: 'كلاس الأكوا',
     aquaSubtitle: 'تمارين مائية لحرق الدهون',
@@ -82,7 +81,7 @@ export const translations = {
     noHistory: 'لا توجد جلسات بعد',
     noHistoryDesc: 'ابدأ أول جلسة من الصفحة الرئيسية وسيظهر سجلها هنا',
     exercises: 'التمارين:',
-    deleteSession: '🗑 حذف الجلسة',
+    deleteSession: 'حذف الجلسة',
     confirmDelete: 'تأكيد الحذف',
     cancel: 'إلغاء',
     // Stats
@@ -110,7 +109,7 @@ export const translations = {
     weeklyPlan: 'خطة التمرين الأسبوعية',
     weeklyPlanDesc: '5 أيام تدريب + يوم أكوا + يوم سونا + يوم راحة. الجدول مرن - سجّل حضورك متى أردت.',
     planTips: 'نصائح للجدول',
-    watchVideo: '▶ شاهد الشرح',
+    watchVideo: 'شاهد الشرح',
     // Profile
     profileTitle: 'الملف الشخصي',
     editProfile: 'تعديل الملف الشخصي',
@@ -175,7 +174,7 @@ export const translations = {
     activeSession: 'Active Session',
     thisWeek: 'This Week',
     thisMonth: 'This Month',
-    total: 'Total Sessions',
+    total: 'Total',
     session: 'session',
     sessions: 'sessions',
     weightProgress: 'Weight Progress',
@@ -184,8 +183,8 @@ export const translations = {
     lostKg: 'Lost',
     chooseWorkout: 'Choose Today\'s Workout',
     autoTime: 'Time will be recorded automatically when you tap',
-    startNow: 'Start Now ▶',
-    continueSession: 'Continue ◀',
+    startNow: 'Start Now',
+    continueSession: 'Continue',
     // Session
     activeNow: 'Active Session',
     started: 'Started',
@@ -199,7 +198,7 @@ export const translations = {
     mood: 'Mood',
     energy: 'Energy',
     notesPlaceholder: 'Notes, injuries, improvements...',
-    endSession: '✅ End Session & Save Progress',
+    endSession: 'End Session & Save Progress',
     saving: '⏳ Saving...',
     sets: 'Sets',
     reps: 'Reps',
@@ -208,10 +207,10 @@ export const translations = {
     note: 'Note',
     notePlaceholder: 'Any note...',
     remove: 'Remove',
-    searchExercise: '🔍 Search exercises...',
+    searchExercise: 'Search exercises...',
     noResults: 'No results found',
     markComplete: 'Mark as Complete',
-    markDone: '✅ Done',
+    markDone: 'Done',
     // Aqua
     aquaTitle: 'Aqua Class',
     aquaSubtitle: 'Water exercises for fat burning',
@@ -232,7 +231,7 @@ export const translations = {
     noHistory: 'No sessions yet',
     noHistoryDesc: 'Start your first session from the home page and it will appear here',
     exercises: 'Exercises:',
-    deleteSession: '🗑 Delete Session',
+    deleteSession: 'Delete Session',
     confirmDelete: 'Confirm Delete',
     cancel: 'Cancel',
     // Stats
@@ -260,7 +259,7 @@ export const translations = {
     weeklyPlan: 'Weekly Workout Plan',
     weeklyPlanDesc: '5 training days + aqua day + sauna day + rest day. Flexible schedule - log your attendance anytime.',
     planTips: 'Schedule Tips',
-    watchVideo: '▶ Watch Tutorial',
+    watchVideo: 'Watch Tutorial',
     // Profile
     profileTitle: 'Profile',
     editProfile: 'Edit Profile',
@@ -326,7 +325,7 @@ const LanguageContext = createContext<LanguageContextType>({
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     // If user has previously chosen a language, respect that choice
-    const saved = safeStorage.getItem('gym_lang') as Lang | null;
+    const saved = localStorage.getItem('gym_lang') as Lang | null;
     if (saved === 'ar' || saved === 'en') return saved;
     // Otherwise auto-detect from device/browser language
     const deviceLang = navigator.language || (navigator as any).userLanguage || '';
@@ -336,7 +335,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLang = (l: Lang) => {
     setLangState(l);
-    safeStorage.setItem('gym_lang', l);
+    localStorage.setItem('gym_lang', l);
   };
 
   const t = (key: TranslationKey): string => {

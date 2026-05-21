@@ -10,7 +10,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-import { PrimeFitLogoSVG } from '@/components/InlineSVGIcons';
+const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
 
 export default function ResetPasswordPage() {
   const { lang } = useLanguage();
@@ -72,7 +72,7 @@ export default function ResetPasswordPage() {
         boxShadow: '0 20px 60px rgba(27,46,94,0.45)',
         textAlign: 'center',
       }}>
-        <PrimeFitLogoSVG size={80} />
+        <img src={LOGO_URL} alt="Prime Fit" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
         <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: '0 0 4px' }}>Prime Fit</h1>
 
         {done ? (
