@@ -435,7 +435,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                 background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
                 border: `1px solid ${SKY}33`,
               }}>
-                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.icon} {s.label}</div>
+                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.label}</div>
                 <div style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>{s.value}</div>
               </div>
             ))}
