@@ -134,11 +134,11 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
   const overridesQuery = trpc.cms.listExerciseOverrides.useQuery();
 
   const uploadIconMutation = trpc.cms.uploadSessionIcon.useMutation({
-    onSuccess: () => { utils.cms.listSessionIcons.invalidate(); setMsg(lang === 'ar' ? 'تم رفع الأيقونة' : 'Icon uploaded'); setTimeout(() => setMsg(''), 3000); },
+    onSuccess: () => { utils.cms.listSessionIcons.invalidate(); utils.cms.getPublicSessionIcons.invalidate(); setMsg(lang === 'ar' ? 'تم رفع الأيقونة' : 'Icon uploaded'); setTimeout(() => setMsg(''), 3000); },
     onError: (e) => setMsg(`Error: ${e.message}`),
   });
   const deleteIconMutation = trpc.cms.deleteSessionIcon.useMutation({
-    onSuccess: () => { utils.cms.listSessionIcons.invalidate(); },
+    onSuccess: () => { utils.cms.listSessionIcons.invalidate(); utils.cms.getPublicSessionIcons.invalidate(); },
   });
   const upsertExMutation = trpc.cms.upsertExerciseOverride.useMutation({
     onSuccess: () => { utils.cms.listExerciseOverrides.invalidate(); setEditingExercise(null); setMsg(lang === 'ar' ? 'تم الحفظ' : 'Saved'); setTimeout(() => setMsg(''), 3000); },

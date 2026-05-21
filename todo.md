@@ -817,3 +817,11 @@
 - [x] Show once on first visit (localStorage flag), dismiss forever on close
 - [x] Bilingual: Arabic + English
 - [x] Integrate into App.tsx
+
+## Session Icon Upload Fix (May 22)
+- [x] Fix CMS session icon upload: ensure uploaded URL is saved to DB correctly
+- [x] Fix CMS session icon preview: re-fetch/display uploaded image after upload (no stale state)
+- [x] Fix home card icons: restore broken default icons (CloudFront URLs broke after rollback)
+- [x] Wire CMS session icon overrides into home card rendering (replace default with DB URL when set)
+- [x] Add cache busting to uploaded image URLs
+- [x] Invalidate getPublicSessionIcons query after upload/delete so home cards update instantly without page refresh
