@@ -9,6 +9,7 @@ import { useAuth } from '../_core/hooks/useAuth';
 import { getLoginUrl } from '../const';
 import { AppIcons } from '../components/AppIcons';
 import GymClassesAdminTab from '../components/GymClassesAdminTab';
+import AdminCMSTab from '../components/AdminCMSTab';
 
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
@@ -23,7 +24,7 @@ function generateCode(): string {
 }
 
 type Lang = 'ar' | 'en';
-type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'gymClasses' | 'profile';
+type Tab = 'dashboard' | 'users' | 'subscriptions' | 'transactions' | 'broadcast' | 'rewards' | 'challenges' | 'community' | 'gymClasses' | 'cms' | 'profile';
 
 const T: Record<string, Record<Lang, string>> = {
   loading: { ar: '⏳ جاري التحقق...', en: '⏳ Verifying...' },
@@ -119,6 +120,7 @@ const T: Record<string, Record<Lang, string>> = {
   tabChallenges: { ar: 'التحديات', en: 'Challenges' },
   tabCommunity: { ar: 'المجتمع', en: 'Community' },
   tabGymClasses: { ar: 'الجيم والحصص', en: 'Gyms & Classes' },
+  tabCMS: { ar: 'CMS ⚙️', en: 'CMS ⚙️' },
   rewardName: { ar: 'اسم المكافأة', en: 'Reward Name' },
   rewardProbability: { ar: 'الاحتمالية %', en: 'Probability %' },
   rewardTier: { ar: 'المستوى', en: 'Tier' },
@@ -934,6 +936,7 @@ export default function AdminPanel() {
           ['challenges', t('tabChallenges', lang)],
           ['community', t('tabCommunity', lang)],
           ['gymClasses', t('tabGymClasses', lang)],
+          ['cms', t('tabCMS', lang)],
           ['profile', t('tabProfile', lang)],
         ] as [Tab, string][]).map(([id, label]) => (
           <button
@@ -1777,11 +1780,15 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* ── GYM CLASSES TAB ── */}
+         {/* ── GYM CLASSES TAB ── */}
         {activeTab === 'gymClasses' && (
           <GymClassesAdminTab lang={lang} />
         )}
 
+        {/* ── CMS TAB ── */}
+        {activeTab === 'cms' && (
+          <AdminCMSTab lang={lang} />
+        )}
       </main>
 
       <style>{`
