@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 
-const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG?v=2';
+import { PrimeFitLogoSVG } from './InlineSVGIcons';
 const STORAGE_KEY = 'pwa_prompt_dismissed';
 
 type Platform = 'android' | 'ios' | null;
@@ -118,16 +118,9 @@ export default function AddToHomeScreenPrompt() {
         </button>
 
         {/* App icon */}
-        <img
-          src={LOGO_URL}
-          alt="Prime Fit"
-          style={{
-            width: 80, height: 80, borderRadius: 18,
-            objectFit: 'contain',
-            marginBottom: 14,
-            boxShadow: '0 4px 16px rgba(27,46,94,0.18)',
-          }}
-        />
+        <div style={{ marginBottom: 14 }}>
+          <PrimeFitLogoSVG size={80} />
+        </div>
 
         <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: '#1B2E5E' }}>
           Install PrimeFit

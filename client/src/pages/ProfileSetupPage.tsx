@@ -7,7 +7,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG?v=2';
+import { PrimeFitLogoSVG } from '@/components/InlineSVGIcons';
 
 export default function ProfileSetupPage() {
   const [, setLocation] = useLocation();
@@ -79,11 +79,7 @@ export default function ProfileSetupPage() {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img
-            src={LOGO_URL}
-            alt="Prime Fit"
-            style={{ height: 52, objectFit: 'contain', marginBottom: 12 }}
-          />
+          <PrimeFitLogoSVG size={52} />
           <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: 0 }}>
             {isAr ? 'مرحباً بك في Prime Fit' : 'Welcome to Prime Fit'}
           </h1>
