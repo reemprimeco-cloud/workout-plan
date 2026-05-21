@@ -850,3 +850,7 @@
 - [x] Integrate session icon overrides into workout card rendering
 - [x] Wire frontend global error boundary to report errors to errorLogs.report
 - [x] Write tests for CMS tRPC procedures
+
+## Upload Fixes (May 22)
+- [x] Fix CMS session icons upload — show default icons as preview, green dot for custom, fix emoji placeholder
+- [x] Fix gym logo upload — image picker working (was a display issue, not functional)
