@@ -1,5 +1,6 @@
 // Hook for tracking workout progress with localStorage persistence
 import { useState, useEffect, useCallback } from 'react';
+import { safeStorage } from '../lib/safeStorage';
 
 export interface ProgressData {
   completedDays: Record<string, boolean>; // key: "week-day" e.g. "1-1"
@@ -20,7 +21,7 @@ const defaultProgress: ProgressData = {
 export function useProgress() {
   const [progress, setProgress] = useState<ProgressData>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = safeStorage.getItem(STORAGE_KEY);
       if (stored) return { ...defaultProgress, ...JSON.parse(stored) };
     } catch {}
     return defaultProgress;
@@ -29,7 +30,7 @@ export function useProgress() {
   // Persist to localStorage on every change
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      safeStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
     } catch {}
   }, [progress]);
 

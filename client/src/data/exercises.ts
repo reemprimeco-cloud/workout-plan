@@ -47,8 +47,6 @@ export interface CardioTemplate {
   defaultIncline: string;
   speedLabel?: string;
   inclineLabel?: string;
-  speedLabelEn?: string;
-  inclineLabelEn?: string;
   showCalories?: boolean;
   showDistance?: boolean;
   image: string;
@@ -59,25 +57,25 @@ export interface CardioTemplate {
 
 // ===== IMAGES (manus-storage) =====
 const IMG = {
-  warmup: '/manus-storage/warmup_f8a00b2a.png',
-  treadmill: '/manus-storage/treadmill_039009ca.jpg',
-  rower: '/manus-storage/machine-rower_003165e0.jpg',
-  elliptical: '/manus-storage/elliptical_25526689.jpg',
-  cardio: '/manus-storage/cardio_machines_6b910eda.jpg',
-  glutes: '/manus-storage/glutes_5f977189.jpg',
-  lunges: '/manus-storage/lunges_squats_536a67c0.jpg',
-  deadlift: '/manus-storage/deadlift_squat_0f651346.jpg',
-  arms: '/manus-storage/arm_exercises_2b6ba203.jpg',
-  lat: '/manus-storage/lat_pulldown_fd6f2005.jpg',
-  plank: '/manus-storage/plank_b44f6d96.jpg',
-  abs: '/manus-storage/ab_exercises_5c818dad.jpg',
-  chest: '/manus-storage/chest_shoulder_f2f90ec8.jpg',
-  shoulder: '/manus-storage/shoulder_exercises_72e2de89.jpg',
-  absGlutes: '/manus-storage/abs_glutes_eb1890bb.jpg',
-  glute2: '/manus-storage/glute_exercises_6dfafade.jpg',
-  sauna: '/manus-storage/sauna_b9935cdb.jpg',
-  aqua: '/manus-storage/aqua_690009c3.jpg',
-  aqua2: '/manus-storage/aqua2_34967505.jpg',
+  warmup: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=640&q=80',
+  treadmill: 'https://images.unsplash.com/photo-1556741533-6e6a62bd8b49?w=640&q=80',
+  rower: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=640&q=80',
+  elliptical: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=640&q=80',
+  cardio: 'https://images.unsplash.com/photo-1538805060514-97d9cc172144?w=640&q=80',
+  glutes: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=640&q=80',
+  lunges: 'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=640&q=80',
+  deadlift: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=640&q=80',
+  arms: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=640&q=80',
+  lat: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=640&q=80',
+  plank: 'https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=640&q=80',
+  abs: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=640&q=80',
+  chest: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=640&q=80',
+  shoulder: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=640&q=80',
+  absGlutes: 'https://images.unsplash.com/photo-1544216717-3bbf52512659?w=640&q=80',
+  glute2: 'https://images.unsplash.com/photo-1598971639058-fab3c3109a73?w=640&q=80',
+  sauna: 'https://images.unsplash.com/photo-1554488383-03f54e78a87c?w=640&q=80',
+  aqua: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=640&q=80',
+  aqua2: 'https://images.unsplash.com/photo-1519315901367-f34ff9154487?w=640&q=80',
 };
 
 // ===== MASTER EXERCISE LIST =====
@@ -645,7 +643,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'treadmill', nameAr: 'جهاز المشي (Treadmill)', nameEn: 'Treadmill', machine: 'Treadmill',
     defaultDuration: 20, defaultSpeed: '5.5', defaultIncline: '3',
-    speedLabel: 'السرعة (كم/ساعة)', inclineLabel: 'الانحدار (%)', speedLabelEn: 'Speed (km/h)', inclineLabelEn: 'Incline (%)',
+    speedLabel: 'السرعة (كم/ساعة)', inclineLabel: 'الانحدار (%)',
     showCalories: true, showDistance: true,
     image: IMG.treadmill, tip: 'المشي بانحدار يزيد من حرق الدهون في الأرداف والفخذين.',
     tipEn: 'Walking on incline burns more fat in glutes and thighs.',
@@ -654,7 +652,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'elliptical', nameAr: 'جهاز الأوربتراك (Elliptical)', nameEn: 'Elliptical', machine: 'Elliptical',
     defaultDuration: 20, defaultSpeed: '5', defaultIncline: '3',
-    speedLabel: 'المقاومة (Level)', inclineLabel: 'الانحدار (Level)', speedLabelEn: 'Resistance (Level)', inclineLabelEn: 'Incline (Level)',
+    speedLabel: 'المقاومة (Level)', inclineLabel: 'الانحدار (Level)',
     showCalories: true, showDistance: false,
     image: IMG.elliptical, tip: 'يعمل على الجسم بالكامل بدون ضغط على المفاصل.',
     tipEn: 'Works the whole body without joint stress.',
@@ -663,7 +661,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'bike', nameAr: 'الدراجة الثابتة (Stationary Bike)', nameEn: 'Stationary Bike', machine: 'Stationary Bike',
     defaultDuration: 30, defaultSpeed: '8', defaultIncline: '4',
-    speedLabel: 'المقاومة (Level)', inclineLabel: 'Level متقطع', speedLabelEn: 'Resistance (Level)', inclineLabelEn: 'Interval Level',
+    speedLabel: 'المقاومة (Level)', inclineLabel: 'Level متقطع',
     showCalories: true, showDistance: false,
     image: IMG.cardio, tip: 'الكارديو المتقطع يحرق دهون البطن أسرع بكثير.',
     tipEn: 'Interval cardio burns belly fat much faster.',
@@ -672,7 +670,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'rower', nameAr: 'جهاز التجديف (Rower)', nameEn: 'Rowing Machine', machine: 'Rowing Machine',
     defaultDuration: 15, defaultSpeed: '24', defaultIncline: '5',
-    speedLabel: 'سرعة الجذب (SPM)', inclineLabel: 'مستوى المقاومة', speedLabelEn: 'Stroke Rate (SPM)', inclineLabelEn: 'Resistance Level',
+    speedLabel: 'سرعة الجذب (SPM)', inclineLabel: 'مستوى المقاومة',
     showCalories: true, showDistance: true,
     image: IMG.rower, tip: 'التجديف يعمل على 86% من عضلات الجسم — مثالي للإحماء الشامل.',
     tipEn: 'Rowing engages 86% of body muscles — ideal for full-body warm-up.',
@@ -681,7 +679,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'precor_bike', nameAr: 'دراجة Precor (Precor Bike)', nameEn: 'Precor Bike', machine: 'Precor Bike',
     defaultDuration: 20, defaultSpeed: '80', defaultIncline: '8',
-    speedLabel: 'السرعة (RPM)', inclineLabel: 'مستوى المقاومة', speedLabelEn: 'Speed (RPM)', inclineLabelEn: 'Resistance Level',
+    speedLabel: 'السرعة (RPM)', inclineLabel: 'مستوى المقاومة',
     showCalories: true, showDistance: false,
     image: IMG.elliptical, tip: 'الدراجة الثابتة تحرق دهون الفخذين والأرداف بدون ضغط على الركبتين.',
     tipEn: 'Stationary bike burns thigh and glute fat without knee stress.',
@@ -690,7 +688,7 @@ export const cardioTemplates: CardioTemplate[] = [
   {
     id: 'climbmill', nameAr: 'جهاز الدرج (Climbmill)', nameEn: 'Climbmill / StairMaster', machine: 'Climbmill',
     defaultDuration: 20, defaultSpeed: '60', defaultIncline: '0',
-    speedLabel: 'السرعة (خطوة/دقيقة)', inclineLabel: 'المستوى', speedLabelEn: 'Speed (steps/min)', inclineLabelEn: 'Level',
+    speedLabel: 'السرعة (خطوة/دقيقة)', inclineLabel: 'المستوى',
     showCalories: true, showDistance: false,
     image: IMG.glutes, tip: 'جهاز الدرج يستهدف الأرداف والفخذين بشكل مكثف — من أفضل أجهزة حرق الدهون.',
     tipEn: 'Climbmill intensely targets glutes and thighs — one of the best fat-burning machines.',
@@ -717,7 +715,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تركيز على الأرداف والفخذين وحرق دهون الأرداف',
     descriptionEn: 'Focus on glutes, thighs, and lower body fat burn',
     defaultExercises: ['squat_db', 'lunge_db', 'hip_thrust', 'rdl', 'leg_press', 'donkey_kicks', 'calf_raises'],
-    defaultCardio: undefined,
+    defaultCardio: 'treadmill',
   },
   upper_arms: {
     nameAr: 'الجزء العلوي - الذراعان والظهر',
@@ -726,7 +724,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تركيز على الذراعين والظهر وحرق دهون اليدين',
     descriptionEn: 'Focus on arms, back definition, and upper body strength',
     defaultExercises: ['bicep_curl', 'tricep_ext', 'lat_pulldown', 'db_row', 'hammer_curl', 'tricep_pushdown'],
-    defaultCardio: undefined,
+    defaultCardio: 'elliptical',
   },
   core_cardio: {
     nameAr: 'البطن والكور + كارديو مكثف',
@@ -735,7 +733,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تركيز على حرق دهون البطن وتقوية عضلات الكور',
     descriptionEn: 'Burn belly fat and strengthen core muscles',
     defaultExercises: ['plank', 'crunches', 'bicycle_crunches', 'leg_raises', 'russian_twist', 'mountain_climbers'],
-    defaultCardio: undefined,
+    defaultCardio: 'bike',
   },
   chest_shoulders: {
     nameAr: 'الصدر والأكتاف',
@@ -744,7 +742,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تقوية الصدر والأكتاف وتحسين القوام',
     descriptionEn: 'Strengthen chest and shoulders, improve posture',
     defaultExercises: ['chest_press', 'shoulder_press', 'lateral_raise', 'chest_fly', 'tricep_kickback', 'side_plank'],
-    defaultCardio: undefined,
+    defaultCardio: 'elliptical',
   },
   full_body: {
     nameAr: 'الجسم الكامل',
@@ -753,7 +751,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تمارين مركبة تعمل على الجسم كاملاً',
     descriptionEn: 'Compound movements targeting the entire body',
     defaultExercises: ['squat_db', 'chest_press', 'lat_pulldown', 'hip_thrust', 'plank', 'bicep_curl', 'tricep_ext'],
-    defaultCardio: undefined,
+    defaultCardio: 'treadmill',
   },
   aqua: {
     nameAr: 'كلاس الأكوا (Aqua Aerobics)',
@@ -780,7 +778,7 @@ export const sessionTypes: Record<SessionType, {
     description: 'تمارين الكارديو والإحماء',
     descriptionEn: 'Cardio and endurance training sessions',
     defaultExercises: [],
-    defaultCardio: undefined,
+    defaultCardio: 'treadmill',
   },
   warm_up: {
     nameAr: 'الإحماء الديناميكي',
