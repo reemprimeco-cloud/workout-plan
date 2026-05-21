@@ -25,13 +25,13 @@ import Community from './Community';
 import Nutrition from './Nutrition';
 import { useGymSync } from '../hooks/useGymSync';
 import { useHaptic } from '../hooks/useHaptic';
+import { NavHomeIcon, NavStatsIcon, NavExercisesIcon, NavCoachIcon, NavCommunityIcon, NavProfileIcon, WorkoutIcon } from '../components/InlineSVGIcons';
 
 // Brand colors
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/primefit_logo_befced15.PNG?v=2';
 
 // Inline SVG logo — renders on all browsers without image loading issues
 function PrimeFitLogo({ size = 40 }: { size?: number }) {
@@ -94,35 +94,29 @@ export default function Home() {
 
   // Inline SVG icons for tabs without CDN webp icons
   const TabSVGIcons: Record<string, (active: boolean) => React.ReactElement> = {
-    pricing: (active) => (
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: active ? 1 : 0.45 }}>
-        <circle cx="15" cy="15" r="12" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
-        <path d="M15 8v14M11 11.5c0-1.1.9-2 2-2h3.5a2 2 0 010 4H13a2 2 0 000 4H17a2 2 0 002-2"
-          stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
-      </svg>
-    ),
+    home: (active) => <NavHomeIcon active={active} />,
+    stats: (active) => <NavStatsIcon active={active} />,
     nutrition: (active) => (
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: active ? 1 : 0.45 }}>
-        {/* Plate */}
-        <circle cx="15" cy="17" r="9" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
-        {/* Fork */}
-        <path d="M9 6v4M9 10c0 1.1.9 2 2 2v5" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
-        <path d="M7 6v3M11 6v3" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
-        {/* Knife */}
-        <path d="M21 6c0 0 1 2 1 4s-1 3-1 3v4" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ opacity: active ? 1 : 0.7 }}>
+        <circle cx="12" cy="14" r="8" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
+        <path d="M7 4v3M7 7c0 1 .7 1.5 1.5 1.5V13" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M5.5 4v2.5M8.5 4v2.5" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M17 4c0 0 .8 1.5 .8 3s-.8 2.5-.8 2.5v3" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
+    exercises: (active) => <NavExercisesIcon active={active} />,
+    coach: (active) => <NavCoachIcon active={active} />,
+    community: (active) => <NavCommunityIcon active={active} />,
+    profile: (active) => <NavProfileIcon active={active} />,
   };
-  const tabs: { id: Tab; iconUrl?: string; label: string }[] = [
-    { id: 'home', iconUrl: '/manus-storage/nav_home_7d9a8832.png?v=2', label: t('navHome') },
-    { id: 'stats', iconUrl: '/manus-storage/nav_stats_173ec95c.png?v=2', label: t('navStats') },
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'home', label: t('navHome') },
+    { id: 'stats', label: t('navStats') },
     { id: 'nutrition', label: isRTL ? 'تغذية' : 'Nutrition' },
-    { id: 'exercises', iconUrl: '/manus-storage/nav_exercises_8bed55b4.png?v=2', label: isRTL ? 'التمارين' : 'Exercises' },
-    { id: 'coach', iconUrl: '/manus-storage/nav_coach_82877c0a.png?v=2', label: isRTL ? 'مدربي' : 'Coach' },
-    { id: 'community', iconUrl: '/manus-storage/nav_community_a9df8d01.png?v=2', label: isRTL ? 'المجتمع' : 'Community' },
-    { id: 'profile', iconUrl: '/manus-storage/nav_profile_7e156c5d.png?v=2', label: t('navProfile') },
+    { id: 'exercises', label: isRTL ? 'التمارين' : 'Exercises' },
+    { id: 'coach', label: isRTL ? 'مدربي' : 'Coach' },
+    { id: 'community', label: isRTL ? 'المجتمع' : 'Community' },
+    { id: 'profile', label: t('navProfile') },
   ];
 
   return (
@@ -314,10 +308,7 @@ export default function Home() {
               minHeight: 56,
             }}
           >
-            {TabSVGIcons[tab.id]
-              ? TabSVGIcons[tab.id](activeTab === tab.id)
-              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
-            }
+            {TabSVGIcons[tab.id](activeTab === tab.id)}
             <span style={{
               fontSize: 10, fontWeight: 700,
               color: activeTab === tab.id ? NAVY : '#7A9BB5',
@@ -376,22 +367,7 @@ function CheckInPanel({ onStart, stats, profile }: {
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
   // Icon URLs for each session type
-  const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
-    lower_body: '/manus-storage/icon_lower_body_59f81631.png?v=2',
-    upper_arms: '/manus-storage/icon_upper_body_bbd91e5d.png?v=2',
-    core_cardio: '/manus-storage/icon_core_cardio_5e8c3914.png?v=2',
-    chest_shoulders: '/manus-storage/icon_chest_shoulders_8582f4ac.png?v=2',
-    full_body: '/manus-storage/icon_full_body_55a7cc7f.png?v=2',
-    aqua: '/manus-storage/icon_aqua_6436dff1.png?v=2',
-    sauna: '/manus-storage/icon_sauna_24076898.png?v=2',
-    active_rest: '/manus-storage/icon_cardio_d3fdaaba.png?v=2',
-    warm_up: '/manus-storage/icon_warm_up_6ff9052b.png?v=2',
-    stretching: '/manus-storage/icon_stretching_59c73b13.png?v=2',
-    home_workouts: '/manus-storage/icon_home_workouts_10e4a4f7.png?v=2',
-    pilates: '/manus-storage/icon_pilates_1a0c0196.png?v=2',
-    mobility: '/manus-storage/icon_mobility_e968ef5f.png?v=2',
-    quick_workouts: '/manus-storage/icon_quick_workouts_2e09574e.png?v=2',
-  };
+  // Workout icons are now rendered as inline SVGs via <WorkoutIcon type={...} />
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
   type CardioFields = { speed: string; incline: string; time: string; distance: string; calories: string };
@@ -527,11 +503,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: 6 }}>
-                      {SESSION_ICON_URLS[type] ? (
-                        <img src={SESSION_ICON_URLS[type]} alt={nameDisplay} style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }} />
-                      ) : (
-                        <span style={{ fontSize: 28 }}>{def.icon}</span>
-                      )}
+                      <WorkoutIcon type={type} size={56} />
                     </div>
                     <div style={{ fontWeight: 900, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
                       {nameDisplay.split(' - ')[0]}
@@ -980,20 +952,15 @@ function TodayGymClasses() {
               {/* Accent bar */}
               <div style={{ width: 5, height: 42, borderRadius: 4, background: accentColor, flexShrink: 0 }} />
 
-              {/* Gym logo or initial */}
-              {gym.gymLogoUrl ? (
-                <img src={gym.gymLogoUrl} alt={gym.gymName}
-                  style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
-              ) : (
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                  background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontWeight: 900, fontSize: 18,
-                }}>
-                  {gym.gymName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              {/* Gym logo — always use styled initial to avoid broken images */}
+              <div style={{
+                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontWeight: 900, fontSize: 18,
+              }}>
+                {gym.gymName.charAt(0).toUpperCase()}
+              </div>
 
               {/* Gym name + class count */}
               <div style={{ flex: 1, textAlign: 'left' }}>
