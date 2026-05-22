@@ -15,6 +15,7 @@ export function registerStorageProxy(app: Express) {
     }
 
     try {
+      // Step 1: Get presigned GET URL from Forge
       const forgeUrl = new URL(
         "v1/storage/presign/get",
         ENV.forgeApiUrl.replace(/\/+$/, "") + "/",
@@ -38,8 +39,26 @@ export function registerStorageProxy(app: Express) {
         return;
       }
 
-      res.set("Cache-Control", "no-store");
-      res.redirect(307, url);
+      // Step 2: Fetch the actual image bytes from S3 (no redirect)
+      // This is required for Safari/iOS PWA which blocks cross-origin 307 redirects for images
+      const imageResp = await fetch(url);
+      if (!imageResp.ok) {
+        console.error(`[StorageProxy] S3 fetch error: ${imageResp.status}`);
+        res.status(502).send("Image fetch error");
+        return;
+      }
+
+      // Step 3: Pipe bytes directly to client with proper headers
+      const contentType = imageResp.headers.get("content-type") || "image/jpeg";
+      const contentLength = imageResp.headers.get("content-length");
+
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "public, max-age=604800, immutable"); // 7 days cache
+      res.set("Access-Control-Allow-Origin", "*");
+      if (contentLength) res.set("Content-Length", contentLength);
+
+      const buffer = await imageResp.arrayBuffer();
+      res.status(200).end(Buffer.from(buffer));
     } catch (err) {
       console.error("[StorageProxy] failed:", err);
       res.status(502).send("Storage proxy error");

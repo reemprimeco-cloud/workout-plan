@@ -50,17 +50,20 @@ const CMSContext = createContext<CMSContextValue>({
 // ── Provider ──────────────────────────────────────────────────────────────────
 export function CMSProvider({ children }: { children: React.ReactNode }) {
   const appearanceQuery = trpc.cms.getAppearance.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000, // 5 min
+    staleTime: 0,          // Always re-fetch when invalidated
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 min
     retry: false,
   });
 
   const sessionIconsQuery = trpc.cms.getPublicSessionIcons.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,          // Always re-fetch when invalidated — critical for instant CMS updates
+    gcTime: 5 * 60 * 1000,
     retry: false,
   });
 
   const exerciseOverridesQuery = trpc.cms.getPublicExerciseOverrides.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
     retry: false,
   });
 
@@ -79,7 +82,13 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   const sessionIconOverridesMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const row of sessionIconsQuery.data ?? []) {
-      map[row.sessionType] = row.iconUrl;
+      // Only add if iconUrl is non-null and non-empty
+      if (row.iconUrl && row.iconUrl.trim() !== '') {
+        map[row.sessionType] = row.iconUrl;
+      }
+    }
+    if (Object.keys(map).length > 0) {
+      console.log('[CMS] SESSION ICON OVERRIDES loaded:', Object.keys(map).length, 'overrides', map);
     }
     return map;
   }, [sessionIconsQuery.data]);
@@ -88,6 +97,9 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     const map: Record<string, ExerciseOverride> = {};
     for (const row of exerciseOverridesQuery.data ?? []) {
       map[row.exerciseId] = row as ExerciseOverride;
+    }
+    if (Object.keys(map).length > 0) {
+      console.log('[CMS] EXERCISE OVERRIDES loaded:', Object.keys(map).length, 'overrides');
     }
     return map;
   }, [exerciseOverridesQuery.data]);

@@ -4,10 +4,11 @@
 
 import { AppIcons } from "./AppIcons";
 import { LowerBodyIcon, UpperBodyIcon, CoreIcon, CardioIcon, FullBodyIcon } from "./ColorIcons";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
 import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
+import { useCMS } from "@/contexts/CMSContext";
 
 // ── Heart Icon SVG (vector outline / filled) ─────────────────
 function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
@@ -57,6 +58,9 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const [showGoalAlert, setShowGoalAlert] = useState(true);
   const [showTipsAlert, setShowTipsAlert] = useState(false);
 
+  // ── CMS exercise overrides (admin-uploaded images + text overrides) ──
+  const { exerciseOverrides: cmsExerciseOverrides } = useCMS();
+
   // ── Favorites state (DB-backed via tRPC) ──
   const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
   const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
@@ -69,7 +73,19 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
     else addFav.mutate({ exerciseId: id });
   };
 
-  const exercises = grouped[activeCategory] || [];
+  // Merge CMS overrides into exercise data — CMS imageUrl wins over static default
+  const rawExercises = grouped[activeCategory] || [];
+  const exercises = useMemo(() => rawExercises.map((ex: Exercise) => {
+    const ov = cmsExerciseOverrides[ex.id];
+    if (!ov) return ex;
+    return {
+      ...ex,
+      ...(ov.imageUrl   ? { imageUrl:   ov.imageUrl }   : {}),
+      ...(ov.youtubeUrl ? { youtubeUrl: ov.youtubeUrl } : {}),
+      ...(ov.name       ? { name:       ov.name }       : {}),
+      ...(ov.nameAr     ? { nameAr:     ov.nameAr }     : {}),
+    };
+  }), [rawExercises, cmsExerciseOverrides]);
 
   return (
     <div

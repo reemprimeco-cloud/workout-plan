@@ -134,7 +134,14 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
   const overridesQuery = trpc.cms.listExerciseOverrides.useQuery();
 
   const uploadIconMutation = trpc.cms.uploadSessionIcon.useMutation({
-    onSuccess: () => { utils.cms.listSessionIcons.invalidate(); utils.cms.getPublicSessionIcons.invalidate(); setMsg(lang === 'ar' ? 'تم رفع الأيقونة' : 'Icon uploaded'); setTimeout(() => setMsg(''), 3000); },
+    onSuccess: (data) => {
+      console.log('[CMS] UPLOAD RESULT session icon:', data);
+      console.log('[CMS] PUBLIC URL:', data?.url);
+      utils.cms.listSessionIcons.invalidate();
+      utils.cms.getPublicSessionIcons.invalidate();
+      setMsg(lang === 'ar' ? 'تم رفع الأيقونة' : 'Icon uploaded');
+      setTimeout(() => setMsg(''), 3000);
+    },
     onError: (e) => setMsg(`Error: ${e.message}`),
   });
   const deleteIconMutation = trpc.cms.deleteSessionIcon.useMutation({
@@ -145,7 +152,14 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
     onError: (e) => setMsg(`Error: ${e.message}`),
   });
   const uploadExImageMutation = trpc.cms.uploadExerciseImage.useMutation({
-    onSuccess: () => { utils.cms.listExerciseOverrides.invalidate(); setUploadingId(null); setMsg(lang === 'ar' ? 'تم رفع الصورة' : 'Image uploaded'); setTimeout(() => setMsg(''), 3000); },
+    onSuccess: (data) => {
+      console.log('[CMS] UPLOAD RESULT exercise image:', data);
+      utils.cms.listExerciseOverrides.invalidate();
+      utils.cms.getPublicExerciseOverrides.invalidate();
+      setUploadingId(null);
+      setMsg(lang === 'ar' ? 'تم رفع الصورة' : 'Image uploaded');
+      setTimeout(() => setMsg(''), 3000);
+    },
     onError: (e) => { setUploadingId(null); setMsg(`Error: ${e.message}`); },
   });
 
@@ -227,13 +241,20 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
             {SESSION_TYPES.map(st => {
               const customUrl = iconMap[st.id];
-              const displayUrl = customUrl || st.defaultIcon;
+              // Add cache-busting timestamp to custom URLs to force browser re-fetch after upload
+              const bustUrl = customUrl ? `${customUrl}?v=${Date.now()}` : null;
+              const displayUrl = bustUrl || st.defaultIcon;
               const isCustom = !!customUrl;
               const isUploading = uploadingId === st.id;
               return (
                 <div key={st.id} style={{ ...cardStyle, padding: 16, marginBottom: 0, textAlign: 'center' }}>
                   <div style={{ width: 72, height: 72, borderRadius: 12, background: '#F0F4F8', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-                    <img src={displayUrl} alt={st.label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    {displayUrl && <img
+                      src={displayUrl}
+                      alt={st.label}
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      onError={(e) => console.warn('[CMS] IMAGE SRC failed to load:', displayUrl, e)}
+                    />}
                     {isCustom && <div style={{ position: 'absolute', top: 2, right: 2, background: '#16A34A', borderRadius: 4, width: 10, height: 10 }} />}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 4 }}>{lang === 'ar' ? st.labelAr : st.label}</div>
@@ -633,7 +654,7 @@ type CMSSection = 'content' | 'appearance' | 'errors';
 export default function AdminCMSTab({ lang }: { lang: 'ar' | 'en' }) {
   const [section, setSection] = useState<CMSSection>('content');
   const errorCountQuery = trpc.cms.countUnresolvedErrors.useQuery(undefined, { refetchInterval: 30_000 });
-  const errorCount = errorCountQuery.data?.count ?? 0;
+  const errorCount = (typeof errorCountQuery.data === 'number' ? errorCountQuery.data : 0);
 
   const sections: { id: CMSSection; label: string; labelAr: string }[] = [
     { id: 'content',    label: 'Content',    labelAr: 'المحتوى' },

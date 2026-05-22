@@ -378,21 +378,22 @@ function CheckInPanel({ onStart, stats, profile }: {
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
   // Icon URLs for each session type — CMS overrides take priority over defaults
+  // Using manus-storage URLs (same ones as AdminCMSTab defaultIcon) — no CloudFront dependency
   const DEFAULT_SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
-    lower_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_lower_body-MuCkSzyesxhQdyW2sjXWAq.webp',
-    upper_arms: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_upper_body-d4Fkcsb5PVaBtsoBf7kR6u.webp',
-    core_cardio: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_core_cardio-2XKA22my7CHNgVpQZBhzVC.webp',
-    chest_shoulders: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_chest_shoulders-7n7FKiPHKydZoJhE4L2Y2a.webp',
-    full_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_full_body-DTurmyGnhh2FK22ddoLwZJ.webp',
-    aqua: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_aqua-CTdfNbHhgUmSuEDYAYZErP.webp',
-    sauna: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_sauna-euKmrDgyW3kcnrExDVuZEj.webp',
-    active_rest: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_cardio-JgDT6bvc8LxDoDkZC3MFmL.webp',
-    warm_up: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_warm_up-QRSEACQjVrSnzzkfpSfCPF.webp',
-    stretching: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_stretching-F4ZvDFQRX2KXtbCduArTqe.webp',
-    home_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_home_workouts-8TAShRf99uAcBdK8sVxufW.webp',
-    pilates: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_pilates-hfeJyx2Mk2XJHngo6SaSmM.webp',
-    mobility: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_mobility-M3ZmtXZ8badZAeB5P6DYgH.webp',
-    quick_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_quick_workouts-WYyiQ3V9SSSK3mS8Ett7pm.webp',
+    lower_body:      '/manus-storage/icon_lower_body_59f81631.png',
+    upper_arms:      '/manus-storage/icon_upper_body_bbd91e5d.png',
+    chest_shoulders: '/manus-storage/icon_chest_shoulders_8582f4ac.png',
+    core_cardio:     '/manus-storage/icon_core_cardio_5e8c3914.png',
+    full_body:       '/manus-storage/icon_full_body_55a7cc7f.png',
+    aqua:            '/manus-storage/icon_aqua_6436dff1.png',
+    sauna:           '/manus-storage/icon_sauna_24076898.png',
+    active_rest:     '/manus-storage/icon_cardio_d3fdaaba.png',
+    warm_up:         '/manus-storage/icon_warm_up_6ff9052b.png',
+    stretching:      '/manus-storage/icon_stretching_59c73b13.png',
+    home_workouts:   '/manus-storage/icon_home_workouts_10e4a4f7.png',
+    pilates:         '/manus-storage/icon_pilates_1a0c0196.png',
+    mobility:        '/manus-storage/icon_mobility_e968ef5f.png',
+    quick_workouts:  '/manus-storage/icon_quick_workouts_2e09574e.png',
   };
   // Merge defaults with CMS overrides — CMS wins when set
   const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
@@ -537,7 +538,15 @@ function CheckInPanel({ onStart, stats, profile }: {
                   <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: 6 }}>
                       {SESSION_ICON_URLS[type] ? (
-                        <img src={SESSION_ICON_URLS[type]} alt={nameDisplay} style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }} />
+                        <img
+                          src={SESSION_ICON_URLS[type]}
+                          alt={nameDisplay}
+                          style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }}
+                          onError={(e) => {
+                            console.warn('[CMS] IMAGE SRC failed on home card:', type, SESSION_ICON_URLS[type]);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
                       ) : (
                         <span style={{ fontSize: 28 }}>{def.icon}</span>
                       )}
