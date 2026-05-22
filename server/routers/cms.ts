@@ -92,15 +92,15 @@ export const cmsRouter = router({
       const existing = await getOrCreateAppearance();
       const buffer = Buffer.from(input.base64, "base64");
       const ext = input.contentType.split("/")[1] ?? "jpg";
-      const { key, url } = await storagePut(
-        `cms/${input.type}_${Date.now()}.${ext}`,
-        buffer,
-        input.contentType
-      );
+      const filePath = `cms/${input.type}_${Date.now()}.${ext}`;
+      console.log("[CMS] uploadAppearanceImage: uploading", filePath, "contentType:", input.contentType);
+      const { key, url } = await storagePut(filePath, buffer, input.contentType);
+      console.log("[CMS] UPLOAD RESULT key:", key, "url:", url);
       const updateData = input.type === "logo"
         ? { logoUrl: url, logoKey: key }
         : { bannerUrl: url, bannerKey: key };
-      await db.update(siteAppearance).set(updateData).where(eq(siteAppearance.id, existing.id));
+      const dbResult = await db.update(siteAppearance).set(updateData).where(eq(siteAppearance.id, existing.id));
+      console.log("[CMS] DB UPDATE appearance:", JSON.stringify(dbResult));
       return { url, key };
     }),
 
@@ -170,23 +170,24 @@ export const cmsRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const buffer = Buffer.from(input.base64, "base64");
       const ext = input.contentType.split("/")[1] ?? "jpg";
-      const { key, url } = await storagePut(
-        `cms/exercises/${input.exerciseId}_${Date.now()}.${ext}`,
-        buffer,
-        input.contentType
-      );
+      const filePath = `cms/exercises/${input.exerciseId}_${Date.now()}.${ext}`;
+      console.log("[CMS] uploadExerciseImage: exerciseId:", input.exerciseId, "path:", filePath);
+      const { key, url } = await storagePut(filePath, buffer, input.contentType);
+      console.log("[CMS] UPLOAD RESULT key:", key, "PUBLIC URL:", url);
       const existing = await db.select().from(exerciseOverrides)
         .where(eq(exerciseOverrides.exerciseId, input.exerciseId)).limit(1);
+      let dbResult;
       if (existing.length > 0) {
-        await db.update(exerciseOverrides)
+        dbResult = await db.update(exerciseOverrides)
           .set({ imageUrl: url })
           .where(eq(exerciseOverrides.exerciseId, input.exerciseId));
       } else {
-        await db.insert(exerciseOverrides).values({
+        dbResult = await db.insert(exerciseOverrides).values({
           exerciseId: input.exerciseId,
           imageUrl: url,
         });
       }
+      console.log("[CMS] DB UPDATE exerciseOverrides:", JSON.stringify(dbResult), "imageUrl:", url);
       return { url, key };
     }),
 
@@ -211,23 +212,24 @@ export const cmsRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const buffer = Buffer.from(input.base64, "base64");
       const ext = input.contentType.split("/")[1] ?? "jpg";
-      const { key, url } = await storagePut(
-        `cms/session-icons/${input.sessionType}_${Date.now()}.${ext}`,
-        buffer,
-        input.contentType
-      );
+      const filePath = `cms/session-icons/${input.sessionType}_${Date.now()}.${ext}`;
+      console.log("[CMS] uploadSessionIcon: sessionType:", input.sessionType, "path:", filePath);
+      const { key, url } = await storagePut(filePath, buffer, input.contentType);
+      console.log("[CMS] UPLOAD RESULT key:", key, "PUBLIC URL:", url);
       const existing = await db.select().from(sessionIconOverrides)
         .where(eq(sessionIconOverrides.sessionType, input.sessionType)).limit(1);
+      let dbResult;
       if (existing.length > 0) {
-        await db.update(sessionIconOverrides)
+        dbResult = await db.update(sessionIconOverrides)
           .set({ iconUrl: url })
           .where(eq(sessionIconOverrides.sessionType, input.sessionType));
       } else {
-        await db.insert(sessionIconOverrides).values({
+        dbResult = await db.insert(sessionIconOverrides).values({
           sessionType: input.sessionType,
           iconUrl: url,
         });
       }
+      console.log("[CMS] DB UPDATE sessionIconOverrides:", JSON.stringify(dbResult), "sessionType:", input.sessionType, "iconUrl:", url);
       return { url, key };
     }),
 
@@ -239,6 +241,7 @@ export const cmsRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db.delete(sessionIconOverrides)
         .where(eq(sessionIconOverrides.sessionType, input.sessionType));
+      console.log("[CMS] deleteSessionIcon: removed sessionType:", input.sessionType);
       return { success: true };
     }),
 
@@ -248,7 +251,8 @@ export const cmsRouter = router({
     const db = await getDb();
     if (!db) return [];
     const rows = await db.select().from(sessionIconOverrides);
-    return rows;
+    // Filter out any rows with null/empty iconUrl to prevent null src
+    return rows.filter(r => r.iconUrl && r.iconUrl.trim() !== '');
   }),
 
   getPublicExerciseOverrides: publicProcedure.query(async () => {
@@ -276,16 +280,14 @@ export const cmsRouter = router({
         message:   input.message,
         stack:     input.stack ?? null,
         url:       input.url ?? null,
-        userId:    ctx.user?.id ?? null,
-        userEmail: ctx.user?.email ?? null,
       });
       return { success: true };
     }),
 
   listErrorLogs: protectedProcedure
     .input(z.object({
+      limit:    z.number().min(1).max(200).default(50),
       resolved: z.boolean().optional(),
-      limit:    z.number().min(1).max(200).default(100),
     }).optional())
     .query(async ({ ctx, input }) => {
       requireAdmin(ctx.user.role);
@@ -295,10 +297,13 @@ export const cmsRouter = router({
       if (input?.resolved !== undefined) {
         conditions.push(eq(appErrorLogs.resolved, input.resolved));
       }
-      return db.select().from(appErrorLogs)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
+      const query = db.select().from(appErrorLogs)
         .orderBy(desc(appErrorLogs.createdAt))
-        .limit(input?.limit ?? 100);
+        .limit(input?.limit ?? 50);
+      if (conditions.length > 0) {
+        return query.where(and(...conditions));
+      }
+      return query;
     }),
 
   resolveError: protectedProcedure
@@ -307,9 +312,7 @@ export const cmsRouter = router({
       requireAdmin(ctx.user.role);
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      await db.update(appErrorLogs)
-        .set({ resolved: true })
-        .where(eq(appErrorLogs.id, input.id));
+      await db.update(appErrorLogs).set({ resolved: true }).where(eq(appErrorLogs.id, input.id));
       return { success: true };
     }),
 
@@ -317,9 +320,7 @@ export const cmsRouter = router({
     requireAdmin(ctx.user.role);
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    await db.update(appErrorLogs)
-      .set({ resolved: true })
-      .where(eq(appErrorLogs.resolved, false));
+    await db.update(appErrorLogs).set({ resolved: true }).where(eq(appErrorLogs.resolved, false));
     return { success: true };
   }),
 
@@ -331,12 +332,10 @@ export const cmsRouter = router({
     return { success: true };
   }),
 
-  countUnresolvedErrors: publicProcedure.query(async ({ ctx }) => {
-    if (!ctx.user || ctx.user.role !== "admin") return { count: 0 };
+  countUnresolvedErrors: publicProcedure.query(async () => {
     const db = await getDb();
-    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const rows = await db.select().from(appErrorLogs)
-      .where(eq(appErrorLogs.resolved, false));
-    return { count: rows.length };
+    if (!db) return 0;
+    const rows = await db.select().from(appErrorLogs).where(eq(appErrorLogs.resolved, false));
+    return rows.length;
   }),
 });

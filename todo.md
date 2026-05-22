@@ -825,3 +825,14 @@
 - [x] Wire CMS session icon overrides into home card rendering (replace default with DB URL when set)
 - [x] Add cache busting to uploaded image URLs
 - [x] Invalidate getPublicSessionIcons query after upload/delete so home cards update instantly without page refresh
+
+## CMS Image Pipeline Full Fix (May 22)
+- [x] Fix storageProxy: change 307 redirect to direct image piping so Safari/iOS PWA can load images
+- [x] Add server-side logging to uploadSessionIcon and uploadExerciseImage (path, url, db result)
+- [x] Fix AdminCMSTab: also invalidate getPublicExerciseOverrides after exercise image upload
+- [x] Fix AdminCMSTab: show upload result URL in console.log after successful mutation
+- [x] Fix CMSContext: reduce staleTime to 0 so queries always re-fetch after invalidation
+- [x] Fix Home.tsx DEFAULT_SESSION_ICON_URLS: replace broken CloudFront URLs with working manus-storage URLs
+- [x] Fix ExerciseLibrary.tsx: apply CMS exercise image overrides to exercise cards
+- [x] Fix ActiveSession.tsx: prevent empty string image src (use null check not empty string)
+- [x] Add cache-busting timestamp to uploaded image URLs in CMS preview
