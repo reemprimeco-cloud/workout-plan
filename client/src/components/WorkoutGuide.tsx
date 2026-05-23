@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { masterExercises, aquaExercises, saunaProtocol, sessionTypes } from '../data/exercises';
 import type { SessionType } from '../data/exercises';
 import { useLanguage } from '../contexts/LanguageContext';
-import { AppIcons } from './AppIcons';
+import { SafeImage } from '@/components/SafeImage';
 
 type GuideTab = 'plan' | 'exercises' | 'aqua' | 'sauna' | 'nutrition';
 
 // Translate Arabic muscle group names to English
-export const muscleGroupEn: Record<string, string> = {
+const muscleGroupEn: Record<string, string> = {
   'الأرداف والفخذين': 'Glutes & Thighs',
   'الأرداف': 'Glutes',
   'الفخذ الخلفي والأرداف': 'Hamstrings & Glutes',
@@ -32,26 +32,6 @@ export const muscleGroupEn: Record<string, string> = {
   'عضلات البطن الجانبية': 'Obliques',
   'البطن والكور والكارديو': 'Core & Cardio',
   'الجسم كله — ظهر، أكتاف، ذراعين، أرداف': 'Full Body',
-  'الجسم كله': 'Full Body',
-  'الكور': 'Core',
-  'الكور والعمود الفقري': 'Core & Spine',
-  'الكور والفخذ': 'Core & Hip Flexors',
-  'الكور والكارديو': 'Core & Cardio',
-  'الصدر والكتف': 'Chest & Shoulders',
-  'الظهر والكور': 'Back & Core',
-  'الظهر والورك': 'Back & Hips',
-  'العمود الفقري': 'Spine',
-  'العمود الفقري الصدري': 'Thoracic Spine',
-  'العمود الفقري والكور': 'Spine & Core',
-  'الفخذ الأمامي': 'Quadriceps',
-  'الكاحل': 'Ankle',
-  'الكتف': 'Shoulder',
-  'الورك': 'Hips',
-  'الورك الأمامي': 'Hip Flexors',
-  'الورك والأرداف': 'Hips & Glutes',
-  'الورك والفخذ': 'Hips & Thighs',
-  'الرقبة': 'Neck',
-  'كارديو': 'Cardio',
 };
 
 // English names for session types (sessionTypes only has nameAr)
@@ -76,11 +56,11 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
   const [expandedEx, setExpandedEx] = useState<string | null>(null);
 
   const tabs: { id: GuideTab; icon: string; labelAr: string; labelEn: string }[] = [
-    { id: 'plan',      icon: 'calendar', labelAr: 'الخطة',    labelEn: 'Plan' },
-    { id: 'exercises', icon: 'dumbbell', labelAr: 'التمارين', labelEn: 'Exercises' },
-    { id: 'aqua',      icon: 'swimming', labelAr: 'الأكوا',   labelEn: 'Aqua' },
-    { id: 'sauna',     icon: 'spa', labelAr: 'السونا',   labelEn: 'Sauna' },
-    { id: 'nutrition', icon: 'salad', labelAr: 'التغذية',  labelEn: 'Nutrition' },
+    { id: 'plan',      icon: '📅', labelAr: 'الخطة',    labelEn: 'Plan' },
+    { id: 'exercises', icon: '🏋️‍♀️', labelAr: 'التمارين', labelEn: 'Exercises' },
+    { id: 'aqua',      icon: '🏊‍♀️', labelAr: 'الأكوا',   labelEn: 'Aqua' },
+    { id: 'sauna',     icon: '🧖‍♀️', labelAr: 'السونا',   labelEn: 'Sauna' },
+    { id: 'nutrition', icon: '🥗', labelAr: 'التغذية',  labelEn: 'Nutrition' },
   ];
 
   const typeOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body'];
@@ -120,36 +100,36 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
   // Nutrition sections with English
   const nutritionSections = [
     {
-      titleAr: 'وجبة ما قبل التمرين (1-2 ساعة قبل)',
-      titleEn: 'Pre-Workout Meal (1–2 hours before)',
+      titleAr: '🍳 وجبة ما قبل التمرين (1-2 ساعة قبل)',
+      titleEn: '🍳 Pre-Workout Meal (1–2 hours before)',
       color: '#E05A00', bg: '#FFF0E8',
       itemsAr: ['موزة + ملعقة زبدة فول سوداني', 'شوفان بالحليب + فاكهة', 'خبز أسمر + بيضة مسلوقة'],
       itemsEn: ['Banana + 1 tbsp peanut butter', 'Oatmeal with milk + fruit', 'Whole wheat bread + boiled egg'],
     },
     {
-      titleAr: 'وجبة ما بعد التمرين (خلال 30 دقيقة)',
-      titleEn: 'Post-Workout Meal (within 30 minutes)',
+      titleAr: '🥤 وجبة ما بعد التمرين (خلال 30 دقيقة)',
+      titleEn: '🥤 Post-Workout Meal (within 30 minutes)',
       color: '#7C3AED', bg: '#F0E8FF',
       itemsAr: ['بروتين شيك + موزة', 'زبادي يوناني + عسل + مكسرات', 'صدر دجاج + أرز بني + خضار'],
       itemsEn: ['Protein shake + banana', 'Greek yogurt + honey + nuts', 'Chicken breast + brown rice + vegetables'],
     },
     {
-      titleAr: 'الماء والترطيب',
-      titleEn: 'Water & Hydration',
+      titleAr: '💧 الماء والترطيب',
+      titleEn: '💧 Water & Hydration',
       color: '#0891B2', bg: '#E0F7FA',
       itemsAr: gender === 'female' ? ['2.5-3 لتر ماء يومياً', 'اشربي 500 مل قبل التمرين', 'اشربي كل 15-20 دقيقة أثناء التمرين', '500 مل بعد التمرين لإعادة الترطيب'] : ['2.5-3 لتر ماء يومياً', 'اشرب 500 مل قبل التمرين', 'اشرب كل 15-20 دقيقة أثناء التمرين', '500 مل بعد التمرين لإعادة الترطيب'],
       itemsEn: ['2.5–3 liters of water daily', 'Drink 500 ml before workout', 'Drink every 15–20 minutes during workout', '500 ml after workout to rehydrate'],
     },
     {
-      titleAr: 'البروتين اليومي',
-      titleEn: 'Daily Protein',
+      titleAr: '🥩 البروتين اليومي',
+      titleEn: '🥩 Daily Protein',
       color: '#DC2626', bg: '#FFE8E8',
       itemsAr: ['1.6-2 جرام بروتين لكل كجم من وزنك', 'مصادر: دجاج، سمك، بيض، زبادي، بقوليات', 'وزّعي البروتين على 4-5 وجبات', 'هدفك: 116-145 جرام بروتين يومياً'],
       itemsEn: ['1.6–2 g protein per kg of body weight', 'Sources: chicken, fish, eggs, yogurt, legumes', 'Spread protein across 4–5 meals', 'Target: 116–145 g protein per day'],
     },
     {
-      titleAr: 'تجنبي',
-      titleEn: 'Avoid',
+      titleAr: '🚫 تجنبي',
+      titleEn: '🚫 Avoid',
       color: '#8A8AAA', bg: '#F4F6F8',
       itemsAr: ['السكريات المضافة والمشروبات الغازية', 'الأطعمة المقلية والمعالجة', 'الوجبات الكبيرة قبل النوم مباشرة', 'تخطي وجبة الإفطار'],
       itemsEn: ['Added sugars and carbonated drinks', 'Fried and processed foods', 'Large meals right before bed', 'Skipping breakfast'],
@@ -200,7 +180,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, padding: '16px 18px', marginBottom: 14, color: 'white',
           }}>
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 900 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={18} />{ar ? 'خطة التمرين الأسبوعية' : 'Weekly Workout Plan'}</span>
+              📋 {ar ? 'خطة التمرين الأسبوعية' : 'Weekly Workout Plan'}
             </h3>
             <p style={{ margin: 0, opacity: 0.8, fontSize: 12 }}>
               {ar
@@ -251,7 +231,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderLeft: isRTL ? 'none' : '4px solid #E05A00',
           }}>
             <h4 style={{ margin: '0 0 8px', color: '#E05A00', fontSize: 13 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Info size={16} />{ar ? 'نصائح للجدول' : 'Schedule Tips'}</span>
+              💡 {ar ? 'نصائح للجدول' : 'Schedule Tips'}
             </h4>
             {planTips.map((tip, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
@@ -303,7 +283,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                     style={{ padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
                     onClick={() => setExpandedEx(isExpanded ? null : ex.id)}
                   >
-                    <img src={ex.image} alt={ar ? ex.nameAr : ex.nameEn} style={{
+                    <SafeImage src={ex.image} alt={ar ? ex.nameAr : ex.nameEn} style={{
                       width: 52, height: 52, borderRadius: 10, objectFit: 'cover', flexShrink: 0,
                     }} />
                     <div style={{ flex: 1 }}>
@@ -317,7 +297,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                         {ex.defaultSets} {ar ? 'جولات' : 'sets'} × {ex.defaultReps} • {ex.defaultWeight}
                       </div>
                     </div>
-                    <span style={{color:'#8A8AAA'}}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
+                    <span style={{ color: '#8A8AAA' }}>{isExpanded ? '▲' : '▼'}</span>
                   </div>
                   {isExpanded && (
                     <div style={{
@@ -348,7 +328,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                         marginBottom: 10,
                       }}>
                         <span style={{ fontSize: 11, color: '#E05A00', fontWeight: 700 }}>
-                          <span style={{display:'inline-flex',alignItems:'center',gap:4}}><AppIcons.Info size={12} className='text-blue-500' />{ar ? 'نصيحة: ' : 'Tip: '}</span>
+                          💡 {ar ? 'نصيحة: ' : 'Tip: '}
                         </span>
                         <span style={{ fontSize: 11, color: '#4A4A6A' }}>
                           {ar ? ex.tip : (ex.tipEn || ex.tip)}
@@ -367,7 +347,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                             justifyContent: 'center',
                           }}
                         >
-                          <AppIcons.ChevronRight size={18} />
+                          <span style={{ fontSize: 18 }}>▶</span>
                           {ar ? 'شاهدي شرح التمرين الصحيح على يوتيوب' : 'Watch exercise tutorial on YouTube'}
                         </a>
                       )}
@@ -386,7 +366,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(8,145,178,0.2)',
           }}>
-            <img src="/manus-storage/aqua_690009c3.jpg" alt="Aqua Aerobics" style={{
+            <SafeImage src="/images/aqua.jpg" alt="Aqua Aerobics" style={{
               width: '100%', height: 180, objectFit: 'cover',
             }} />
           </div>
@@ -396,7 +376,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderLeft: isRTL ? 'none' : '4px solid #0891B2',
           }}>
             <h3 style={{ margin: '0 0 6px', color: '#0891B2', fontSize: 15, fontWeight: 900 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Swimming size={18} />{ar ? 'كلاس الأكوا - فوائد ومعلومات' : 'Aqua Class — Benefits & Info'}</span>
+              🏊‍♀️ {ar ? 'كلاس الأكوا - فوائد ومعلومات' : 'Aqua Class — Benefits & Info'}
             </h3>
             <p style={{ margin: 0, fontSize: 12, color: '#0891B2' }}>
               {ar
@@ -422,7 +402,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                 }}>{ex.duration}</div>
               </div>
               <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 4 }}>
-                <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={12} className='text-blue-500' />{ar ? ex.tipAr : ex.tipEn}</span>
+                💡 {ar ? ex.tipAr : ex.tipEn}
               </div>
             </div>
           ))}
@@ -431,14 +411,14 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             border: '1px solid #B2EBF2',
           }}>
             <h4 style={{ margin: '0 0 8px', color: '#0891B2', fontSize: 13 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={16} />{ar ? 'ما تحتاجينه:' : 'What you need:'}</span>
+              🎽 {ar ? 'ما تحتاجينه:' : 'What you need:'}
             </h4>
             {(ar
               ? ['مايوه رياضي مريح', 'نظارة سباحة (اختياري)', 'حذاء مائي للحماية', 'منشفة وزجاجة ماء', 'دمبلز مائية (يوفرها النادي عادةً)']
               : ['Comfortable swimsuit', 'Swimming goggles (optional)', 'Water shoes for protection', 'Towel and water bottle', 'Water dumbbells (usually provided by the gym)']
             ).map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <AppIcons.Check size={14} className='text-cyan-600' />
+                <span style={{ color: '#0891B2' }}>✓</span>
                 <span style={{ fontSize: 12, color: '#4A4A6A' }}>{item}</span>
               </div>
             ))}
@@ -453,7 +433,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(180,83,9,0.2)',
           }}>
-            <img src="/manus-storage/sauna_b9935cdb.jpg" alt="Sauna" style={{
+            <SafeImage src="/images/sauna.jpg" alt="Sauna" style={{
               width: '100%', height: 180, objectFit: 'cover',
             }} />
           </div>
@@ -463,7 +443,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderLeft: isRTL ? 'none' : '4px solid #B45309',
           }}>
             <h3 style={{ margin: '0 0 6px', color: '#B45309', fontSize: 15, fontWeight: 900 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Spa size={18} />{ar ? 'السونا - فوائد ومعلومات' : 'Sauna — Benefits & Info'}</span>
+              🧖‍♀️ {ar ? 'السونا - فوائد ومعلومات' : 'Sauna — Benefits & Info'}
             </h3>
             <p style={{ margin: 0, fontSize: 12, color: '#B45309' }}>
               {ar
@@ -488,9 +468,9 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                   borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700, flexShrink: 0,
                 }}>{p.duration}</div>
               </div>
-              <div style={{fontSize:11,color:'#8A8AAA',marginTop:4,display:'flex',alignItems:'center',gap:4}}><AppIcons.Sun size={11} />{p.temp}</div>
+              <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 4 }}>🌡 {p.temp}</div>
               <div style={{ fontSize: 11, color: '#4A4A6A', marginTop: 3 }}>
-                <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={12} className='text-blue-500' />{ar ? p.tipAr : p.tipEn}</span>
+                💡 {ar ? p.tipAr : p.tipEn}
               </div>
             </div>
           ))}
@@ -499,14 +479,14 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             border: '1px solid #FDE68A',
           }}>
             <h4 style={{ margin: '0 0 8px', color: '#B45309', fontSize: 13 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Warning size={16} className='text-amber-700' />{ar ? 'تحذيرات مهمة:' : 'Important Warnings:'}</span>
+              ⚠️ {ar ? 'تحذيرات مهمة:' : 'Important Warnings:'}
             </h4>
             {(ar
               ? (gender === 'female' ? ['اشربي 500 مل ماء قبل الدخول وبعده', 'لا تدخلي مباشرة بعد وجبة كبيرة', 'إذا شعرتِ بدوار اخرجي فوراً', 'لا تتجاوزي 20 دقيقة في جلسة واحدة'] : ['اشرب 500 مل ماء قبل الدخول وبعده', 'لا تدخل مباشرة بعد وجبة كبيرة', 'إذا شعرت بدوار اخرج فوراً', 'لا تتجاوز 20 دقيقة في جلسة واحدة'])
               : ['Drink 500 ml water before and after entering', 'Do not enter immediately after a large meal', 'If you feel dizzy, exit immediately', 'Do not exceed 20 minutes in a single session']
             ).map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <AppIcons.Warning size={14} className='text-amber-700' />
+                <span style={{ color: '#B45309' }}>⚠</span>
                 <span style={{ fontSize: 12, color: '#4A4A6A' }}>{item}</span>
               </div>
             ))}
@@ -522,7 +502,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, padding: '16px 18px', marginBottom: 14, color: 'white',
           }}>
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 900 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Salad size={18} />{ar ? 'النصائح الغذائية' : 'Nutrition Tips'}</span>
+              🥗 {ar ? 'النصائح الغذائية' : 'Nutrition Tips'}
             </h3>
             <p style={{ margin: 0, opacity: 0.85, fontSize: 12 }}>
               {ar
