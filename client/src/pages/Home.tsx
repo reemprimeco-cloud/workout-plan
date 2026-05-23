@@ -19,73 +19,75 @@ import UserGuide from '../components/UserGuide';
 import ProfilePanel from '../components/ProfilePanel';
 import { ExerciseLibrary } from '../components/ExerciseLibrary';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCMS } from '../contexts/CMSContext';
+import { AppIcons } from '../components/AppIcons';
 import MyCoach from './MyCoach';
 import Community from './Community';
 import Nutrition from './Nutrition';
-import { LOGO_URL } from '@/lib/imageUtils';
-import { SafeImage } from '@/components/SafeImage';
-
-type Tab = 'home' | 'nutrition' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
+import { useGymSync } from '../hooks/useGymSync';
+import { useHaptic } from '../hooks/useHaptic';
 
 // Brand colors
 const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
+const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
+
+// Inline SVG logo — renders on all browsers without image loading issues
+function PrimeFitLogo({ size = 40 }: { size?: number }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: size * 0.22,
+      background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <svg width={size * 0.58} height={size * 0.58} viewBox="0 0 24 24" fill="none">
+        <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z"
+          fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+type Tab = 'home' | 'nutrition' | 'stats' | 'guide' | 'exercises' | 'profile' | 'coach' | 'community';
 
 export default function Home() {
   const tracker = useGymTracker();
   const { lang, t, isRTL } = useLanguage();
   const { isAuthenticated } = useAuth();
+  // Background DB sync — keeps sessions + weight logs in sync across devices
+  useGymSync();
+
+  // Reload page when DB sync brings in new data from another device
+  useEffect(() => {
+    const handleSynced = () => window.location.reload();
+    window.addEventListener('gym-data-synced', handleSynced);
+    return () => window.removeEventListener('gym-data-synced', handleSynced);
+  }, []);
+
   const profileQuery = trpc.userProfile.getProfile.useQuery(undefined, { enabled: isAuthenticated, retry: false });
   const headerAvatar = profileQuery.data?.avatarUrl ?? null;
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [prevTab, setPrevTab] = useState<Tab>('home');
+  const [tabKey, setTabKey] = useState(0);
   const [startingSession, setStartingSession] = useState(false);
+  const { selection, lightTap } = useHaptic();
+
+  const handleTabChange = (tab: Tab) => {
+    if (tab === activeTab) return;
+    selection(); // haptic feedback on tab tap
+    setPrevTab(activeTab);
+    setActiveTab(tab);
+    setTabKey(k => k + 1);
+  };
   const { activeSession, startSession, stats, data } = tracker;
   const { data: currentUser } = trpc.auth.me.useQuery();
 
-  // Show profile setup if new user (no name or weight set)
-  const isNewUser = !data.profile.name || data.profile.currentWeight === 0;
-  if (isNewUser) {
-    return (
-      <div dir="ltr" style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        fontFamily: 'Inter, system-ui, sans-serif',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      }}>
-        <div style={{
-          background: '#fff',
-          borderRadius: 24,
-          padding: '32px 24px',
-          width: '100%',
-          maxWidth: 420,
-          boxShadow: '0 20px 60px rgba(27,46,94,0.35)',
-        }}>
-          {/* Logo on setup screen */}
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <SafeImage
-              src={LOGO_URL}
-              alt="Prime Fit"
-              style={{ width: 100, height: 100, objectFit: 'contain', marginBottom: 12, borderRadius: 16 }}
-            />
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: 0 }}>
-              Welcome to Prime Fit
-            </h1>
-            <p style={{ color: '#7A9BB5', fontSize: 13, marginTop: 6 }}>
-              Set up your profile to get started
-            </p>
-          </div>
-          <SetupForm onComplete={() => {}} tracker={tracker} />
-        </div>
-      </div>
-    );
-  }
 
   const handleStart = (type: SessionType) => {
+    lightTap(); // haptic feedback on session start
     setStartingSession(true);
     startSession(type);
     setTimeout(() => setStartingSession(false), 300);
@@ -114,11 +116,10 @@ export default function Home() {
       </svg>
     ),
   };
-  const tabs: { id: Tab; iconUrl: string; label: string }[] = [
+  const tabs: { id: Tab; iconUrl?: string; label: string }[] = [
     { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
-    { id: 'nutrition', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_history-a27xkVaa7XRbAfmF4ibhZT.webp', label: isRTL ? 'التغذية' : 'Nutrition' },
     { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
-    { id: 'guide', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_schedule-D64uvVBcX7bMckxvHeB5DG.webp', label: t('navGuide') },
+    { id: 'nutrition', label: isRTL ? 'تغذية' : 'Nutrition' },
     { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
     { id: 'coach', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp', label: isRTL ? 'مدربي' : 'Coach' },
     { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
@@ -137,7 +138,10 @@ export default function Home() {
       {/* ── Top Header ── */}
       <header style={{
         background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        padding: '12px 20px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
+        paddingBottom: '12px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -148,27 +152,9 @@ export default function Home() {
       }}>
         {/* Left: Logo + App Name */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Prime Fit Logo (small) */}
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <SafeImage
-              src={LOGO_URL}
-              alt="Prime Fit"
-              style={{ height: 40, width: 40, objectFit: 'contain', display: 'block', borderRadius: 8 }}
-            />
-          </div>
-          {/* User avatar (if uploaded) */}
-          {headerAvatar && (
-            <div
-              onClick={() => setActiveTab('profile')}
-              style={{
-                width: 36, height: 36, borderRadius: '50%',
-                overflow: 'hidden', border: '2px solid rgba(255,255,255,0.6)',
-                cursor: 'pointer', flexShrink: 0,
-              }}
-            >
-              <SafeImage src={headerAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-          )}
+          {/* Prime Fit Logo (small) — inline SVG, renders on all browsers */}
+          <PrimeFitLogo size={40} />
+
           <div>
             <h1 style={{ margin: 0, color: 'white', fontSize: 17, fontWeight: 900, lineHeight: 1 }}>
               Prime Fit
@@ -179,7 +165,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: streak + active indicator */}
+        {/* Right: active session indicator + admin button */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeSession && (
             <div style={{
@@ -187,20 +173,58 @@ export default function Home() {
               color: NAVY, fontSize: 12, fontWeight: 700,
               animation: 'pulse 2s infinite',
             }}>
-              🔴 {t('activeSession')}
+              <span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Flame size={14} className='text-red-500' /> {t('activeSession')}</span>
             </div>
           )}
-          <div style={{
-            background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '6px 12px',
-            color: SKY_LIGHT, fontSize: 12,
-          }}>
-            🔥 {stats.streak} {t('streak')}
-          </div>
+          {(currentUser as any)?.role === 'admin' && (
+            <a
+              href="/admin"
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: '1.5px solid rgba(255,255,255,0.35)',
+                borderRadius: 10,
+                padding: '5px 12px',
+                color: 'white',
+                fontSize: 12,
+                fontWeight: 700,
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Settings size={16} /> {lang === 'ar' ? 'الإدارة' : 'Admin'}</span>
+            </a>
+          )}
         </div>
       </header>
 
       {/* ── Content ── */}
-      <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16 }}>
+      {/* Coach tab gets its own full-height flex container (WhatsApp-style) */}
+      {activeTab === 'coach' && (
+        <div key={`coach-${tabKey}`} className="tab-enter" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+          <MyCoach />
+        </div>
+      )}
+      {/* Community tab gets its own full-height container — avoids overflow:hidden clipping fixed panels */}
+      {activeTab === 'community' && (
+        <div key={`community-${tabKey}`} className="tab-enter" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+          <Community
+            userId={currentUser?.id}
+            streak={stats.streak}
+            weeklyCompletion={stats.progressPercent}
+            currentWeight={data.profile.currentWeight}
+            targetWeight={data.profile.targetWeight}
+            name={data.profile.name}
+          />
+        </div>
+      )}
+      <main
+        key={`main-${tabKey}`}
+        className={(activeTab !== 'coach' && activeTab !== 'community') ? 'tab-enter scroll-ios' : ''}
+        style={(activeTab === 'coach' || activeTab === 'community') ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+      >
 
         {/* Active Session Banner */}
         {activeSession && (
@@ -226,7 +250,7 @@ export default function Home() {
                 fontSize: 13, cursor: 'pointer',
               }}
             >
-              {isRTL ? 'متابعة ◀' : '▶ Continue'}
+              <span style={{display:'flex',alignItems:'center',gap:4}}>{isRTL ? <AppIcons.ChevronLeft size={14}/> : <AppIcons.ChevronRight size={14}/>}{isRTL ? 'متابعة' : 'Continue'}</span>
             </button>
           </div>
         )}
@@ -235,7 +259,7 @@ export default function Home() {
         {activeTab === 'home' && (
           <>
             {activeSession ? (
-              <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} />
+              <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} weightKg={data.profile.currentWeight || 65} />
             ) : (
               <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
             )}
@@ -243,13 +267,13 @@ export default function Home() {
         )}
 
         {activeTab === 'nutrition' && <Nutrition />}
-        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} />}
+        {activeTab === 'stats' && <StatsPanel stats={stats} weightLog={data.weightLog} sessions={data.sessions} profile={data.profile} onLogWeight={tracker.logWeight} onDelete={tracker.deleteSession} onDeleteExercise={tracker.removeExercise} onDeleteCardio={tracker.removeCardio} />}
         {activeTab === 'guide' && <WorkoutGuide gender={(data.profile.gender as 'male' | 'female') || 'female'} />}
         {activeTab === 'exercises' && (
           <div style={{ padding: '16px' }}>
             <div style={{ marginBottom: 16 }}>
               <h2 style={{ color: '#1B2E5E', fontWeight: 800, fontSize: 20, margin: 0 }}>
-                {isRTL ? '🏋️ قائمة التمارين' : '🏋️ Exercise Library'}
+                <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={20} className='text-[#1B2E5E]' />{isRTL ? 'قائمة التمارين' : 'Exercise Library'}</span>
               </h2>
               <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
                 {isRTL
@@ -264,17 +288,7 @@ export default function Home() {
           </div>
         )}
         {activeTab === 'profile' && <ProfilePanel />}
-        {activeTab === 'coach' && <MyCoach />}
-        {activeTab === 'community' && (
-          <Community
-            userId={currentUser?.id}
-            streak={stats.streak}
-            weeklyCompletion={stats.progressPercent}
-            currentWeight={data.profile.currentWeight}
-            targetWeight={data.profile.targetWeight}
-            name={data.profile.name}
-          />
-        )}
+        {/* coach + community tabs rendered outside main above */}
       </main>
 
       {/* ── Bottom Navigation ── */}
@@ -290,18 +304,20 @@ export default function Home() {
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
+            className="haptic-press no-select touch-target"
             style={{
               flex: 1, padding: '10px 4px 8px',
               border: 'none', background: 'none', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
               transition: 'all 0.2s',
               borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
+              minHeight: 56,
             }}
           >
             {TabSVGIcons[tab.id]
               ? TabSVGIcons[tab.id](activeTab === tab.id)
-              : <SafeImage src={tab.iconUrl} alt={tab.label} resolve={false} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
+              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
             }
             <span style={{
               fontSize: 10, fontWeight: 700,
@@ -351,6 +367,7 @@ function CheckInPanel({ onStart, stats, profile }: {
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
 }) {
   const { lang, t, isRTL } = useLanguage();
+  const { sessionIconOverrides } = useCMS();
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? t('greetingMorning') : hour < 17 ? t('greetingAfternoon') : t('greetingEvening');
@@ -360,22 +377,30 @@ function CheckInPanel({ onStart, stats, profile }: {
   const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const sessionOrder: SessionType[] = ['lower_body', 'upper_arms', 'core_cardio', 'chest_shoulders', 'full_body', 'aqua', 'sauna', 'active_rest', 'warm_up', 'stretching', 'home_workouts', 'pilates', 'mobility', 'quick_workouts'];
 
-  // Icon URLs for each session type
+  // Icon URLs for each session type — CMS overrides take priority over defaults
+  // Using manus-storage URLs (same ones as AdminCMSTab defaultIcon) — no CloudFront dependency
+  const DEFAULT_SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
+    lower_body:      '/manus-storage/icon_lower_body_59f81631.png',
+    upper_arms:      '/manus-storage/icon_upper_body_bbd91e5d.png',
+    chest_shoulders: '/manus-storage/icon_chest_shoulders_8582f4ac.png',
+    core_cardio:     '/manus-storage/icon_core_cardio_5e8c3914.png',
+    full_body:       '/manus-storage/icon_full_body_55a7cc7f.png',
+    aqua:            '/manus-storage/icon_aqua_6436dff1.png',
+    sauna:           '/manus-storage/icon_sauna_24076898.png',
+    active_rest:     '/manus-storage/icon_cardio_d3fdaaba.png',
+    warm_up:         '/manus-storage/icon_warm_up_6ff9052b.png',
+    stretching:      '/manus-storage/icon_stretching_59c73b13.png',
+    home_workouts:   '/manus-storage/icon_home_workouts_10e4a4f7.png',
+    pilates:         '/manus-storage/icon_pilates_1a0c0196.png',
+    mobility:        '/manus-storage/icon_mobility_e968ef5f.png',
+    quick_workouts:  '/manus-storage/icon_quick_workouts_2e09574e.png',
+  };
+  // Merge defaults with CMS overrides — CMS wins when set
   const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
-    lower_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_lower_body-MuCkSzyesxhQdyW2sjXWAq.webp',
-    upper_arms: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_upper_body-d4Fkcsb5PVaBtsoBf7kR6u.webp',
-    core_cardio: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_core_cardio-2XKA22my7CHNgVpQZBhzVC.webp',
-    chest_shoulders: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_chest_shoulders-7n7FKiPHKydZoJhE4L2Y2a.webp',
-    full_body: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_full_body-DTurmyGnhh2FK22ddoLwZJ.webp',
-    aqua: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_aqua-CTdfNbHhgUmSuEDYAYZErP.webp',
-    sauna: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_sauna-euKmrDgyW3kcnrExDVuZEj.webp',
-    active_rest: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_cardio-JgDT6bvc8LxDoDkZC3MFmL.webp',
-    warm_up: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_warm_up-QRSEACQjVrSnzzkfpSfCPF.webp',
-    stretching: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_stretching-F4ZvDFQRX2KXtbCduArTqe.webp',
-    home_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_home_workouts-8TAShRf99uAcBdK8sVxufW.webp',
-    pilates: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_pilates-hfeJyx2Mk2XJHngo6SaSmM.webp',
-    mobility: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_mobility-M3ZmtXZ8badZAeB5P6DYgH.webp',
-    quick_workouts: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/icon_quick_workouts-WYyiQ3V9SSSK3mS8Ett7pm.webp',
+    ...DEFAULT_SESSION_ICON_URLS,
+    ...Object.fromEntries(
+      Object.entries(sessionIconOverrides).filter(([, v]) => !!v)
+    ) as Partial<Record<SessionType, string>>,
   };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
   // Cardio machines state — 4 machines
@@ -405,22 +430,22 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ position: 'absolute', bottom: -30, left: -10, width: 90, height: 90, borderRadius: '50%', background: `${SKY}10` }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}>{greeting} 👋</p>
+          <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}><span style={{display:'flex',alignItems:'center',gap:6}}>{greeting}<AppIcons.Wave size={16} /></span></p>
           <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
             {profile.name}
           </h2>
-          <p style={{ margin: 0, color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
+          <p style={{ margin: '0 0 0', color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
-              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}`, icon: '📅' },
-              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}`, icon: '📆' },
-              { label: t('total'), value: `${stats.totalSessions} ${t('session')}`, icon: '🏆' },
+              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}` },
+              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}` },
+              { label: t('total'), value: `${stats.totalSessions} ${t('session')}` },
             ].map(s => (
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
                 border: `1px solid ${SKY}33`,
               }}>
-                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.icon} {s.label}</div>
+                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.label}</div>
                 <div style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>{s.value}</div>
               </div>
             ))}
@@ -435,7 +460,7 @@ function CheckInPanel({ onStart, stats, profile }: {
         border: `1px solid ${SKY_LIGHT}55`,
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>⚖️ {t('weightProgress')}</span>
+          <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Scale size={16} />{t('weightProgress')}</span></span>
           <span style={{ fontSize: 12, color: '#7A9BB5' }}>
             {profile.currentWeight} {t('kg')} {isRTL ? '←' : '→'} {profile.targetWeight} {t('kg')}
           </span>
@@ -452,20 +477,25 @@ function CheckInPanel({ onStart, stats, profile }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
           <span style={{ fontSize: 11, color: '#7A9BB5' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
           <span style={{ fontSize: 11, color: NAVY, fontWeight: 700 }}>
-            {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 🎉
+            {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 
           </span>
         </div>
       </div>
 
+
+
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
         <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 900 }}>
-          🏋️‍♀️ {t('chooseWorkout')}
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={18} className='text-[#1B2E5E]' />{t('chooseWorkout')}</span>
         </h3>
         <p style={{ margin: '4px 0 0', color: '#7A9BB5', fontSize: 12 }}>
           {t('autoTime')}
         </p>
       </div>
+
+      {/* Today's Gym Classes */}
+      <TodayGymClasses />
 
       {/* Session Type Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -508,7 +538,15 @@ function CheckInPanel({ onStart, stats, profile }: {
                   <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: 6 }}>
                       {SESSION_ICON_URLS[type] ? (
-                        <SafeImage src={SESSION_ICON_URLS[type]} alt={nameDisplay} resolve={false} style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }} />
+                        <img
+                          src={SESSION_ICON_URLS[type]}
+                          alt={nameDisplay}
+                          style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }}
+                          onError={(e) => {
+                            console.warn('[CMS] IMAGE SRC failed on home card:', type, SESSION_ICON_URLS[type]);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
                       ) : (
                         <span style={{ fontSize: 28 }}>{def.icon}</span>
                       )}
@@ -526,7 +564,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                     )}
                   </div>
                   {sessionExercises.length > 0 && (
-                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? '▲' : '▼'}</span>
+                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
                   )}
                 </div>
               </button>
@@ -539,7 +577,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
                   <div style={{ marginBottom: 10, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
-                    {lang === 'ar' ? '🏃 أجهزة الكارديو — سجّل بياناتك بعد التمرين:' : '🏃 Cardio Machines — Log your data after each workout:'}
+                    {lang === 'ar' ? 'أجهزة الكارديو — سجّل بياناتك بعد التمرين:' : 'Cardio Machines — Log your data after workout:'}
                   </div>
 
                   {cardioMachines.map(machine => {
@@ -549,43 +587,43 @@ function CheckInPanel({ onStart, stats, profile }: {
 
                     // Define fields per machine
                     const machineIcons: Record<string, string> = {
-                      treadmill: '🏃',
-                      rower: '🚣',
-                      precor_bike: '🚴',
-                      climbmill: '🏔️',
+                      treadmill: 'running',
+                      rower: 'rowing',
+                      precor_bike: 'bike',
+                      climbmill: 'mountain',
                     };
-                    const icon = machineIcons[mid] || '💪';
+                    const iconKey = machineIcons[mid] || 'dumbbell';
 
                     // Fields config per machine
                     type FieldDef = { key: keyof typeof mData; labelAr: string; labelEn: string; placeholder: string; fullRow?: boolean };
                     const fieldsMap: Record<string, FieldDef[]> = {
                       treadmill: [
-                        { key: 'speed', labelAr: '⚡ السرعة (km/h)', labelEn: '⚡ Speed (km/h)', placeholder: 'e.g. 5.5' },
-                        { key: 'incline', labelAr: '📈 الانحدار (%)', labelEn: '📈 Incline (%)', placeholder: 'e.g. 3' },
+                        { key: 'speed', labelAr: 'السرعة (km/h)', labelEn: 'Speed (km/h)', placeholder: 'e.g. 5.5' },
+                        { key: 'incline', labelAr: 'الانحدار (%)', labelEn: 'Incline (%)', placeholder: 'e.g. 3' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
-                        { key: 'distance', labelAr: '📏 المسافة (km)', labelEn: '📏 Distance (km)', placeholder: 'e.g. 1.8' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 150', fullRow: true },
+                        { key: 'distance', labelAr: 'المسافة (km)', labelEn: 'Distance (km)', placeholder: 'e.g. 1.8' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 150', fullRow: true },
                       ],
                       rower: [
-                        { key: 'speed', labelAr: '🚣 الإيقاع (SPM)', labelEn: '🚣 Rate (SPM)', placeholder: 'e.g. 24' },
-                        { key: 'incline', labelAr: '🔧 المقاومة (Level)', labelEn: '🔧 Resistance', placeholder: 'e.g. 5' },
+                        { key: 'speed', labelAr: 'الإيقاع (SPM)', labelEn: 'Rate (SPM)', placeholder: 'e.g. 24' },
+                        { key: 'incline', labelAr: 'المقاومة (Level)', labelEn: 'Resistance', placeholder: 'e.g. 5' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 15' },
-                        { key: 'distance', labelAr: '📏 المسافة (m)', labelEn: '📏 Distance (m)', placeholder: 'e.g. 3100' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 120', fullRow: true },
+                        { key: 'distance', labelAr: 'المسافة (m)', labelEn: 'Distance (m)', placeholder: 'e.g. 3100' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 120', fullRow: true },
                       ],
                       precor_bike: [
-                        { key: 'speed', labelAr: '🚴 السرعة (RPM)', labelEn: '🚴 Speed (RPM)', placeholder: 'e.g. 80' },
-                        { key: 'incline', labelAr: '🔧 المقاومة (Level)', labelEn: '🔧 Resistance', placeholder: 'e.g. 8' },
+                        { key: 'speed', labelAr: 'السرعة (RPM)', labelEn: 'Speed (RPM)', placeholder: 'e.g. 80' },
+                        { key: 'incline', labelAr: 'المقاومة (Level)', labelEn: 'Resistance', placeholder: 'e.g. 8' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
-                        { key: 'distance', labelAr: '📏 المسافة (km)', labelEn: '📏 Distance (km)', placeholder: 'e.g. 5.0' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 180', fullRow: true },
+                        { key: 'distance', labelAr: 'المسافة (km)', labelEn: 'Distance (km)', placeholder: 'e.g. 5.0' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 180', fullRow: true },
                       ],
                       climbmill: [
-                        { key: 'speed', labelAr: '🏔️ السرعة (خطوة/د)', labelEn: '🏔️ Steps/min', placeholder: 'e.g. 60' },
-                        { key: 'incline', labelAr: '🔧 المستوى', labelEn: '🔧 Level', placeholder: 'e.g. 8' },
+                        { key: 'speed', labelAr: 'السرعة (خطوة/د)', labelEn: 'Steps/min', placeholder: 'e.g. 60' },
+                        { key: 'incline', labelAr: 'المستوى', labelEn: 'Level', placeholder: 'e.g. 8' },
                         { key: 'time', labelAr: '⏱ الوقت (min)', labelEn: '⏱ Time (min)', placeholder: 'e.g. 20' },
-                        { key: 'distance', labelAr: '📏 الطوابق', labelEn: '📏 Floors', placeholder: 'e.g. 40' },
-                        { key: 'calories', labelAr: '🔥 السعرات', labelEn: '🔥 Calories', placeholder: 'e.g. 200', fullRow: true },
+                        { key: 'distance', labelAr: 'الطوابق', labelEn: 'Floors', placeholder: 'e.g. 40' },
+                        { key: 'calories', labelAr: 'السعرات', labelEn: 'Calories', placeholder: 'e.g. 200', fullRow: true },
                       ],
                     };
                     const fields = fieldsMap[mid] || [];
@@ -600,7 +638,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                       }}>
                         {/* Machine image + title */}
                         <div style={{ position: 'relative', height: 130, overflow: 'hidden' }}>
-                          <SafeImage src={machine.image} alt={machine.nameEn}
+                          <img src={machine.image} alt={machine.nameEn}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                           <div style={{
                             position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -608,21 +646,21 @@ function CheckInPanel({ onStart, stats, profile }: {
                             padding: '16px 12px 10px',
                             color: 'white', fontWeight: 700, fontSize: 14,
                           }}>
-                            {icon} {lang === 'ar' ? machine.nameAr : machine.nameEn}
+                            <span style={{display:'inline-flex',alignItems:'center',gap:6}}>{iconKey === 'running' ? <AppIcons.Running size={16} /> : iconKey === 'mountain' ? <AppIcons.Mountain size={16} /> : <AppIcons.Cardio size={16} />}{lang === 'ar' ? machine.nameAr : machine.nameEn}</span>
                           </div>
                         </div>
 
                         {/* Tip */}
                         <div style={{ padding: '8px 12px 4px' }}>
                           <div style={{ color: '#7A9BB5', fontSize: 10, fontWeight: 600 }}>
-                            💡 {lang === 'ar' ? machine.tip : (machine.tipEn || machine.tip)}
+                            <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={14} className='text-blue-500' />{lang === 'ar' ? machine.tip : (machine.tipEn || machine.tip)}</span>
                           </div>
                         </div>
 
                         {/* Input fields */}
                         <div style={{ padding: '8px 12px 12px' }}>
                           <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 8, fontWeight: 600 }}>
-                            {lang === 'ar' ? '📊 سجّل بياناتك بعد التمرين:' : '📊 Log your data after workout:'}
+                            <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Stats size={14} />{lang === 'ar' ? 'سجّل بياناتك بعد التمرين:' : 'Log your data after workout:'}</span>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                             {fields.map(field => (
@@ -672,8 +710,8 @@ function CheckInPanel({ onStart, stats, profile }: {
                             }}
                           >
                             {isSaved
-                              ? (lang === 'ar' ? '✅ تم الحفظ!' : '✅ Saved!')
-                              : (lang === 'ar' ? `💾 حفظ بيانات ${machine.nameAr.split(' ')[0]}` : `💾 Save ${machine.nameEn} Data`)}
+                              ? (lang === 'ar' ? 'تم الحفظ!' : 'Saved!')
+                              : (lang === 'ar' ? `حفظ بيانات ${machine.nameAr.split(' ')[0]}` : `Save ${machine.nameEn} Data`)}
                           </button>
                         </div>
                       </div>
@@ -692,7 +730,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
                   <div style={{ marginBottom: 8, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
-                    {lang === 'ar' ? '📋 تمارين هذا القسم:' : '📋 Exercises in this section:'}
+                    <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{lang === 'ar' ? 'تمارين هذا القسم:' : 'Exercises in this section:'}</span>
                   </div>
                   {sessionExercises.map((ex, idx) => (
                     <div key={ex.id} style={{
@@ -702,7 +740,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                       {/* Machine Image */}
                       {ex.imageUrl && (
                         <div style={{ borderRadius: 8, overflow: 'hidden', marginBottom: 6, height: 100 }}>
-                          <SafeImage
+                          <img
                             src={ex.imageUrl}
                             alt={lang === 'ar' ? ex.nameAr : ex.name}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -780,7 +818,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                     gap: 6,
                   }}
                 >
-                  <span>▶</span>
+                  <AppIcons.ChevronRight size={14} />
                   <span>{isRTL ? (gender === 'female' ? 'ابدئي الآن' : 'ابدأ الآن') : 'Start Now'}</span>
                 </button>
               </div>
@@ -792,8 +830,427 @@ function CheckInPanel({ onStart, stats, profile }: {
   );
 }
 
-// ── Setup Form (shown to new users) ──────────────────────────
-function SetupForm({ tracker }: { onComplete: () => void; tracker: ReturnType<typeof useGymTracker> }) {
+// ── Today's Gym Classes (shown on Home below check-in title, above exercise cards) ─────────────────────────
+function TodayGymClasses() {
+  const { lang } = useLanguage();
+  const { isAuthenticated } = useAuth();
+
+  const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  const { data: classes = [], isLoading } = trpc.gymClasses.getTodayClasses.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
+  const joinMutation = trpc.gymClasses.joinClass.useMutation();
+  const leaveMutation = trpc.gymClasses.leaveClass.useMutation();
+
+  const [joinedIds, setJoinedIds] = React.useState<Set<number>>(new Set());
+  const [joiningId, setJoiningId] = React.useState<number | null>(null);
+  const [leavingId, setLeavingId] = React.useState<number | null>(null);
+  // Track which gym cards are expanded — default: all expanded
+  const [expandedGyms, setExpandedGyms] = React.useState<Set<number>>(new Set());
+  // Track which branches are expanded — default: all expanded
+  const [expandedBranches, setExpandedBranches] = React.useState<Set<number>>(new Set());
+
+  // Group classes by gymId, then by branchId
+  const gymGroups = React.useMemo(() => {
+    const map = new Map<number, {
+      gymId: number;
+      gymName: string;
+      gymBrandColor: string | null;
+      gymLogoUrl: string | null;
+      branches: Map<number, { branchId: number; branchName: string; classes: any[] }>;
+    }>();
+    for (const cls of classes as any[]) {
+      if (!map.has(cls.gymId)) {
+        map.set(cls.gymId, {
+          gymId: cls.gymId,
+          gymName: cls.gymName,
+          gymBrandColor: cls.gymBrandColor,
+          gymLogoUrl: cls.gymLogoUrl ?? null,
+          branches: new Map(),
+        });
+      }
+      const gym = map.get(cls.gymId)!;
+      if (!gym.branches.has(cls.branchId)) {
+        gym.branches.set(cls.branchId, { branchId: cls.branchId, branchName: cls.branchName ?? '', classes: [] });
+      }
+      gym.branches.get(cls.branchId)!.classes.push(cls);
+    }
+    return Array.from(map.values());
+  }, [classes]);
+
+  // Gyms and branches start collapsed; user taps to expand
+
+  const handleJoin = async (classId: number) => {
+    if (joinedIds.has(classId) || joiningId === classId) return;
+    setJoiningId(classId);
+    try {
+      await joinMutation.mutateAsync({ classId });
+      setJoinedIds(prev => new Set(Array.from(prev).concat(classId)));
+    } catch {
+      setJoinedIds(prev => new Set(Array.from(prev).concat(classId)));
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const handleLeave = async (classId: number) => {
+    if (leavingId === classId) return;
+    setLeavingId(classId);
+    try {
+      await leaveMutation.mutateAsync({ classId });
+      setJoinedIds(prev => {
+        const next = new Set(Array.from(prev));
+        next.delete(classId);
+        return next;
+      });
+    } catch {
+      // If server returns NOT_FOUND, still remove from local state
+      setJoinedIds(prev => {
+        const next = new Set(Array.from(prev));
+        next.delete(classId);
+        return next;
+      });
+    } finally {
+      setLeavingId(null);
+    }
+  };
+
+  const toggleGym = (gymId: number) => {
+    setExpandedGyms(prev => {
+      const next = new Set(Array.from(prev));
+      if (next.has(gymId)) next.delete(gymId); else next.add(gymId);
+      return next;
+    });
+  };
+
+  const toggleBranch = (branchId: number) => {
+    setExpandedBranches(prev => {
+      const next = new Set(Array.from(prev));
+      if (next.has(branchId)) next.delete(branchId); else next.add(branchId);
+      return next;
+    });
+  };
+
+  const intensityColor = (i: string) => {
+    if (i === 'Beginner') return { bg: '#DCFCE7', text: '#16A34A' };
+    if (i === 'Intermediate') return { bg: '#FEF9C3', text: '#CA8A04' };
+    return { bg: '#FEE2E2', text: '#DC2626' };
+  };
+
+  if (!isLoading && classes.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Section header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <h3 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 900 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AppIcons.Calendar size={18} />
+            {lang === 'ar' ? 'حصص اليوم' : "Today's Classes"}
+          </span>
+        </h3>
+        <span style={{ fontSize: 11, color: '#7A9BB5', fontWeight: 600 }}>{todayDay}</span>
+      </div>
+
+      {/* Loading skeleton */}
+      {isLoading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[1, 2].map(i => (
+            <div key={i} style={{ height: 72, background: '#E2E8F0', borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
+          ))}
+        </div>
+      )}
+
+      {/* One card per gym */}
+      {!isLoading && gymGroups.map(gym => {
+        const isExpanded = expandedGyms.has(gym.gymId);
+        const accentColor = gym.gymBrandColor || NAVY;
+        const totalClasses = Array.from(gym.branches.values()).reduce((s, b) => s + b.classes.length, 0);
+        return (
+          <div
+            key={gym.gymId}
+            style={{
+              background: 'white',
+              borderRadius: 18,
+              marginBottom: 12,
+              boxShadow: '0 3px 16px rgba(27,46,94,0.09)',
+              overflow: 'hidden',
+              border: `1.5px solid ${SKY_LIGHT}`,
+            }}
+          >
+            {/* Gym header — tap to expand/collapse */}
+            <button
+              onClick={() => toggleGym(gym.gymId)}
+              style={{
+                width: '100%',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                borderBottom: isExpanded ? `1.5px solid ${SKY_LIGHT}` : 'none',
+              }}
+            >
+              {/* Accent bar */}
+              <div style={{ width: 5, height: 42, borderRadius: 4, background: accentColor, flexShrink: 0 }} />
+
+              {/* Gym logo or initial */}
+              {gym.gymLogoUrl ? (
+                <img src={gym.gymLogoUrl} alt={gym.gymName}
+                  style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+              ) : (
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                  background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontWeight: 900, fontSize: 18,
+                }}>
+                  {gym.gymName.charAt(0).toUpperCase()}
+                </div>
+              )}
+
+              {/* Gym name + class count */}
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontWeight: 900, color: NAVY, fontSize: 15 }}>{gym.gymName}</div>
+                <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>
+                  {totalClasses} {lang === 'ar' ? 'حصة اليوم' : totalClasses === 1 ? 'class today' : 'classes today'}
+                  {' · '}{gym.branches.size} {lang === 'ar' ? 'فرع' : gym.branches.size === 1 ? 'branch' : 'branches'}
+                </div>
+              </div>
+
+              {/* Chevron */}
+              <svg
+                width={18} height={18} viewBox="0 0 24 24" fill="none"
+                style={{ flexShrink: 0, transition: 'transform 0.25s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              >
+                <path d="M6 9l6 6 6-6" stroke={NAVY} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* Expanded content: branches + classes */}
+            {isExpanded && (
+              <div style={{ padding: '8px 16px 14px' }}>
+                {Array.from(gym.branches.values()).map((branch, bIdx) => {
+                  const isBranchExpanded = expandedBranches.has(branch.branchId);
+                  return (
+                  <div key={branch.branchId} style={{ marginTop: bIdx > 0 ? 14 : 6 }}>
+                    {/* Branch header — tap to expand/collapse */}
+                    <button
+                      onClick={() => toggleBranch(branch.branchId)}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        padding: '6px 0', display: 'flex', alignItems: 'center', gap: 6,
+                        marginBottom: isBranchExpanded ? 8 : 0,
+                      }}
+                    >
+                      <AppIcons.Location size={11} />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#7A9BB5', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1, textAlign: 'left' }}>
+                        {branch.branchName || (lang === 'ar' ? 'الفرع الرئيسي' : 'Main Branch')}
+                      </span>
+                      <span style={{ fontSize: 10, color: '#94A3B8', marginRight: 4 }}>
+                        {branch.classes.length} {lang === 'ar' ? 'حصة' : branch.classes.length === 1 ? 'class' : 'classes'}
+                      </span>
+                      <svg width={13} height={13} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: 'transform 0.2s', transform: isBranchExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        <path d="M6 9l6 6 6-6" stroke="#7A9BB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+
+                    {/* Class rows — only shown when branch is expanded */}
+                    {isBranchExpanded && branch.classes.map((cls: any, cIdx: number) => {
+                      const joined = joinedIds.has(cls.id) || cls.alreadyJoined;
+                      const ic = intensityColor(cls.intensity);
+                      const kcal = cls.caloriesOverride ?? (cls.intensity === 'Beginner' ? 200 : cls.intensity === 'Intermediate' ? 300 : 400);
+                      return (
+                        <div
+                          key={cls.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: '10px 12px',
+                            borderRadius: 12,
+                            background: joined ? '#F0FDF4' : '#F8FAFC',
+                            marginBottom: cIdx < branch.classes.length - 1 ? 6 : 0,
+                            border: `1px solid ${joined ? '#BBF7D0' : '#E2E8F0'}`,
+                            transition: 'background 0.3s, border-color 0.3s',
+                          }}
+                        >
+                          {/* Left accent dot */}
+                          <div style={{ width: 4, height: 36, borderRadius: 3, background: accentColor, flexShrink: 0 }} />
+
+                          {/* Class info */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 800, color: NAVY, fontSize: 13 }}>{cls.className}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ic.bg, color: ic.text }}>
+                                {cls.intensity}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, flexWrap: 'wrap' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
+                                <AppIcons.Coach size={11} />{cls.coach}
+                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
+                                <AppIcons.Timer size={11} />{cls.time} · {cls.durationMin}{lang === 'ar' ? 'د' : 'min'}
+                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#F97316', fontWeight: 600 }}>
+                                🔥 {kcal} {lang === 'ar' ? 'سعرة' : 'kcal'}
+                              </span>
+                            </div>
+                            {cls.notes && (
+                              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2 }}>{cls.notes}</div>
+                            )}
+                          </div>
+
+                          {/* Join / Leave button */}
+                          {joined ? (
+                            <button
+                              onClick={() => handleLeave(cls.id)}
+                              disabled={leavingId === cls.id}
+                              style={{
+                                flexShrink: 0,
+                                padding: '7px 13px',
+                                borderRadius: 9,
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: leavingId === cls.id
+                                  ? '#94A3B8'
+                                  : 'linear-gradient(135deg, #EF4444, #DC2626)',
+                                color: 'white',
+                                transition: 'background 0.3s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              {leavingId === cls.id ? (
+                                <><AppIcons.Spinner size={12} /> ...</>
+                              ) : (
+                                <>{lang === 'ar' ? 'إلغاء' : 'Leave'}</>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleJoin(cls.id)}
+                              disabled={joiningId === cls.id}
+                              style={{
+                                flexShrink: 0,
+                                padding: '7px 13px',
+                                borderRadius: 9,
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: joiningId === cls.id
+                                  ? '#94A3B8'
+                                  : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
+                                color: 'white',
+                                transition: 'background 0.3s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              {joiningId === cls.id ? (
+                                <><AppIcons.Spinner size={12} /> ...</>
+                              ) : (
+                                <><AppIcons.Plus size={12} /> {lang === 'ar' ? 'انضم' : 'Join'}</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Nutrition Summary Card (shown on Home above workout section) ────────────────────────────────────────────
+function NutritionSummaryCard() {
+  const { lang, isRTL } = useLanguage();
+  const { data: todayLog } = trpc.nutrition.getTodayLog.useQuery({});
+  const { data: goals } = trpc.nutrition.getGoals.useQuery();
+
+  const calories = todayLog?.totals?.calories ?? 0;
+  const goalCal = todayLog?.goals?.calories ?? 2000;
+  const protein = todayLog?.totals?.proteinG ?? 0;
+  const carbs = todayLog?.totals?.carbsG ?? 0;
+  const fat = todayLog?.totals?.fatG ?? 0;
+  const water = todayLog?.totalWaterMl ?? 0;
+  const goalWater = todayLog?.goals?.waterMl ?? 2500;
+  const calPct = Math.min(100, Math.round((calories / goalCal) * 100));
+  const waterPct = Math.min(100, Math.round((water / goalWater) * 100));
+
+  const NAVY = '#1B2E5E';
+  const SKY = '#7BB8D4';
+  const GREEN = '#22C55E';
+
+  return (
+    <div
+      style={{
+        background: 'white', borderRadius: 16, padding: '14px 16px', marginBottom: 14,
+        boxShadow: '0 2px 12px rgba(27,46,94,0.08)', border: '1px solid #D0DFF055',
+        cursor: 'default',
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>
+          <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Salad size={18} className='text-green-600' />{lang === 'ar' ? 'تغذية اليوم' : "Today's Nutrition"}</span>
+        </span>
+      </div>
+
+      {/* Calories row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#475569'}}><AppIcons.Flame size={12} className='text-orange-500' />{lang === 'ar' ? 'سعرات' : 'Calories'}</span>
+        <span style={{ fontSize: 12, color: '#475569' }}>{calories} / {goalCal} kcal</span>
+      </div>
+      <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{ height: '100%', width: `${calPct}%`, background: `linear-gradient(90deg, ${SKY}, ${NAVY})`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+      </div>
+
+      {/* Macros row */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        {[
+          { label: lang === 'ar' ? 'بروتين' : 'Protein', value: `${Math.round(protein)}g`, color: '#EF4444', bg: '#FEF2F2' },
+          { label: lang === 'ar' ? 'كربو' : 'Carbs', value: `${Math.round(carbs)}g`, color: '#F59E0B', bg: '#FFFBEB' },
+          { label: lang === 'ar' ? 'دهون' : 'Fat', value: `${Math.round(fat)}g`, color: '#8B5CF6', bg: '#F5F3FF' },
+        ].map(m => (
+          <div key={m.label} style={{ flex: 1, background: m.bg, borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}>
+            <div style={{ fontWeight: 800, color: m.color, fontSize: 14 }}>{m.value}</div>
+            <div style={{ color: '#94a3b8', fontSize: 10 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Water row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#475569'}}><AppIcons.Water size={12} className='text-blue-500' />{lang === 'ar' ? 'ماء' : 'Water'}</span>
+        <span style={{ fontSize: 12, color: SKY, fontWeight: 700 }}>{water} / {goalWater} ml</span>
+      </div>
+      <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${waterPct}%`, background: `linear-gradient(90deg, #38BDF8, #0EA5E9)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Setup Form (shown to new users) ────────────────────────────────────────────
+function SetupForm({ tracker, onComplete: _onComplete }: { onComplete: () => void; tracker: ReturnType<typeof useGymTracker> }) {
   const [form, setForm] = useState({ name: '', age: '', height: '', currentWeight: '', targetWeight: '', gender: 'female' as 'female' | 'male' });
   const [error, setError] = useState('');
 
@@ -867,7 +1324,7 @@ function SetupForm({ tracker }: { onComplete: () => void; tracker: ReturnType<ty
               background: form.gender === g ? NAVY : '#fff',
               color: form.gender === g ? '#fff' : '#3D5A80',
             }}>
-              {g === 'female' ? '♀ Female' : '♂ Male'}
+              <span style={{display:'flex',alignItems:'center',gap:4}}>{g === 'female' ? <AppIcons.Female size={14} /> : <AppIcons.Male size={14} />}{g === 'female' ? 'Female' : 'Male'}</span>
             </button>
           ))}
         </div>
@@ -879,13 +1336,13 @@ function SetupForm({ tracker }: { onComplete: () => void; tracker: ReturnType<ty
           <span style={{ fontSize: 12, color: '#3D5A80', marginLeft: 6 }}>{previewBMI < 18.5 ? 'Underweight' : previewBMI < 25 ? 'Normal' : previewBMI < 30 ? 'Overweight' : 'Obese'}</span>
         </div>
       )}
-      {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}>⚠️ {error}</p>}
+      {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Warning size={14} className='text-red-500' />{error}</span></p>}
       <button onClick={handleSubmit} style={{
         background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`, color: '#fff', border: 'none', borderRadius: 14,
         padding: '14px', fontSize: 16, fontWeight: 900, cursor: 'pointer', marginTop: 4,
         boxShadow: `0 4px 16px ${NAVY}44`,
       }}>
-        🚀 Start My Program
+        <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lightning size={16} />Start My Program</span>
       </button>
     </div>
   );

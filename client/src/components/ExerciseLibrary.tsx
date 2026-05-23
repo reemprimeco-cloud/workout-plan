@@ -2,10 +2,26 @@
 // Design: Prime Fit — Navy/Sky Blue palette, Arabic RTL support
 // Shows gender-specific exercises with YouTube links, grouped by category
 
-import { useState } from "react";
+import { AppIcons } from "./AppIcons";
+import { LowerBodyIcon, UpperBodyIcon, CoreIcon, CardioIcon, FullBodyIcon } from "./ColorIcons";
+import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 import { getProgramByGender, getExercisesByCategory, type Exercise, type GenderProgram } from "@/lib/exerciseData";
 import { cardioTemplates, type CardioTemplate } from "@/data/exercises";
-import { SafeImage } from "@/components/SafeImage";
+import { useCMS } from "@/contexts/CMSContext";
+
+// ── Heart Icon SVG (vector outline / filled) ─────────────────
+function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
+  return filled ? (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#e11d48" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ) : (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
 
 interface ExerciseLibraryProps {
   gender: "male" | "female";
@@ -13,14 +29,14 @@ interface ExerciseLibraryProps {
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
-  Chest: "💪",
-  Back: "🔙",
-  Shoulders: "🏋️",
-  Arms: "💪",
-  Core: "🎯",
-  Glutes: "🍑",
-  Legs: "🦵",
-  Cardio: "🏃",
+  Chest: "chest",
+  Back: "back",
+  Shoulders: "shoulders",
+  Arms: "arms",
+  Core: "core",
+  Glutes: "glutes",
+  Legs: "legs",
+  Cardio: "cardio",
 };
 
 const REST_COLOR = (seconds: number) => {
@@ -42,7 +58,34 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const [showGoalAlert, setShowGoalAlert] = useState(true);
   const [showTipsAlert, setShowTipsAlert] = useState(false);
 
-  const exercises = grouped[activeCategory] || [];
+  // ── CMS exercise overrides (admin-uploaded images + text overrides) ──
+  const { exerciseOverrides: cmsExerciseOverrides } = useCMS();
+
+  // ── Favorites state (DB-backed via tRPC) ──
+  const { data: favIds = [], refetch: refetchFavs } = trpc.exerciseFavorites.getFavorites.useQuery();
+  const addFav = trpc.exerciseFavorites.addFavorite.useMutation({ onSuccess: () => refetchFavs() });
+  const removeFav = trpc.exerciseFavorites.removeFavorite.useMutation({ onSuccess: () => refetchFavs() });
+
+  const isFav = (id: string) => favIds.includes(id);
+  const toggleFav = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (isFav(id)) removeFav.mutate({ exerciseId: id });
+    else addFav.mutate({ exerciseId: id });
+  };
+
+  // Merge CMS overrides into exercise data — CMS imageUrl wins over static default
+  const rawExercises = grouped[activeCategory] || [];
+  const exercises = useMemo(() => rawExercises.map((ex: Exercise) => {
+    const ov = cmsExerciseOverrides[ex.id];
+    if (!ov) return ex;
+    return {
+      ...ex,
+      ...(ov.imageUrl   ? { imageUrl:   ov.imageUrl }   : {}),
+      ...(ov.youtubeUrl ? { youtubeUrl: ov.youtubeUrl } : {}),
+      ...(ov.name       ? { name:       ov.name }       : {}),
+      ...(ov.nameAr     ? { nameAr:     ov.nameAr }     : {}),
+    };
+  }), [rawExercises, cmsExerciseOverrides]);
 
   return (
     <div
@@ -81,7 +124,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             ×
           </button>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-            <span style={{ fontSize: 22 }}>🎯</span>
+            <AppIcons.Target size={22} />
             <div>
               <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                 {isAr ? "الهدف من البرنامج" : "Program Goal"}
@@ -91,7 +134,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
               </div>
               <div style={{ marginTop: 8, display: "flex", gap: 16, flexWrap: "wrap" }}>
                 <span style={{ color: "#94a3b8", fontSize: 12 }}>
-                  📅 {isAr ? program.scheduleAr : program.schedule}
+                  <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Calendar size={14} />{isAr ? program.scheduleAr : program.schedule}</span>
                 </span>
                 <span style={{ color: "#94a3b8", fontSize: 12 }}>
                   ⏱ {isAr ? program.restBetweenSetsAr : program.restBetweenSets}
@@ -122,8 +165,8 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
           direction: isAr ? "rtl" : "ltr",
         }}
       >
-        <span>💡 {isAr ? "نصائح مهمة للبرنامج" : "Important Program Tips"}</span>
-        <span>{showTipsAlert ? "▲" : "▼"}</span>
+        <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={14} />{isAr ? "نصائح مهمة للبرنامج" : "Important Program Tips"}</span>
+        <span style={{display:'inline-flex'}}>{showTipsAlert ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
       </button>
 
       {showTipsAlert && (
@@ -147,7 +190,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
           {/* Weekly Plan */}
           <div style={{ marginTop: 12, borderTop: "1px solid rgba(123,184,212,0.2)", paddingTop: 12 }}>
             <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
-              📋 {isAr ? "التقسيم الأسبوعي المقترح" : "Suggested Weekly Split"}
+              <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{isAr ? "التقسيم الأسبوعي المقترح" : "Suggested Weekly Split"}</span>
             </div>
             {(isAr ? program.weeklyPlanAr : program.weeklyPlan).map((day, i) => (
               <div
@@ -197,12 +240,12 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             whiteSpace: "nowrap",
           }}
         >
-          🏃 {isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}
+          <span style={{display:'flex',alignItems:'center',gap:6}}><CardioIcon size={16} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
         </button>
         {categories.map((cat) => {
           const ex = grouped[cat][0];
           const label = isAr ? ex.categoryAr : cat;
-          const icon = CATEGORY_ICONS[cat] || "🏋️";
+          const iconKey = CATEGORY_ICONS[cat] || 'chest';
           const isActive = !showCardioSection && activeCategory === cat;
           return (
             <button
@@ -231,7 +274,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                 transition: "all 0.2s",
               }}
             >
-              <span>{icon}</span>
+              <span style={{display:'inline-flex',alignItems:'center'}}>{iconKey === 'cardio' ? <CardioIcon size={16} /> : iconKey === 'legs' ? <LowerBodyIcon size={16} /> : iconKey === 'core' ? <CoreIcon size={16} /> : iconKey === 'back' ? <UpperBodyIcon size={16} /> : iconKey === 'shoulders' ? <UpperBodyIcon size={16} /> : iconKey === 'arms' ? <UpperBodyIcon size={16} /> : iconKey === 'chest' ? <UpperBodyIcon size={16} /> : <FullBodyIcon size={16} />}</span>
               <span>{label}</span>
               <span
                 style={{
@@ -258,7 +301,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             borderRadius: 14, padding: "14px 16px", marginBottom: 14,
           }}>
             <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-              🏃 {isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}
+              <span style={{display:'flex',alignItems:'center',gap:6}}><CardioIcon size={16} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
             </div>
             <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>
               {isAr
@@ -289,52 +332,75 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
               }}
             >
               {/* Card Header */}
-              <button
-                onClick={() => setExpandedExercise(isExpanded ? null : ex.id)}
-                style={{
-                  width: "100%",
-                  background: "none",
-                  border: "none",
-                  padding: "14px 16px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  direction: isAr ? "rtl" : "ltr",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
-                  {/* Sets/Reps badge */}
-                  <div
-                    style={{
-                      background: "rgba(123,184,212,0.15)",
-                      border: "1px solid rgba(123,184,212,0.3)",
-                      borderRadius: 8,
-                      padding: "6px 10px",
-                      textAlign: "center",
-                      minWidth: 52,
-                    }}
-                  >
-                    <div style={{ color: "#7BB8D4", fontSize: 14, fontWeight: 800 }}>{ex.sets}</div>
-                    <div style={{ color: "#64748b", fontSize: 10 }}>{isAr ? "جولات" : "sets"}</div>
-                  </div>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <button
+                  onClick={() => setExpandedExercise(isExpanded ? null : ex.id)}
+                  style={{
+                    flex: 1,
+                    background: "none",
+                    border: "none",
+                    padding: "14px 16px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    direction: isAr ? "rtl" : "ltr",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+                    {/* Sets/Reps badge */}
+                    <div
+                      style={{
+                        background: "rgba(123,184,212,0.15)",
+                        border: "1px solid rgba(123,184,212,0.3)",
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        textAlign: "center",
+                        minWidth: 52,
+                      }}
+                    >
+                      <div style={{ color: "#7BB8D4", fontSize: 14, fontWeight: 800 }}>{ex.sets}</div>
+                      <div style={{ color: "#64748b", fontSize: 10 }}>{isAr ? "جولات" : "sets"}</div>
+                    </div>
 
-                  <div style={{ flex: 1, textAlign: isAr ? "right" : "left" }}>
-                    <div style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>
-                      {isAr ? ex.nameAr : ex.name}
-                    </div>
-                    <div style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
-                      {ex.reps} {isAr ? "تكرار" : "reps"} &nbsp;·&nbsp;
-                      <span style={{ color: REST_COLOR(restSec) }}>
-                        ⏱ {isAr ? ex.restAr : `${ex.rest}s rest`}
-                      </span>
+                    <div style={{ flex: 1, textAlign: isAr ? "right" : "left" }}>
+                      <div style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>
+                        {isAr ? ex.nameAr : ex.name}
+                      </div>
+                      <div style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
+                        {ex.reps} {isAr ? "تكرار" : "reps"} &nbsp;·&nbsp;
+                        <span style={{ color: REST_COLOR(restSec), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                          <AppIcons.Timer size={12} /> {isAr ? ex.restAr : `${ex.rest}s rest`}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <span style={{ color: "#7BB8D4", fontSize: 16, marginRight: isAr ? 0 : 0, marginLeft: isAr ? 0 : 0 }}>
-                  {isExpanded ? "▲" : "▼"}
-                </span>
-              </button>
+                  <span style={{ color: "#7BB8D4", fontSize: 16 }}>
+                    {isExpanded ? <AppIcons.ChevronUp size={16} /> : <AppIcons.ChevronDown size={16} />}
+                  </span>
+                </button>
+
+                {/* Heart toggle button */}
+                <button
+                  onClick={(e) => toggleFav(e, ex.id)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "14px 14px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "transform 0.2s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.25)")}
+                  onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+                  title={isFav(ex.id) ? (isAr ? "إزالة من المفضلة" : "Remove from favorites") : (isAr ? "إضافة للمفضلة" : "Add to favorites")}
+                >
+                  <HeartIcon filled={isFav(ex.id)} size={18} />
+                </button>
+              </div>
 
               {/* Expanded Details */}
               {isExpanded && (
@@ -348,7 +414,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                   {/* Machine Image */}
                   {ex.imageUrl && (
                     <div style={{ marginTop: 14, marginBottom: 14, borderRadius: 12, overflow: "hidden", background: "#f8fafc" }}>
-                      <SafeImage
+                      <img
                         src={ex.imageUrl}
                         alt={isAr ? ex.nameAr : ex.name}
                         style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }}
@@ -367,8 +433,8 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                     }}
                   >
                     {[
-                      { label: isAr ? "الجولات" : "Sets", value: ex.sets, icon: "🔄" },
-                      { label: isAr ? "التكرارات" : "Reps", value: ex.reps, icon: "💪" },
+                      { label: isAr ? "الجولات" : "Sets", value: ex.sets, icon: "repeat" },
+                      { label: isAr ? "التكرارات" : "Reps", value: ex.reps, icon: "dumbbell" },
                       { label: isAr ? "الراحة" : "Rest", value: isAr ? ex.restAr : `${ex.rest}s`, icon: "⏱" },
                     ].map((stat) => (
                       <div
@@ -400,7 +466,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                         alignItems: "flex-start",
                       }}
                     >
-                      <span style={{ fontSize: 16 }}>📌</span>
+                      <AppIcons.Pin size={16} />
                       <span style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6 }}>
                         {isAr ? ex.notesAr : ex.notes}
                       </span>
@@ -458,7 +524,7 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
       {/* Machine Image */}
       {machine.image && (
         <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
-          <SafeImage
+          <img
             src={machine.image}
             alt={machine.nameEn}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -490,22 +556,22 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           <span style={{
             background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
             padding: "4px 10px", fontSize: 11, fontWeight: 600,
-          }}>🚀 {machine.speedLabel ? (isAr ? machine.speedLabel : machine.speedLabel) : (isAr ? "السرعة" : "Speed")}: {machine.defaultSpeed}</span>
+          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Lightning size={12} />{isAr ? (machine.speedLabel || 'السرعة') : (machine.speedLabel || 'Speed')}: {machine.defaultSpeed}</span></span>
           <span style={{
             background: "#EEF4FF", color: "#1B2E5E", borderRadius: 8,
             padding: "4px 10px", fontSize: 11, fontWeight: 600,
-          }}>📐 {machine.inclineLabel ? (isAr ? machine.inclineLabel : machine.inclineLabel) : (isAr ? "الانحدار" : "Incline")}: {machine.defaultIncline}</span>
+          }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Mountain size={12} />{isAr ? (machine.inclineLabel || 'الانحدار') : (machine.inclineLabel || 'Incline')}: {machine.defaultIncline}</span></span>
           {machine.showCalories && (
             <span style={{
               background: "#FFF3E0", color: "#E65100", borderRadius: 8,
               padding: "4px 10px", fontSize: 11, fontWeight: 600,
-            }}>🔥 {isAr ? "سجّل الكالوريز" : "Log Calories"}</span>
+            }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Flame size={12} />{isAr ? "سجّل الكالوريز" : "Log Calories"}</span></span>
           )}
           {machine.showDistance && (
             <span style={{
               background: "#E8F5E9", color: "#2E7D32", borderRadius: 8,
               padding: "4px 10px", fontSize: 11, fontWeight: 600,
-            }}>📏 {isAr ? "سجّل المسافة" : "Log Distance"}</span>
+            }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Road size={12} />{isAr ? "سجّل المسافة" : "Log Distance"}</span></span>
           )}
         </div>
         {/* Tip */}
@@ -516,7 +582,7 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           marginBottom: 8,
         }}>
           <div style={{ fontSize: 11, color: "#1B2E5E", fontWeight: 600 }}>
-            💡 {isAr ? machine.tip : (machine.tipEn || machine.tip)}
+            <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={12} />{isAr ? machine.tip : (machine.tipEn || machine.tip)}</span>
           </div>
         </div>
         {/* Toggle details */}
@@ -531,14 +597,14 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
             fontFamily: "inherit",
           }}
         >
-          {expanded ? (isAr ? "▲ إخفاء التفاصيل" : "▲ Hide Details") : (isAr ? "▼ عرض التفاصيل" : "▼ Show Details")}
+          {expanded ? (isAr ? "إخفاء التفاصيل" : "Hide Details") : (isAr ? "عرض التفاصيل" : "Show Details")}
         </button>
         {expanded && (
           <div style={{ marginTop: 10 }}>
             <div style={{ fontSize: 12, color: "#4A4A6A", lineHeight: 1.8 }}>
               <div><strong>{isAr ? "المدة الافتراضية:" : "Default Duration:"}</strong> {machine.defaultDuration} {isAr ? "دقيقة" : "min"}</div>
-              <div><strong>{machine.speedLabel || (isAr ? "السرعة:" : "Speed:")}:</strong> {machine.defaultSpeed}</div>
-              <div><strong>{machine.inclineLabel || (isAr ? "الانحدار:" : "Incline:")}:</strong> {machine.defaultIncline}</div>
+              <div><strong>{isAr ? (machine.speedLabel || 'السرعة:') : (machine.speedLabel || 'Speed:')}:</strong> {machine.defaultSpeed}</div>
+              <div><strong>{isAr ? (machine.inclineLabel || 'الانحدار:') : (machine.inclineLabel || 'Incline:')}:</strong> {machine.defaultIncline}</div>
               {machine.showCalories && <div><strong>{isAr ? "الكالوريز:" : "Calories:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
               {machine.showDistance && <div><strong>{isAr ? "المسافة:" : "Distance:"}</strong> {isAr ? "سجّل من شاشة الجهاز" : "Record from machine display"}</div>}
             </div>
