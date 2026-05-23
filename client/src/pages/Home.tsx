@@ -26,6 +26,7 @@ import Community from './Community';
 import Nutrition from './Nutrition';
 import { useGymSync } from '../hooks/useGymSync';
 import { useHaptic } from '../hooks/useHaptic';
+import { resolveImageUrl } from '../lib/imageUtils';
 
 // Brand colors
 const NAVY = '#1B2E5E';
@@ -117,13 +118,13 @@ export default function Home() {
     ),
   };
   const tabs: { id: Tab; iconUrl?: string; label: string }[] = [
-    { id: 'home', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_home-MB3HH244jNRVyt3UBmjfaH.webp', label: t('navHome') },
-    { id: 'stats', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_stats-RXVm9hpxc7GBzmaMdWrFmx.webp', label: t('navStats') },
+    { id: 'home',      iconUrl: '/api/img/nav_home_f8e94025.webp',      label: t('navHome') },
+    { id: 'stats',     iconUrl: '/api/img/nav_stats_b03246bb.webp',     label: t('navStats') },
     { id: 'nutrition', label: isRTL ? 'تغذية' : 'Nutrition' },
-    { id: 'exercises', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_exercises-3TC2oqKP4xXQknExSCkvXw.webp', label: isRTL ? 'التمارين' : 'Exercises' },
-    { id: 'coach', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_coach-3A6CnqUcxkmm9BJjYrTrbx.webp', label: isRTL ? 'مدربي' : 'Coach' },
-    { id: 'community', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_community-cqTg9EGeLKQ5s3xGH4BQNP.webp', label: isRTL ? 'المجتمع' : 'Community' },
-    { id: 'profile', iconUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310519663573066350/2uwsTsKVVU7RLKXYLxnCKd/nav_profile-4Skb4HPfvUiSWNBfKW6iLX.webp', label: t('navProfile') },
+    { id: 'exercises', iconUrl: '/api/img/nav_exercises_76a3e7fb.webp', label: isRTL ? 'التمارين' : 'Exercises' },
+    { id: 'coach',     iconUrl: '/api/img/nav_coach_27ad6440.webp',     label: isRTL ? 'مدربي' : 'Coach' },
+    { id: 'community', iconUrl: '/api/img/nav_community_f198d8dd.webp', label: isRTL ? 'المجتمع' : 'Community' },
+    { id: 'profile',   iconUrl: '/api/img/nav_profile_bcc2b31d.webp',   label: t('navProfile') },
   ];
 
   return (
@@ -1000,7 +1001,7 @@ function TodayGymClasses() {
 
               {/* Gym logo or initial */}
               {gym.gymLogoUrl ? (
-                <img src={gym.gymLogoUrl} alt={gym.gymName}
+                <img src={resolveImageUrl(gym.gymLogoUrl)} alt={gym.gymName}
                   style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
               ) : (
                 <div style={{
