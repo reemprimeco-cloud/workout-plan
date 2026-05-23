@@ -12,20 +12,20 @@ const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
 // ── Session types list ────────────────────────────────────────────────────────────────────────────
 const SESSION_TYPES = [
-  { id: 'lower_body',      label: 'Lower Body',       labelAr: 'الجزء السفلي',   defaultIcon: '/manus-storage/icon_lower_body_59f81631.png' },
-  { id: 'upper_arms',      label: 'Upper Arms & Back', labelAr: 'الأذرع والظهر',  defaultIcon: '/manus-storage/icon_upper_body_bbd91e5d.png' },
-  { id: 'chest_shoulders', label: 'Chest & Shoulders', labelAr: 'الصدر والأكتاف', defaultIcon: '/manus-storage/icon_chest_shoulders_8582f4ac.png' },
-  { id: 'core_cardio',     label: 'Core & Cardio',     labelAr: 'الكور والكارديو', defaultIcon: '/manus-storage/icon_core_cardio_5e8c3914.png' },
-  { id: 'full_body',       label: 'Full Body',         labelAr: 'الجسم كامل',   defaultIcon: '/manus-storage/icon_full_body_55a7cc7f.png' },
-  { id: 'aqua',            label: 'Aqua',              labelAr: 'الأكوا',         defaultIcon: '/manus-storage/icon_aqua_6436dff1.png' },
-  { id: 'sauna',           label: 'Sauna',             labelAr: 'الساونا',        defaultIcon: '/manus-storage/icon_sauna_24076898.png' },
-  { id: 'active_rest',     label: 'Active Rest',       labelAr: 'الراحة النشطة', defaultIcon: '/manus-storage/icon_cardio_d3fdaaba.png' },
-  { id: 'warm_up',         label: 'Warm Up',           labelAr: 'الإحماء',        defaultIcon: '/manus-storage/icon_warm_up_6ff9052b.png' },
-  { id: 'stretching',      label: 'Stretching',        labelAr: 'التمدد',        defaultIcon: '/manus-storage/icon_stretching_59c73b13.png' },
-  { id: 'home_workouts',   label: 'Home Workouts',     labelAr: 'تمارين المنزل', defaultIcon: '/manus-storage/icon_home_workouts_10e4a4f7.png' },
-  { id: 'pilates',         label: 'Pilates',           labelAr: 'البيلاتس',       defaultIcon: '/manus-storage/icon_pilates_1a0c0196.png' },
-  { id: 'mobility',        label: 'Mobility',          labelAr: 'المرونة',        defaultIcon: '/manus-storage/icon_mobility_e968ef5f.png' },
-  { id: 'quick_workouts',  label: 'Quick Workouts',    labelAr: 'تمارين سريعة', defaultIcon: '/manus-storage/icon_quick_workouts_2e09574e.png' },
+  { id: 'lower_body',      label: 'Lower Body',       labelAr: 'الجزء السفلي',   defaultIcon: '/api/img/icon_lower_body_59f81631.png' },
+  { id: 'upper_arms',      label: 'Upper Arms & Back', labelAr: 'الأذرع والظهر',  defaultIcon: '/api/img/icon_upper_body_bbd91e5d.png' },
+  { id: 'chest_shoulders', label: 'Chest & Shoulders', labelAr: 'الصدر والأكتاف', defaultIcon: '/api/img/icon_chest_shoulders_8582f4ac.png' },
+  { id: 'core_cardio',     label: 'Core & Cardio',     labelAr: 'الكور والكارديو', defaultIcon: '/api/img/icon_core_cardio_5e8c3914.png' },
+  { id: 'full_body',       label: 'Full Body',         labelAr: 'الجسم كامل',   defaultIcon: '/api/img/icon_full_body_55a7cc7f.png' },
+  { id: 'aqua',            label: 'Aqua',              labelAr: 'الأكوا',         defaultIcon: '/api/img/icon_aqua_6436dff1.png' },
+  { id: 'sauna',           label: 'Sauna',             labelAr: 'الساونا',        defaultIcon: '/api/img/icon_sauna_24076898.png' },
+  { id: 'active_rest',     label: 'Active Rest',       labelAr: 'الراحة النشطة', defaultIcon: '/api/img/icon_cardio_d3fdaaba.png' },
+  { id: 'warm_up',         label: 'Warm Up',           labelAr: 'الإحماء',        defaultIcon: '/api/img/icon_warm_up_6ff9052b.png' },
+  { id: 'stretching',      label: 'Stretching',        labelAr: 'التمدد',        defaultIcon: '/api/img/icon_stretching_59c73b13.png' },
+  { id: 'home_workouts',   label: 'Home Workouts',     labelAr: 'تمارين المنزل', defaultIcon: '/api/img/icon_home_workouts_10e4a4f7.png' },
+  { id: 'pilates',         label: 'Pilates',           labelAr: 'البيلاتس',       defaultIcon: '/api/img/icon_pilates_1a0c0196.png' },
+  { id: 'mobility',        label: 'Mobility',          labelAr: 'المرونة',        defaultIcon: '/api/img/icon_mobility_e968ef5f.png' },
+  { id: 'quick_workouts',  label: 'Quick Workouts',    labelAr: 'تمارين سريعة', defaultIcon: '/api/img/icon_quick_workouts_2e09574e.png' },
 ];
 // ── Exercise list (all IDs + names) ──────────────────────────────────────────
 const EXERCISES = [

@@ -32,7 +32,7 @@ const NAVY = '#1B2E5E';
 const NAVY_DARK = '#0F1E3D';
 const SKY = '#7BB8D4';
 const SKY_LIGHT = '#A8D4E8';
-const LOGO_URL = '/manus-storage/primefit_logo_11f9ef29.PNG';
+const LOGO_URL = '/api/img/primefit_logo_11f9ef29.PNG';
 
 // Inline SVG logo — renders on all browsers without image loading issues
 function PrimeFitLogo({ size = 40 }: { size?: number }) {
@@ -380,20 +380,20 @@ function CheckInPanel({ onStart, stats, profile }: {
   // Icon URLs for each session type — CMS overrides take priority over defaults
   // Using manus-storage URLs (same ones as AdminCMSTab defaultIcon) — no CloudFront dependency
   const DEFAULT_SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {
-    lower_body:      '/manus-storage/icon_lower_body_59f81631.png',
-    upper_arms:      '/manus-storage/icon_upper_body_bbd91e5d.png',
-    chest_shoulders: '/manus-storage/icon_chest_shoulders_8582f4ac.png',
-    core_cardio:     '/manus-storage/icon_core_cardio_5e8c3914.png',
-    full_body:       '/manus-storage/icon_full_body_55a7cc7f.png',
-    aqua:            '/manus-storage/icon_aqua_6436dff1.png',
-    sauna:           '/manus-storage/icon_sauna_24076898.png',
-    active_rest:     '/manus-storage/icon_cardio_d3fdaaba.png',
-    warm_up:         '/manus-storage/icon_warm_up_6ff9052b.png',
-    stretching:      '/manus-storage/icon_stretching_59c73b13.png',
-    home_workouts:   '/manus-storage/icon_home_workouts_10e4a4f7.png',
-    pilates:         '/manus-storage/icon_pilates_1a0c0196.png',
-    mobility:        '/manus-storage/icon_mobility_e968ef5f.png',
-    quick_workouts:  '/manus-storage/icon_quick_workouts_2e09574e.png',
+    lower_body:      '/api/img/icon_lower_body_59f81631.png',
+    upper_arms:      '/api/img/icon_upper_body_bbd91e5d.png',
+    chest_shoulders: '/api/img/icon_chest_shoulders_8582f4ac.png',
+    core_cardio:     '/api/img/icon_core_cardio_5e8c3914.png',
+    full_body:       '/api/img/icon_full_body_55a7cc7f.png',
+    aqua:            '/api/img/icon_aqua_6436dff1.png',
+    sauna:           '/api/img/icon_sauna_24076898.png',
+    active_rest:     '/api/img/icon_cardio_d3fdaaba.png',
+    warm_up:         '/api/img/icon_warm_up_6ff9052b.png',
+    stretching:      '/api/img/icon_stretching_59c73b13.png',
+    home_workouts:   '/api/img/icon_home_workouts_10e4a4f7.png',
+    pilates:         '/api/img/icon_pilates_1a0c0196.png',
+    mobility:        '/api/img/icon_mobility_e968ef5f.png',
+    quick_workouts:  '/api/img/icon_quick_workouts_2e09574e.png',
   };
   // Merge defaults with CMS overrides — CMS wins when set
   const SESSION_ICON_URLS: Partial<Record<SessionType, string>> = {

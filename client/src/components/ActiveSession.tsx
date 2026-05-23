@@ -1064,7 +1064,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
       border: '2px solid #0891B2',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <img src="/manus-storage/aqua_f892423a.jpg" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).src = '/manus-storage/placeholder_4de366d7.png'; }} />
+        <img src="/api/img/aqua_f892423a.jpg" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).src = '/api/img/placeholder_4de366d7.png'; }} />
         <div>
           <h3 style={{ margin: 0, color: '#0891B2', fontSize: 15, fontWeight: 900 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Swimming size={18} />{isAr ? 'كلاس الأكوا' : 'Aqua Class'}</span></h3>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#0891B2' }}>{isAr ? 'تمارين مائية لحرق الدهون' : 'Water exercises for fat burn'}</p>
@@ -1130,7 +1130,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
       border: '2px solid #B45309',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <img src="/manus-storage/sauna_721a5de2.jpg" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).src = '/manus-storage/placeholder_4de366d7.png'; }} />
+        <img src="/api/img/sauna_721a5de2.jpg" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).src = '/api/img/placeholder_4de366d7.png'; }} />
         <div>
           <h3 style={{ margin: 0, color: '#B45309', fontSize: 15, fontWeight: 900 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Spa size={18} />{isSaunaAr ? 'جلسة السونا' : 'Sauna Session'}</span></h3>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#B45309' }}>{isSaunaAr ? 'تعافٍ وحرق سعرات وإزالة سموم' : 'Recovery, calorie burn & detox'}</p>
