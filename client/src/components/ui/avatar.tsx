@@ -2,6 +2,7 @@ import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
+import { handleImageError } from "@/lib/imageUtils";
 
 function Avatar({
   className,
@@ -21,12 +22,17 @@ function Avatar({
 
 function AvatarImage({
   className,
+  onError,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn("aspect-square size-full", className)}
+      onError={(e) => {
+        handleImageError(e);
+        onError?.(e);
+      }}
       {...props}
     />
   );

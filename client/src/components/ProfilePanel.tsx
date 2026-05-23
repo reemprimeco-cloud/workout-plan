@@ -3,13 +3,11 @@
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { trpc } from '@/lib/trpc';
-import { useAuth } from '@/_core/hooks/useAuth';
 import { useGymTracker } from '@/hooks/useGymTracker';
-import PrivacySettingsSection from './PrivacySettingsSection';
+import NotificationSettings from './NotificationSettings';
 import UserGuide from './UserGuide';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AppIcons } from './AppIcons';
-import { useLocation } from 'wouter';
+import { SafeImage } from '@/components/SafeImage';
 
 // ── BMI & Plan Calculator ──────────────────────────────────────────────────
 function calcBMI(weight: number, height: number): number {
@@ -20,7 +18,7 @@ function calcBMI(weight: number, height: number): number {
 
 function getBMICategory(bmi: number, lang: 'ar' | 'en') {
   if (bmi < 18.5) return { label: lang === 'ar' ? 'نقص وزن' : 'Underweight', color: '#3B82F6' };
-  if (bmi < 25)   return { label: lang === 'ar' ? 'طبيعي' : 'Normal', color: '#10B981' };
+  if (bmi < 25)   return { label: lang === 'ar' ? 'طبيعي ✅' : 'Normal ✅', color: '#10B981' };
   if (bmi < 30)   return { label: lang === 'ar' ? 'زيادة وزن' : 'Overweight', color: '#F59E0B' };
   return { label: lang === 'ar' ? 'سمنة' : 'Obese', color: '#EF4444' };
 }
@@ -80,7 +78,7 @@ function WeightLogSection() {
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-5">
-      <h3 className="font-bold text-gray-800 mb-3">{lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
+      <h3 className="font-bold text-gray-800 mb-3">⚖️ {lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
       {/* Input */}
       <div className="flex gap-2 mb-4">
         <input
@@ -95,7 +93,7 @@ function WeightLogSection() {
           className="px-4 py-2.5 rounded-xl font-bold text-sm text-white transition-all"
           style={{ background: saved ? '#10B981' : '#E05A00' }}
         >
-          <span style={{display:'flex',alignItems:'center',gap:4}}>{saved ? <AppIcons.Check size={14} /> : null}{saved ? '' : (lang === 'ar' ? 'سجّل' : 'Log')}</span>
+          {saved ? '✅' : (lang === 'ar' ? 'سجّل' : 'Log')}
         </button>
       </div>
       {/* Last 5 entries */}
@@ -132,217 +130,25 @@ function WeightLogSection() {
 // ── Help Section Sub-component ──────────────────────────────────────────────
 function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
   const [open, setOpen] = useState(false);
-  const [, navigate] = useLocation();
-  const isRTL = lang === 'ar';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* User Guide accordion */}
-      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-        <button
-          onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between px-5 py-4 text-left"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <span className="font-bold text-gray-800 text-sm">
-            {isRTL ? 'دليل الاستخدام' : 'Help & User Guide'}
-          </span>
-          <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
-            <AppIcons.ChevronDown size={14} />
-          </span>
-        </button>
-        {open && (
-          <div className="border-t border-gray-100">
-            <UserGuide />
-          </div>
-        )}
-      </div>
-
-      {/* Legal links */}
-      <div
-        style={{
-          background: 'white',
-          borderRadius: 16,
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          overflow: 'hidden',
-        }}
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
+        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
       >
-        <div
-          style={{
-            padding: '12px 20px 8px',
-            color: '#9CA3AF',
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-          }}
-        >
-          {isRTL ? 'قانوني' : 'Legal'}
-        </div>
-        {/* Privacy Policy */}
-        <button
-          onClick={() => navigate('/privacy')}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '13px 20px',
-            background: 'none',
-            border: 'none',
-            borderTop: '1px solid #F3F4F6',
-            cursor: 'pointer',
-            textAlign: isRTL ? 'right' : 'left',
-            direction: isRTL ? 'rtl' : 'ltr',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32,
-              background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
-              borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1F2937' }}>
-              {isRTL ? 'سياسة الخصوصية' : 'Privacy Policy'}
-            </span>
-          </div>
-          <AppIcons.ChevronRight size={14} style={{ color: '#9CA3AF', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
-        </button>
-        {/* Terms of Service */}
-        <button
-          onClick={() => navigate('/terms')}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '13px 20px',
-            background: 'none',
-            border: 'none',
-            borderTop: '1px solid #F3F4F6',
-            cursor: 'pointer',
-            textAlign: isRTL ? 'right' : 'left',
-            direction: isRTL ? 'rtl' : 'ltr',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32,
-              background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)',
-              borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1F2937' }}>
-              {isRTL ? 'شروط الخدمة' : 'Terms of Service'}
-            </span>
-          </div>
-          <AppIcons.ChevronRight size={14} style={{ color: '#9CA3AF', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Subscription Card ────────────────────────────────────────────────────────────
-function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boolean }) {
-  const subQuery = trpc.subscription.getStatus.useQuery();
-  const sub = subQuery.data;
-
-  if (subQuery.isLoading) return null;
-
-  // Determine display values
-  let planDisplay = '';
-  let periodDisplay = '';
-  let statusLabel = '';
-  let statusColor = '#22C55E';
-  let expiresAt: Date | null = null;
-  let daysLeft: number | null = null;
-  let isExpired = false;
-
-  if (isAdmin) {
-    // Admin: show Admin badge
-    planDisplay = lang === 'ar' ? 'مدير' : 'Admin';
-    periodDisplay = lang === 'ar' ? 'وصول كامل' : 'Full Access';
-    statusLabel = lang === 'ar' ? 'نشط' : 'Active';
-    statusColor = '#22C55E';
-  } else if (sub) {
-    const planLabels: Record<string, Record<'ar' | 'en', string>> = {
-      free:       { ar: 'مجاني',      en: 'Free' },
-      prime_plus: { ar: 'Prime Plus', en: 'Prime Plus' },
-      prime_pro:  { ar: 'Prime Pro',  en: 'Prime Pro' },
-    };
-    const periodLabels: Record<string, Record<'ar' | 'en', string>> = {
-      monthly:    { ar: 'شهري',         en: 'Monthly' },
-      yearly:     { ar: 'سنوي',          en: 'Yearly' },
-      lifetime:   { ar: 'دائم',          en: 'Lifetime' },
-      free_trial: { ar: 'تجريبي مجاني', en: 'Free Trial' },
-    };
-    planDisplay = planLabels[sub.plan ?? 'free']?.[lang] ?? sub.plan ?? '';
-    const subAny = sub as any;
-    periodDisplay = periodLabels[subAny.period ?? 'monthly']?.[lang] ?? '';
-    expiresAt = sub.expiresAt ? new Date(sub.expiresAt) : null;
-    daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000) : null;
-    isExpired = expiresAt ? expiresAt < new Date() : false;
-    statusColor = isExpired ? '#EF4444' : (daysLeft !== null && daysLeft <= 3 ? '#F59E0B' : '#22C55E');
-    statusLabel = isExpired
-      ? (lang === 'ar' ? 'منتهي' : 'Expired')
-      : sub.status === 'trialing'
-        ? (lang === 'ar' ? 'تجريبي' : 'Trialing')
-        : (lang === 'ar' ? 'نشط' : 'Active');
-  } else {
-    return null;
-  }
-
-  return (
-    <div style={{
-      background: 'white', borderRadius: 16, padding: '16px 18px',
-      boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
-      border: `1.5px solid ${statusColor}33`,
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 15 }}>
-          {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
+        <span className="font-bold text-gray-800 text-sm">
+          📘 {lang === 'ar' ? 'دليل الاستخدام' : 'Help & User Guide'}
         </span>
-        <span style={{
-          background: `${statusColor}22`, color: statusColor,
-          borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 800,
-        }}>
-          {statusLabel}
+        <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
+          ▾
         </span>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <p style={{ margin: '0 0 2px', color: '#374151', fontSize: 15, fontWeight: 800 }}>{periodDisplay || planDisplay}</p>
-          <p style={{ margin: 0, color: '#6B7280', fontSize: 13, fontWeight: 600 }}>{planDisplay}</p>
+      </button>
+      {open && (
+        <div className="border-t border-gray-100">
+          <UserGuide />
         </div>
-        <div style={{ textAlign: 'end' }}>
-          {expiresAt && (
-            <p style={{ margin: 0, color: statusColor, fontSize: 12, fontWeight: 700 }}>
-              {isExpired
-                ? (lang === 'ar' ? 'انتهى' : 'Expired')
-                : daysLeft === 0 ? (lang === 'ar' ? 'اليوم' : 'Today')
-                : `${daysLeft} ${lang === 'ar' ? 'يوم' : 'days'}`}
-            </p>
-          )}
-          {expiresAt && (
-            <p style={{ margin: '2px 0 0', color: '#9CA3AF', fontSize: 10 }}>
-              {expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
-            </p>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -350,11 +156,7 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
 // ── Component ─────────────────────────────────────────────────────────────
 export function ProfilePanel() {
   const { profile, updateProfile, resetAll } = useGymTracker();
-  const { logout: logoutFn, user } = useAuth();
   const { lang, setLang, t, isRTL } = useLanguage();
-  const userEmail = (user as any)?.email || '';
-  const userRole = (user as any)?.role || 'user';
-  const isAdmin = userRole === 'admin';
   const [editing, setEditing] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [form, setForm] = useState({ ...profile });
@@ -433,14 +235,14 @@ export function ProfilePanel() {
         ))}
       </div>
 
-      {/* ── Profile Settings Header (reference design) ── */}
+      {/* ── Instagram-style profile header ── */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
 
         {/* Top row: avatar + stats */}
         <div className="flex items-center gap-5 px-5 pt-6 pb-3">
 
-          {/* Avatar — initials only, no upload */}
-          <div style={{ flexShrink: 0 }}>
+          {/* Avatar */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{
               width: 82, height: 82, borderRadius: '50%',
               background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
@@ -448,9 +250,53 @@ export function ProfilePanel() {
               fontSize: 34, fontWeight: 900, color: 'white',
               boxShadow: '0 0 0 3px white, 0 0 0 4.5px #1B2E5E22',
               userSelect: 'none',
+              overflow: 'hidden',
+              position: 'relative',
             }}>
-              {profile.name ? profile.name.trim()[0].toUpperCase() : '?'}
+              {avatarPreview ? (
+                <SafeImage
+                  src={avatarPreview}
+                  alt="avatar"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
+              ) : (
+                profile.name ? profile.name.trim()[0].toUpperCase() : '?'
+              )}
+              {/* Loading overlay while uploading to S3 */}
+              {avatarUploading && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(27,46,94,0.6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    border: '3px solid rgba(255,255,255,0.35)',
+                    borderTopColor: 'white',
+                    animation: 'spin 0.8s linear infinite',
+                  }} />
+                </div>
+              )}
             </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                position: 'absolute', bottom: 0,
+                ...(isRTL ? { left: 0 } : { right: 0 }),
+                width: 26, height: 26, borderRadius: '50%',
+                background: '#1B2E5E', border: '2.5px solid white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', fontSize: 11, color: 'white',
+              }}
+              aria-label="Change photo"
+            >+</button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarChange}
+            />
           </div>
 
           {/* Stats columns */}
@@ -521,26 +367,16 @@ export function ProfilePanel() {
           </div>
         </div>
 
-        {/* Name + meta + email */}
+        {/* Name + meta */}
         <div style={{ padding: '0 20px 4px' }}>
-          <p style={{ fontSize: 16, fontWeight: 900, color: '#111827', margin: 0 }}>
+          <p style={{ fontSize: 15, fontWeight: 900, color: '#111827', margin: 0 }}>
             {profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}
           </p>
-          {userEmail && (
-            <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 0', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
-              {userEmail}
-            </p>
-          )}
           <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0', lineHeight: 1.5 }}>
             {lang === 'ar'
               ? `${profile.age} سنة · ${profile.height} سم · ${profile.gender === 'female' ? 'أنثى' : 'ذكر'}`
               : `${profile.age} yrs · ${profile.height} cm · ${profile.gender === 'female' ? 'Female' : 'Male'}`}
           </p>
-          {isAdmin && (
-            <span style={{ display: 'inline-block', marginTop: 4, background: '#1B2E5E', color: 'white', fontSize: 10, fontWeight: 800, borderRadius: 20, padding: '2px 10px', letterSpacing: '0.05em' }}>
-              {lang === 'ar' ? 'مدير' : 'Admin'}
-            </span>
-          )}
         </div>
 
         {/* Edit Profile button */}
@@ -561,7 +397,7 @@ export function ProfilePanel() {
 
       {/* BMI Meter */}
       <div className="bg-white rounded-2xl shadow-md p-5">
-        <h3 className="font-bold text-gray-800 mb-3">{t('bmiLabel')}</h3>
+        <h3 className="font-bold text-gray-800 mb-3">📊 {t('bmiLabel')}</h3>
         <div className="relative h-4 rounded-full overflow-hidden mb-2"
           style={{ background: 'linear-gradient(to right, #3B82F6 0%, #10B981 25%, #F59E0B 55%, #EF4444 80%, #7C3AED 100%)' }}>
           <div className="absolute top-0 w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-md transition-all duration-500"
@@ -604,7 +440,7 @@ export function ProfilePanel() {
             background: 'rgba(255,255,255,0.1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 20, flexShrink: 0,
-          }}><AppIcons.Target size={16} /></div>
+          }}>🎯</div>
         </div>
 
         {/* Description */}
@@ -675,42 +511,45 @@ export function ProfilePanel() {
         ))}
       </div>
 
-      {/* Subscription Status Card — uses DB subscription via trpc */}
-      <SubscriptionCard lang={lang} isAdmin={isAdmin} />
-
-      {/* Logout Button */}
+      {/* Notification Settings */}
+      <NotificationSettings />
+      {/* Change License Button */}
       <div className="pb-2">
         <button
-          onClick={async () => {
-            if (window.confirm(lang === 'ar' ? 'هل تريد تسجيل الخروج؟' : 'Logout?')) {
-              await logoutFn();
-              window.location.href = '/';
+          onClick={() => {
+            if (window.confirm(lang === 'ar' ? 'هل تريد تغيير مفتاح الترخيص؟ سيتم تسجيل خروجك من البرنامج.' : 'Change license key? You will be logged out of the app.')) {
+              localStorage.removeItem('primefit_license');
+              window.location.reload();
             }
           }}
           className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
-          style={{ borderColor: '#EF4444', color: '#DC2626', background: 'rgba(239,68,68,0.08)' }}
+          style={{ borderColor: '#7BB8D4', color: '#1B2E5E', background: 'rgba(123,184,212,0.08)' }}
         >
-          {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+          🔑 {lang === 'ar' ? 'تغيير مفتاح الترخيص' : 'Change License Key'}
         </button>
       </div>
-
       {/* Reset Button */}
       <div className="pb-2">
         <button onClick={() => setShowReset(true)}
           className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 font-semibold text-sm hover:bg-red-50 transition-all">
-          {t('resetData')}
+          🗑️ {t('resetData')}
         </button>
       </div>
 
-      {/* Privacy Settings */}
-      <PrivacySettingsSection lang={lang} />
       {/* Help Section */}
       <HelpSection lang={lang} />
 
       {/* App Info Footer */}
       <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
+        <p className="text-xs text-gray-400 leading-relaxed">
+          {lang === 'ar'
+            ? `تاريخ البداية: ${new Date(profile.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} • البيانات محفوظة محلياً على جهازك 🔒`
+            : `Started: ${new Date(profile.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} • Data saved locally on your device 🔒`
+          }
+        </p>
+        <p className="text-xs text-gray-300 mt-1">Gym Tracker v1.0 • Auto-save enabled ✅</p>
         <p className="text-xs mt-2" style={{ color: '#C8C8D0', letterSpacing: '0.03em' }}>
-          Made by <span style={{ fontWeight: 700, color: '#B0B0C0' }}>Primeco</span> © {new Date().getFullYear()} All rights reserved
+          Made by <span style={{ fontWeight: 700, color: '#B0B0C0' }}>Primeco</span>  © {new Date().getFullYear()} All rights reserved
         </p>
       </div>
 
@@ -718,185 +557,116 @@ export function ProfilePanel() {
       {editing && createPortal(
         <div style={{
           position: 'fixed', inset: 0, zIndex: 99999,
-          background: 'white',
-          overflowY: 'auto',
-          fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          padding: '0 0 0 0',
         }}>
-          <div dir={isRTL ? 'rtl' : 'ltr'} style={{ maxWidth: 520, margin: '0 auto', minHeight: '100vh', background: 'white' }}>
-
-            {/* ── Header ── */}
-            <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #F3F4F6' }}>
-              <button onClick={() => setEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#374151', fontSize: 20, lineHeight: 1 }}>←</button>
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#111827' }}>
-                  {lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
-                </h2>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
-                  {lang === 'ar' ? 'تحديث معلوماتك وتتبع تقدمك' : 'Update your information and track your progress'}
-                </p>
-              </div>
-              <div style={{ width: 28 }} />
-            </div>
-
-            {/* ── User Card ── */}
-            <div style={{ margin: '16px 16px 0', background: '#F8FAFC', borderRadius: 16, padding: '16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
-                background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 26, fontWeight: 900, color: 'white',
-                border: '3px solid #1B2E5E',
-              }}>
-                {form.name ? form.name.trim()[0].toUpperCase() : '?'}
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#111827' }}>{form.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</p>
-                {userEmail && <p style={{ margin: '2px 0 4px', fontSize: 12, color: '#6B7280', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userEmail}</p>}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#EFF6FF', color: '#2563EB', borderRadius: 8, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                  {lang === 'ar' ? 'حساب البريد' : 'Email Account'}
-                </span>
-              </div>
-            </div>
-
-            {/* ── Personal Information ── */}
-            <div style={{ padding: '20px 16px 0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}</span>
-              </div>
-
-              {/* Field helper */}
-              {([
-                { icon: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', label: lang === 'ar' ? 'الاسم' : 'Name', field: 'name' as const, type: 'text', placeholder: lang === 'ar' ? 'اسمك' : 'Your name', min: undefined, max: undefined, step: undefined },
-                { icon: 'M3 6h18M3 12h18M3 18h18', label: lang === 'ar' ? 'الوزن الحالي (kg)' : 'Current Weight (kg)', field: 'currentWeight' as const, type: 'number', placeholder: '73.1', min: 30, max: 250, step: 0.1 },
-                { icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z', label: lang === 'ar' ? 'الوزن المستهدف (kg)' : 'Target Weight (kg)', field: 'targetWeight' as const, type: 'number', placeholder: '66', min: 30, max: 250, step: 0.1 },
-                { icon: 'M3 3v18h18', label: lang === 'ar' ? 'وزن البداية (kg)' : 'Starting Weight (kg)', field: 'startWeight' as const, type: 'number', placeholder: '72.6', min: 30, max: 300, step: 0.1 },
-              ] as const).map((f) => (
-                <div key={f.field} style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d={f.icon} />
-                    </svg>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 2px', fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{f.label}</p>
+          <div style={{
+            background: 'white', borderRadius: '20px 20px 0 0',
+            width: '100%', maxWidth: 520,
+            maxHeight: '92vh', overflowY: 'auto',
+          }}>
+            <div className="p-5">
+              <h3 className="text-lg font-black text-gray-800 mb-4">✏️ {t('editProfile')}</h3>
+              <div className="space-y-4">
+                {/* ── Current Weight - Highlighted at top ── */}
+                <div className="bg-orange-50 border-2 border-[#E05A00] rounded-2xl p-4">
+                  <label className="text-sm font-black text-[#E05A00] block mb-2">⚖️ {lang === 'ar' ? 'الوزن الحالي' : 'Current Weight'}</label>
+                  <div className="flex items-center gap-3">
                     <input
-                      type={f.type}
-                      step={f.step}
-                      min={f.min}
-                      max={f.max}
-                      value={f.field === 'name' ? (form.name || '') : ((form[f.field] as number) || '')}
-                      onChange={e => setForm({ ...form, [f.field]: f.type === 'number' ? (e.target.value === '' ? 0 : Number(e.target.value)) : e.target.value })}
-                      placeholder={f.placeholder}
-                      autoFocus={f.field === 'currentWeight'}
-                      style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: 'inherit' }}
+                      type="number" step="0.1" min="30" max="250"
+                      value={form.currentWeight || ''}
+                      onChange={e => setForm({ ...form, currentWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      placeholder={lang === 'ar' ? 'مثال: 72.6' : 'e.g. 72.6'}
+                      className="flex-1 border-2 border-orange-300 rounded-xl px-4 py-3 text-gray-800 text-lg font-bold focus:border-[#E05A00] outline-none bg-white"
+                      autoFocus
                     />
+                    <span className="text-lg font-bold text-[#E05A00]">kg</span>
                   </div>
-                </div>
-              ))}
-
-              {/* Height + Age side by side */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                {([
-                  { icon: 'M12 2v20M2 12h20', label: lang === 'ar' ? 'الطول (cm)' : 'Height (cm)', field: 'height' as const, placeholder: '165', min: 100, max: 250 },
-                  { icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z', label: lang === 'ar' ? 'العمر' : 'Age', field: 'age' as const, placeholder: '36', min: 10, max: 100 },
-                ] as const).map(f => (
-                  <div key={f.field} style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d={f.icon} />
-                      </svg>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: '0 0 2px', fontSize: 10, color: '#9CA3AF', fontWeight: 600 }}>{f.label}</p>
-                      <input
-                        type="number"
-                        min={f.min} max={f.max}
-                        value={(form[f.field] as number) || ''}
-                        onChange={e => setForm({ ...form, [f.field]: Number(e.target.value) })}
-                        placeholder={f.placeholder}
-                        style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: 'inherit' }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Gender */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'الجنس' : 'Gender'}</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, background: '#F3F4F6', borderRadius: 12, padding: 4 }}>
-                  {(['male', 'female'] as const).map(g => (
-                    <button key={g} onClick={() => setForm({ ...form, gender: g })}
-                      style={{
-                        padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
-                        fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
-                        background: form.gender === g ? '#2563EB' : 'transparent',
-                        color: form.gender === g ? 'white' : '#6B7280',
-                        transition: 'all 0.2s',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      }}>
-                      <span style={{display:'flex',alignItems:'center',gap:4}}>{g === 'male' ? <AppIcons.Male size={14} /> : <AppIcons.Female size={14} />}{g === 'male' ? (lang === 'ar' ? 'ذكر' : 'Male') : (lang === 'ar' ? 'أنثى' : 'Female')}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Health Summary ── */}
-              {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
-                const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
-                const previewCat = getBMICategory(previewBMI, lang);
-                return (
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'ملخص الصحة' : 'Health Summary'}</span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      {/* Weight Status */}
-                      <div style={{ background: `${previewCat.color}15`, border: `1.5px solid ${previewCat.color}40`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: `${previewCat.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewCat.color} strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </div>
-                        <div>
-                          <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{previewCat.label}</p>
-                          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: previewCat.color }}>{previewBMI}</p>
-                        </div>
+                  {form.currentWeight > 0 && form.currentWeight < 30 && (
+                    <p className="text-xs text-red-500 mt-1">{lang === 'ar' ? 'الوزن يجب أن يكون أكثر من 30 كجم' : 'Weight must be over 30 kg'}</p>
+                  )}
+                  {Number(form.height) > 0 && Number(form.currentWeight) >= 30 && (() => {
+                    const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
+                    const previewCat = getBMICategory(previewBMI, lang);
+                    return (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-gray-500">BMI:</span>
+                        <span className="text-sm font-black" style={{ color: previewCat.color }}>{previewBMI} — {previewCat.label}</span>
                       </div>
-                      {/* BMI */}
-                      <div style={{ background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        </div>
-                        <div>
-                          <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{lang === 'ar' ? 'مؤشر كتلة الجسم' : 'Body Mass Index (BMI)'}</p>
-                          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#2563EB' }}>{previewBMI}</p>
-                        </div>
-                      </div>
-                    </div>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 block mb-1">{t('name')}</label>
+                  <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
+                    placeholder={lang === 'ar' ? 'اسمك...' : 'Your name...'} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600 block mb-1">{t('age')}</label>
+                    <input type="number" value={form.age} onChange={e => setForm({ ...form, age: Number(e.target.value) })}
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={10} max={100} placeholder="e.g. 36" />
                   </div>
-                );
-              })()}
-
-              {/* ── Save / Cancel ── */}
-              <div style={{ paddingBottom: 32 }}>
-                <button onClick={handleSave}
-                  style={{ width: '100%', padding: '14px 0', borderRadius: 14, border: 'none', background: '#2563EB', color: 'white', fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                  {lang === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
-                </button>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600 block mb-1">{t('height')}</label>
+                    <input type="number" value={form.height} onChange={e => setForm({ ...form, height: Number(e.target.value) })}
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={100} max={250} placeholder="e.g. 165" />
+                  </div>
+                </div>
+                {/* Target Weight */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 block mb-1">
+                    🎯 {t('targetWeightLabel')} <span className="text-xs text-gray-400">(kg)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number" step="0.1" min="30" max="250"
+                      value={form.targetWeight || ''}
+                      onChange={e => setForm({ ...form, targetWeight: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      placeholder={lang === 'ar' ? 'مثال: 65' : 'e.g. 65'}
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none"
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">kg</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 block mb-1">{t('startWeightLabel')}</label>
+                  <input type="number" step="0.1" value={form.startWeight} onChange={e => setForm({ ...form, startWeight: Number(e.target.value) })}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none" min={30} max={300} placeholder="e.g. 72.6" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 block mb-2">{t('gender')}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(['female', 'male'] as const).map(g => (
+                      <button key={g} onClick={() => setForm({ ...form, gender: g })}
+                        className={`py-2.5 rounded-xl font-semibold text-sm border-2 transition-all ${form.gender === g ? 'bg-[#E05A00] text-white border-[#E05A00]' : 'bg-white text-gray-600 border-gray-200'}`}>
+                        {g === 'female' ? `♀️ ${t('genderFemale')}` : `♂️ ${t('genderMale')}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Live BMI Preview */}
+                {Number(form.height) > 0 && Number(form.currentWeight) > 0 && (() => {
+                  const previewBMI = calcBMI(Number(form.currentWeight), Number(form.height));
+                  const previewCat = getBMICategory(previewBMI, lang);
+                  return (
+                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                      <div className="text-sm text-gray-500">{t('bmiLabel')}</div>
+                      <div className="text-2xl font-black mt-1" style={{ color: previewCat.color }}>{previewBMI}</div>
+                      <div className="text-sm font-semibold mt-0.5" style={{ color: previewCat.color }}>{previewCat.label}</div>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="flex gap-3 mt-6">
                 <button onClick={() => setEditing(false)}
-                  style={{ width: '100%', padding: '13px 0', borderRadius: 14, border: '1.5px solid #E5E7EB', background: 'white', color: '#374151', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                  {lang === 'ar' ? 'إلغاء' : 'Cancel'}
-                </button>
-                <p style={{ textAlign: 'center', margin: '12px 0 0', fontSize: 11, color: '#9CA3AF' }}>
-                  <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lock size={14} />{lang === 'ar' ? 'بياناتك آمنة وخاصة' : 'Your data is secure and private'}</span>
-                </p>
+                  style={{ flex: 1, padding: '12px 0', borderRadius: 12, border: '2px solid #E5E7EB', background: 'white', color: '#6B7280', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >{t('cancel')}</button>
+                <button onClick={handleSave}
+                  style={{ flex: 1, padding: '12px 0', borderRadius: 12, border: 'none', background: '#1B2E5E', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                >✅ {t('save')}</button>
               </div>
             </div>
           </div>
@@ -919,7 +689,7 @@ export function ProfilePanel() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
           }}>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ marginBottom: 8, display:"flex", justifyContent:"center" }}><AppIcons.Warning size={36} className="text-red-600" /></div>
+              <div style={{ fontSize: 48, marginBottom: 8 }}>⚠️</div>
               <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: '#DC2626' }}>
                 {t('resetData')}
               </h3>
@@ -933,8 +703,8 @@ export function ProfilePanel() {
             }}>
               <p style={{ margin: 0, fontSize: 12, color: '#991B1B', lineHeight: 1.6 }}>
                 {lang === 'ar'
-                  ? 'سيتم حذف: جميع جلسات التمرين، سجل الوزن، بيانات الملف الشخصي. لا يمكن التراجع عن هذا الإجراء.'
-                  : 'This will delete: all workout sessions, weight log, and profile data. This cannot be undone.'}
+                  ? '🗑️ سيتم حذف: جميع جلسات التمرين، سجل الوزن، بيانات الملف الشخصي. لا يمكن التراجع عن هذا الإجراء.'
+                  : '🗑️ This will delete: all workout sessions, weight log, and profile data. This cannot be undone.'}
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>

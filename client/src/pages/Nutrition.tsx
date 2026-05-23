@@ -10,13 +10,10 @@
  *  - Meals: meal history cards
  *  - Insights: AI insights
  */
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import NutritionMealsTab from "../components/NutritionMealsTab";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
-import { getDailyCaloriesBurned } from "../lib/calorieCalc";
-import { AppIcons } from "../components/AppIcons";
-import { NutritionDashboardIcon, NutritionMealsIcon, NutritionScannerIcon, NutritionRobotIcon, WaterDropIcon, MacroCloudIcon, FlameIcon, PlateIcon, CoffeeCupIcon, JuiceCupIcon, MealFoodIcon, CoffeeDrinkIcon, DrinkIcon } from "../components/ColorIcons";
+import { SafeImage } from "@/components/SafeImage";
 
 // ── Design tokens (matches main app light theme) ──────────────────────────────
 const PAGE_BG   = "#F0F4F8";
@@ -69,7 +66,7 @@ const T: Record<string, Record<string, string>> = {
   tryAgain:     { ar: "حاول مجدداً", en: "Try Again" },
   addToDiary:   { ar: "أضف للسجل", en: "Add to Diary" },
   saving:       { ar: "جاري الحفظ...", en: "Saving..." },
-  saved:        { ar: "تم الحفظ!", en: "Saved!" },
+  saved:        { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
   edit:         { ar: "تعديل", en: "Edit" },
   delete:       { ar: "حذف", en: "Delete" },
   noMeals:      { ar: "لا توجد وجبات بعد", en: "No meals logged yet" },
@@ -87,12 +84,12 @@ const T: Record<string, Record<string, string>> = {
   noInsights:   { ar: "اضغط لتوليد تحليلات مخصصة", en: "Tap to generate personalized insights" },
   saveGoals:    { ar: "حفظ الأهداف", en: "Save Goals" },
   savingGoals:  { ar: "جاري الحفظ...", en: "Saving..." },
-  savedGoals:   { ar: "تم الحفظ!", en: "Saved!" },
+  savedGoals:   { ar: "✅ تم الحفظ!", en: "✅ Saved!" },
   ml:           { ar: "مل", en: "ml" },
 };
 const tl = (k: string, lang: string) => T[k]?.[lang] ?? T[k]?.en ?? k;
 
-const MEAL_ICONS: Record<string, string> = { breakfast: "sunrise", lunch: "sun", dinner: "moon", snack: "apple" };
+const MEAL_ICONS: Record<string, string> = { breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎" };
 
 // ── Shared card ───────────────────────────────────────────────────────────────
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({
@@ -103,20 +100,18 @@ const card = (extra?: React.CSSProperties): React.CSSProperties => ({
 });
 
 // ── Large calorie ring ────────────────────────────────────────────────────────
-function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: number; goal: number; lang: string; workoutCalories?: number }) {
+function CalorieRing({ consumed, goal, lang }: { consumed: number; goal: number; lang: string }) {
   const size = 180;
   const r = 74;
   const circ = 2 * Math.PI * r;
   const pct = Math.min(consumed / Math.max(goal, 1), 1);
   const dash = circ * (1 - pct);
-  // Remaining = Goal - Food + Exercise
-  const remaining = Math.max(goal - consumed + workoutCalories, 0);
-  const ringColor = remaining === 0 ? '#DC2626' : consumed > goal ? '#F97316' : NAVY;
+  const remaining = Math.max(goal - consumed, 0);
 
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 4 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><FlameIcon size={18} />{tl("dailyCal", lang)}</span>
+        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>🔥 {tl("dailyCal", lang)}</span>
       </div>
 
       {/* Ring */}
@@ -124,7 +119,7 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
         <div style={{ position: "relative", width: size, height: size }}>
           <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
             <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#E8EDF4" strokeWidth={12} />
-            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={ringColor} strokeWidth={12}
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={NAVY} strokeWidth={12}
               strokeDasharray={circ} strokeDashoffset={dash}
               strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease" }} />
           </svg>
@@ -145,51 +140,33 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
         <div style={{ color: MUTED, fontSize: 12 }}>{tl("of", lang)} {goal}</div>
       </div>
 
-      {/* 4 stat boxes: Remaining / Consumed / Burned / Goal */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {/* 3 stat boxes */}
+      <div style={{ display: "flex", gap: 8 }}>
         <div style={{
-          flex: 1, minWidth: 60, background: remaining === 0 ? '#FEF2F2' : '#F0FDF4',
-          borderRadius: 14, padding: "10px 6px", textAlign: "center",
-          border: `1px solid ${remaining === 0 ? '#FECACA' : '#BBF7D0'}`,
+          flex: 1, background: "#F0FDF4", borderRadius: 14, padding: "12px 8px", textAlign: "center",
+          border: "1px solid #BBF7D0",
         }}>
-          <div style={{ color: remaining === 0 ? '#DC2626' : C_GREEN, fontSize: 18, fontWeight: 900 }}>{Math.round(remaining)}</div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
+          <div style={{ color: C_GREEN, fontSize: 20, fontWeight: 900 }}>{Math.round(remaining)}</div>
+          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
         </div>
         <div style={{
-          flex: 1, minWidth: 60, background: PAGE_BG, borderRadius: 14, padding: "10px 6px", textAlign: "center",
+          flex: 1, background: PAGE_BG, borderRadius: 14, padding: "12px 8px", textAlign: "center",
           border: `1px solid ${BORDER}`,
         }}>
-          <div style={{ color: TEXT, fontSize: 18, fontWeight: 900 }}>{Math.round(consumed)}</div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
+          <div style={{ color: TEXT, fontSize: 20, fontWeight: 900 }}>{Math.round(consumed)}</div>
+          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
         </div>
-        {workoutCalories > 0 && (
-          <div style={{
-            flex: 1, minWidth: 60, background: '#FFF7ED', borderRadius: 14, padding: "10px 6px", textAlign: "center",
-            border: '1px solid #FED7AA',
-          }}>
-            <div style={{ color: '#C2410C', fontSize: 18, fontWeight: 900 }}>{workoutCalories}</div>
-            <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-            <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{lang === 'ar' ? 'محروقة' : 'Burned'}</div>
-          </div>
-        )}
         <div style={{
-          flex: 1, minWidth: 60, background: SKY_LIGHT, borderRadius: 14, padding: "10px 6px", textAlign: "center",
+          flex: 1, background: SKY_LIGHT, borderRadius: 14, padding: "12px 8px", textAlign: "center",
           border: `1px solid ${SKY}44`,
         }}>
-          <div style={{ color: SKY, fontSize: 18, fontWeight: 900 }}>{goal}</div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
+          <div style={{ color: SKY, fontSize: 20, fontWeight: 900 }}>{goal}</div>
+          <div style={{ color: MUTED, fontSize: 10, marginTop: 2 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
         </div>
       </div>
-      {workoutCalories > 0 && (
-        <p style={{ fontSize: 10, color: MUTED, textAlign: 'center', margin: '8px 0 0' }}>
-          {lang === 'ar'
-            ? `المتبقي = الهدف − الطعام + السعرات المحروقة التقديرية`
-            : 'Remaining = Goal − Food + Est. Calories Burned'}
-        </p>
-      )}
     </div>
   );
 }
@@ -260,15 +237,15 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
 }) {
   const pct = Math.min(totalMl / Math.max(goalMl, 1), 1);
   const cups = [
-    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150 },
-    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250 },
-    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330 },
-    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500 },
+    { label: lang === "ar" ? "كوب صغير" : "Small Cup", ml: 150, icon: "💧" },
+    { label: lang === "ar" ? "كوب"       : "Cup",       ml: 250, icon: "💧" },
+    { label: lang === "ar" ? "علبة"      : "Can",       ml: 330, icon: "💧" },
+    { label: lang === "ar" ? "زجاجة"    : "Bottle",    ml: 500, icon: "💧" },
   ];
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><WaterDropIcon size={18} />{tl("waterIntake", lang)}</span>
+        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>💧 {tl("waterIntake", lang)}</span>
         <span style={{ color: C_WATER, fontSize: 13, fontWeight: 700 }}>
           {totalMl}{tl("ml", lang)} / {goalMl}{tl("ml", lang)}
         </span>
@@ -288,7 +265,7 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
             display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
             cursor: "pointer", fontFamily: "inherit",
           }}>
-            <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><WaterDropIcon size={28} /></span>
+            <span style={{ fontSize: 22 }}>{c.icon}</span>
             <span style={{ color: TEXT, fontSize: 11, fontWeight: 700 }}>{c.label}</span>
             <span style={{ color: C_WATER, fontSize: 10 }}>{c.ml}{tl("ml", lang)}</span>
           </button>
@@ -306,7 +283,7 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Stats size={18} />{tl("weeklyTrend", lang)}</span>
+        <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>📈 {tl("weeklyTrend", lang)}</span>
       </div>
 
       {/* Chart area */}
@@ -386,40 +363,6 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
   );
 }
 
-// ── Goals Modal Field (must be outside GoalsModal to avoid remount on each render) ──
-function GoalField({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit: string }) {
-  const TEXT = "#1B2E5E";
-  const MUTED = "#94A3B8";
-  const BORDER = "#E2E8F0";
-  const PAGE_BG = "#F0F4F8";
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{label}</span>
-        <span style={{ color: MUTED, fontSize: 12 }}>{unit}</span>
-      </div>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={value}
-        onChange={e => {
-          const v = e.target.value;
-          if (v === "" || /^\d+$/.test(v)) onChange(v);
-        }}
-        onFocus={e => e.target.select()}
-        style={{
-          width: "100%", boxSizing: "border-box",
-          background: PAGE_BG, border: `1.5px solid ${BORDER}`,
-          borderRadius: 12, padding: "12px 14px", color: TEXT,
-          fontSize: 16, fontWeight: 700, fontFamily: "inherit", outline: "none",
-          WebkitAppearance: "none" as any,
-        }}
-      />
-    </div>
-  );
-}
-
 // ── Goals Modal ───────────────────────────────────────────────────────────────
 function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClose: () => void }) {
   const utils = trpc.useUtils();
@@ -438,7 +381,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
   // Read profile from localStorage (set by useGymTracker)
   const profile = (() => {
     try {
-      const stored = localStorage.getItem("gym_tracker_v3");
+      const stored = localStorage.getItem("primefit_data");
       if (stored) {
         const parsed = JSON.parse(stored);
         return parsed.profile ?? {};
@@ -508,6 +451,34 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
     }
   };
 
+  const Field = ({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit: string }) => (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+        <span style={{ color: TEXT, fontSize: 13, fontWeight: 700 }}>{label}</span>
+        <span style={{ color: MUTED, fontSize: 12 }}>{unit}</span>
+      </div>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={value}
+        onChange={e => {
+          const v = e.target.value;
+          // Allow empty string or digits only
+          if (v === "" || /^\d+$/.test(v)) onChange(v);
+        }}
+        onFocus={e => e.target.select()}
+        style={{
+          width: "100%", boxSizing: "border-box",
+          background: PAGE_BG, border: `1.5px solid ${BORDER}`,
+          borderRadius: 12, padding: "12px 14px", color: TEXT,
+          fontSize: 16, fontWeight: 700, fontFamily: "inherit", outline: "none",
+          WebkitAppearance: "none" as any,
+        }}
+      />
+    </div>
+  );
+
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(15,30,61,0.55)",
@@ -523,12 +494,12 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 900, margin: 0 }}>
-            <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Target size={18} />{tl("goals", lang)}</span>
+            🎯 {tl("goals", lang)}
           </h2>
           <button onClick={onClose} style={{
             background: PAGE_BG, border: "none", borderRadius: "50%",
             width: 32, height: 32, fontSize: 16, cursor: "pointer", color: TEXT2,
-          }}><AppIcons.Close size={16} /></button>
+          }}>✕</button>
         </div>
 
         {/* TDEE Auto-Calculator */}
@@ -542,8 +513,8 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           }}
         >
-          <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Stats size={16} />{lang === "ar" ? "احسب أهدافك تلقائياً (TDEE)" : "Auto-Calculate Goals (TDEE)"}</span>
-          <span style={{opacity:0.7}}>{showTDEE ? <AppIcons.ChevronUp size={12} /> : <AppIcons.ChevronDown size={12} />}</span>
+          🧮 {lang === "ar" ? "احسب أهدافك تلقائياً (TDEE)" : "Auto-Calculate Goals (TDEE)"}
+          <span style={{ fontSize: 10, opacity: 0.7 }}>{showTDEE ? "▲" : "▼"}</span>
         </button>
 
         {showTDEE && (() => {
@@ -568,9 +539,9 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
             }}>
               {!hasProfile ? (
                 <p style={{ color: "#F59E0B", fontSize: 12, margin: 0, textAlign: "center" }}>
-                  <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-red-500" />{lang === "ar"
+                  ⚠️ {lang === "ar"
                     ? "أكمل بيانات ملفك الشخصي (الوزن، الطول، العمر) أولاً"
-                    : "Complete your profile (weight, height, age) first"}</span>
+                    : "Complete your profile (weight, height, age) first"}
                 </p>
               ) : (
                 <>
@@ -668,7 +639,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
                       cursor: "pointer", fontFamily: "inherit",
                     }}
                   >
-                    <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Check size={14} />{lang === "ar" ? "تطبيق هذه الأهداف" : "Apply These Goals"}</span>
+                    ✅ {lang === "ar" ? "تطبيق هذه الأهداف" : "Apply These Goals"}
                   </button>
                 </>
               )}
@@ -676,11 +647,11 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
           );
         })()}
 
-        <GoalField label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   unit="kcal" />
-        <GoalField label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  unit="g" />
-        <GoalField label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} unit="g" />
-        <GoalField label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   unit="g" />
-        <GoalField label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} unit="ml" />
+        <Field label={lang === "ar" ? "السعرات اليومية" : "Daily Calories"} value={cal}   onChange={setCal}   unit="kcal" />
+        <Field label={lang === "ar" ? "البروتين"         : "Protein"}        value={prot}  onChange={setProt}  unit="g" />
+        <Field label={lang === "ar" ? "الكربوهيدرات"    : "Carbs"}           value={carbs} onChange={setCarbs} unit="g" />
+        <Field label={lang === "ar" ? "الدهون"           : "Fat"}             value={fat}   onChange={setFat}   unit="g" />
+        <Field label={lang === "ar" ? "الماء"            : "Water"}           value={water} onChange={setWater} unit="ml" />
 
         {errMsg ? (
           <div style={{ color: "#EF4444", fontSize: 13, textAlign: "center", marginBottom: 8 }}>{errMsg}</div>
@@ -722,8 +693,8 @@ function ExceedWarning({ lang, exceeded, onOpenGoals }: {
   if (items.length === 0) return null;
 
   const advice = lang === "ar"
-    ? `تجاوزت الهدف اليومي في: ${items.join("، ")}. حاول تقليل الوجبات الدسمة وزيادة شرب الماء. تذكر أن الاتساق أهم من الكمال!`
-    : `You exceeded your daily goal for: ${items.join(", ")}. Try reducing heavy meals and drink more water. Remember: consistency matters more than perfection!`;
+    ? `⚠️ تجاوزت الهدف اليومي في: ${items.join("، ")}. حاول تقليل الوجبات الدسمة وزيادة شرب الماء. تذكر أن الاتساق أهم من الكمال!`
+    : `⚠️ You exceeded your daily goal for: ${items.join(", ")}. Try reducing heavy meals and drink more water. Remember: consistency matters more than perfection!`;
 
   return (
     <div style={{
@@ -731,7 +702,7 @@ function ExceedWarning({ lang, exceeded, onOpenGoals }: {
       borderRadius: 16, padding: "14px 16px", marginBottom: 14,
       display: "flex", alignItems: "flex-start", gap: 10,
     }}>
-      <span style={{flexShrink:0}}><AppIcons.Warning size={22} className="text-red-500" /></span>
+      <span style={{ fontSize: 22, flexShrink: 0 }}>🚨</span>
       <div style={{ flex: 1 }}>
         <p style={{ color: "#DC2626", fontSize: 13, fontWeight: 800, margin: "0 0 6px" }}>
           {lang === "ar" ? "تجاوزت الهدف اليومي!" : "Daily Target Exceeded!"}
@@ -788,18 +759,6 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
   const fatGoal   = goals?.fatG     ?? 65;
   const waterGoal = goals?.waterMl  ?? 2500;
 
-  // Read workout calories burned today from gym tracker localStorage
-  const workoutCaloriesToday = (() => {
-    try {
-      const stored = localStorage.getItem('gym_tracker_v3');
-      if (!stored) return 0;
-      const data = JSON.parse(stored);
-      const weight = data?.profile?.currentWeight || 65;
-      const today = new Date().toISOString().split('T')[0];
-      return getDailyCaloriesBurned(data?.sessions || [], today, weight);
-    } catch { return 0; }
-  })();
-
   const exceeded = {
     calories: totals.calories > calGoal,
     protein:  totals.proteinG > protGoal,
@@ -814,12 +773,12 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
       {anyExceeded && <ExceedWarning lang={lang} exceeded={exceeded} onOpenGoals={onOpenGoals} />}
 
       {/* Calorie ring card */}
-      <CalorieRing consumed={totals.calories} goal={calGoal} lang={lang} workoutCalories={workoutCaloriesToday} />
+      <CalorieRing consumed={totals.calories} goal={calGoal} lang={lang} />
 
       {/* Macronutrients card */}
       <div style={card()}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-          <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><MacroCloudIcon size={18} />{tl("macros", lang)}</span>
+          <span style={{ color: TEXT, fontSize: 16, fontWeight: 900 }}>🥩 {tl("macros", lang)}</span>
         </div>
 
         {/* Progress bars */}
@@ -875,7 +834,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
             width: 44, height: 44, borderRadius: 12, background: "#FFF7ED",
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
           }}>
-            {MEAL_ICONS[meal.meal_type] === "sunrise" ? <AppIcons.Sunrise size={20} /> : MEAL_ICONS[meal.meal_type] === "sun" ? <AppIcons.Sun size={20} /> : MEAL_ICONS[meal.meal_type] === "moon" ? <AppIcons.Sleep size={20} /> : <AppIcons.Apple size={20} />}
+            {MEAL_ICONS[meal.meal_type] ?? "🍽️"}
           </div>
           <div>
             <p style={{ color: TEXT, fontSize: 13, fontWeight: 700, margin: 0 }}>
@@ -894,14 +853,14 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
           }}>
             {Math.round(meal.total_calories)} kcal
           </span>
-          <span style={{color:MUTED}}>{expanded ? <AppIcons.ChevronUp size={12} /> : <AppIcons.ChevronDown size={12} />}</span>
+          <span style={{ color: MUTED, fontSize: 12 }}>{expanded ? "▲" : "▼"}</span>
         </div>
       </div>
 
       {expanded && (
         <div style={{ padding: "0 16px 16px", borderTop: `1px solid ${BORDER}` }}>
           {meal.image_url && (
-            <img src={meal.image_url} alt="meal" style={{
+            <SafeImage src={meal.image_url} alt="meal" style={{
               width: "100%", maxHeight: 160, objectFit: "cover",
               borderRadius: 12, marginBottom: 12, marginTop: 12,
             }} />
@@ -941,7 +900,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
               borderRadius: 10, padding: "10px 12px", marginTop: 10,
             }}>
               <p style={{ color: NAVY, fontSize: 11, margin: 0, lineHeight: 1.6 }}>
-                <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Info size={12} className="text-blue-500" />{lang === "ar" ? meal.insight_ar : meal.insight_en}</span>
+                💡 {lang === "ar" ? meal.insight_ar : meal.insight_en}
               </p>
             </div>
           )}
@@ -949,7 +908,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
             marginTop: 10, background: "#FEF2F2", border: "1px solid #FECACA",
             color: "#EF4444", borderRadius: 8, padding: "6px 14px", fontSize: 11,
             cursor: "pointer", fontFamily: "inherit",
-          }}><span style={{display:"flex",alignItems:"center",gap:4}}><AppIcons.Trash size={12} />{tl("delete", lang)}</span></button>
+          }}>🗑️ {tl("delete", lang)}</button>
         </div>
       )}
     </div>
@@ -958,7 +917,44 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
 
 // ── Meals Tab ─────────────────────────────────────────────────────────────────
 function MealsTab({ lang }: { lang: string }) {
-  return <NutritionMealsTab lang={lang} />;
+  const utils = trpc.useUtils();
+  const { data: history, isLoading } = trpc.nutrition.getMealHistory.useQuery({ limit: 30 });
+  const deleteMeal = trpc.nutrition.deleteMeal.useMutation({
+    onSuccess: () => {
+      utils.nutrition.getMealHistory.invalidate();
+      utils.nutrition.getTodayLog.invalidate();
+      utils.nutrition.getToday.invalidate();
+    },
+  });
+
+  if (isLoading) return (
+    <div style={{ textAlign: "center", padding: "48px 0" }}>
+      <div style={{ fontSize: 32, animation: "spin 1s linear infinite" }}>⏳</div>
+    </div>
+  );
+
+  if (!history?.length) return (
+    <div style={{ textAlign: "center", padding: "56px 0" }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: "50%", background: "#FFF7ED",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 40, margin: "0 auto 16px",
+      }}>🍽️</div>
+      <p style={{ color: TEXT, fontSize: 15, fontWeight: 700, margin: "0 0 6px" }}>{tl("noMeals", lang)}</p>
+      <p style={{ color: MUTED, fontSize: 12 }}>
+        {lang === "ar" ? "استخدم الماسح لإضافة وجباتك" : "Use the scanner to add your meals"}
+      </p>
+    </div>
+  );
+
+  return (
+    <div>
+      {history.map((meal: any) => (
+        <MealCard key={meal.id} meal={meal} lang={lang}
+          onDelete={() => deleteMeal.mutate({ mealId: meal.id })} />
+      ))}
+    </div>
+  );
 }
 
 // ── Scanner Tab ───────────────────────────────────────────────────────────────
@@ -1095,7 +1091,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               boxShadow: `0 4px 16px ${NAVY}44`,
             }}>
-              <AppIcons.Camera size={34} />
+              <span style={{ fontSize: 34 }}>📷</span>
               {tl("scan", lang)}
             </button>
             <button onClick={() => fileInputRef.current?.click()} style={{
@@ -1106,7 +1102,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               boxShadow: SHADOW,
             }}>
-              <AppIcons.Image size={34} />
+              <span style={{ fontSize: 34 }}>🖼️</span>
               {tl("upload", lang)}
             </button>
           </div>
@@ -1116,13 +1112,12 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             borderRadius: 14, padding: "12px 16px", marginBottom: 14,
             display: "flex", alignItems: "center", gap: 10,
           }}>
-            <AppIcons.Stats size={22} />
+            <span style={{ fontSize: 22 }}>📊</span>
             <span style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>
               {tl("barcodeHint", lang)}
             </span>
           </div>
 
-          <QuickMealsGrid lang={lang} mealType={mealType} setMealType={setMealType} />
           <ManualSearch lang={lang} mealType={mealType} setMealType={setMealType} />
         </>
       )}
@@ -1130,12 +1125,12 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
       {status === "analyzing" && (
         <div style={{ textAlign: "center", padding: "40px 0" }}>
           {previewUrl && (
-            <img src={previewUrl} alt="food" style={{
+            <SafeImage src={previewUrl} alt="food" resolve={false} style={{
               width: "100%", maxHeight: 200, objectFit: "cover",
               borderRadius: 16, marginBottom: 16, opacity: 0.85,
             }} />
           )}
-          <div style={{ marginBottom: 12 }}><AppIcons.Search size={36} /></div>
+          <div style={{ fontSize: 36, marginBottom: 12, animation: "spin 1s linear infinite" }}>🔍</div>
           <p style={{ color: NAVY, fontSize: 14, fontWeight: 700 }}>{tl("analyzing", lang)}</p>
           <p style={{ color: MUTED, fontSize: 11 }}>
             {lang === "ar" ? "يتم تحليل الطعام بالذكاء الاصطناعي..." : "AI is identifying food items..."}
@@ -1159,7 +1154,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
       {status === "ready" && editItems.length > 0 && (
         <>
           {previewUrl && (
-            <img src={previewUrl} alt="food" style={{
+            <SafeImage src={previewUrl} alt="food" resolve={false} style={{
               width: "100%", maxHeight: 180, objectFit: "cover",
               borderRadius: 14, marginBottom: 14,
             }} />
@@ -1170,7 +1165,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               borderRadius: 12, padding: "10px 14px", marginBottom: 12,
             }}>
               <p style={{ color: NAVY, fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Info size={12} className="text-blue-500" />{lang === "ar" ? analysis.insightAr : analysis.insightEn}</span>
+                💡 {lang === "ar" ? analysis.insightAr : analysis.insightEn}
               </p>
             </div>
           )}
@@ -1206,7 +1201,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                 <button onClick={() => removeItem(idx)} style={{
                   background: "#FEF2F2", border: "1px solid #FECACA", color: "#EF4444",
                   borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
-                }}><AppIcons.Close size={16} /></button>
+                }}>✕</button>
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {[
@@ -1253,7 +1248,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                       )}
                       <div style={{ color: MUTED, fontSize: 9 }}>{m.unit}</div>
                       <div style={{ color: MUTED, fontSize: 9 }}>{m.label}</div>
-                      {!isEditing && <div style={{ color: m.color, opacity: 0.6, marginTop: 1 }}><AppIcons.Edit size={10} /></div>}
+                      {!isEditing && <div style={{ color: m.color, fontSize: 7, opacity: 0.6, marginTop: 1 }}>✏️</div>}
                     </div>
                   );
                 })}
@@ -1312,199 +1307,13 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
           }}>
             {saveStatus === "saved" ? tl("saved", lang)
               : saveStatus === "saving" ? tl("saving", lang)
-              : tl("addToDiary", lang)}
+              : `💾 ${tl("addToDiary", lang)}`}
           </button>
         </>
       )}
 
       <input ref={fileInputRef}   type="file" accept="image/*"            style={{ display: "none" }} onChange={e => e.target.files?.[0] && processImage(e.target.files[0])} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={e => e.target.files?.[0] && processImage(e.target.files[0])} />
-    </div>
-  );
-}
-
-// ── Quick Meals Grid ─────────────────────────────────────────────────────────
-type QuickMealCategory = "meals" | "coffee" | "drinks";
-
-interface QuickMealItem {
-  nameAr: string;
-  nameEn: string;
-  emoji: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  serving: string;
-}
-
-const QUICK_MEALS: Record<QuickMealCategory, QuickMealItem[]> = {
-  meals: [
-    { nameAr: "كبسة دجاج",   nameEn: "Chicken Kabsa",   emoji: "", calories: 520, protein: 32, carbs: 65, fat: 12, serving: "1 plate (350g)" },
-    { nameAr: "شاورما دجاج", nameEn: "Chicken Shawarma", emoji: "", calories: 420, protein: 28, carbs: 42, fat: 14, serving: "1 wrap (250g)" },
-    { nameAr: "برغر",         nameEn: "Burger",           emoji: "", calories: 550, protein: 30, carbs: 48, fat: 24, serving: "1 burger (220g)" },
-    { nameAr: "بيتزا",        nameEn: "Pizza",            emoji: "", calories: 280, protein: 12, carbs: 34, fat: 10, serving: "1 slice (100g)" },
-    { nameAr: "سلطة خضراء",  nameEn: "Green Salad",      emoji: "", calories: 80,  protein: 3,  carbs: 10, fat: 3,  serving: "1 bowl (200g)" },
-    { nameAr: "فول مدمس",    nameEn: "Foul Medames",     emoji: "", calories: 180, protein: 10, carbs: 28, fat: 4,  serving: "1 cup (200g)" },
-    { nameAr: "تمر",          nameEn: "Dates",            emoji: "", calories: 120, protein: 1,  carbs: 32, fat: 0,  serving: "4 dates (40g)" },
-    { nameAr: "خبز عربي",    nameEn: "Arabic Bread",     emoji: "", calories: 165, protein: 5,  carbs: 34, fat: 1,  serving: "1 loaf (65g)" },
-    { nameAr: "أرز مع دجاج", nameEn: "Rice with Chicken",emoji: "", calories: 480, protein: 35, carbs: 58, fat: 10, serving: "1 plate (350g)" },
-    { nameAr: "مكرونة",       nameEn: "Pasta",            emoji: "", calories: 350, protein: 12, carbs: 65, fat: 6,  serving: "1 plate (250g)" },
-  ],
-  coffee: [
-    { nameAr: "كابتشينو",      nameEn: "Cappuccino",       emoji: "", calories: 120, protein: 6,  carbs: 12, fat: 5,  serving: "1 cup (240ml)" },
-    { nameAr: "لاتيه",         nameEn: "Latte",            emoji: "", calories: 190, protein: 10, carbs: 19, fat: 7,  serving: "1 cup (360ml)" },
-    { nameAr: "أمريكانو",      nameEn: "Americano",        emoji: "", calories: 15,  protein: 1,  carbs: 3,  fat: 0,  serving: "1 cup (240ml)" },
-    { nameAr: "شاي بالحليب",  nameEn: "Tea with Milk",    emoji: "", calories: 80,  protein: 3,  carbs: 12, fat: 2,  serving: "1 cup (240ml)" },
-    { nameAr: "قهوة عربية",   nameEn: "Arabic Coffee",    emoji: "", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 cup (100ml)" },
-    { nameAr: "ماتشا لاتيه",  nameEn: "Matcha Latte",     emoji: "", calories: 160, protein: 6,  carbs: 22, fat: 5,  serving: "1 cup (360ml)" },
-    { nameAr: "إسبريسو",       nameEn: "Espresso",         emoji: "", calories: 5,   protein: 0,  carbs: 1,  fat: 0,  serving: "1 shot (30ml)" },
-    { nameAr: "شوكولاتة ساخنة",nameEn: "Hot Chocolate",   emoji: "", calories: 220, protein: 8,  carbs: 35, fat: 6,  serving: "1 cup (240ml)" },
-  ],
-  drinks: [
-    { nameAr: "ماء",           nameEn: "Water",            emoji: "", calories: 0,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 bottle (500ml)" },
-    { nameAr: "عصير برتقال",  nameEn: "Orange Juice",     emoji: "", calories: 110, protein: 2,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "كولا",          nameEn: "Cola",             emoji: "", calories: 140, protein: 0,  carbs: 39, fat: 0,  serving: "1 can (355ml)" },
-    { nameAr: "لبن",           nameEn: "Milk",             emoji: "", calories: 150, protein: 8,  carbs: 12, fat: 8,  serving: "1 glass (240ml)" },
-    { nameAr: "عصير تفاح",    nameEn: "Apple Juice",      emoji: "", calories: 115, protein: 0,  carbs: 28, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "ليموناضة",      nameEn: "Lemonade",         emoji: "", calories: 100, protein: 0,  carbs: 26, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "عصير مانجو",   nameEn: "Mango Juice",      emoji: "", calories: 130, protein: 1,  carbs: 32, fat: 0,  serving: "1 glass (240ml)" },
-    { nameAr: "شاي أخضر",     nameEn: "Green Tea",        emoji: "", calories: 2,   protein: 0,  carbs: 0,  fat: 0,  serving: "1 cup (240ml)" },
-  ],
-};
-
-function QuickMealsGrid({ lang, mealType, setMealType }: {
-  lang: string; mealType: MealType; setMealType: (m: MealType) => void;
-}) {
-  const utils = trpc.useUtils();
-  const [category, setCategory] = useState<QuickMealCategory>("meals");
-  const [addedId, setAddedId]   = useState<string | null>(null);
-
-  const saveMeal = trpc.nutrition.saveMeal.useMutation({
-    onSuccess: () => {
-      utils.nutrition.getMealHistory.invalidate();
-      utils.nutrition.getTodayLog.invalidate();
-      utils.nutrition.getToday.invalidate();
-    },
-  });
-
-  const handleQuickAdd = async (item: QuickMealItem) => {
-    const id = `${category}-${item.nameEn}`;
-    setAddedId(id);
-    await saveMeal.mutateAsync({
-      mealType,
-      items: [{
-        name:           item.nameEn,
-        nameAr:         item.nameAr,
-        estimatedGrams: 0,
-        portionDesc:    item.serving,
-        portionDescAr:  item.serving,
-        calories:       item.calories,
-        protein:        item.protein,
-        carbs:          item.carbs,
-        fat:            item.fat,
-      }],
-    });
-    setTimeout(() => setAddedId(null), 1500);
-  };
-
-  const catTabs: { id: QuickMealCategory; labelAr: string; labelEn: string; icon: React.ReactNode }[] = [
-    { id: "meals",  labelAr: "وجبات",    labelEn: "Meals",   icon: <PlateIcon size={22} /> },
-    { id: "coffee", labelAr: "قهوة",     labelEn: "Coffee",  icon: <CoffeeCupIcon size={22} /> },
-    { id: "drinks", labelAr: "مشروبات",  labelEn: "Drinks",  icon: <JuiceCupIcon size={22} /> },
-  ];
-
-  return (
-    <div style={card()}>
-      {/* Header */}
-      <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 12px" }}>
-        <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Lightning size={18} />{lang === "ar" ? "إضافة سريعة" : "Quick Add"}</span>
-      </p>
-
-      {/* Meal type selector */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-        {(["breakfast","lunch","dinner","snack"] as const).map(mt => (
-          <button key={mt} onClick={() => setMealType(mt)} style={{
-            padding: "5px 10px", borderRadius: 16,
-            border: mealType === mt ? `1.5px solid ${NAVY}` : `1px solid ${BORDER}`,
-            background: mealType === mt ? NAVY : WHITE,
-            color: mealType === mt ? WHITE : TEXT2,
-            fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          }}>
-            {MEAL_ICONS[mt]} {tl(mt, lang)}
-          </button>
-        ))}
-      </div>
-
-      {/* Category tabs */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 14, borderBottom: `1px solid ${BORDER}`, paddingBottom: 10 }}>
-        {catTabs.map(ct => (
-          <button key={ct.id} onClick={() => setCategory(ct.id)} style={{
-            flex: 1, padding: "8px 4px", borderRadius: 12,
-            border: category === ct.id ? `1.5px solid ${SKY}` : `1px solid ${BORDER}`,
-            background: category === ct.id ? SKY_LIGHT : WHITE,
-            color: category === ct.id ? NAVY : TEXT2,
-            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-          }}>
-            <span style={{ fontSize: 18 }}>{ct.icon}</span>
-            <span>{lang === "ar" ? ct.labelAr : ct.labelEn}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Meals grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {QUICK_MEALS[category].map(item => {
-          const id = `${category}-${item.nameEn}`;
-          const isAdded = addedId === id;
-          return (
-            <button
-              key={id}
-              onClick={() => !isAdded && handleQuickAdd(item)}
-              disabled={isAdded || saveMeal.isPending}
-              style={{
-                background: isAdded ? "#F0FDF4" : WHITE,
-                border: `1.5px solid ${isAdded ? "#22C55E" : BORDER}`,
-                borderRadius: 14, padding: "10px 10px",
-                cursor: isAdded ? "default" : "pointer",
-                fontFamily: "inherit",
-                display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4,
-                textAlign: lang === "ar" ? "right" : "left",
-                boxShadow: SHADOW,
-                transition: "all 0.15s",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
-                <span style={{display:"flex",alignItems:"center",justifyContent:"center"}}>{isAdded ? <AppIcons.Check size={22} className="text-green-500" /> : category === "meals" ? <MealFoodIcon name={item.nameEn} size={22} /> : category === "coffee" ? <CoffeeDrinkIcon name={item.nameEn} size={22} /> : <DrinkIcon name={item.nameEn} size={22} />}</span>
-                <span style={{ color: TEXT, fontSize: 12, fontWeight: 700, flex: 1, lineHeight: 1.2 }}>
-                  {lang === "ar" ? item.nameAr : item.nameEn}
-                </span>
-              </div>
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
-                <span style={{
-                  background: "#FFF7ED", color: "#F97316",
-                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 700,
-                }}>
-                  <span style={{display:"inline-flex",alignItems:"center",gap:4}}><AppIcons.Flame size={12} className="text-orange-500" />{item.calories}</span>
-                </span>
-                <span style={{
-                  background: "#FEF2F2", color: C_PROTEIN,
-                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 600,
-                }}>
-                  P {item.protein}g
-                </span>
-                <span style={{
-                  background: "#FFFBEB", color: C_CARBS,
-                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 600,
-                }}>
-                  C {item.carbs}g
-                </span>
-              </div>
-              <span style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{item.serving}</span>
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -1545,7 +1354,7 @@ function ManualSearch({ lang, mealType, setMealType }: {
   return (
     <div style={card()}>
       <p style={{ color: TEXT, fontSize: 13, fontWeight: 800, margin: "0 0 10px" }}>
-        <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Search size={18} />{lang === "ar" ? "بحث يدوي" : "Manual Search"}</span>
+        🔍 {lang === "ar" ? "بحث يدوي" : "Manual Search"}
       </p>
       <input
         type="text" placeholder={tl("searchFood", lang)} value={query}
@@ -1613,7 +1422,7 @@ function ManualSearch({ lang, mealType, setMealType }: {
             padding: "10px", fontSize: 13, fontWeight: 900,
             cursor: adding ? "not-allowed" : "pointer", fontFamily: "inherit",
           }}>
-            <span style={{display:"flex",alignItems:"center",gap:4}}>{added ? <AppIcons.Check size={14} /> : <AppIcons.Plus size={14} />}{added ? tl("saved", lang) : adding ? tl("saving", lang) : tl("addFood", lang)}</span>
+            {added ? "✅ " + tl("saved", lang) : adding ? tl("saving", lang) : `+ ${tl("addFood", lang)}`}
           </button>
         </div>
       )}
@@ -1625,21 +1434,13 @@ function ManualSearch({ lang, mealType, setMealType }: {
 function InsightsTab({ lang }: { lang: string }) {
   const utils = trpc.useUtils();
   const { data: insights, isLoading } = trpc.nutrition.getInsights.useQuery();
-  const [genError, setGenError] = useState<string | null>(null);
   const generateInsights = trpc.nutrition.generateInsights.useMutation({
-    onSuccess: () => {
-      setGenError(null);
-      utils.nutrition.getInsights.invalidate();
-    },
-    onError: (err) => {
-      setGenError(lang === 'ar' ? 'حدث خطأ أثناء التوليد. حاول مرة أخرى.' : 'Generation failed. Please try again.');
-      console.error('[Insights] generation error:', err.message);
-    },
+    onSuccess: () => utils.nutrition.getInsights.invalidate(),
   });
 
   const insightIcons: Record<string, string> = {
-    protein: "dumbbell", hydration: "water", calories: "flame",
-    macros: "salad", recovery: "sleep", general: "info", default: "info",
+    protein: "💪", hydration: "💧", calories: "🔥",
+    macros: "🥗", recovery: "🛌", general: "💡", default: "💡",
   };
 
   return (
@@ -1662,17 +1463,8 @@ function InsightsTab({ lang }: { lang: string }) {
       >
         {generateInsights.isPending
           ? `⏳ ${tl("generating", lang)}`
-          : tl("generateInsights", lang)}
+          : `🤖 ${tl("generateInsights", lang)}`}
       </button>
-
-      {genError && (
-        <div style={{
-          background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12,
-          padding: "10px 14px", marginBottom: 12, color: "#DC2626", fontSize: 13, fontWeight: 600,
-        }}>
-          <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-red-500" />{genError}</span>
-        </div>
-      )}
 
       {isLoading && (
         <div style={{ textAlign: "center", padding: "20px 0" }}>
@@ -1686,7 +1478,7 @@ function InsightsTab({ lang }: { lang: string }) {
             width: 72, height: 72, borderRadius: "50%", background: SKY_LIGHT,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 36, margin: "0 auto 14px",
-          }}><AppIcons.Robot size={24} /></div>
+          }}>🤖</div>
           <p style={{ color: TEXT, fontSize: 14, fontWeight: 700, margin: "0 0 6px" }}>
             {lang === "ar" ? "لا توجد تحليلات بعد" : "No insights yet"}
           </p>
@@ -1737,7 +1529,7 @@ function InsightsTab({ lang }: { lang: string }) {
 }
 
 // ── Main Nutrition Page ───────────────────────────────────────────────────────
-type NutritionTab = "dashboard" | "meals" | "scanner";
+type NutritionTab = "dashboard" | "meals" | "scanner" | "insights";
 
 export default function Nutrition() {
   const { lang, isRTL } = useLanguage();
@@ -1749,10 +1541,11 @@ export default function Nutrition() {
     weekday: "long", month: "long", day: "numeric",
   });
 
-  const tabs: { id: NutritionTab; icon: React.ReactNode; label: string }[] = [
-    { id: "dashboard", icon: <NutritionDashboardIcon size={22} />, label: tl("dashboard", lang) },
-    { id: "meals",     icon: <NutritionMealsIcon size={22} />,     label: tl("meals",     lang) },
-    { id: "scanner",   icon: <NutritionScannerIcon size={22} />,   label: tl("scanner",   lang) },
+  const tabs: { id: NutritionTab; icon: string; label: string }[] = [
+    { id: "dashboard", icon: "📊", label: tl("dashboard", lang) },
+    { id: "meals",     icon: "🍽️", label: tl("meals",     lang) },
+    { id: "scanner",   icon: "📷", label: tl("scanner",   lang) },
+    { id: "insights",  icon: "🤖", label: tl("insights",  lang) },
   ];
 
   return (
@@ -1767,7 +1560,7 @@ export default function Nutrition() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
           <div>
             <h1 style={{ color: TEXT, fontSize: 24, fontWeight: 900, margin: 0 }}>
-              <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Salad size={20} />{tl("title", lang)}</span>
+              🥗 {tl("title", lang)}
             </h1>
             <p style={{ color: MUTED, fontSize: 12, margin: "3px 0 0" }}>{today}</p>
           </div>
@@ -1782,7 +1575,7 @@ export default function Nutrition() {
               boxShadow: SHADOW,
             }}
           >
-            <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Target size={18} />{tl("goals", lang)}</span>
+            🎯 {tl("goals", lang)}
           </button>
         </div>
 
@@ -1807,7 +1600,7 @@ export default function Nutrition() {
                 transition: "all 0.2s",
               }}
             >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", opacity: activeTab === tab.id ? 1 : 0.6 }}>{tab.icon}</span>
+              <span style={{ fontSize: 18 }}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -1819,7 +1612,7 @@ export default function Nutrition() {
         {activeTab === "dashboard" && <DashboardTab lang={lang} onOpenGoals={() => setShowGoals(true)} />}
         {activeTab === "meals"     && <MealsTab lang={lang} />}
         {activeTab === "scanner"   && <ScannerTab lang={lang} onSaved={() => setActiveTab("meals")} />}
-
+        {activeTab === "insights"  && <InsightsTab lang={lang} />}
       </div>
 
       {/* Goals modal */}

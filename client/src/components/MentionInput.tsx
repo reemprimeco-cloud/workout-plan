@@ -13,6 +13,7 @@
  * - Renders as <textarea> (multiline) or <input> (single-line)
  */
 import { useState, useRef, useEffect, useCallback } from "react";
+import { SafeImage } from "@/components/SafeImage";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
 
@@ -55,7 +56,7 @@ function MiniAvatar({ name, photoUrl, size = 36, color = "#7BB8D4" }: {
         overflow: "hidden", flexShrink: 0,
         border: `2px solid ${color}`,
       }}>
-        <img src={photoUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <SafeImage src={photoUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
     );
   }
