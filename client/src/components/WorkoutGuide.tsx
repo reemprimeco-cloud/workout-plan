@@ -386,9 +386,9 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(8,145,178,0.2)',
           }}>
-            <img src="/images/aqua.jpg" alt="Aqua Aerobics" style={{
+            <img src="/manus-storage/aqua_f892423a.jpg" alt="Aqua Aerobics" style={{
               width: '100%', height: 180, objectFit: 'cover',
-            }} onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png'; }} />
+            }} onError={(e) => { (e.target as HTMLImageElement).src = '/manus-storage/placeholder_4de366d7.png'; }} />
           </div>
           <div style={{
             background: '#E0F7FA', borderRadius: 14, padding: '14px 16px', marginBottom: 14,
@@ -453,9 +453,9 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
             borderRadius: 16, overflow: 'hidden', marginBottom: 14,
             boxShadow: '0 4px 16px rgba(180,83,9,0.2)',
           }}>
-            <img src="/images/sauna.jpg" alt="Sauna" style={{
+            <img src="/manus-storage/sauna_721a5de2.jpg" alt="Sauna" style={{
               width: '100%', height: 180, objectFit: 'cover',
-            }} onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png'; }} />
+            }} onError={(e) => { (e.target as HTMLImageElement).src = '/manus-storage/placeholder_4de366d7.png'; }} />
           </div>
           <div style={{
             background: '#FEF3C7', borderRadius: 14, padding: '14px 16px', marginBottom: 14,
