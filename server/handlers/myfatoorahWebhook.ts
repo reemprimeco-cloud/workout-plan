@@ -9,6 +9,7 @@
  *   4. Upserts the subscription record in the DB
  */
 import type { Request, Response } from "express";
+import { createHash, timingSafeEqual } from "crypto";
 import { eq, and, or } from "drizzle-orm";
 import { ENV } from "../_core/env";
 import { getPaymentStatus } from "../_core/myfatoorah";
@@ -20,6 +21,17 @@ import { generateLicenseKey } from "./licenseUtils";
 
 type SubscriptionPlan = "free" | "prime_plus" | "prime_pro";
 type BillingPeriod = "monthly" | "yearly";
+
+/**
+ * Constant-time string comparison (PF-004). SHA-256 both sides to a fixed
+ * 32-byte length so timingSafeEqual never throws on length mismatch and no
+ * length information leaks via an early return.
+ */
+function safeEqual(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
 
 const PERIOD_DAYS: Record<BillingPeriod, number> = { monthly: 30, yearly: 365 };
 
@@ -34,8 +46,18 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
   console.log("[MFWebhook] Incoming webhook");
 
   try {
-    const secret = req.headers["webhook-secret"] ?? req.headers["x-webhook-secret"];
-    if (ENV.myfatoorahWebhookKey && secret !== ENV.myfatoorahWebhookKey) {
+    // ── Authenticate the caller (PF-004) ──────────────────────────────────
+    // Fail CLOSED: if no webhook secret is configured we cannot authenticate
+    // the request, so reject rather than accept every caller (the previous
+    // `ENV.key && secret !== ENV.key` guard skipped verification entirely
+    // when the env var was unset). The comparison is constant-time.
+    if (!ENV.myfatoorahWebhookKey) {
+      console.error("[MFWebhook] MYFATOORAH_WEBHOOK_SECRET not configured — rejecting webhook");
+      return res.status(500).json({ error: "webhook-not-configured" });
+    }
+    const secretHeader = req.headers["webhook-secret"] ?? req.headers["x-webhook-secret"];
+    const providedSecret = Array.isArray(secretHeader) ? secretHeader[0] : secretHeader;
+    if (!providedSecret || !safeEqual(providedSecret, ENV.myfatoorahWebhookKey)) {
       console.warn("[MFWebhook] Invalid secret");
       return res.status(401).json({ error: "invalid-secret" });
     }
