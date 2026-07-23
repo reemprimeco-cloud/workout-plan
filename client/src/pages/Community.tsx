@@ -792,15 +792,14 @@ function FeedPanel({ lang, currentUserId, streak, weeklyCompletion, currentWeigh
     setHasMore(true);
   }, [feedTab]);
 
+  // Live feed via Supabase Realtime: latestPost updates on a community_posts
+  // INSERT (see SocketContext). react-query invalidations on mutations still
+  // refresh the feed when Realtime is unavailable.
   useEffect(() => {
-    const socket = socketCtx?.socket;
-    if (!socket) return;
-    const handler = (post: any) => {
-      setLivePosts(prev => prev.find(p => p.id === post.id) ? prev : [post, ...prev]);
-    };
-    socket.on("new_post", handler);
-    return () => { socket.off("new_post", handler); };
-  }, [socketCtx?.socket]);
+    const post = socketCtx?.latestPost as any;
+    if (!post) return;
+    setLivePosts(prev => prev.find(p => p.id === post.id) ? prev : [post, ...prev]);
+  }, [socketCtx?.latestPost]);
 
   const forYouPosts = [
     ...livePosts.filter(lp => !allPosts.find((p: any) => p.id === lp.id)),

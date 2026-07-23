@@ -1,7 +1,6 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
-import { Server as SocketIOServer } from "socket.io";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerImageProxy } from "./imageProxy";
@@ -14,10 +13,9 @@ import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth"
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
-// ── Socket.IO singleton — import this in routers to emit events ───────────────
-let _io: SocketIOServer | null = null;
-export function getIO(): SocketIOServer | null { return _io; }
-export function setIO(io: SocketIOServer) { _io = io; }
+// Real-time was moved to Supabase Realtime (Stage 6): the server no longer runs
+// a Socket.IO server. The client subscribes to Postgres INSERTs directly, and
+// the routers just write rows (notifications, posts) via tRPC as before.
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -108,21 +106,6 @@ const licenseVerifyRateLimit = rateLimit({
 async function startServer() {
   const app = express();
   const server = createServer(app);
-
-  // ── Socket.IO setup ──────────────────────────────────────────────────────
-  const io = new SocketIOServer(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
-    path: "/socket.io",
-  });
-  setIO(io);
-
-  io.on("connection", (socket) => {
-    // Client sends their userId to join a personal room for direct notifications
-    socket.on("join", (userId: number) => {
-      if (userId) socket.join(`user:${userId}`);
-    });
-    socket.on("disconnect", () => {});
-  });
 
   // ── Google OAuth redirect flow (mobile-safe) ─────────────────────────────
   app.get("/api/auth/google", googleAuthRedirect);
