@@ -59,9 +59,9 @@ export const healthRouter = router({
         fileType:   input.mimeType,
         reportType: input.reportType,
         notes:      input.notes ?? null,
-      });
+      }).returning({ id: healthReports.id });
 
-      return { id: (result as any).insertId as number, fileUrl: url, key };
+      return { id: result.id, fileUrl: url, key };
     }),
 
   // Analyze a health report using LLM vision (image) or text (PDF summary)
@@ -183,8 +183,8 @@ Respond in JSON with this exact schema:
         safeExercises:    JSON.stringify(analysis.safeExercises ?? []),
         warningExercises: JSON.stringify(analysis.warningExercises ?? []),
         recoveryTips:     JSON.stringify(analysis.recoveryTips ?? []),
-      });
-      const analysisId = (analysisResult as any).insertId as number;
+      }).returning({ id: aiHealthAnalysis.id });
+      const analysisId = analysisResult.id;
 
       // Auto-generate personalized program
       const weeklyPlan = analysis.weeklyPlan ?? {};

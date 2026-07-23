@@ -1,1 +1,0 @@
-ALTER TABLE `subscriptions` ADD `licenseKey` varchar(128);

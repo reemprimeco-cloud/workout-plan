@@ -288,7 +288,8 @@ export const adminRouter = router({
           paymentProvider: "manual",
           sentBy: ctx.user.name ?? ctx.user.openId,
         } as any)
-        .onDuplicateKeyUpdate({
+        .onConflictDoUpdate({
+          target: subscriptions.userId,
           set: {
             plan: input.plan,
             status: input.status,

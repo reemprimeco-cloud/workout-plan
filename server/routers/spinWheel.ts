@@ -149,7 +149,7 @@ export const spinWheelRouter = router({
           challengeId: input.challengeId,
           spinToken: token,
           status: "pending",
-        }).$returningId();
+        }).returning({ id: rewardSpins.id });
         const spinId = inserted?.id;
         return { eligible: true, spin: { id: spinId, token, status: "pending" as const } };
       }

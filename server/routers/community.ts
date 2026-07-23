@@ -601,7 +601,7 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
         targetValue: input.targetValue,
         isActive: true,
         participantsCount: 0,
-      }).$returningId();
+      }).returning({ id: communityChallenges.id });
       return { success: true, id: challenge.id };
     }),
 
