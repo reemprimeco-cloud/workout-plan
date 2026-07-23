@@ -72,13 +72,14 @@ export default function NotificationBell({
   onNavigate?: (target: { type: string; postId?: number; userId?: number }) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { unreadCount, clearUnread, latestNotification } = useSocket();
+  const { unreadCount, clearUnread, latestNotification, realtimeConnected } = useSocket();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
 
   const { data: notifications, refetch } = trpc.community.getNotifications.useQuery(undefined, {
     enabled: open,
-    refetchInterval: open ? 15_000 : false,
+    // Poll only as a fallback when Realtime is unavailable.
+    refetchInterval: open && !realtimeConnected ? 15_000 : false,
   });
 
   const markAllRead = trpc.community.markNotificationsRead.useMutation({
