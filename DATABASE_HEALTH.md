@@ -109,3 +109,5 @@ Full variable list: `ENVIRONMENT.md`.
 | Seed + Realtime + RLS | ✅ applied via SQL Editor ("Run and enable RLS") |
 | RLS security finding | ✅ fixed (deny-all RLS on all 55 tables; service-role bypass) |
 | Storage / Vercel / keys | ⛔ user infra (dashboard + Vercel) |
+
+<!-- staging deploy trigger: 2026-07-23T20:19:03Z -->
