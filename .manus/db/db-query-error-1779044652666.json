@@ -1,8 +1,0 @@
-{
-  "query": "UPDATE users SET active_device_id = NULL WHERE email = 'reemprimeco@gmail.com';\nUPDATE device_sessions SET revoked = 1 WHERE user_id = (SELECT id FROM users WHERE email = 'reemprimeco@gmail.com');",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute UPDATE users SET active_device_id = NULL WHERE email = 'reemprimeco@gmail.com';\nUPDATE device_sessions SET revoked = 1 WHERE user_id = (SELECT id FROM users WHERE email = 'reemprimeco@gmail.com');",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'active_device_id' in 'field list'"
-  ]
-}

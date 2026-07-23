@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO access_codes (code, customerName, isActive) VALUES ('PRIME-DEMO-SCRN', 'Demo Screenshot', 1);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute INSERT INTO access_codes (code, customerName, isActive) VALUES ('PRIME-DEMO-SCRN', 'Demo Screenshot', 1);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1954
-}

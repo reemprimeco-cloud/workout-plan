@@ -1,8 +1,0 @@
-{
-  "query": "\nUPDATE subscriptions \nSET \n  plan = 'prime_plus',\n  status = 'active',\n  period = 'monthly',\n  paymentStatus = 'paid',\n  paymentProvider = 'myfatoorah',\n  email = '2qxs5qbdzd@privaterelay.appleid.com',\n  startsAt = '2026-05-18 00:00:00',\n  expiresAt = '2026-06-18 00:00:00',\n  updatedAt = NOW()\nWHERE userId = 'XQDaagyzSDVtHL3sLphx9C';\n\nINSERT INTO billing_history (userId, plan, period, amount, currency, status, paymentProvider, paymentRef, createdAt)\nVALUES (\n  'XQDaagyzSDVtHL3sLphx9C',\n  'prime_plus',\n  'monthly',\n  '2.500',\n  'KWD',\n  'paid',\n  'myfatoorah',\n  'Manual-MyFatoorah-20260518-RajaPrimePlus',\n  NOW()\n);\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute \nUPDATE subscriptions \nSET \n  plan = 'prime_plus',\n  status = 'active',\n  period = 'monthly',\n  paymentStatus = 'paid',\n  paymentProvider = 'myfatoorah',\n  email = '2qxs5qbdzd@privaterelay.appleid.com',\n  startsAt = '2026-05-18 00:00:00',\n  expiresAt = '2026-06-18 00:00:00',\n  updatedAt = NOW()\nWHERE userId = 'XQDaagyzSDVtHL3sLphx9C';\n\nINSERT INTO billing_history (userId, plan, period, amount, currency, status, paymentProvider, paymentRef, createdAt)\nVALUES (\n  'XQDaagyzSDVtHL3sLphx9C',\n  'prime_plus',\n  'monthly',\n  '2.500',\n  'KWD',\n  'paid',\n  'myfatoorah',\n  'Manual-MyFatoorah-20260518-RajaPrimePlus',\n  NOW()\n);\n",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 15: Unknown column 'paymentProvider' in 'field list'"
-  ]
-}

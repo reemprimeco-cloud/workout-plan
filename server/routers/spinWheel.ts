@@ -83,10 +83,12 @@ async function pickReward(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, ch
   if (pool.length === 0) throw new Error("No rewards configured");
 
   const totalWeight = pool.reduce((sum, r) => sum + r.weight, 0);
-  let rand = Math.random() * totalWeight;
+  // PF-015: use a CSPRNG for reward selection. Weights are integers, so
+  // randomInt(totalWeight) draws a uniform integer in [0, totalWeight).
+  let rand = totalWeight > 0 ? crypto.randomInt(totalWeight) : 0;
   for (const reward of pool) {
     rand -= reward.weight;
-    if (rand <= 0) return reward;
+    if (rand < 0) return reward;
   }
   return pool[pool.length - 1];
 }

@@ -1,9 +1,0 @@
-{
-  "query": "SHOW TABLES LIKE 'admin_notifications'; SHOW TABLES LIKE 'notification_reads';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway06.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4xeK7FVQkXBtxe6.acd239c43cfc --database 2uwsTsKVVU7RLKXYLxnCKd --execute SHOW TABLES LIKE 'admin_notifications'; SHOW TABLES LIKE 'notification_reads';",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 2013
-}

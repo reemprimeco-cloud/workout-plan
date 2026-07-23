@@ -913,14 +913,18 @@ export async function upsertUserPrivacySettings(data: InsertUserPrivacySettings)
 export async function markSingleNotificationRead(notifId: number, userId: number) {
   const db = await getDb();
   if (!db) return;
+  // Scope to the owning user (PF-009): without the userId predicate any
+  // authenticated user could mark another user's notification read by id.
   await db.update(socialNotifications)
     .set({ isRead: true })
-    .where(eq(socialNotifications.id, notifId));
+    .where(and(eq(socialNotifications.id, notifId), eq(socialNotifications.userId, userId)));
 }
 
 export async function deleteNotification(notifId: number, userId: number) {
   const db = await getDb();
   if (!db) return;
+  // Scope to the owning user (PF-009): without the userId predicate any
+  // authenticated user could delete another user's notification by id.
   await db.delete(socialNotifications)
-    .where(eq(socialNotifications.id, notifId));
+    .where(and(eq(socialNotifications.id, notifId), eq(socialNotifications.userId, userId)));
 }

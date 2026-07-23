@@ -369,14 +369,28 @@ export const standaloneAuthRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+      // Fail closed if Google sign-in isn't configured (PF-007): without a
+      // known client id we cannot validate the token's audience, so we must
+      // not accept any token rather than accept all of them.
+      if (!ENV.googleClientId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Google sign-in is not configured on this server.",
+        });
+      }
+
       // Verify Google ID token by calling Google's tokeninfo endpoint
       let googlePayload: {
         sub: string;
         email: string;
         name: string;
         picture?: string;
-        email_verified?: boolean;
+        email_verified?: boolean | string;
+        aud?: string;
+        iss?: string;
       };
+
+      const GOOGLE_ISSUERS = ["accounts.google.com", "https://accounts.google.com"];
 
       try {
         const resp = await fetch(
@@ -388,6 +402,21 @@ export const standaloneAuthRouter = router({
         googlePayload = await resp.json() as typeof googlePayload;
         if (!googlePayload.sub || !googlePayload.email) {
           throw new Error("Invalid Google token payload");
+        }
+        // PF-007: the tokeninfo endpoint proves the token is a valid Google
+        // token, but NOT that it was issued for THIS app. Without checking
+        // `aud`, a token minted for any other Google OAuth client could be
+        // replayed here to log in as that token's email. Enforce audience,
+        // issuer, and verified email.
+        if (googlePayload.aud !== ENV.googleClientId) {
+          throw new Error("Google token audience mismatch");
+        }
+        if (!googlePayload.iss || !GOOGLE_ISSUERS.includes(googlePayload.iss)) {
+          throw new Error("Google token issuer mismatch");
+        }
+        const emailVerified = googlePayload.email_verified === true || googlePayload.email_verified === "true";
+        if (!emailVerified) {
+          throw new Error("Google email not verified");
         }
       } catch (err) {
         throw new TRPCError({
