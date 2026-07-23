@@ -29,7 +29,7 @@ import {
 } from "../db";
 import { getDb } from "../db";
 import { users, communityPosts, communityComments, communityChallenges, challengeParticipants, communityReportPosts } from "../../drizzle/schema";
-import { eq, like, or } from "drizzle-orm";
+import { eq, like, or, inArray } from "drizzle-orm";
 import { getIO } from "../_core/index";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
 import { sendPushToSubscription } from "./notifications";
@@ -102,7 +102,7 @@ export const communityRouter = router({
       if (!db) return { posts: allPosts, trending };
       const userIds = Array.from(new Set(allPosts.map(p => p.userId)));
       const userRows = userIds.length > 0
-        ? await db.select({ id: users.id, name: users.name }).from(users)
+        ? await db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, userIds))
         : [];
       const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
       return {
@@ -256,7 +256,7 @@ export const communityRouter = router({
       const db = await getDb();
       if (!db || comments.length === 0) return comments;
       const userIds = Array.from(new Set(comments.map(c => c.userId)));
-      const userRows = await db.select({ id: users.id, name: users.name }).from(users);
+      const userRows = await db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, userIds));
       const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
       return comments.map(c => ({ ...c, userName: userMap[c.userId] ?? "User" }));
     }),

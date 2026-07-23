@@ -112,3 +112,7 @@ temp/
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
+
+# Manus DB-inspector cache — contains cached query outputs including
+# customer PII and DB connection metadata. Must never be tracked (PF-002).
+.manus/
