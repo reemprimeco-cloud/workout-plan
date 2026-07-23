@@ -125,7 +125,6 @@ async function startServer() {
     });
     socket.on("disconnect", () => {});
   });
-  app.post("/api/webhooks/myfatoorah", myfatoorahWebhookHandler);
 
   // ── Google OAuth redirect flow (mobile-safe) ─────────────────────────────
   app.get("/api/auth/google", googleAuthRedirect);
@@ -136,6 +135,24 @@ async function startServer() {
     // Allow inline scripts/styles needed by Vite HMR in development
     contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
   }));
+
+  // ── MyFatoorah payment webhook (PF-003) ──────────────────────────────────
+  // Registered AFTER helmet but with its OWN body parser. Previously this
+  // route was mounted before express.json(), so req.body was always undefined
+  // and every real callback 400'd — the automated payment→license pipeline
+  // never ran. The route-scoped parser also captures the raw request bytes on
+  // req.rawBody so the handler can verify the webhook signature (PF-004), and
+  // caps the webhook body at 1MB (public endpoint hardening).
+  app.post(
+    "/api/webhooks/myfatoorah",
+    express.json({
+      limit: "1mb",
+      verify: (req, _res, buf) => {
+        (req as unknown as { rawBody?: Buffer }).rawBody = buf;
+      },
+    }),
+    myfatoorahWebhookHandler,
+  );
 
   // ── Rate limiting on auth endpoints ──────────────────────────────────────
   // Applied as path-prefix middleware BEFORE the tRPC handler so they fire
