@@ -21,7 +21,7 @@ This is the decisive validation of the MySQL→PostgreSQL port: the generated
 unique constraints for `user_follows` and `community_bookmarks`) applies cleanly
 to a real Supabase Postgres with no errors.
 
-## 2. Seed — ⏳ prepared, applied via `scripts/staging_seed_and_realtime.sql`
+## 2. Seed — ✅ applied via `scripts/staging_seed_and_realtime.sql` (SQL Editor, "Run and enable RLS")
 
 Idempotent seed (bcrypt hashes pre-computed, cost 12). Expected row counts after
 a first run:
@@ -48,7 +48,7 @@ a first run:
 \* No dedicated trainer role exists in the schema (`users.role` is `admin|user`);
 the Trainer account maps to `admin`, as designed in Phase 2 scope.
 
-## 3. Realtime — ⏳ publication add included in the SQL
+## 3. Realtime — ✅ publication add applied
 
 `social_notifications` and `community_posts` are added to the
 `supabase_realtime` publication. See the RLS interaction in §4.
@@ -106,6 +106,6 @@ Full variable list: `ENVIRONMENT.md`.
 |---|---|
 | Schema (55 tables, 36 enums) | ✅ live & verified |
 | MySQL→Postgres port | ✅ proven against real DB |
-| Seed + Realtime + RLS | ⏳ one SQL paste (`scripts/staging_seed_and_realtime.sql`) |
-| RLS security finding | ✅ fix authored (deny-all + service-role bypass) |
+| Seed + Realtime + RLS | ✅ applied via SQL Editor ("Run and enable RLS") |
+| RLS security finding | ✅ fixed (deny-all RLS on all 55 tables; service-role bypass) |
 | Storage / Vercel / keys | ⛔ user infra (dashboard + Vercel) |
