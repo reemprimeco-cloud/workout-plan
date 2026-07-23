@@ -109,6 +109,24 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
       return res.json({ ok: true, skipped: `status: ${status}` });
     }
 
+    // ── Idempotency guard (PF-013) ────────────────────────────────────────
+    // MyFatoorah retries webhooks on any non-2xx (and sometimes on 2xx). A
+    // "paid" billingHistory row for this invoice means we already processed
+    // it; re-processing would extend a returning customer's key a second time
+    // and insert a duplicate paid billing row. Skip idempotently.
+    {
+      const db = await getDb();
+      if (db) {
+        const alreadyPaid = await db.select().from(billingHistory)
+          .where(and(eq(billingHistory.invoiceId, invoiceId), eq(billingHistory.status, "paid")))
+          .limit(1);
+        if (alreadyPaid.length > 0) {
+          console.log(`[MFWebhook] Invoice ${invoiceId} already processed — idempotent skip`);
+          return res.json({ ok: true, idempotent: true });
+        }
+      }
+    }
+
     // Detect plan from pending subscription record or amount
     let plan: SubscriptionPlan = "prime_plus";
     let period: BillingPeriod  = "monthly";
@@ -184,11 +202,34 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
     const expiry = newExpiry ?? new Date(Date.now() + PERIOD_DAYS[period] * 86400_000);
     const db = await getDb();
     if (db && userId) {
-      const existingSub = await db.select().from(subscriptions)
-        .where(eq(subscriptions.userId, userId)).limit(1);
-      if (existingSub.length > 0) {
-        await db.update(subscriptions)
-          .set({
+      // PF-013: the subscription upsert and the billing delete+insert are a
+      // single logical unit — wrap them in a transaction so a partial failure
+      // can't leave the subscription updated without a paid billing record
+      // (or vice versa). NOTE: the access-code create/extend + customer email
+      // above still run outside this transaction; folding them in (and sending
+      // the email strictly after commit) is a follow-up that needs DB testing.
+      await db.transaction(async (tx) => {
+        const existingSub = await tx.select().from(subscriptions)
+          .where(eq(subscriptions.userId, userId)).limit(1);
+        if (existingSub.length > 0) {
+          await tx.update(subscriptions)
+            .set({
+              plan,
+              status: "active",
+              period,
+              paymentStatus: "paid",
+              paymentProvider: "myfatoorah",
+              startsAt: new Date(),
+              expiresAt: expiry,
+              invoiceId,
+              licenseKey: licenseCode,
+              email: email || existingSub[0].email,
+              updatedAt: new Date(),
+            })
+            .where(eq(subscriptions.userId, userId));
+        } else {
+          await tx.insert(subscriptions).values({
+            userId,
             plan,
             status: "active",
             period,
@@ -198,44 +239,29 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
             expiresAt: expiry,
             invoiceId,
             licenseKey: licenseCode,
-            email: email || existingSub[0].email,
-            updatedAt: new Date(),
-          })
-          .where(eq(subscriptions.userId, userId));
-      } else {
-        await db.insert(subscriptions).values({
-          userId,
-          plan,
-          status: "active",
-          period,
-          paymentStatus: "paid",
-          paymentProvider: "myfatoorah",
-          startsAt: new Date(),
-          expiresAt: expiry,
-          invoiceId,
-          licenseKey: licenseCode,
-          email: email || null,
-        });
-      }
+            email: email || null,
+          });
+        }
 
-      // Remove any pending records for the same user or invoice before inserting paid record
-      await db.delete(billingHistory)
-        .where(
-          and(
-            eq(billingHistory.status, 'pending'),
-            or(
-              eq(billingHistory.userId, userId),
-              eq(billingHistory.invoiceId, invoiceId)
+        // Remove any pending records for the same user or invoice before inserting paid record
+        await tx.delete(billingHistory)
+          .where(
+            and(
+              eq(billingHistory.status, 'pending'),
+              or(
+                eq(billingHistory.userId, userId),
+                eq(billingHistory.invoiceId, invoiceId)
+              )
             )
-          )
-        );
+          );
 
-      await db.insert(billingHistory).values({
-        userId, plan, period,
-        amount: String(amount), currency,
-        status: "paid",
-        invoiceId,
-        paymentRef: String(payment?.transactionId ?? ""),
+        await tx.insert(billingHistory).values({
+          userId, plan, period,
+          amount: String(amount), currency,
+          status: "paid",
+          invoiceId,
+          paymentRef: String(payment?.transactionId ?? ""),
+        });
       });
     }
 
