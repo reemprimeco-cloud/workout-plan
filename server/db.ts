@@ -237,6 +237,13 @@ export async function getAllActiveSubscriptions() {
   return subs.filter(s => userIds.includes(s.userId));
 }
 
+/** All users with reminders enabled — used by the scheduled reminder cron. */
+export async function getEnabledReminderSettings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notificationSettings).where(eq(notificationSettings.enabled, true));
+}
+
 // ── Notification Settings ──────────────────────────────────────────────────
 
 export async function getNotificationSettings(userId: number) {

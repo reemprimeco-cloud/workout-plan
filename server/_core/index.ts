@@ -147,8 +147,9 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerImageProxy(app);
-  // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
-  app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
+  // Scheduled reminder cron (Vercel Cron issues a GET with the CRON_SECRET
+  // bearer token). Mounted BEFORE tRPC and the static fallthrough.
+  app.get("/api/cron/workout-reminders", workoutReminderHandler);
 
   // NOTE: The unauthenticated /api/debug/test-reminder/:userId and
   // /api/debug/notifications endpoints were removed (PF-011). They allowed

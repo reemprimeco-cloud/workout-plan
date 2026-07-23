@@ -1,36 +1,32 @@
 /**
- * Notifications Router — Web Push subscription management + reminder scheduling
+ * Notifications Router — Web Push subscription management + reminder preferences
+ *
+ * Reminder delivery is handled by a single scheduled cron
+ * (server/handlers/workoutReminder.ts, e.g. Vercel Cron) that queries all
+ * users whose reminder is due — there are no per-user cron jobs anymore.
  *
  * Procedures:
- *  - getVapidPublicKey  (public)  — returns VAPID public key for browser subscription
- *  - subscribe          (protected) — save push subscription + create/update heartbeat cron
- *  - unsubscribe        (protected) — delete push subscription + delete heartbeat cron
- *  - getSettings        (protected) — get current notification settings
- *  - updateSettings     (protected) — update reminder time / days / language + reschedule cron
+ *  - getVapidPublicKey  (public)    — VAPID public key for browser subscription
+ *  - subscribe          (protected) — save push subscription + enable reminders
+ *  - unsubscribe        (protected) — delete push subscription + disable reminders
+ *  - getSettings        (protected) — current notification settings
+ *  - updateSettings     (protected) — reminder time / days / language / prefs
  */
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { parse as parseCookie } from "cookie";
 import webpush from "web-push";
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { ENV } from "../_core/env";
-import { COOKIE_NAME } from "@shared/const";
 import {
   upsertPushSubscription,
   deletePushSubscription,
   getPushSubscriptionByUser,
   getNotificationSettings,
   upsertNotificationSettings,
-  updateNotificationTaskUid,
   getDb,
 } from "../db";
 import { eq } from "drizzle-orm";
-import {
-  createHeartbeatJob,
-  updateHeartbeatJob,
-  deleteHeartbeatJob,
-} from "../_core/heartbeat";
 
 // Configure web-push with VAPID keys (lazy — only when keys are available)
 function getWebPush() {
@@ -92,74 +88,25 @@ export const notificationsRouter = router({
         auth: input.auth,
       });
 
-      // 2. Get existing settings to check for existing cron
-      const existing = await getNotificationSettings(userId);
-
-      // 3. Create or update heartbeat cron
-      const sessionToken =
-        parseCookie(ctx.req.headers.cookie ?? "")[COOKIE_NAME] ?? "";
-      const cron = buildCron(input.reminderTime, input.days);
-
-      let taskUid: string | null = existing?.scheduleCronTaskUid ?? null;
-
-      if (taskUid) {
-        // Update existing cron
-        await updateHeartbeatJob(
-          taskUid,
-          {
-            cron,
-            path: "/api/scheduled/workoutReminder",
-            payload: { userId },
-          },
-          sessionToken,
-        );
-      } else {
-        // Create new cron
-        const job = await createHeartbeatJob(
-          {
-            name: `workout-reminder-${userId}`,
-            cron,
-            path: "/api/scheduled/workoutReminder",
-            payload: { userId },
-            description: `Workout reminder for user ${userId}`,
-          },
-          sessionToken,
-        );
-        taskUid = job.taskUid;
-      }
-
-      // 4. Save notification settings
+      // 2. Enable reminders. The central cron (workoutReminder handler) will
+      //    pick this user up when their reminderTime is due — no per-user cron.
       await upsertNotificationSettings({
         userId,
         enabled: true,
         reminderTime: input.reminderTime,
         days: input.days,
         language: input.language,
-        scheduleCronTaskUid: taskUid,
+        scheduleCronTaskUid: null,
       });
 
-      return { success: true, taskUid };
+      return { success: true };
     }),
 
-  /** Remove push subscription and disable reminder cron */
+  /** Remove push subscription and disable reminders */
   unsubscribe: protectedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.user.id;
-
-    // Get existing settings to find cron task UID
     const settings = await getNotificationSettings(userId);
 
-    if (settings?.scheduleCronTaskUid) {
-      const sessionToken =
-        parseCookie(ctx.req.headers.cookie ?? "")[COOKIE_NAME] ?? "";
-      try {
-        await deleteHeartbeatJob(settings.scheduleCronTaskUid, sessionToken);
-      } catch {
-        // Cron may already be deleted — not fatal
-      }
-      await updateNotificationTaskUid(userId, null);
-    }
-
-    // Disable in settings
     await upsertNotificationSettings({
       userId,
       enabled: false,
@@ -169,9 +116,7 @@ export const notificationsRouter = router({
       scheduleCronTaskUid: null,
     });
 
-    // Delete push subscription
     await deletePushSubscription(userId);
-
     return { success: true };
   }),
 
@@ -206,43 +151,17 @@ export const notificationsRouter = router({
       const userId = ctx.user.id;
       const settings = await getNotificationSettings(userId);
 
-      // Allow saving preferences even without an active subscription
-      if (settings && (!settings.enabled || !settings.scheduleCronTaskUid)) {
-        await upsertNotificationSettings({
-          userId,
-          enabled: settings.enabled,
-          reminderTime: input.reminderTime,
-          days: input.days,
-          language: input.language,
-          scheduleCronTaskUid: settings.scheduleCronTaskUid ?? null,
-          communityNotifs:  input.communityNotifs  ?? settings.communityNotifs  ?? true,
-          appUpdatesNotifs: input.appUpdatesNotifs ?? settings.appUpdatesNotifs ?? true,
-        });
-        return { success: true };
-      }
-
-      if (!settings?.enabled || !settings?.scheduleCronTaskUid) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No active subscription to update" });
-      }
-
-      const sessionToken = parseCookie(ctx.req.headers.cookie ?? "")[COOKIE_NAME] ?? "";
-      const cron = buildCron(input.reminderTime, input.days);
-
-      await updateHeartbeatJob(
-        settings.scheduleCronTaskUid,
-        { cron, path: "/api/scheduled/workoutReminder", payload: { userId } },
-        sessionToken,
-      );
-
+      // Preferences are just saved; the central cron reads reminderTime/days at
+      // send time, so there is nothing to reschedule.
       await upsertNotificationSettings({
         userId,
-        enabled: true,
+        enabled: settings?.enabled ?? false,
         reminderTime: input.reminderTime,
         days: input.days,
         language: input.language,
-        scheduleCronTaskUid: settings.scheduleCronTaskUid,
-        communityNotifs:  input.communityNotifs  ?? settings.communityNotifs  ?? true,
-        appUpdatesNotifs: input.appUpdatesNotifs ?? settings.appUpdatesNotifs ?? true,
+        scheduleCronTaskUid: null,
+        communityNotifs:  input.communityNotifs  ?? settings?.communityNotifs  ?? true,
+        appUpdatesNotifs: input.appUpdatesNotifs ?? settings?.appUpdatesNotifs ?? true,
       });
 
       return { success: true };

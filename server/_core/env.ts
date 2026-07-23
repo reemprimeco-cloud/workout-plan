@@ -7,8 +7,10 @@ export const ENV = {
   // openId. OAUTH_SERVER_URL was Manus-OAuth-only and was removed (Stage 2).
   ownerOpenId:        process.env.OWNER_OPEN_ID ?? "",
   isProduction:       process.env.NODE_ENV === "production",
-  forgeApiUrl:        process.env.BUILT_IN_FORGE_API_URL ?? "",
-  forgeApiKey:        process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  ownerEmail:         process.env.OWNER_EMAIL ?? "",
+  // Shared secret for the scheduled-cron endpoint (Vercel Cron sends it as a
+  // Bearer token). If empty, the cron endpoint is disabled (returns 503).
+  cronSecret:         process.env.CRON_SECRET ?? "",
   wooStoreUrl:        process.env.WOO_STORE_URL ?? "",
   wooConsumerKey:     process.env.WOO_CONSUMER_KEY ?? "",
   wooConsumerSecret:  process.env.WOO_CONSUMER_SECRET ?? "",
