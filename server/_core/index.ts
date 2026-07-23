@@ -87,6 +87,26 @@ const forgotPasswordRateLimit = rateLimit({
   },
 });
 
+/**
+ * License-key verification: max 10 attempts per 15 minutes per IP (PF-008).
+ * license.verify succeeds against a ~40-bit PRIME-XXXX-XXXX key and, on
+ * success, issues a one-year session cookie — i.e. it is a second login
+ * endpoint. Without this limiter it was un-throttled and brute-forceable.
+ */
+const licenseVerifyRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many license verification attempts. Please try again in 15 minutes." },
+  keyGenerator: (req) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
+      ?? req.socket?.remoteAddress
+      ?? "unknown";
+  },
+});
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -123,6 +143,7 @@ async function startServer() {
   app.use("/api/trpc/standaloneAuth.login", loginRateLimit);
   app.use("/api/trpc/standaloneAuth.signUp", signupRateLimit);
   app.use("/api/trpc/standaloneAuth.forgotPassword", forgotPasswordRateLimit);
+  app.use("/api/trpc/license.verify", licenseVerifyRateLimit);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
