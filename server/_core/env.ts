@@ -29,3 +29,22 @@ export const ENV = {
   appDomain:            process.env.APP_DOMAIN ?? "primefit.app",
   googleClientId:       process.env.VITE_GOOGLE_CLIENT_ID ?? "",
 };
+
+// PF-015: fail fast in production if a hard-required secret is missing.
+// Previously every variable silently defaulted to "" (contradicting
+// SECURITY.md's claim that startup fails on missing vars), so a misconfigured
+// deploy would boot with an empty JWT secret or no database rather than
+// erroring. Only the two secrets the app cannot safely run without are
+// enforced here, and only in production so dev/test are unaffected.
+if (ENV.isProduction) {
+  const required: Array<[string, string]> = [
+    ["DATABASE_URL", ENV.databaseUrl],
+    ["JWT_SECRET", ENV.cookieSecret],
+  ];
+  const missing = required.filter(([, value]) => !value).map(([name]) => name);
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables in production: ${missing.join(", ")}`,
+    );
+  }
+}

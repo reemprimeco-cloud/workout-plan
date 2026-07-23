@@ -275,8 +275,10 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
     });
 
   } catch (err: any) {
-    console.error("[MFWebhook] Error:", err.message);
-    return res.status(500).json({ error: err.message });
+    // PF-015: log details server-side, return a generic body (don't leak
+    // internals / stack traces to the caller).
+    console.error("[MFWebhook] Error:", err);
+    return res.status(500).json({ error: "internal-error" });
   }
 }
 

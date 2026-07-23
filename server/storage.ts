@@ -18,6 +18,12 @@ function getForgeConfig() {
 }
 
 function normalizeKey(relKey: string): string {
+  // PF-015: reject path-traversal segments defensively. Keys are currently
+  // built server-side, but a future caller passing user-influenced path
+  // components must not be able to escape the intended prefix.
+  if (relKey.split(/[/\\]/).some((seg) => seg === "..")) {
+    throw new Error("Invalid storage key: path traversal is not allowed");
+  }
   return relKey.replace(/^\/+/, "");
 }
 
