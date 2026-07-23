@@ -4,7 +4,6 @@ import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerStorageProxy } from "./storageProxy";
 import { registerImageProxy } from "./imageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -164,7 +163,6 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  registerStorageProxy(app);
   registerImageProxy(app);
   // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
   app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
