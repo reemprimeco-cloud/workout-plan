@@ -1,12 +1,20 @@
--- Prime Fit — staging: enable Realtime + seed demo data + verify.
+-- Prime Fit — staging bootstrap: Realtime + seed + RLS hardening + verify.
 -- Paste this whole file into the Supabase SQL Editor (project dccxerplokwvecdwhytr) and Run.
 -- Idempotent: safe to run more than once.
 
--- ═══ 1. Realtime ══════════════════════════════════════════════════════════
-alter publication supabase_realtime add table social_notifications;
-alter publication supabase_realtime add table community_posts;
+-- ═══ 1. Realtime publication ══════════════════════════════════════════════
+-- Adds the two tables the client subscribes to. Under the deny-all RLS applied
+-- in section 3 the browser (anon) receives no live events and the app uses its
+-- automatic polling fallback. To enable live Realtime later, add an anon SELECT
+-- policy to a table (accepting that it becomes publicly readable via the API).
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE social_notifications;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE community_posts;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- ═══ 2. Seed ══════════════════════════════════════════════════════════════
+-- ═══ 2. Seed demo data ════════════════════════════════════════════════════
 -- Test accounts (login at /auth):
 --   admin@primefit.test / Admin123!  · trainer@primefit.test / Trainer123!
 --   premium@primefit.test / Premium123!  · free@primefit.test / Free123!
@@ -83,7 +91,21 @@ INSERT INTO exercise_overrides ("exerciseId", "nameEn", "nameAr", sets, reps, "r
   ('deadlift', 'Deadlift',      'ديدليفت',   4, 10, 120)
 ON CONFLICT ("exerciseId") DO NOTHING;
 
--- ═══ 3. Verify (row counts) ═══════════════════════════════════════════════
+-- ═══ 3. Security hardening: enable RLS (deny-all) on every public table ════
+-- The app reads/writes via the service-role key (server-side), which BYPASSES
+-- RLS. Enabling RLS with no policies blocks the public anon key from touching
+-- any table via the auto-generated API. This resolves the advisor finding
+-- "rls_disabled_in_public".
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', r.tablename);
+  END LOOP;
+END $$;
+
+-- ═══ 4. Verify ════════════════════════════════════════════════════════════
 SELECT 'users' t, count(*) n FROM users
 UNION ALL SELECT 'subscriptions', count(*) FROM subscriptions
 UNION ALL SELECT 'nutrition_goals', count(*) FROM nutrition_goals
@@ -98,3 +120,9 @@ UNION ALL SELECT 'reward_probabilities', count(*) FROM reward_probabilities
 UNION ALL SELECT 'site_appearance', count(*) FROM site_appearance
 UNION ALL SELECT 'exercise_overrides', count(*) FROM exercise_overrides
 ORDER BY t;
+
+-- RLS coverage (expect rls_enabled = 55, rls_disabled = 0):
+SELECT
+  count(*) FILTER (WHERE rowsecurity)     AS rls_enabled,
+  count(*) FILTER (WHERE NOT rowsecurity) AS rls_disabled
+FROM pg_tables WHERE schemaname = 'public';
