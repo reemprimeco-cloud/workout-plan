@@ -6,7 +6,8 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerImageProxy } from "./imageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+// NOTE: ./vite (which imports the heavy `vite` package) is imported dynamically
+// inside startServer so the Vercel serverless function never bundles it.
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
 import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth";
@@ -103,9 +104,19 @@ const licenseVerifyRateLimit = rateLimit({
   },
 });
 
-async function startServer() {
+/**
+ * Build the fully-configured Express app (all /api routes + middleware) without
+ * binding a port. Used both by the local/self-hosted server (startServer) and
+ * by the Vercel serverless entry (api/index.ts). Static-file / Vite serving is
+ * intentionally NOT here — locally it's added in startServer; on Vercel the
+ * client is served from the CDN via vercel.json.
+ */
+export function buildApp(): express.Express {
   const app = express();
-  const server = createServer(app);
+  // Trust the platform proxy (Vercel / any LB) so req.protocol and the client
+  // IP (x-forwarded-for) are correct — required for Secure cookies and for the
+  // rate-limit key. (Addresses the PF-023 follow-up.)
+  app.set("trust proxy", 1);
 
   // ── Google OAuth redirect flow (mobile-safe) ─────────────────────────────
   app.get("/api/auth/google", googleAuthRedirect);
@@ -164,7 +175,19 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
+
+  return app;
+}
+
+/**
+ * Local / self-hosted entry point: builds the app, serves the client (Vite in
+ * dev, static files in prod), and listens on a port. Not used on Vercel.
+ */
+async function startServer() {
+  const app = buildApp();
+  const server = createServer(app);
+  const { serveStatic, setupVite } = await import("./vite");
+
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
@@ -173,14 +196,16 @@ async function startServer() {
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
-
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
-
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch(console.error);
+// Run the standalone server unless we're inside a Vercel serverless function
+// (which imports buildApp from api/index.ts instead).
+if (!process.env.VERCEL) {
+  startServer().catch(console.error);
+}
