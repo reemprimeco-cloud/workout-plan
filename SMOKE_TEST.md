@@ -3,7 +3,7 @@
 Run after deploy. `[blocking]` items must pass before calling staging good.
 
 ## Boot & static
-- [ ] `[blocking]` `GET /api/trpc/health.ping` → `{ ok: true }`.
+- [ ] `[blocking]` `GET /api/trpc/system.health?input=%7B%22json%22%3A%7B%22timestamp%22%3A0%7D%7D` → `{"result":{"data":{"json":{"ok":true}}}}`.
 - [ ] `[blocking]` App loads; no console errors; assets served from CDN.
 
 ## Auth
