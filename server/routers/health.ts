@@ -44,7 +44,10 @@ export const healthRouter = router({
       const buffer = Buffer.from(input.fileBase64, "base64");
       const ext    = input.mimeType.split("/")[1]?.replace("jpeg", "jpg") ?? "bin";
       const key    = `health-reports/${userId}/${Date.now()}.${ext}`;
-      const { url } = await storagePut(key, buffer, input.mimeType);
+      // Health reports are documented as "image or PDF" (blood tests, x-rays),
+      // so opt out of storagePut's image-only magic-byte validation (PF-012)
+      // to preserve PDF support. This is the one non-image storagePut caller.
+      const { url } = await storagePut(key, buffer, input.mimeType, { validateImage: false });
 
       const drizzle = await getDb();
       if (!drizzle) throw new Error("DB unavailable");
