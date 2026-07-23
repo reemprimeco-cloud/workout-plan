@@ -20,6 +20,13 @@ export const ENV = {
   smtpUser:           process.env.SMTP_USER ?? "",
   smtpPass:           process.env.SMTP_PASS ?? "",
   smtpFrom:           process.env.SMTP_FROM ?? "Prime Fit <noreply@primefit.app>",
+  // ── AI provider (vendor-agnostic; see server/_core/ai) ────────────────────
+  aiProvider:         process.env.AI_PROVIDER ?? "openai",
+  openaiApiKey:       process.env.OPENAI_API_KEY ?? "",
+  openaiBaseUrl:      process.env.OPENAI_BASE_URL ?? "https://api.openai.com",
+  aiModel:            process.env.AI_MODEL ?? "gpt-4o",
+  aiTranscribeModel:  process.env.AI_TRANSCRIBE_MODEL ?? "whisper-1",
+  aiImageModel:       process.env.AI_IMAGE_MODEL ?? "gpt-image-1",
   // ── Supabase ──────────────────────────────────────────────────────────────
   supabaseUrl:        process.env.SUPABASE_URL ?? "",
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY ?? "",   // service_role key (server only)
