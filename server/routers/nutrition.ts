@@ -559,8 +559,8 @@ Reply with JSON array only:
         totalFiber:    totals.fiber,
         totalSugar:    totals.sugar,
         totalSodium:   totals.sodium,
-      });
-      const mealLogId = (result as any).insertId as number;
+      }).returning({ id: mealLogs.id });
+      const mealLogId = result.id;
       // Insert items
       if (input.items.length > 0) {
         await db.insert(mealLogItems).values(
@@ -753,8 +753,8 @@ Reply with JSON array only:
         fatG:        input.fatG,
         mealType:    input.mealType,
         servingSize: input.servingSize,
-      });
-      return { success: true, id: (result as any).insertId };
+      }).returning({ id: mealFavorites.id });
+      return { success: true, id: result.id };
     }),
 
   /** Remove a favorite */
@@ -891,8 +891,8 @@ Reply with JSON array only:
         totalSugar:     0,
         totalSodium:    0,
         notes:          input.servingSize ? `${input.quantity}x ${input.servingSize}` : undefined,
-      });
-      const mealLogId = (logResult as any).insertId;
+      }).returning({ id: mealLogs.id });
+      const mealLogId = logResult.id;
       await db.insert(mealLogItems).values({
         mealLogId,
         name:            input.name,
