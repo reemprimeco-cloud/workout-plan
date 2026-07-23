@@ -2,7 +2,9 @@ export const ENV = {
   appId:              process.env.VITE_APP_ID ?? "",
   cookieSecret:       process.env.JWT_SECRET ?? "",
   databaseUrl:        process.env.DATABASE_URL ?? "",
-  oAuthServerUrl:     process.env.OAUTH_SERVER_URL ?? "",
+  // OWNER_OPEN_ID kept as a generic "this openId is the admin/owner" config
+  // (used in db.ts to auto-promote the owner). Set it to the owner's standalone
+  // openId. OAUTH_SERVER_URL was Manus-OAuth-only and was removed (Stage 2).
   ownerOpenId:        process.env.OWNER_OPEN_ID ?? "",
   isProduction:       process.env.NODE_ENV === "production",
   forgeApiUrl:        process.env.BUILT_IN_FORGE_API_URL ?? "",
