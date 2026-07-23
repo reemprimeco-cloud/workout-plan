@@ -13,7 +13,7 @@ import { createHash, timingSafeEqual } from "crypto";
 import { eq, and, or } from "drizzle-orm";
 import { ENV } from "../_core/env";
 import { getPaymentStatus } from "../_core/myfatoorah";
-import { getDb, getAccessCodeByEmail, extendSubscription, createAccessCode } from "../db";
+import { getDb, getAccessCodeByEmail, extendSubscription, createAccessCode, getUserByOpenId } from "../db";
 import { subscriptions, billingHistory } from "../../drizzle/schema";
 import { sendRenewalEmail } from "../_core/email";
 import { sendLicenseEmail } from "../_core/email";
@@ -69,7 +69,23 @@ export async function myfatoorahWebhookHandler(req: Request, res: Response) {
     const payment      = await getPaymentStatus(invoiceId);
     const status       = String(payment?.status ?? "");
     const userId       = String(payment?.userId ?? "");
-    const email = (body?.Data?.CustomerEmail ?? body?.CustomerEmail ?? "").toLowerCase().trim();
+    // PF-005: the recipient of the license key must be derived from the
+    // VERIFIED payment identity (CustomerReference === the paying user's
+    // openId, returned by getPaymentStatus), not from the attacker-
+    // controllable webhook body. Fall back to the body email only when the
+    // account has no email on file, and log any discrepancy.
+    const bodyEmail = (body?.Data?.CustomerEmail ?? body?.CustomerEmail ?? "").toLowerCase().trim();
+    let email = bodyEmail;
+    if (userId) {
+      const payingUser = await getUserByOpenId(userId);
+      const trustedEmail = payingUser?.email?.toLowerCase().trim();
+      if (trustedEmail) {
+        if (bodyEmail && bodyEmail !== trustedEmail) {
+          console.warn("[MFWebhook] Webhook body email differs from account email — using verified account email");
+        }
+        email = trustedEmail;
+      }
+    }
     const amount       = Number(payment?.amount ?? 0);
     const currency     = "KWD";
     const customerName = String(body?.Data?.CustomerName ?? body?.CustomerName ?? "Customer");
