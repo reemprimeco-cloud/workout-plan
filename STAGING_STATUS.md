@@ -46,6 +46,15 @@
 
 **Phase 3A: complete.** All five integrations configured and verified on production (`main`, https://workout-plan-weld.vercel.app).
 
+## Phase 3B — security hygiene
+
+| Item | Status | Notes |
+|---|---|---|
+| Git history purge (`.manus/db/*.json` + customer PII in commit messages) | ✅ Done | Deeper than the original Phase 1 finding: 60+ `.manus/db/*.json` files contained the **production TiDB connection details** (host/port/user/db) and query results with real emails; 2 commit messages contained a real customer's name + email in plaintext. Rewrote history with `git-filter-repo` (strip `.manus/` from all commits + redact the 2 messages), force-pushed all 4 branches. **All commit SHAs changed** — any existing local clone must be re-cloned fresh, not pulled. |
+| `v2.0.0` tag repointed to rewritten history | ⏳ Owner action | The git proxy blocks tag ref pushes and no GitHub-API tool exists for it either; you must delete + recreate the `v2.0.0` release/tag in the GitHub UI (target: `main`) so it stops pointing at the orphaned pre-rewrite commit. |
+| Rotate leaked production credentials (MyFatoorah key, old DB password, JWT secret, SMTP password, Google secret, WooCommerce keys, VAPID, AWS STS) | ⏳ Owner action | The old TiDB/MySQL production database itself is being retired in favor of Postgres/Supabase (Phase 2), which neutralizes most of these; explicitly rotate anything still live (MyFatoorah — done, new key generated during Phase 3A; Google OAuth secret — done, new client created; others as needed if still in use). |
+| `v1.1.0-phase1-security` tag | ⏳ Owner action | Never successfully pushed (same proxy restriction); recreate via GitHub UI if desired, targeting the equivalent commit on the rewritten `migration/phase-1-security` branch. |
+
 ## Known limitations / risks
 
 - **Vercel Hobby**: daily-only cron (reminders fire 06:00 UTC only); in-memory
