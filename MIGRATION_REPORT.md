@@ -118,7 +118,10 @@ Auth: email/password + Google both mint the same signed JWT session cookie
 - **Static app images**: legacy `/manus-storage/*` URLs are rewritten to
   `/api/img/*` (Supabase-backed). A fresh staging DB has no such rows; built-in
   images ship in `client/public/` and serve from the CDN.
-- **Reminder cron granularity**: hourly; matches users by reminder *hour*.
+- **Reminder cron granularity**: **daily** (`0 6 * * *`) on Vercel Hobby, which
+  caps crons at once/day — so the reminder job matches only users whose reminder
+  hour is 06:00 UTC. Hourly granularity (matching every user's hour) requires the
+  Vercel **Pro** plan; switch `vercel.json` back to `0 * * * *` after upgrading.
 - Historical "manus" strings remain only in comments, test fixtures, a
   localStorage key name, and the legacy image-URL map — no runtime dependency.
 - The DB port did not migrate production data (staging is a fresh seed, by
