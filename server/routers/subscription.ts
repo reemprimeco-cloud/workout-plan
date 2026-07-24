@@ -4,7 +4,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, verifyAccessCode, createAccessCode } from "../db";
 import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { resendKeyEmail } from "../_core/email";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
 
@@ -296,12 +296,17 @@ export const subscriptionRouter = router({
 
   // Get license key after payment — used on the success page to show the key immediately.
   // Accepts either invoiceId (from our DB) or paymentId (appended by MyFatoorah to CallBackUrl).
-  getKeyByInvoice: publicProcedure
+  // PF-006: was a publicProcedure that returned ANY customer's license key
+  // for a supplied (sequential, guessable) invoiceId — an unauthenticated
+  // enumeration/IDOR. Now requires a session and only returns the key when
+  // the invoice belongs to the caller. The success page is reached after a
+  // protected checkout, so the caller is already authenticated.
+  getKeyByInvoice: protectedProcedure
     .input(z.object({
       invoiceId: z.string().optional(),
       paymentId: z.string().optional(),
     }).refine(d => d.invoiceId || d.paymentId, { message: "invoiceId or paymentId required" }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const database = await getDb();
       if (!database) return { licenseKey: null };
 
@@ -317,22 +322,34 @@ export const subscriptionRouter = router({
       }
       if (!resolvedInvoiceId) return { licenseKey: null };
 
-      // Check access codes linked to this invoice via note field
-      const notePattern = `Auto-generated via MyFatoorah payment. Invoice: ${resolvedInvoiceId}`;
-      const codeRows = await database
-        .select()
-        .from(accessCodes)
-        .where(eq(accessCodes.note, notePattern))
-        .limit(1);
-      if (codeRows[0]) return { licenseKey: codeRows[0].code };
-
-      // Fallback: check subscriptions table for this invoiceId
+      // Primary: the subscription row records both the invoice and the owning
+      // user (userId === openId). Bind on both so only the payer can read it.
       const subRows = await database
         .select()
         .from(subscriptions)
-        .where(eq(subscriptions.invoiceId, resolvedInvoiceId))
+        .where(and(
+          eq(subscriptions.invoiceId, resolvedInvoiceId),
+          eq(subscriptions.userId, ctx.user.openId),
+        ))
         .limit(1);
-      return { licenseKey: subRows[0]?.licenseKey ?? null };
+      if (subRows[0]?.licenseKey) return { licenseKey: subRows[0].licenseKey };
+
+      // Fallback: the auto-generated access code for this invoice, but only
+      // when it was issued to the caller's own email.
+      const userEmail = ctx.user.email?.toLowerCase().trim();
+      if (userEmail) {
+        const notePattern = `Auto-generated via MyFatoorah payment. Invoice: ${resolvedInvoiceId}`;
+        const codeRows = await database
+          .select()
+          .from(accessCodes)
+          .where(eq(accessCodes.note, notePattern))
+          .limit(1);
+        if (codeRows[0] && codeRows[0].customerEmail?.toLowerCase().trim() === userEmail) {
+          return { licenseKey: codeRows[0].code };
+        }
+      }
+
+      return { licenseKey: null };
     }),
 
   // Activate a free subscription directly (no license key required)

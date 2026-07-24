@@ -1,118 +1,89 @@
 /**
- * Scheduled handler: POST /api/scheduled/workoutReminder
+ * Scheduled reminder cron: GET /api/cron/workout-reminders
  *
- * Triggered by a per-user Heartbeat cron at the user's chosen reminder time.
- * Looks up the user's push subscription by taskUid, sends a workout reminder.
+ * Replaces the former per-user Manus Heartbeat jobs with a single central cron
+ * (e.g. Vercel Cron, hourly). Each run: authenticate via CRON_SECRET, find all
+ * users whose reminder is due this hour (reminderTime hour == current UTC hour
+ * and today's weekday is in their `days`), and send a web-push reminder.
  *
- * Auth: sdk.authenticateRequest — user.isCron === true, user.taskUid set.
+ * Auth: `Authorization: Bearer <CRON_SECRET>` (Vercel Cron sends this) or
+ * `?secret=<CRON_SECRET>`.
  */
-
 import type { Request, Response } from "express";
-import { sdk } from "../_core/sdk";
+import { ENV } from "../_core/env";
 import {
-  getNotificationSettings,
+  getEnabledReminderSettings,
   getPushSubscriptionByUser,
   deletePushSubscription,
-  updateNotificationTaskUid,
 } from "../db";
 import { sendPushToSubscription } from "../routers/notifications";
 
 const WORKOUT_MESSAGES = {
-  ar: {
-    title: "🏋️ وقت التمرين!",
-    body: "حان وقت تمرينك اليومي في Prime Fit. لا تتأخري — جسمك يستحق! 💪",
-  },
-  en: {
-    title: "🏋️ Workout Time!",
-    body: "Time for your daily workout in Prime Fit. Don't skip it — your body deserves it! 💪",
-  },
+  ar: { title: "🏋️ وقت التمرين!", body: "حان وقت تمرينك اليومي في Prime Fit. لا تتأخري — جسمك يستحق! 💪" },
+  en: { title: "🏋️ Workout Time!", body: "Time for your daily workout in Prime Fit. Don't skip it — your body deserves it! 💪" },
 };
 
+function isAuthorized(req: Request): boolean {
+  if (!ENV.cronSecret) return false;
+  const auth = req.headers.authorization;
+  if (auth === `Bearer ${ENV.cronSecret}`) return true;
+  const q = req.query.secret;
+  return typeof q === "string" && q === ENV.cronSecret;
+}
+
 export async function workoutReminderHandler(req: Request, res: Response) {
+  if (!ENV.cronSecret) {
+    return res.status(503).json({ error: "cron-not-configured" });
+  }
+  if (!isAuthorized(req)) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
   try {
-    // Authenticate as cron request
-    const user = await sdk.authenticateRequest(req);
-    if (!user.isCron || !user.taskUid) {
-      return res.status(403).json({ error: "cron-only" });
-    }
+    const now = new Date();
+    const currentHour = now.getUTCHours();
+    const currentDay = now.getUTCDay(); // 0=Sun..6=Sat
 
-    // Look up notification settings by taskUid
-    // We need to find which user owns this cron — look up by taskUid in settings
-    const { getDb } = await import("../db");
-    const { notificationSettings } = await import("../../drizzle/schema");
-    const { eq } = await import("drizzle-orm");
+    const settings = await getEnabledReminderSettings();
+    let sent = 0;
+    let skipped = 0;
 
-    const db = await getDb();
-    if (!db) {
-      return res.status(500).json({ error: "db-unavailable" });
-    }
+    for (const s of settings) {
+      const reminderHour = parseInt((s.reminderTime ?? "09:00").split(":")[0], 10);
+      const days = (s.days ?? "0,1,2,3,4,5,6").split(",").map((d) => d.trim());
+      if (reminderHour !== currentHour || !days.includes(String(currentDay))) {
+        skipped++;
+        continue;
+      }
 
-    const settingsRows = await db
-      .select()
-      .from(notificationSettings)
-      .where(eq(notificationSettings.scheduleCronTaskUid, user.taskUid))
-      .limit(1);
+      const sub = await getPushSubscriptionByUser(s.userId);
+      if (!sub) { skipped++; continue; }
 
-    if (!settingsRows.length) {
-      // Orphaned cron — return 2xx so forge stops retrying
-      return res.json({ ok: true, skipped: "orphan" });
-    }
-
-    const settings = settingsRows[0];
-
-    if (!settings.enabled) {
-      return res.json({ ok: true, skipped: "disabled" });
-    }
-
-    // Get push subscription
-    const sub = await getPushSubscriptionByUser(settings.userId);
-    if (!sub) {
-      return res.json({ ok: true, skipped: "no-subscription" });
-    }
-
-    const lang = (settings.language ?? "ar") as "ar" | "en";
-    const msg = WORKOUT_MESSAGES[lang] ?? WORKOUT_MESSAGES.ar;
-
-    const payload = {
-      title: msg.title,
-      body: msg.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      url: "/",
-      tag: "workout-reminder",
-      renotify: true,
-    };
-
-    const result = await sendPushToSubscription(
-      sub.endpoint,
-      sub.p256dh,
-      sub.auth,
-      payload,
-    );
-
-    if (result === "expired") {
-      // Clean up expired subscription
-      await deletePushSubscription(settings.userId);
-      await updateNotificationTaskUid(settings.userId, null);
-      return res.json({ ok: true, skipped: "subscription-expired" });
-    }
-
-    if (result === "error") {
-      return res.status(500).json({
-        error: "push-failed",
-        context: { taskUid: user.taskUid },
-        timestamp: new Date().toISOString(),
+      const lang = (s.language ?? "ar") as "ar" | "en";
+      const msg = WORKOUT_MESSAGES[lang] ?? WORKOUT_MESSAGES.ar;
+      const result = await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
+        title: msg.title,
+        body: msg.body,
+        icon: "/icons/icon-192.png",
+        badge: "/icons/icon-192.png",
+        url: "/",
+        tag: "workout-reminder",
+        renotify: true,
       });
+
+      if (result === "expired") {
+        await deletePushSubscription(s.userId);
+        skipped++;
+      } else if (result === "error") {
+        skipped++;
+      } else {
+        sent++;
+      }
     }
 
-    return res.json({ ok: true, userId: settings.userId, lang });
+    return res.json({ ok: true, sent, skipped, hour: currentHour, day: currentDay });
   } catch (err: unknown) {
-    const error = err as Error;
-    return res.status(500).json({
-      error: error.message,
-      stack: error.stack,
-      context: { url: req.url },
-      timestamp: new Date().toISOString(),
-    });
+    console.error("[Cron] workout-reminders failed:", err);
+    return res.status(500).json({ error: "internal-error" });
   }
 }

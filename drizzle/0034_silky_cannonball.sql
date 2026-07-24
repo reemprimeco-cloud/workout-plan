@@ -1,1 +1,0 @@
-ALTER TABLE `joined_classes` ADD `sessionId` int;

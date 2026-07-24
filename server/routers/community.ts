@@ -29,8 +29,7 @@ import {
 } from "../db";
 import { getDb } from "../db";
 import { users, communityPosts, communityComments, communityChallenges, challengeParticipants, communityReportPosts } from "../../drizzle/schema";
-import { eq, like, or } from "drizzle-orm";
-import { getIO } from "../_core/index";
+import { eq, like, or, inArray } from "drizzle-orm";
 import { getPushSubscriptionByUser, getNotificationSettings } from "../db";
 import { sendPushToSubscription } from "./notifications";
 
@@ -102,7 +101,7 @@ export const communityRouter = router({
       if (!db) return { posts: allPosts, trending };
       const userIds = Array.from(new Set(allPosts.map(p => p.userId)));
       const userRows = userIds.length > 0
-        ? await db.select({ id: users.id, name: users.name }).from(users)
+        ? await db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, userIds))
         : [];
       const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
       return {
@@ -150,18 +149,7 @@ export const communityRouter = router({
       });
       await addXp({ userId: ctx.user.id, event: "post", points: xpAward });
 
-      // ── Broadcast new post to all connected users ─────────────────────────
-      try {
-        const db = await getDb();
-        const actor = db ? await db.select({ name: users.name })
-          .from(users).where(eq(users.id, ctx.user.id)).limit(1) : [];
-        const io = getIO();
-        io?.emit("new_post", {
-          ...post,
-          userName: actor[0]?.name ?? "User",
-        });
-      } catch (e) { /* non-fatal */ }
-
+      // Live feed is delivered by Supabase Realtime (community_posts INSERT).
       return post;
     }),
 
@@ -207,13 +195,8 @@ export const communityRouter = router({
               messageEn: `${icon} ${actorName} reacted to your post`,
             });
 
-            // Emit via socket.io
-            const io = getIO();
-            io?.to(`user:${postAuthorId}`).emit("notification", {
-              type: input.type,
-              message: `${icon} ${actorName} reacted to your post`,
-              postId: input.postId,
-            });
+            // Notification delivery is handled by Supabase Realtime
+            // (social_notifications INSERT above).
 
             // Web Push (if subscribed)
             const sub = await getPushSubscriptionByUser(postAuthorId);
@@ -256,7 +239,7 @@ export const communityRouter = router({
       const db = await getDb();
       if (!db || comments.length === 0) return comments;
       const userIds = Array.from(new Set(comments.map(c => c.userId)));
-      const userRows = await db.select({ id: users.id, name: users.name }).from(users);
+      const userRows = await db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, userIds));
       const userMap = Object.fromEntries(userRows.map(u => [u.id, u.name ?? "User"]));
       return comments.map(c => ({ ...c, userName: userMap[c.userId] ?? "User" }));
     }),
@@ -290,13 +273,7 @@ export const communityRouter = router({
               message: `💬 ${actorName} علّق على منشورك`,
               messageEn: `💬 ${actorName} commented on your post`,
             });
-
-            const io = getIO();
-            io?.to(`user:${postAuthorId}`).emit("notification", {
-              type: "comment",
-              message: `💬 ${actorName} commented on your post`,
-              postId: input.postId,
-            });
+            // Notification delivery is handled by Supabase Realtime.
 
             const sub = await getPushSubscriptionByUser(postAuthorId);
             const settings = await getNotificationSettings(postAuthorId);
@@ -601,7 +578,7 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
         targetValue: input.targetValue,
         isActive: true,
         participantsCount: 0,
-      }).$returningId();
+      }).returning({ id: communityChallenges.id });
       return { success: true, id: challenge.id };
     }),
 
@@ -656,11 +633,6 @@ Make it specific, data-driven, and motivating. Use exactly one emoji.`;
     .mutation(async ({ ctx, input }) => {
       if (input.receiverId === ctx.user.id) throw new TRPCError({ code: "BAD_REQUEST" });
       const id = await sendDirectMessage({ senderId: ctx.user.id, receiverId: input.receiverId, content: input.content, isRead: false });
-      // Real-time socket emit
-      try {
-        const io = getIO();
-        io?.to(`user:${input.receiverId}`).emit("new_dm", { senderId: ctx.user.id, content: input.content });
-      } catch (e) { /* non-fatal */ }
       return { success: true, id };
     }),
 

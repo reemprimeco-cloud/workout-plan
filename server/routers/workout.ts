@@ -147,8 +147,8 @@ export const workoutRouter = router({
         await db.update(gymSessions).set(values).where(eq(gymSessions.id, existing[0].id));
         return { id: existing[0].id, action: "updated" };
       } else {
-        const result = await db.insert(gymSessions).values(values);
-        return { id: (result as any)[0]?.insertId, action: "created" };
+        const [result] = await db.insert(gymSessions).values(values).returning({ id: gymSessions.id });
+        return { id: result?.id, action: "created" };
       }
     }),
 

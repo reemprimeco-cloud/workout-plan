@@ -44,7 +44,10 @@ export const healthRouter = router({
       const buffer = Buffer.from(input.fileBase64, "base64");
       const ext    = input.mimeType.split("/")[1]?.replace("jpeg", "jpg") ?? "bin";
       const key    = `health-reports/${userId}/${Date.now()}.${ext}`;
-      const { url } = await storagePut(key, buffer, input.mimeType);
+      // Health reports are documented as "image or PDF" (blood tests, x-rays),
+      // so opt out of storagePut's image-only magic-byte validation (PF-012)
+      // to preserve PDF support. This is the one non-image storagePut caller.
+      const { url } = await storagePut(key, buffer, input.mimeType, { validateImage: false });
 
       const drizzle = await getDb();
       if (!drizzle) throw new Error("DB unavailable");
@@ -56,9 +59,9 @@ export const healthRouter = router({
         fileType:   input.mimeType,
         reportType: input.reportType,
         notes:      input.notes ?? null,
-      });
+      }).returning({ id: healthReports.id });
 
-      return { id: (result as any).insertId as number, fileUrl: url, key };
+      return { id: result.id, fileUrl: url, key };
     }),
 
   // Analyze a health report using LLM vision (image) or text (PDF summary)
@@ -180,8 +183,8 @@ Respond in JSON with this exact schema:
         safeExercises:    JSON.stringify(analysis.safeExercises ?? []),
         warningExercises: JSON.stringify(analysis.warningExercises ?? []),
         recoveryTips:     JSON.stringify(analysis.recoveryTips ?? []),
-      });
-      const analysisId = (analysisResult as any).insertId as number;
+      }).returning({ id: aiHealthAnalysis.id });
+      const analysisId = analysisResult.id;
 
       // Auto-generate personalized program
       const weeklyPlan = analysis.weeklyPlan ?? {};

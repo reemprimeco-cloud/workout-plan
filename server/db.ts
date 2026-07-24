@@ -1,5 +1,6 @@
 import { desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser, users, accessCodes, InsertAccessCode,
   pushSubscriptions, InsertPushSubscription,
@@ -21,10 +22,13 @@ import { ENV } from './_core/env';
 let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
+// Uses postgres-js against Supabase Postgres. `prepare: false` is required when
+// connecting through Supabase's transaction-mode pooler (pgbouncer).
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.DATABASE_URL, { prepare: false });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -83,7 +87,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -232,6 +237,13 @@ export async function getAllActiveSubscriptions() {
   return subs.filter(s => userIds.includes(s.userId));
 }
 
+/** All users with reminders enabled — used by the scheduled reminder cron. */
+export async function getEnabledReminderSettings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(notificationSettings).where(eq(notificationSettings.enabled, true));
+}
+
 // ── Notification Settings ──────────────────────────────────────────────────
 
 export async function getNotificationSettings(userId: number) {
@@ -245,7 +257,8 @@ export async function getNotificationSettings(userId: number) {
 export async function upsertNotificationSettings(data: InsertNotificationSettings) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
-  await db.insert(notificationSettings).values(data).onDuplicateKeyUpdate({
+  await db.insert(notificationSettings).values(data).onConflictDoUpdate({
+    target: notificationSettings.userId,
     set: {
       enabled: data.enabled,
       reminderTime: data.reminderTime,
@@ -346,7 +359,8 @@ export async function getCoachMemory(userId: number) {
 export async function upsertCoachMemory(data: InsertCoachMemory) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
-  await db.insert(coachMemory).values(data).onDuplicateKeyUpdate({
+  await db.insert(coachMemory).values(data).onConflictDoUpdate({
+    target: coachMemory.userId,
     set: {
       goalWeight: data.goalWeight,
       currentWeight: data.currentWeight,
@@ -713,7 +727,7 @@ export async function followUser(followerId: number, followingId: number) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
   await db.insert(userFollows).values({ followerId, followingId })
-    .onDuplicateKeyUpdate({ set: { followerId } }); // no-op on duplicate
+    .onConflictDoNothing({ target: [userFollows.followerId, userFollows.followingId] });
 }
 
 export async function unfollowUser(followerId: number, followingId: number) {
@@ -792,7 +806,7 @@ export async function searchUsers(query: string, limit = 10) {
 export async function sendDirectMessage(data: InsertDirectMessage) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
-  const [row] = await db.insert(directMessages).values(data).$returningId();
+  const [row] = await db.insert(directMessages).values(data).returning({ id: directMessages.id });
   return row.id;
 }
 
@@ -851,7 +865,7 @@ export async function bookmarkPost(userId: number, postId: number) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
   await db.insert(communityBookmarks).values({ userId, postId })
-    .onDuplicateKeyUpdate({ set: { userId } }); // no-op on duplicate
+    .onConflictDoNothing({ target: [communityBookmarks.userId, communityBookmarks.postId] });
 }
 
 export async function unbookmarkPost(userId: number, postId: number) {
@@ -893,7 +907,8 @@ export async function getUserPrivacySettings(userId: number) {
 export async function upsertUserPrivacySettings(data: InsertUserPrivacySettings) {
   const db = await getDb();
   if (!db) throw new Error('DB not available');
-  await db.insert(userPrivacySettings).values(data).onDuplicateKeyUpdate({
+  await db.insert(userPrivacySettings).values(data).onConflictDoUpdate({
+    target: userPrivacySettings.userId,
     set: {
       allowDMs: data.allowDMs,
       allowFollows: data.allowFollows,
@@ -913,14 +928,18 @@ export async function upsertUserPrivacySettings(data: InsertUserPrivacySettings)
 export async function markSingleNotificationRead(notifId: number, userId: number) {
   const db = await getDb();
   if (!db) return;
+  // Scope to the owning user (PF-009): without the userId predicate any
+  // authenticated user could mark another user's notification read by id.
   await db.update(socialNotifications)
     .set({ isRead: true })
-    .where(eq(socialNotifications.id, notifId));
+    .where(and(eq(socialNotifications.id, notifId), eq(socialNotifications.userId, userId)));
 }
 
 export async function deleteNotification(notifId: number, userId: number) {
   const db = await getDb();
   if (!db) return;
+  // Scope to the owning user (PF-009): without the userId predicate any
+  // authenticated user could delete another user's notification by id.
   await db.delete(socialNotifications)
-    .where(eq(socialNotifications.id, notifId));
+    .where(and(eq(socialNotifications.id, notifId), eq(socialNotifications.userId, userId)));
 }

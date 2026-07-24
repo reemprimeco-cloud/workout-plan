@@ -74,8 +74,8 @@ export const gymClassesRouter = router({
         name:       input.name,
         logoUrl:    input.logoUrl ?? null,
         brandColor: input.brandColor ?? "#1B2E5E",
-      });
-      return { id: (result as any).insertId as number };
+      }).returning({ id: gyms.id });
+      return { id: result.id };
     }),
 
   updateGym: protectedProcedure
@@ -152,8 +152,8 @@ export const gymClassesRouter = router({
         gymId:    input.gymId,
         name:     input.name,
         location: input.location ?? null,
-      });
-      return { id: (result as any).insertId as number };
+      }).returning({ id: gymBranches.id });
+      return { id: result.id };
     }),
 
   updateBranch: protectedProcedure
@@ -219,8 +219,8 @@ export const gymClassesRouter = router({
     .mutation(async ({ ctx, input }) => {
       requireAdmin(ctx.user.role);
       const db = dbRequired(await getDb());
-      const [result] = await db.insert(gymClasses).values(input);
-      return { id: (result as any).insertId as number };
+      const [result] = await db.insert(gymClasses).values(input).returning({ id: gymClasses.id });
+      return { id: result.id };
     }),
 
   updateClass: protectedProcedure
@@ -296,8 +296,8 @@ export const gymClassesRouter = router({
           gymCache[name] = existing[0].id;
           return existing[0].id;
         }
-        const [r] = await db.insert(gyms).values({ name });
-        const id = (r as any).insertId as number;
+        const [r] = await db.insert(gyms).values({ name }).returning({ id: gyms.id });
+        const id = r.id;
         gymCache[name] = id;
         return id;
       };
@@ -311,8 +311,8 @@ export const gymClassesRouter = router({
           branchCache[key] = existing[0].id;
           return existing[0].id;
         }
-        const [r] = await db.insert(gymBranches).values({ gymId, name: branchName });
-        const id = (r as any).insertId as number;
+        const [r] = await db.insert(gymBranches).values({ gymId, name: branchName }).returning({ id: gymBranches.id });
+        const id = r.id;
         branchCache[key] = id;
         return id;
       };
@@ -446,8 +446,8 @@ export const gymClassesRouter = router({
         notes: `Gym class: ${cls.className} — Coach: ${cls.coach}`,
         caloriesBurned,
         isActive: false,
-      });
-      const sessionId = (sessionResult as any).insertId as number;
+      }).returning({ id: gymSessions.id });
+      const sessionId = sessionResult.id;
 
       await db.insert(joinedClasses).values({
         userId,

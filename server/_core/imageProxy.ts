@@ -1,16 +1,17 @@
 /**
- * Image Proxy — /api/img/:key
+ * Image Proxy — GET /api/img/:key
  *
- * The platform intercepts /manus-storage/* on production and returns a 307
- * redirect to a signed CloudFront URL. Safari/iOS PWA blocks cross-origin
- * 307 redirects for <img> tags, causing broken images.
+ * Serves image bytes from Supabase Storage under the same-origin /api/ path so
+ * <img> tags work on iOS Safari / PWA (no cross-origin redirect). The key is a
+ * storage object path; its bucket is derived from the key prefix.
  *
- * This proxy sits under /api/ which is NOT intercepted by the platform CDN.
- * It fetches the presigned URL from Forge and pipes the image bytes directly
- * to the client — no redirect, works on all browsers including Safari.
+ * New uploads return absolute Supabase URLs directly (storagePut), so this
+ * proxy mainly serves keys referenced as /api/img/<key>. Private buckets
+ * (health-reports) are NOT served here — they require signed URLs.
  */
 import type { Express } from "express";
-import { ENV } from "./env";
+import { getSupabaseAdmin } from "./supabase";
+import { bucketForKey, isPrivateBucket } from "../storage";
 
 export function registerImageProxy(app: Express) {
   app.get("/api/img/:key(*)", async (req, res) => {
@@ -20,54 +21,30 @@ export function registerImageProxy(app: Express) {
       return;
     }
 
-    if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-      res.status(500).send("Image proxy not configured");
+    const bucket = bucketForKey(key);
+    if (isPrivateBucket(bucket)) {
+      // Private objects must be accessed via a signed URL, not this public proxy.
+      res.status(403).send("Forbidden");
       return;
     }
 
     try {
-      // Get presigned GET URL from Forge
-      const forgeUrl = new URL(
-        "v1/storage/presign/get",
-        ENV.forgeApiUrl.replace(/\/+$/, "") + "/",
-      );
-      forgeUrl.searchParams.set("path", key);
-
-      const forgeResp = await fetch(forgeUrl, {
-        headers: { Authorization: `Bearer ${ENV.forgeApiKey}` },
-      });
-
-      if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[ImageProxy] forge error: ${forgeResp.status} ${body}`);
-        res.status(502).send("Storage backend error");
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase.storage.from(bucket).download(key);
+      if (error || !data) {
+        console.error(`[ImageProxy] download error (${bucket}/${key}):`, error?.message);
+        res.status(404).send("Not found");
         return;
       }
 
-      const { url } = (await forgeResp.json()) as { url: string };
-      if (!url) {
-        res.status(502).send("Empty signed URL from backend");
-        return;
-      }
-
-      // Fetch image bytes from S3 and pipe directly — no redirect
-      const imageResp = await fetch(url);
-      if (!imageResp.ok) {
-        console.error(`[ImageProxy] S3 fetch error: ${imageResp.status}`);
-        res.status(502).send("Image fetch error");
-        return;
-      }
-
-      const contentType = imageResp.headers.get("content-type") || "image/jpeg";
-      const contentLength = imageResp.headers.get("content-length");
+      const contentType = data.type || "image/jpeg";
+      const buffer = Buffer.from(await data.arrayBuffer());
 
       res.set("Content-Type", contentType);
-      res.set("Cache-Control", "public, max-age=604800, immutable"); // 7-day cache
+      res.set("Cache-Control", "public, max-age=604800, immutable");
       res.set("Access-Control-Allow-Origin", "*");
-      if (contentLength) res.set("Content-Length", contentLength);
-
-      const buffer = await imageResp.arrayBuffer();
-      res.status(200).end(Buffer.from(buffer));
+      res.set("Content-Length", String(buffer.length));
+      res.status(200).end(buffer);
     } catch (err) {
       console.error("[ImageProxy] failed:", err);
       res.status(502).send("Image proxy error");

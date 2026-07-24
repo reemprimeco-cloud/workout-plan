@@ -159,12 +159,10 @@ export async function wooCommerceWebhookHandler(req: Request, res: Response) {
     return res.json({ ok: true, orderId, licenseKey, emailSent, customerEmail });
 
   } catch (err: unknown) {
+    // PF-015: log details server-side, return a generic body (previously
+    // leaked error.message AND error.stack to the caller).
     const error = err as Error;
     console.error("[WooWebhook] ❌ Unhandled error:", error.message, error.stack);
-    return res.status(500).json({
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString(),
-    });
+    return res.status(500).json({ error: "internal-error" });
   }
 }

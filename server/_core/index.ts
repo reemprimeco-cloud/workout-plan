@@ -1,25 +1,22 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
-import { Server as SocketIOServer } from "socket.io";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
-import { registerStorageProxy } from "./storageProxy";
 import { registerImageProxy } from "./imageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+// NOTE: ./vite (which imports the heavy `vite` package) is imported dynamically
+// inside startServer so the Vercel serverless function never bundles it.
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
 import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
-// ── Socket.IO singleton — import this in routers to emit events ───────────────
-let _io: SocketIOServer | null = null;
-export function getIO(): SocketIOServer | null { return _io; }
-export function setIO(io: SocketIOServer) { _io = io; }
+// Real-time was moved to Supabase Realtime (Stage 6): the server no longer runs
+// a Socket.IO server. The client subscribes to Postgres INSERTs directly, and
+// the routers just write rows (notifications, posts) via tRPC as before.
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -87,25 +84,39 @@ const forgotPasswordRateLimit = rateLimit({
   },
 });
 
-async function startServer() {
+/**
+ * License-key verification: max 10 attempts per 15 minutes per IP (PF-008).
+ * license.verify succeeds against a ~40-bit PRIME-XXXX-XXXX key and, on
+ * success, issues a one-year session cookie — i.e. it is a second login
+ * endpoint. Without this limiter it was un-throttled and brute-forceable.
+ */
+const licenseVerifyRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many license verification attempts. Please try again in 15 minutes." },
+  keyGenerator: (req) => {
+    const forwarded = req.headers["x-forwarded-for"];
+    return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
+      ?? req.socket?.remoteAddress
+      ?? "unknown";
+  },
+});
+
+/**
+ * Build the fully-configured Express app (all /api routes + middleware) without
+ * binding a port. Used both by the local/self-hosted server (startServer) and
+ * by the Vercel serverless entry (api/index.ts). Static-file / Vite serving is
+ * intentionally NOT here — locally it's added in startServer; on Vercel the
+ * client is served from the CDN via vercel.json.
+ */
+export function buildApp(): express.Express {
   const app = express();
-  const server = createServer(app);
-
-  // ── Socket.IO setup ──────────────────────────────────────────────────────
-  const io = new SocketIOServer(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
-    path: "/socket.io",
-  });
-  setIO(io);
-
-  io.on("connection", (socket) => {
-    // Client sends their userId to join a personal room for direct notifications
-    socket.on("join", (userId: number) => {
-      if (userId) socket.join(`user:${userId}`);
-    });
-    socket.on("disconnect", () => {});
-  });
-  app.post("/api/webhooks/myfatoorah", myfatoorahWebhookHandler);
+  // Trust the platform proxy (Vercel / any LB) so req.protocol and the client
+  // IP (x-forwarded-for) are correct — required for Secure cookies and for the
+  // rate-limit key. (Addresses the PF-023 follow-up.)
+  app.set("trust proxy", 1);
 
   // ── Google OAuth redirect flow (mobile-safe) ─────────────────────────────
   app.get("/api/auth/google", googleAuthRedirect);
@@ -117,92 +128,44 @@ async function startServer() {
     contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
   }));
 
+  // ── MyFatoorah payment webhook (PF-003) ──────────────────────────────────
+  // Registered AFTER helmet but with its OWN body parser. Previously this
+  // route was mounted before express.json(), so req.body was always undefined
+  // and every real callback 400'd — the automated payment→license pipeline
+  // never ran. The route-scoped parser also captures the raw request bytes on
+  // req.rawBody so the handler can verify the webhook signature (PF-004), and
+  // caps the webhook body at 1MB (public endpoint hardening).
+  app.post(
+    "/api/webhooks/myfatoorah",
+    express.json({
+      limit: "1mb",
+      verify: (req, _res, buf) => {
+        (req as unknown as { rawBody?: Buffer }).rawBody = buf;
+      },
+    }),
+    myfatoorahWebhookHandler,
+  );
+
   // ── Rate limiting on auth endpoints ──────────────────────────────────────
   // Applied as path-prefix middleware BEFORE the tRPC handler so they fire
   // regardless of which tRPC procedure is called.
   app.use("/api/trpc/standaloneAuth.login", loginRateLimit);
   app.use("/api/trpc/standaloneAuth.signUp", signupRateLimit);
   app.use("/api/trpc/standaloneAuth.forgotPassword", forgotPasswordRateLimit);
+  app.use("/api/trpc/license.verify", licenseVerifyRateLimit);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  registerStorageProxy(app);
   registerImageProxy(app);
-  registerOAuthRoutes(app);
-  // Scheduled handlers — must be mounted BEFORE tRPC and static fallthrough
-  app.post("/api/scheduled/workoutReminder", workoutReminderHandler);
+  // Scheduled reminder cron (Vercel Cron issues a GET with the CRON_SECRET
+  // bearer token). Mounted BEFORE tRPC and the static fallthrough.
+  app.get("/api/cron/workout-reminders", workoutReminderHandler);
 
-  // ── Manual reminder test — POST /api/debug/test-reminder/:userId ─────────
-  // Fires a push to a specific user without needing the cron
-  app.post("/api/debug/test-reminder/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      if (!userId) return res.status(400).json({ error: "invalid userId" });
-
-      const { getPushSubscriptionByUser, getNotificationSettings } = await import("../db");
-      const { sendPushToSubscription } = await import("../routers/notifications");
-
-      const sub      = await getPushSubscriptionByUser(userId);
-      const settings = await getNotificationSettings(userId);
-
-      if (!sub) return res.status(404).json({ error: "no push subscription for this user — they must enable notifications first" });
-
-      const lang = (settings?.language ?? "ar") as "ar" | "en";
-      const result = await sendPushToSubscription(sub.endpoint, sub.p256dh, sub.auth, {
-        title: lang === "ar" ? "🏋️ تذكير التمرين" : "🏋️ Workout Reminder",
-        body:  lang === "ar" ? "حان وقت تمرينك! لا تتأخري 💪" : "Time for your workout! Don't skip it 💪",
-        icon:  "/icons/icon-192.png",
-        url:   "/",
-      });
-
-      return res.json({ ok: true, result, userId, lang });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
-    }
-  });
-  app.get("/api/debug/notifications", async (_req, res) => {
-    const { getDb } = await import("../db");
-    const { pushSubscriptions, notificationSettings } = await import("../../drizzle/schema");
-
-    const db = await getDb();
-    let subCount = 0;
-    let enabledCount = 0;
-    let sampleSettings: any = null;
-
-    if (db) {
-      const subs = await db.select().from(pushSubscriptions).limit(100);
-      subCount = subs.length;
-      const settings = await db.select().from(notificationSettings).limit(100);
-      enabledCount = settings.filter((s: any) => s.enabled).length;
-      sampleSettings = settings[0] ?? null;
-    }
-
-    res.json({
-      ok: true,
-      checks: {
-        vapidPublicKey:  !!process.env.VAPID_PUBLIC_KEY  ? "✅ set" : "❌ MISSING",
-        vapidPrivateKey: !!process.env.VAPID_PRIVATE_KEY ? "✅ set" : "❌ MISSING",
-        forgeApiUrl:     !!process.env.BUILT_IN_FORGE_API_URL  ? "✅ set" : "❌ MISSING — cron jobs won't fire",
-        forgeApiKey:     !!process.env.BUILT_IN_FORGE_API_KEY  ? "✅ set" : "❌ MISSING — cron jobs won't fire",
-        smtpUser:        !!process.env.SMTP_USER ? "✅ set" : "⚠️ not set",
-      },
-      stats: {
-        pushSubscriptions: subCount,
-        enabledReminders:  enabledCount,
-      },
-      sampleSettings: sampleSettings ? {
-        userId:              sampleSettings.userId,
-        enabled:             sampleSettings.enabled,
-        reminderTime:        sampleSettings.reminderTime,
-        days:                sampleSettings.days,
-        hasCronTaskUid:      !!sampleSettings.scheduleCronTaskUid,
-        scheduleCronTaskUid: sampleSettings.scheduleCronTaskUid ?? "null — cron never created",
-      } : "no settings rows found",
-      timestamp: new Date().toISOString(),
-    });
-  });
-
+  // NOTE: The unauthenticated /api/debug/test-reminder/:userId and
+  // /api/debug/notifications endpoints were removed (PF-011). They allowed
+  // anyone to trigger push notifications to arbitrary users and to read
+  // push-subscription counts / VAPID config state without authentication.
 
   // tRPC API
   app.use(
@@ -212,7 +175,19 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
+
+  return app;
+}
+
+/**
+ * Local / self-hosted entry point: builds the app, serves the client (Vite in
+ * dev, static files in prod), and listens on a port. Not used on Vercel.
+ */
+async function startServer() {
+  const app = buildApp();
+  const server = createServer(app);
+  const { serveStatic, setupVite } = await import("./vite");
+
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
@@ -221,14 +196,16 @@ async function startServer() {
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
-
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
-
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch(console.error);
+// Run the standalone server unless we're inside a Vercel serverless function
+// (which imports buildApp from api/index.ts instead).
+if (!process.env.VERCEL) {
+  startServer().catch(console.error);
+}
