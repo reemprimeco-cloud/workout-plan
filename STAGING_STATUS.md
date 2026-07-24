@@ -1,0 +1,63 @@
+# Prime Fit — Staging Status
+
+**Live URL:** https://workout-plan-weld.vercel.app
+**Deployed commit:** `5c0bbef` on `migration/phase-2-standalone` · **Date:** 2026-07-24
+**Stack:** Vercel (Hobby) serverless + Supabase `PrimeFit` (`dccxerplokwvecdwhytr`, eu-west-3)
+
+## Verified live (smoke-tested)
+
+| Check | Result |
+|---|---|
+| `system.health` tRPC ping | ✅ `{"ok":true}` |
+| Database via pooler (6543) + seed | ✅ `community.getFeed` returns both seeded posts with user names |
+| Email/password login (`premium@primefit.test`) | ✅ 200 + JWT `app_session_id` cookie (`HttpOnly; Secure; SameSite=None`) |
+| Login rate limiting | ✅ `ratelimit: 10;w=900` headers present |
+| Helmet security headers | ✅ CSP, HSTS, nosniff, etc. |
+| Storage buckets (6, `health-reports` private) | ✅ created |
+| Deny-all RLS on all 55 tables | ✅ applied |
+
+**Test accounts:** `admin@primefit.test`/`Admin123!` · `trainer@primefit.test`/`Trainer123!` · `premium@primefit.test`/`Premium123!` · `free@primefit.test`/`Free123!`
+
+## Deploy issues found & fixed during Stage 10
+
+1. **Hourly cron rejected on Vercel Hobby** — every phase-2 deploy silently failed
+   config validation; `main` (no vercel.json) kept serving. Fixed: cron now daily
+   (`0 6 * * *`); restore hourly on Pro. (`cd3dca1`)
+2. **`ERR_MODULE_NOT_FOUND` at runtime** — Vercel traces (not bundles) functions;
+   the extensionless ESM import of `../server/_core/index` failed. Fixed: server
+   pre-bundled to `api/_bundle.js` via esbuild (`./vite` excluded). (`5c0bbef`)
+3. **DB password URL-encoding** — password contains `@`; must be `%40` in
+   `DATABASE_URL`.
+
+## Environment variables set (Production)
+
+`DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `SUPABASE_URL`, `VITE_SUPABASE_URL`,
+`SUPABASE_SERVICE_KEY`, `VITE_SUPABASE_ANON_KEY`.
+
+## Not yet configured (features dormant until keys added)
+
+| Feature | Needs |
+|---|---|
+| AI coach / food analysis | `OPENAI_API_KEY` (+ `AI_MODEL` etc.) |
+| Google login | `VITE_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` + redirect URI |
+| Payments | MyFatoorah **sandbox** key + webhook secret |
+| Email (reset password, licenses) | `SMTP_*` |
+| Web push + reminder cron | `VAPID_*`, `CRON_SECRET` |
+
+## Known limitations / risks
+
+- **Vercel Hobby**: daily-only cron (reminders fire 06:00 UTC only); in-memory
+  rate limits reset per cold start.
+- **Realtime**: deny-all RLS means browser gets no live events → automatic
+  polling fallback is in effect (by design; see DATABASE_HEALTH.md §4).
+- **Rotate the staging DB password** before production use (it transited chat
+  during setup) — Supabase → Database Settings → Reset password, then update
+  `DATABASE_URL` in Vercel and redeploy.
+- Carry-over owner tasks: rotate previously leaked production credentials; purge
+  `.manus/db` PII from git history; tag `v1.1.0-phase1-security` push.
+
+## Next
+
+1. Browser/PWA pass on the live URL (login, dashboard, community, admin).
+2. Add feature keys above as desired; re-run the relevant SMOKE_TEST.md items.
+3. PR `migration/phase-2-standalone` → `main` (only after owner approval).
