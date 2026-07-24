@@ -70,7 +70,8 @@ If you skip this, the app automatically falls back to polling.
    (or merge it into your default branch first).
 2. Vercel reads `vercel.json`: build `vite build` → `dist/public` (static CDN),
    `/api/*` → the `api/index.ts` serverless function, SPA fallback, and an
-   hourly Cron on `/api/cron/workout-reminders`.
+   daily Cron on `/api/cron/workout-reminders` (06:00 UTC — Vercel Hobby allows
+   daily crons only; switch `vercel.json` to `0 * * * *` for hourly on Pro).
 3. Add all environment variables from `ENVIRONMENT.md` (staging values).
 4. Deploy.
 
