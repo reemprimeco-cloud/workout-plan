@@ -1,3 +1,66 @@
+# Release Notes — v2.0.0
+
+**Release:** Phase 2 — Standalone Migration (Manus → Vercel + Supabase)
+**Branch merged:** `migration/phase-2-standalone` → `main` (PR #1)
+**Staging:** https://workout-plan-weld.vercel.app — deployed & smoke-verified
+**Validation:** `tsc --noEmit` clean · build green · tests 147/149 (2 pre-existing env-only) · live smoke: health ✅ DB ✅ auth ✅
+
+## Highlights
+
+Prime Fit no longer depends on the Manus platform for anything at runtime.
+The app targets **Vercel serverless + Supabase** (Postgres · Storage · Realtime)
+and still runs as a single self-hosted Node process if preferred.
+
+| Area | Before (Manus) | After (standalone) |
+|---|---|---|
+| Auth | Manus OAuth portal | JWT session + Google OAuth + email/password |
+| AI | forge.manus.im, hard-coded model | vendor-agnostic `AiProvider` (OpenAI default), all env-driven |
+| Storage | Manus S3 presign | Supabase Storage — 6 buckets, private `health-reports`, signed URLs |
+| Database | MySQL/TiDB | **PostgreSQL** — 55 tables, 36 enums, fresh migration, postgres-js |
+| Real-time | Socket.IO server | Supabase Realtime + automatic polling fallback |
+| Scheduled jobs | Per-user Manus Heartbeat | one Vercel Cron (`CRON_SECRET`), daily on Hobby |
+| Runtime | long-running Express | bundled serverless function (`api/_bundle.js`) + static CDN |
+| Analytics/build | manus plugins, Umami | removed |
+
+## Breaking changes
+
+- **Environment variables**: Manus vars removed (`OAUTH_SERVER_URL`, `BUILT_IN_FORGE_*`,
+  `VITE_FRONTEND_FORGE_*`, `VITE_ANALYTICS_*`, `VITE_OAUTH_PORTAL_URL`); Supabase/AI/cron
+  vars added — see `ENVIRONMENT.md`. `DATABASE_URL` is now Postgres (pooler :6543;
+  URL-encode special chars in the password, e.g. `@` → `%40`).
+- **Database**: MySQL schema/migrations discarded; fresh Postgres baseline
+  (`drizzle/0000_*.sql`). No production data migrated (separate plan).
+- **Manus login removed**: existing Manus-OAuth accounts cannot sign in; use
+  email/password or Google.
+- **Socket.IO removed**: no `/socket.io` endpoint; clients use Supabase Realtime
+  or polling.
+
+## Deployment notes (learned on staging)
+
+1. Vercel **Hobby caps crons at daily** — sub-daily cron in `vercel.json` silently
+   fails the whole deployment at config validation.
+2. Vercel traces (doesn't bundle) functions — extensionless ESM imports crash at
+   runtime (`ERR_MODULE_NOT_FOUND`); the server is pre-bundled by the build.
+3. Supabase RLS enabled deny-all on all tables; server uses service-role (bypass);
+   browser Realtime therefore falls back to polling by design.
+
+## Operational checklist (staging → production)
+
+- Rotate the staging DB password and any credentials that transited chat/e-mail.
+- Add feature keys when needed: `OPENAI_API_KEY`, Google OAuth, MyFatoorah
+  (sandbox → live), `SMTP_*`, `VAPID_*`, `CRON_SECRET`.
+- Vercel Pro for hourly reminder cron + shared rate-limit store (Upstash) before
+  real traffic.
+- Outstanding from Phase 1: purge `.manus/db` PII from git history; rotate the
+  previously leaked production credentials.
+
+## Test accounts (staging)
+
+`admin@primefit.test`/`Admin123!` · `trainer@primefit.test`/`Trainer123!` ·
+`premium@primefit.test`/`Premium123!` · `free@primefit.test`/`Free123!`
+
+---
+
 # Release Notes — v1.1.0-phase1-security
 
 **Release:** Phase 1 — Production Stabilization (Security)
