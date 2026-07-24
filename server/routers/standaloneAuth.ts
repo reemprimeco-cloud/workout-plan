@@ -12,7 +12,7 @@ import { z } from "zod";
 import { users, deviceSessions } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "../_core/cookies";
-import { ENV } from "../_core/env";
+import { ENV, GOOGLE_ALLOWED_AUDIENCES } from "../_core/env";
 import { sdk } from "../_core/sdk";
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
@@ -371,8 +371,9 @@ export const standaloneAuthRouter = router({
 
       // Fail closed if Google sign-in isn't configured (PF-007): without a
       // known client id we cannot validate the token's audience, so we must
-      // not accept any token rather than accept all of them.
-      if (!ENV.googleClientId) {
+      // not accept any token rather than accept all of them. Accepts the web
+      // client and/or any native iOS client (see GOOGLE_ALLOWED_AUDIENCES).
+      if (GOOGLE_ALLOWED_AUDIENCES.length === 0) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Google sign-in is not configured on this server.",
@@ -406,9 +407,10 @@ export const standaloneAuthRouter = router({
         // PF-007: the tokeninfo endpoint proves the token is a valid Google
         // token, but NOT that it was issued for THIS app. Without checking
         // `aud`, a token minted for any other Google OAuth client could be
-        // replayed here to log in as that token's email. Enforce audience,
-        // issuer, and verified email.
-        if (googlePayload.aud !== ENV.googleClientId) {
+        // replayed here to log in as that token's email. Enforce audience
+        // (against the web + iOS clients this app owns), issuer, and verified
+        // email.
+        if (!googlePayload.aud || !GOOGLE_ALLOWED_AUDIENCES.includes(googlePayload.aud)) {
           throw new Error("Google token audience mismatch");
         }
         if (!googlePayload.iss || !GOOGLE_ISSUERS.includes(googlePayload.iss)) {
