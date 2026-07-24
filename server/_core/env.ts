@@ -38,8 +38,28 @@ export const ENV = {
   myfatoorahApiUrl:     process.env.MYFATOORAH_API_URL ?? "https://api.myfatoorah.com",  // prod
   myfatoorahWebhookKey: process.env.MYFATOORAH_WEBHOOK_SECRET ?? "",
   appDomain:            process.env.APP_DOMAIN ?? "primefit.app",
+  // Web OAuth client — the audience of ID tokens minted by the website's
+  // "Sign in with Google" button.
   googleClientId:       process.env.VITE_GOOGLE_CLIENT_ID ?? "",
+  // Native iOS OAuth client(s) — Google validates bundle ID per client, so
+  // the iOS app (and any per-environment build: com.primefit.ios[.dev|.staging])
+  // uses its own client ID whose ID tokens carry a different `aud`. Accept a
+  // comma-separated list so multiple iOS build configs can be allowed at once.
+  googleIosClientIds:   (process.env.GOOGLE_IOS_CLIENT_IDS ?? process.env.GOOGLE_IOS_CLIENT_ID ?? "")
+                          .split(",").map(s => s.trim()).filter(Boolean),
 };
+
+/**
+ * All Google OAuth client IDs whose ID tokens this server accepts as valid
+ * audience (`aud`). Combines the web client with any native iOS clients.
+ * A token's `aud` must exactly match one of these (see PF-007 in
+ * standaloneAuth.googleSignIn) — this is the multi-platform equivalent of
+ * checking a single client ID, not a relaxation of the check.
+ */
+export const GOOGLE_ALLOWED_AUDIENCES: string[] = [
+  ENV.googleClientId,
+  ...ENV.googleIosClientIds,
+].filter(Boolean);
 
 // PF-015: fail fast in production if a hard-required secret is missing.
 // Previously every variable silently defaulted to "" (contradicting
