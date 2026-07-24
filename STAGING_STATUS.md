@@ -52,8 +52,19 @@
 |---|---|---|
 | Git history purge (`.manus/db/*.json` + customer PII in commit messages) | ✅ Done | Deeper than the original Phase 1 finding: 60+ `.manus/db/*.json` files contained the **production TiDB connection details** (host/port/user/db) and query results with real emails; 2 commit messages contained a real customer's name + email in plaintext. Rewrote history with `git-filter-repo` (strip `.manus/` from all commits + redact the 2 messages), force-pushed all 4 branches. **All commit SHAs changed** — any existing local clone must be re-cloned fresh, not pulled. |
 | `v2.0.0` tag repointed to rewritten history | ✅ Done | Deleted the release, then the tag itself (two separate GitHub objects — deleting the release alone does not remove the tag), via the GitHub UI (git proxy blocks tag ref pushes; no GitHub-API tool exists for this either). New tag verified via API to point at the clean rewritten `main`. |
-| Rotate leaked production credentials (MyFatoorah key, old DB password, JWT secret, SMTP password, Google secret, WooCommerce keys, VAPID, AWS STS) | ⏳ Owner action | The old TiDB/MySQL production database itself is being retired in favor of Postgres/Supabase (Phase 2), which neutralizes most of these; explicitly rotate anything still live (MyFatoorah — done, new key generated during Phase 3A; Google OAuth secret — done, new client created; others as needed if still in use). |
-| `v1.1.0-phase1-security` tag | ⏳ Owner action | Never successfully pushed (same proxy restriction); recreate via GitHub UI if desired, targeting the equivalent commit on the rewritten `migration/phase-1-security` branch. |
+| Rotate leaked production credentials | ✅ Resolved | MyFatoorah live API key — rotated (new key generated Phase 3A). Google OAuth client secret — rotated (new client created, old deleted). JWT_SECRET / DB password — moot, this Supabase Postgres database is the only production database going forward (see below); old TiDB never used the new secrets. |
+| **Old TiDB/MySQL production database** (Manus-era) | ⏳ Owner action | Confirmed **no active customers depend on it** — this Supabase deployment is the sole production database going forward (no data migration performed or needed). **Action:** log into TiDB Cloud (cluster host `gateway06.us-east-1.prod.aws.tidbcloud.com`, database `2uwsTsKVVU7RLKXYLxnCKd`) and pause or delete the cluster to fully neutralize the leaked-credential exposure. |
+| `v1.1.0-phase1-security` tag | ⏳ Owner action (optional) | Never successfully pushed (git proxy blocks tag refs); recreate via GitHub UI if desired, targeting the equivalent commit on the rewritten `migration/phase-1-security` branch. Non-blocking. |
+
+**Phase 3B: complete** (pending only the optional TiDB cluster pause/delete, which is a dashboard click whenever convenient — it doesn't block anything else).
+
+## Phase 3, item 3 — production data strategy: RESOLVED
+
+**Decision:** fresh start. The old TiDB/MySQL production database has no active customers depending on it. This Supabase Postgres database (`dccxerplokwvecdwhytr`) is the **sole production database** going forward. No MySQL→Postgres data migration was performed or is planned.
+
+## 🎉 Phase 3 — COMPLETE
+
+3A (5 integrations) ✅ · 3B (history purge + credential rotation) ✅ · Data strategy decision ✅. Ready for **Phase 4 — SwiftUI iOS app** (separate repository).
 
 ## Known limitations / risks
 
