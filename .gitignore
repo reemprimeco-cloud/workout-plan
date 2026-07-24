@@ -116,3 +116,6 @@ client/public/__manus__/version.json
 # Manus DB-inspector cache — contains cached query outputs including
 # customer PII and DB connection metadata. Must never be tracked (PF-002).
 .manus/
+
+# Generated Vercel function bundle
+api/_bundle.js
