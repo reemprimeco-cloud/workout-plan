@@ -34,15 +34,15 @@
 `DATABASE_URL`, `JWT_SECRET`, `VITE_APP_ID`, `SUPABASE_URL`, `VITE_SUPABASE_URL`,
 `SUPABASE_SERVICE_KEY`, `VITE_SUPABASE_ANON_KEY`.
 
-## Not yet configured (features dormant until keys added)
+## Phase 3A — feature activation log
 
-| Feature | Needs |
-|---|---|
-| AI coach / food analysis | `OPENAI_API_KEY` (+ `AI_MODEL` etc.) |
-| Google login | `VITE_GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` + redirect URI |
-| Payments | MyFatoorah **sandbox** key + webhook secret |
-| Email (reset password, licenses) | `SMTP_*` |
-| Web push + reminder cron | `VAPID_*`, `CRON_SECRET` |
+| Feature | Status | Notes |
+|---|---|---|
+| AI coach / food analysis (OpenAI) | ✅ Live | `coach.chat` returns real GPT-4o replies |
+| Google OAuth login | ✅ Live | New client created (old leaked-secret client deleted); UI button restored (`d926359`) — was removed in Manus era, backend flow was intact |
+| MyFatoorah **live** payments | ⚠️ Partially verified | Real payment succeeded (KNET, 2.626 KD); manually replaying the webhook call proved the full pipeline (signature check → license generation `PRIME-9K5Z-3SH6` → subscription activation → billing history) works correctly end-to-end. **Open issue:** MyFatoorah's portal is not yet auto-delivering the webhook to us — the Endpoint field in Webhook Settings appeared to not persist (reverted to placeholder styling). Follow-up: re-verify the endpoint saved, or contact MyFatoorah support; the code path itself needs no further work. |
+| SMTP | ⏳ Pending | |
+| Web push + reminder cron | ⏳ Pending | |
 
 ## Known limitations / risks
 
