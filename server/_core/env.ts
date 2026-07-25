@@ -47,6 +47,12 @@ export const ENV = {
   // comma-separated list so multiple iOS build configs can be allowed at once.
   googleIosClientIds:   (process.env.GOOGLE_IOS_CLIENT_IDS ?? process.env.GOOGLE_IOS_CLIENT_ID ?? "")
                           .split(",").map(s => s.trim()).filter(Boolean),
+  // Sign in with Apple — the `aud` claim on an Apple identity token is the
+  // app's bundle ID itself (unlike Google's separate OAuth client id), so
+  // this is just the iOS app's bundle id(s) across build configs
+  // (com.primefit.ios[.dev|.staging]).
+  appleBundleIds:       (process.env.APPLE_BUNDLE_IDS ?? "")
+                          .split(",").map(s => s.trim()).filter(Boolean),
 };
 
 /**
@@ -60,6 +66,9 @@ export const GOOGLE_ALLOWED_AUDIENCES: string[] = [
   ENV.googleClientId,
   ...ENV.googleIosClientIds,
 ].filter(Boolean);
+
+/** Bundle IDs this server accepts as a Sign in with Apple token's `aud`. */
+export const APPLE_ALLOWED_AUDIENCES: string[] = [...ENV.appleBundleIds].filter(Boolean);
 
 // PF-015: fail fast in production if a hard-required secret is missing.
 // Previously every variable silently defaulted to "" (contradicting

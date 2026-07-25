@@ -7,15 +7,21 @@ import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { eq } from "drizzle-orm";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import nodemailer from "nodemailer";
 import { z } from "zod";
 import { users, deviceSessions } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "../_core/cookies";
-import { ENV, GOOGLE_ALLOWED_AUDIENCES } from "../_core/env";
+import { ENV, GOOGLE_ALLOWED_AUDIENCES, APPLE_ALLOWED_AUDIENCES } from "../_core/env";
 import { sdk } from "../_core/sdk";
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+
+// Apple's public signing keys for identity tokens — cached and
+// auto-refreshed by `jose` (same verification primitive already used for
+// this server's own session JWTs in _core/sdk.ts).
+const APPLE_JWKS = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -481,6 +487,120 @@ export const standaloneAuthRouter = router({
         }
       } else {
         // Update last login
+        await db.update(users)
+          .set({ lastSignedIn: new Date(), lastLoginAt: new Date() })
+          .where(eq(users.id, user.id));
+      }
+
+      if (!user) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create user" });
+      }
+
+      const deviceId = (ctx.req.headers?.["x-device-id"] as string) || null;
+      await createSessionAndSetCookie(ctx, user.openId, user.fullName || user.name || "", deviceId);
+
+      return {
+        success: true,
+        message: "تم تسجيل الدخول بنجاح",
+        user: {
+          id: user.id,
+          name: user.fullName || user.name,
+          email: user.email,
+          role: user.role,
+        },
+      };
+    }),
+
+  /**
+   * Verify a Sign in with Apple identity token and sign in / sign up.
+   * Mirrors `googleSignIn` above: the client (iOS, via AuthenticationServices)
+   * already has an Apple-signed identity token; this verifies it against
+   * Apple's public JWKS and mints the same session cookie either way.
+   *
+   * Note: `authProvider` stays "google" for these accounts (no "apple" value
+   * exists in that Postgres enum yet — adding one is a schema migration this
+   * pass deliberately avoids on a live database). The real distinction is
+   * recorded in the free-text `loginMethod` column ("apple"), which nothing
+   * currently branches on for user-facing copy.
+   */
+  appleSignIn: publicProcedure
+    .input(z.object({
+      identityToken: z.string().min(1),
+      // Apple only includes the name in `ASAuthorizationAppleIDCredential`
+      // on the user's FIRST authorization ever — the client caches and
+      // resends it on later calls so it's recorded even though Apple's
+      // identity token itself never carries a name claim.
+      fullName: z.string().max(200).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      if (APPLE_ALLOWED_AUDIENCES.length === 0) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Sign in with Apple is not configured on this server.",
+        });
+      }
+
+      let payload: { sub: string; email?: string; email_verified?: boolean | string };
+      try {
+        const verified = await jwtVerify(input.identityToken, APPLE_JWKS, {
+          issuer: "https://appleid.apple.com",
+          audience: APPLE_ALLOWED_AUDIENCES,
+        });
+        payload = verified.payload as typeof payload;
+        if (!payload.sub) throw new Error("Invalid Apple token payload");
+      } catch {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "فشل التحقق من حساب Apple. يرجى المحاولة مرة أخرى.",
+        });
+      }
+
+      const appleOpenId = `apple_${payload.sub}`;
+      // Real, deliverable even when it's Apple's private-relay address.
+      // Only missing if Apple omitted it (very old/malformed tokens) — fall
+      // back to a stable placeholder tied to the sub so signup never fails.
+      const email = payload.email?.toLowerCase().trim() || `${appleOpenId}@appleid.privaterelay`;
+      const displayName = input.fullName?.trim() || email.split("@")[0] || "Prime Fit User";
+
+      let existingResult = await db.select().from(users).where(eq(users.openId, appleOpenId)).limit(1);
+      let user = existingResult[0];
+
+      if (!user) {
+        const byEmail = payload.email
+          ? await db.select().from(users).where(eq(users.email, email)).limit(1)
+          : [];
+
+        if (byEmail.length > 0) {
+          user = byEmail[0];
+          await db.update(users)
+            .set({
+              authProvider: "google",
+              loginMethod: "apple",
+              emailVerified: true,
+              lastSignedIn: new Date(),
+              lastLoginAt: new Date(),
+            })
+            .where(eq(users.id, user.id));
+        } else {
+          await db.insert(users).values({
+            openId: appleOpenId,
+            fullName: displayName,
+            name: displayName,
+            email,
+            authProvider: "google",
+            loginMethod: "apple",
+            emailVerified: true,
+            lastSignedIn: new Date(),
+            lastLoginAt: new Date(),
+          });
+
+          const newUser = await db.select().from(users).where(eq(users.openId, appleOpenId)).limit(1);
+          user = newUser[0];
+        }
+      } else {
         await db.update(users)
           .set({ lastSignedIn: new Date(), lastLoginAt: new Date() })
           .where(eq(users.id, user.id));
