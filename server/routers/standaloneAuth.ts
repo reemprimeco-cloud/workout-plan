@@ -696,4 +696,23 @@ export const standaloneAuthRouter = router({
 
       return { success: true, message: "تم تسجيل الخروج بنجاح" };
     }),
+
+  /**
+   * Self-service account deletion (App Store Guideline 5.1.1(v) — an app
+   * that supports account creation must also let the user delete that
+   * account from within the app, not just via a support request). Deletes
+   * the caller's own row only — never another user's, unlike the
+   * admin-only `admin.deleteUser`. Relies on the same FK cascade behavior
+   * that procedure already depends on.
+   */
+  deleteMyAccount: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      await db.delete(users).where(eq(users.id, ctx.user.id));
+      ctx.res.clearCookie(COOKIE_NAME);
+
+      return { success: true, message: "تم حذف حسابك بنجاح" };
+    }),
 });
