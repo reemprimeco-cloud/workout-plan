@@ -8,6 +8,13 @@ import { eq, and, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
 
+/// App Store price tiers for the iOS subscription products, in USD — the
+/// web checkout (MyFatoorah) prices in KWD and is a separate ladder.
+const APPLE_USD_PRICES = {
+  prime_plus: { monthly: 9.99, yearly: 89.99 },
+  prime_pro: { monthly: 19.99, yearly: 179.99 },
+} as const;
+
 export const subscriptionRouter = router({
   // Get available plans with prices
   getPlans: publicProcedure.query(() => {
@@ -477,9 +484,6 @@ export const subscriptionRouter = router({
         .where(eq(subscriptions.userId, userId))
         .limit(1);
 
-      // No dedicated "apple" enum value yet (would need a schema migration);
-      // "manual" is the closest existing paymentProvider for a
-      // non-MyFatoorah, verified-elsewhere payment.
       const commonFields = {
         plan: input.plan,
         status: "active" as const,
@@ -487,7 +491,7 @@ export const subscriptionRouter = router({
         startsAt,
         expiresAt,
         paymentStatus: "paid" as const,
-        paymentProvider: "manual" as const,
+        paymentProvider: "apple" as const,
         transactionId: input.originalTransactionId,
         autoRenew: true,
       };
@@ -510,8 +514,8 @@ export const subscriptionRouter = router({
           userId,
           plan: input.plan,
           period: input.period,
-          amount: String(PLAN_PRICES[input.plan][input.period]),
-          currency: "KWD",
+          amount: String(APPLE_USD_PRICES[input.plan][input.period]),
+          currency: "USD",
           status: "paid",
           invoiceId: input.transactionId,
           paymentRef: input.originalTransactionId,
