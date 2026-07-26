@@ -48,7 +48,7 @@ export const privacyPolicy = {
       },
       {
         heading: "11. Third-Party Services",
-        body: `Prime Fit integrates with the following third-party services: Google OAuth for authentication, MyFatoorah for payment processing, and Manus platform infrastructure for hosting and AI capabilities. Each of these services has its own privacy policy and data practices. We recommend reviewing their policies to understand how they handle your information. We are not responsible for the privacy practices of third-party services.`,
+        body: `Prime Fit integrates with the following third-party services: Google OAuth for authentication, MyFatoorah for payment processing, Supabase for database and file storage, Vercel for application hosting, and OpenAI for AI coaching and food-photo analysis capabilities. Each of these services has its own privacy policy and data practices. We recommend reviewing their policies to understand how they handle your information. We are not responsible for the privacy practices of third-party services.`,
       },
       {
         heading: "12. Contact Information",
@@ -106,7 +106,7 @@ export const privacyPolicy = {
       },
       {
         heading: "١١. خدمات الطرف الثالث",
-        body: `يتكامل برايم فت مع خدمات الطرف الثالث التالية: Google OAuth للمصادقة، وMyFatoorah لمعالجة المدفوعات، ومنصة Manus للبنية التحتية والاستضافة وقدرات الذكاء الاصطناعي. لكل من هذه الخدمات سياسة خصوصية وممارسات بيانات خاصة بها. نوصي بمراجعة سياساتها لفهم كيفية تعاملها مع معلوماتك. لسنا مسؤولين عن ممارسات الخصوصية لخدمات الطرف الثالث.`,
+        body: `يتكامل برايم فت مع خدمات الطرف الثالث التالية: Google OAuth للمصادقة، وMyFatoorah لمعالجة المدفوعات، وSupabase لقاعدة البيانات وتخزين الملفات، وVercel لاستضافة التطبيق، وOpenAI لقدرات المدرب الذكي وتحليل صور الطعام. لكل من هذه الخدمات سياسة خصوصية وممارسات بيانات خاصة بها. نوصي بمراجعة سياساتها لفهم كيفية تعاملها مع معلوماتك. لسنا مسؤولين عن ممارسات الخصوصية لخدمات الطرف الثالث.`,
       },
       {
         heading: "١٢. معلومات التواصل",
