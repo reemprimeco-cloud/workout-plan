@@ -39,6 +39,18 @@ publishable ones noted. In production the server refuses to boot without
 ## Payments (MyFatoorah)
 | `MYFATOORAH_API_KEY` · `MYFATOORAH_API_URL` (`https://apitest.myfatoorah.com` for sandbox) · `MYFATOORAH_WEBHOOK_SECRET` |
 
+## In-app purchases (Apple)
+| Variable | Notes |
+|---|---|
+| `APPLE_BUNDLE_IDS` | Comma-separated bundle IDs accepted as a Sign in with Apple token audience, e.g. `com.primefit.ios,com.primefit.ios.staging`. |
+| `APPLE_NOTIFICATIONS_BUNDLE_ID` | Bundle ID an App Store Server Notification must carry. Defaults to the first `APPLE_BUNDLE_IDS` entry; set explicitly only if the two lists must differ. |
+| `APPLE_APP_ID` | Numeric App Store app ID (App Store Connect → App Information → "Apple ID"). **Required** to verify Production notifications; unused in Sandbox. |
+| `APPLE_ROOT_CERTS_B64` | Optional. Comma-separated base64 DER of Apple's root CAs. When unset the roots are fetched once from `apple.com` over verified TLS and cached. Set this to pin the trust anchors or for deploys with no outbound egress — the fetched fingerprints are logged at startup so they can be captured. |
+
+`/api/webhooks/app-store` needs no shared secret: authenticity comes from the
+Apple-signed JWS in the request body, which is verified against Apple's
+certificate chain and rejected on failure.
+
 ## Email (SMTP)
 | `SMTP_HOST` · `SMTP_PORT` · `SMTP_USER` · `SMTP_PASS` · `SMTP_FROM` · `OWNER_EMAIL` (owner-alert recipient; defaults to `SMTP_USER`) |
 

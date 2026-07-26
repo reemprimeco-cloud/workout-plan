@@ -10,6 +10,7 @@ import { createContext } from "./context";
 // inside startServer so the Vercel serverless function never bundles it.
 import { workoutReminderHandler } from "../handlers/workoutReminder";
 import { handleMyfatoorahWebhook as myfatoorahWebhookHandler } from "../handlers/myfatoorahWebhook";
+import { appStoreNotificationHandler } from "../handlers/appStoreNotifications";
 import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -144,6 +145,19 @@ export function buildApp(): express.Express {
       },
     }),
     myfatoorahWebhookHandler,
+  );
+
+  // ── App Store Server Notifications V2 ────────────────────────────────────
+  // Apple's channel for subscription events that happen outside the app
+  // (renew, expire, cancel, refund, billing failure). Same mounting rationale
+  // as the MyFatoorah hook above: its own 1MB JSON parser, registered before
+  // the global 50MB parser. No shared-secret check here — authenticity comes
+  // from the Apple-signed JWS in the body, which the handler verifies against
+  // Apple's certificate chain and rejects on failure.
+  app.post(
+    "/api/webhooks/app-store",
+    express.json({ limit: "1mb" }),
+    appStoreNotificationHandler,
   );
 
   // ── Rate limiting on auth endpoints ──────────────────────────────────────
