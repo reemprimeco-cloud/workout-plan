@@ -35,7 +35,10 @@ export const subscriptionRouter = router({
           nameAr: "برايم بلس",
           descriptionEn: "Full access with AI coach",
           descriptionAr: "وصول كامل مع المدرب الذكي",
-          features: ["basic_tracking", "workout_guide", "ai_coach", "community", "stats"],
+          // "community" was removed: the feature isn't shipped in the iOS
+          // app, and this list renders directly on its paywall — selling an
+          // absent feature is an App Review 2.3.1 rejection.
+          features: ["basic_tracking", "workout_guide", "ai_coach", "ai_programs", "stats"],
           prices: PLAN_PRICES.prime_plus,
         },
         {
@@ -44,7 +47,7 @@ export const subscriptionRouter = router({
           nameAr: "برايم برو",
           descriptionEn: "Everything in Plus + priority support",
           descriptionAr: "كل شيء في بلس + دعم أولوية",
-          features: ["basic_tracking", "workout_guide", "ai_coach", "community", "stats", "priority_support", "custom_programs"],
+          features: ["basic_tracking", "workout_guide", "ai_coach", "ai_programs", "stats", "priority_support", "custom_programs"],
           prices: PLAN_PRICES.prime_pro,
         },
       ],
