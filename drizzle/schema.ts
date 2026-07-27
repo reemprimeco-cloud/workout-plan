@@ -74,7 +74,12 @@ export const users = pgTable("users", {
   fullName: varchar("fullName", { length: 255 }),
   email: varchar("email", { length: 320 }).unique(),
   passwordHash: varchar("passwordHash", { length: 255 }),
-  authProvider: usersAuthProviderEnum("authProvider").default("manus").notNull(),
+  // Defaults to "email" — every signup path sets this explicitly, but the
+  // column default was still "manus", an auth system that no longer exists,
+  // so any insert that omitted it recorded a provider the app can't act on.
+  // The "manus" enum value itself is retained: accounts created before the
+  // migration still carry it and dropping it would orphan those rows.
+  authProvider: usersAuthProviderEnum("authProvider").default("email").notNull(),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: usersRoleEnum("role").default("user").notNull(),
   avatarUrl: text("avatarUrl"),

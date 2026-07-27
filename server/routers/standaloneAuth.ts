@@ -1,7 +1,8 @@
 /**
  * standaloneAuth.ts
- * Email/Password + Google Sign-In authentication procedures.
- * These run alongside the existing Manus OAuth system.
+ * Email/Password + Google Sign-In + Sign in with Apple authentication.
+ * These are the only auth paths — the former Manus OAuth portal was removed
+ * in the standalone migration.
  */
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
