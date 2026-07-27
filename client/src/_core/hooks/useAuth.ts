@@ -42,10 +42,12 @@ export function useAuth(options?: UseAuthOptions) {
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
-      JSON.stringify(meQuery.data)
-    );
+    // Removed: a `localStorage.setItem("manus-runtime-user-info", …)` that
+    // wrote the whole user object (name, email, role) to localStorage on every
+    // recomputation. It fed the Manus runtime/debug collector, which was
+    // removed in Stage 1 — nothing has read the key since, so it was purely
+    // persisting user data to disk for no purpose. It was also a side effect
+    // inside a `useMemo`, which React may discard or re-run at will.
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,

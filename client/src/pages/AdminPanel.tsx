@@ -1515,6 +1515,18 @@ export default function AdminPanel() {
                       const payStatusColor2: Record<string, string> = {
                         paid: '#16A34A', free: '#2563EB', pending: '#D97706', failed: '#DC2626', refunded: '#64748b',
                       };
+                      // Where the subscription came from. Apple IAP renewals and
+                      // cancellations are managed by Apple, not this panel — the
+                      // badge is what tells an admin not to edit those rows.
+                      const providerLabel2: Record<string, string> = {
+                        apple: lang === 'ar' ? ' آبل' : ' App Store',
+                        myfatoorah: lang === 'ar' ? 'ماي فاتورة' : 'MyFatoorah',
+                        manual: lang === 'ar' ? 'يدوي (مسؤول)' : 'Manual (admin)',
+                        free: lang === 'ar' ? 'مجاني' : 'Free',
+                      };
+                      const providerColor2: Record<string, string> = {
+                        apple: '#0F172A', myfatoorah: '#7C3AED', manual: '#D97706', free: '#64748b',
+                      };
                       const daysLeft2 = sub.expiresAt ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / 86400000) : null;
                       const daysColor2 = daysLeft2 === null ? '#64748b' : daysLeft2 <= 0 ? '#DC2626' : daysLeft2 <= 7 ? '#D97706' : '#16A34A';
                       const displayName = sub.userFullName || sub.userName || '—';
@@ -1549,9 +1561,14 @@ export default function AdminPanel() {
                             </span>
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <span style={{ background: `${payStatusColor2[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor2[sub.paymentStatus] ?? '#64748b', borderRadius: 5, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>
-                              {payStatusLabel2[sub.paymentStatus] ?? sub.paymentStatus}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-start' }}>
+                              <span style={{ background: `${payStatusColor2[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor2[sub.paymentStatus] ?? '#64748b', borderRadius: 5, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>
+                                {payStatusLabel2[sub.paymentStatus] ?? sub.paymentStatus}
+                              </span>
+                              <span style={{ background: `${providerColor2[sub.paymentProvider] ?? '#64748b'}12`, color: providerColor2[sub.paymentProvider] ?? '#64748b', borderRadius: 5, padding: '2px 7px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                {providerLabel2[sub.paymentProvider] ?? sub.paymentProvider}
+                              </span>
+                            </div>
                           </td>
                           <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
                             {sub.startsAt ? new Date(sub.startsAt).toLocaleDateString('en-GB') : '—'}

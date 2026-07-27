@@ -5,6 +5,17 @@
 import nodemailer from "nodemailer";
 import { ENV } from "./env";
 
+/**
+ * The "open the app" destination used by every email template.
+ *
+ * Previously each template hard-coded its own URL, and the broadcast email
+ * still pointed at `primefit.manus.space` — a domain that stopped existing
+ * with the Manus migration, so every recipient of a broadcast got a dead
+ * button. Driving all four from `APP_DOMAIN` keeps them consistent and means
+ * a domain change is one env var, not a code edit in four places.
+ */
+const APP_URL = `https://${ENV.appDomain}`;
+
 function getTransporter() {
   return nodemailer.createTransport({
     host: ENV.smtpHost,
@@ -102,7 +113,7 @@ export async function sendLicenseEmail({
 
               <!-- CTA -->
               <div style="text-align:center;margin:28px 0 0;">
-                <a href="https://primefit.app" style="background:linear-gradient(135deg,#00E5FF,#00B8CC);color:#0D1B2A;text-decoration:none;font-weight:900;font-size:15px;padding:14px 36px;border-radius:12px;display:inline-block;">
+                <a href="${APP_URL}" style="background:linear-gradient(135deg,#00E5FF,#00B8CC);color:#0D1B2A;text-decoration:none;font-weight:900;font-size:15px;padding:14px 36px;border-radius:12px;display:inline-block;">
                   افتح التطبيق الآن 💪
                 </a>
               </div>
@@ -217,7 +228,7 @@ export async function sendRenewalEmail({
             </div>
 
             <div style="text-align:center;">
-              <a href="https://primefit.app" style="background:linear-gradient(135deg,#22C55E,#16A34A);color:white;text-decoration:none;font-weight:900;font-size:14px;padding:12px 32px;border-radius:12px;display:inline-block;">
+              <a href="${APP_URL}" style="background:linear-gradient(135deg,#22C55E,#16A34A);color:white;text-decoration:none;font-weight:900;font-size:14px;padding:12px 32px;border-radius:12px;display:inline-block;">
                 افتح التطبيق الآن 💪
               </a>
             </div>
@@ -275,7 +286,7 @@ export async function resendKeyEmail({
           <span style="color:#00E5FF;font-size:22px;font-weight:900;font-family:monospace;letter-spacing:2px;">${licenseKey}</span>
         </div>
         <p style="color:#22C55E;font-size:13px;">صالح حتى: ${expStr}</p>
-        <a href="https://primefit.app" style="background:#00E5FF;color:#0D1B2A;padding:12px 28px;border-radius:12px;text-decoration:none;font-weight:900;display:inline-block;margin-top:12px;">افتح التطبيق</a>
+        <a href="${APP_URL}" style="background:#00E5FF;color:#0D1B2A;padding:12px 28px;border-radius:12px;text-decoration:none;font-weight:900;display:inline-block;margin-top:12px;">افتح التطبيق</a>
       </div>`,
       text: `كود وصولك: ${licenseKey} — صالح حتى ${expStr}`,
     });
@@ -323,7 +334,7 @@ export async function sendBroadcastEmail({
               <p style="color:#F9FAFB;font-size:16px;margin:0 0 16px;">مرحباً ${firstName}! 👋</p>
               <div style="color:#D1D5DB;font-size:14px;line-height:1.8;white-space:pre-wrap;">${body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
               <div style="text-align:center;margin:28px 0 0;">
-                <a href="https://primefit.manus.space" style="background:linear-gradient(135deg,#00E5FF,#00B8CC);color:#0D1B2A;text-decoration:none;font-weight:900;font-size:15px;padding:14px 36px;border-radius:12px;display:inline-block;">افتح التطبيق 💪</a>
+                <a href="${APP_URL}" style="background:linear-gradient(135deg,#00E5FF,#00B8CC);color:#0D1B2A;text-decoration:none;font-weight:900;font-size:15px;padding:14px 36px;border-radius:12px;display:inline-block;">افتح التطبيق 💪</a>
               </div>
             </td>
           </tr>

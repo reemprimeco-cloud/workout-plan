@@ -47,6 +47,28 @@ export const ENV = {
   // comma-separated list so multiple iOS build configs can be allowed at once.
   googleIosClientIds:   (process.env.GOOGLE_IOS_CLIENT_IDS ?? process.env.GOOGLE_IOS_CLIENT_ID ?? "")
                           .split(",").map(s => s.trim()).filter(Boolean),
+  // Sign in with Apple — the `aud` claim on an Apple identity token is the
+  // app's bundle ID itself (unlike Google's separate OAuth client id), so
+  // this is just the iOS app's bundle id(s) across build configs
+  // (com.primefit.ios[.dev|.staging]).
+  appleBundleIds:       (process.env.APPLE_BUNDLE_IDS ?? "")
+                          .split(",").map(s => s.trim()).filter(Boolean),
+  // ── App Store Server Notifications V2 ──────────────────────────────────
+  // The bundle ID the notification payload must carry. Defaults to the first
+  // Sign in with Apple bundle ID since it's the same app; set explicitly when
+  // those lists need to differ (e.g. accepting .dev tokens for auth but only
+  // production notifications for billing).
+  appleNotificationsBundleId: process.env.APPLE_NOTIFICATIONS_BUNDLE_ID ?? "",
+  // Numeric App Store app ID ("appAppleId" in App Store Connect → App
+  // Information). Required by Apple's verifier for Production notifications;
+  // omitted in Sandbox.
+  appleAppId:           process.env.APPLE_APP_ID ?? "",
+  // DER-encoded Apple root CAs, base64, comma-separated. Optional: when unset
+  // the roots are fetched once from Apple's certificate authority over
+  // verified TLS. Set this for deployments with no outbound egress, or to pin
+  // the exact trust anchors. See server/_core/appleRootCerts.ts.
+  appleRootCertsB64:    (process.env.APPLE_ROOT_CERTS_B64 ?? "")
+                          .split(",").map(s => s.trim()).filter(Boolean),
 };
 
 /**
@@ -60,6 +82,9 @@ export const GOOGLE_ALLOWED_AUDIENCES: string[] = [
   ENV.googleClientId,
   ...ENV.googleIosClientIds,
 ].filter(Boolean);
+
+/** Bundle IDs this server accepts as a Sign in with Apple token's `aud`. */
+export const APPLE_ALLOWED_AUDIENCES: string[] = [...ENV.appleBundleIds].filter(Boolean);
 
 // PF-015: fail fast in production if a hard-required secret is missing.
 // Previously every variable silently defaulted to "" (contradicting

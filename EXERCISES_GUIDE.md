@@ -66,9 +66,9 @@
 | `IMG.aqua` | الأكوا |
 
 > **لإضافة صورة جديدة:**  
-> 1. ارفع الصورة: `manus-upload-file --webdev path/to/image.jpg`  
-> 2. أضف المسار المُعاد إلى كائن `IMG` في أعلى الملف:  
->    `myNewImage: '/manus-storage/filename_abc123.jpg',`  
+> 1. ارفع الصورة عبر لوحة الإدارة (Admin → CMS) أو إلى Supabase Storage في مجلد `exercises`.  
+> 2. أضف الرابط المُعاد إلى كائن `IMG` في أعلى الملف:  
+>    `myNewImage: 'https://<project>.supabase.co/storage/v1/object/public/exercises/filename.jpg',`  
 > 3. استخدمه في التمرين: `image: IMG.myNewImage`
 
 ### قائمة sessionTypes المتاحة:
@@ -139,7 +139,7 @@
   rest: "60",                   // بالثواني
   restAr: "60 ثانية",
   youtubeUrl: "https://www.youtube.com/watch?v=XXXXX",
-  imageUrl: "/manus-storage/filename_abc123.jpg",  // صورة الجهاز
+  imageUrl: "https://<project>.supabase.co/storage/v1/object/public/exercises/filename.jpg",  // صورة الجهاز
   notes: "Tip in English",
   notesAr: "نصيحة بالعربي",
 },

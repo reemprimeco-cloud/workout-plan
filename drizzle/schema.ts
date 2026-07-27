@@ -41,7 +41,7 @@ export const subscriptionsPlanEnum = pgEnum("subscriptions_plan", ["free", "prim
 export const subscriptionsStatusEnum = pgEnum("subscriptions_status", ["active", "expired", "cancelled", "trialing", "pending"]);
 export const subscriptionsPeriodEnum = pgEnum("subscriptions_period", ["monthly", "yearly", "lifetime", "free_trial"]);
 export const subscriptionsPaymentStatusEnum = pgEnum("subscriptions_payment_status", ["paid", "pending", "failed", "refunded", "free"]);
-export const subscriptionsPaymentProviderEnum = pgEnum("subscriptions_payment_provider", ["myfatoorah", "manual", "free"]);
+export const subscriptionsPaymentProviderEnum = pgEnum("subscriptions_payment_provider", ["myfatoorah", "manual", "free", "apple"]);
 export const billingHistoryPlanEnum = pgEnum("billing_history_plan", ["free", "prime_plus", "prime_pro"]);
 export const billingHistoryPeriodEnum = pgEnum("billing_history_period", ["monthly", "yearly"]);
 export const billingHistoryStatusEnum = pgEnum("billing_history_status", ["paid", "failed", "refunded", "pending"]);
@@ -74,7 +74,12 @@ export const users = pgTable("users", {
   fullName: varchar("fullName", { length: 255 }),
   email: varchar("email", { length: 320 }).unique(),
   passwordHash: varchar("passwordHash", { length: 255 }),
-  authProvider: usersAuthProviderEnum("authProvider").default("manus").notNull(),
+  // Defaults to "email" — every signup path sets this explicitly, but the
+  // column default was still "manus", an auth system that no longer exists,
+  // so any insert that omitted it recorded a provider the app can't act on.
+  // The "manus" enum value itself is retained: accounts created before the
+  // migration still carry it and dropping it would orphan those rows.
+  authProvider: usersAuthProviderEnum("authProvider").default("email").notNull(),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: usersRoleEnum("role").default("user").notNull(),
   avatarUrl: text("avatarUrl"),

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."subscriptions_payment_provider" ADD VALUE 'apple';

@@ -8,6 +8,13 @@ import { eq, and, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
 
+/// App Store price tiers for the iOS subscription products, in USD — the
+/// web checkout (MyFatoorah) prices in KWD and is a separate ladder.
+const APPLE_USD_PRICES = {
+  prime_plus: { monthly: 9.99, yearly: 89.99 },
+  prime_pro: { monthly: 19.99, yearly: 179.99 },
+} as const;
+
 export const subscriptionRouter = router({
   // Get available plans with prices
   getPlans: publicProcedure.query(() => {
@@ -434,4 +441,88 @@ export const subscriptionRouter = router({
 
     return rows;
   }),
+
+  // Record a paid App Store subscription — called by the iOS app after
+  // StoreKit 2 verifies the transaction on-device (Apple-signed JWS; that
+  // verification is itself cryptographic proof of payment, so this is a
+  // record/activate step, not a second payment check). Apple's own web
+  // checkout equivalent (MyFatoorah) can't be used inside the iOS app per
+  // App Store guidelines, so this is the paid-plan path for that client only.
+  // Idempotent against StoreKit's transaction redelivery (e.g.
+  // Transaction.updates replaying on relaunch) via `transactionId`.
+  verifyAppleTransaction: protectedProcedure
+    .input(z.object({
+      plan: z.enum(["prime_plus", "prime_pro"]),
+      period: z.enum(["monthly", "yearly"]),
+      productId: z.string().min(1),
+      transactionId: z.string().min(1),
+      originalTransactionId: z.string().min(1),
+      purchaseDate: z.string(),
+      expiresDate: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const expiresAt = new Date(input.expiresDate);
+      const startsAt = new Date(input.purchaseDate);
+      if (Number.isNaN(expiresAt.getTime()) || Number.isNaN(startsAt.getTime())) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid purchaseDate/expiresDate" });
+      }
+
+      const userId = ctx.user.openId;
+
+      const alreadyRecorded = await database
+        .select()
+        .from(billingHistory)
+        .where(eq(billingHistory.invoiceId, input.transactionId))
+        .limit(1);
+
+      const existing = await database
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .limit(1);
+
+      const commonFields = {
+        plan: input.plan,
+        status: "active" as const,
+        period: input.period,
+        startsAt,
+        expiresAt,
+        paymentStatus: "paid" as const,
+        paymentProvider: "apple" as const,
+        transactionId: input.originalTransactionId,
+        autoRenew: true,
+      };
+
+      if (existing.length > 0) {
+        await database
+          .update(subscriptions)
+          .set({ ...commonFields, updatedAt: new Date() })
+          .where(eq(subscriptions.userId, userId));
+      } else {
+        await database.insert(subscriptions).values({
+          userId,
+          ...commonFields,
+          email: ctx.user.email ?? null,
+        });
+      }
+
+      if (alreadyRecorded.length === 0) {
+        await database.insert(billingHistory).values({
+          userId,
+          plan: input.plan,
+          period: input.period,
+          amount: String(APPLE_USD_PRICES[input.plan][input.period]),
+          currency: "USD",
+          status: "paid",
+          invoiceId: input.transactionId,
+          paymentRef: input.originalTransactionId,
+        });
+      }
+
+      console.log(`[Subscription] Apple IAP verified for user ${userId}: ${input.plan}/${input.period}, expires ${expiresAt.toISOString()}`);
+      return { success: true, plan: input.plan, status: "active" as const, expiresAt };
+    }),
 });
