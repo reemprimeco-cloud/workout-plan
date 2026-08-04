@@ -7,6 +7,9 @@ export const ENV = {
   // openId. OAUTH_SERVER_URL was Manus-OAuth-only and was removed (Stage 2).
   ownerOpenId:        process.env.OWNER_OPEN_ID ?? "",
   isProduction:       process.env.NODE_ENV === "production",
+  // Comma-separated. Doubles as the destination for owner notifications and as
+  // the identity check behind `isOwnerEmail` — the accounts that run the app
+  // rather than buy it.
   ownerEmail:         process.env.OWNER_EMAIL ?? "",
   // Shared secret for the scheduled-cron endpoint (Vercel Cron sends it as a
   // Bearer token). If empty, the cron endpoint is disabled (returns 503).
@@ -85,6 +88,28 @@ export const GOOGLE_ALLOWED_AUDIENCES: string[] = [
 
 /** Bundle IDs this server accepts as a Sign in with Apple token's `aud`. */
 export const APPLE_ALLOWED_AUDIENCES: string[] = [...ENV.appleBundleIds].filter(Boolean);
+
+/**
+ * Is this the account that operates Prime Fit, rather than a customer of it?
+ *
+ * Owner accounts are never gated by subscription state: they exist to run the
+ * app — support, content, demos, checking a bug report a member filed — and
+ * locking the operator out of their own product when a trial lapses has no
+ * upside. Config-driven rather than a hard-coded address so the owner can
+ * change without a deploy, and comma-separated so a second operator can be
+ * added later.
+ *
+ * Matching is case- and whitespace-insensitive: email casing carries no
+ * meaning, and an owner who typed "R.bhck@…" at signup must not lose access
+ * because the env var says "r.bhck@…".
+ */
+export function isOwnerEmail(email: string | null | undefined): boolean {
+  if (!email || !ENV.ownerEmail) return false;
+  const candidate = email.trim().toLowerCase();
+  return ENV.ownerEmail
+    .split(",")
+    .some(entry => entry.trim().toLowerCase() === candidate);
+}
 
 // PF-015: fail fast in production if a hard-required secret is missing.
 // Previously every variable silently defaulted to "" (contradicting

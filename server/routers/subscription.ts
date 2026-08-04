@@ -7,6 +7,7 @@ import { resendKeyEmail } from "../_core/email";
 import { eq, and, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
+import { isOwnerEmail } from "../_core/env";
 
 /// App Store price tiers for the iOS subscription products, in USD — the
 /// web checkout (MyFatoorah) prices in KWD and is a separate ladder.
@@ -129,6 +130,15 @@ export const subscriptionRouter = router({
     // If not authenticated, return none — unauthenticated users cannot access the app
     if (!ctx.user) {
       return { plan: "free", status: "none", expiresAt: null, licenseKey: null };
+    }
+
+    // The owner is never a customer of their own app. Resolved here rather than
+    // by writing a lifetime row at signup because a row is overwritable — an
+    // App Store or MyFatoorah webhook firing against the owner's account would
+    // silently downgrade it — whereas this check runs on every read and cannot
+    // be clobbered by payment state.
+    if (isOwnerEmail(ctx.user.email)) {
+      return { plan: "prime_pro", status: "active", expiresAt: null, licenseKey: null };
     }
 
     const userId = ctx.user.openId;

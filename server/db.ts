@@ -17,7 +17,7 @@ import {
   communityBookmarks, InsertCommunityBookmark,
   userPrivacySettings, InsertUserPrivacySettings,
 } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import { ENV, isOwnerEmail } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -74,7 +74,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
+    } else if (user.openId === ENV.ownerOpenId || isOwnerEmail(user.email)) {
+      // Matching on email as well as openId: the owner's openId is generated at
+      // signup and isn't known in advance, so OWNER_OPEN_ID can only be filled
+      // in after the fact. OWNER_EMAIL can be set before the account exists,
+      // which is what makes the promotion work on first sign-in.
       values.role = 'admin';
       updateSet.role = 'admin';
     }
