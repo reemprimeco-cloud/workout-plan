@@ -7,6 +7,7 @@ import { resendKeyEmail } from "../_core/email";
 import { eq, and, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
+import { isOwnerEmail } from "../_core/env";
 
 /// App Store price tiers for the iOS subscription products, in USD — the
 /// web checkout (MyFatoorah) prices in KWD and is a separate ladder.
@@ -35,7 +36,10 @@ export const subscriptionRouter = router({
           nameAr: "برايم بلس",
           descriptionEn: "Full access with AI coach",
           descriptionAr: "وصول كامل مع المدرب الذكي",
-          features: ["basic_tracking", "workout_guide", "ai_coach", "community", "stats"],
+          // "community" was removed: the feature isn't shipped in the iOS
+          // app, and this list renders directly on its paywall — selling an
+          // absent feature is an App Review 2.3.1 rejection.
+          features: ["basic_tracking", "workout_guide", "ai_coach", "ai_programs", "stats"],
           prices: PLAN_PRICES.prime_plus,
         },
         {
@@ -44,7 +48,7 @@ export const subscriptionRouter = router({
           nameAr: "برايم برو",
           descriptionEn: "Everything in Plus + priority support",
           descriptionAr: "كل شيء في بلس + دعم أولوية",
-          features: ["basic_tracking", "workout_guide", "ai_coach", "community", "stats", "priority_support", "custom_programs"],
+          features: ["basic_tracking", "workout_guide", "ai_coach", "ai_programs", "stats", "priority_support", "custom_programs"],
           prices: PLAN_PRICES.prime_pro,
         },
       ],
@@ -126,6 +130,15 @@ export const subscriptionRouter = router({
     // If not authenticated, return none — unauthenticated users cannot access the app
     if (!ctx.user) {
       return { plan: "free", status: "none", expiresAt: null, licenseKey: null };
+    }
+
+    // The owner is never a customer of their own app. Resolved here rather than
+    // by writing a lifetime row at signup because a row is overwritable — an
+    // App Store or MyFatoorah webhook firing against the owner's account would
+    // silently downgrade it — whereas this check runs on every read and cannot
+    // be clobbered by payment state.
+    if (isOwnerEmail(ctx.user.email)) {
+      return { plan: "prime_pro", status: "active", expiresAt: null, licenseKey: null };
     }
 
     const userId = ctx.user.openId;
