@@ -5,7 +5,7 @@ import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
-import { ENV } from "./env";
+import { ENV, isOwnerEmail } from "./env";
 
 // NOTE: The Manus OAuth client (ExchangeToken / GetUserInfo / GetUserInfoWithJwt
 // against OAUTH_SERVER_URL) and the Manus cron-session path were removed during
@@ -122,13 +122,25 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
+    // Owner promotion happens here, not only in upsertUser, because this is
+    // the one path every authenticated request passes through *with the full
+    // user row in hand*. The email/password login never upserts at all — it
+    // verifies the hash and issues a cookie — and this call previously sent
+    // only openId + lastSignedIn, so an upsert-keyed rule on email could never
+    // see one. Promoting from the row we just read fixes both gaps.
+    const shouldPromote = isOwnerEmail(user.email) && user.role !== "admin";
+
     // Touch last-signed-in timestamp.
     await db.upsertUser({
       openId: user.openId,
       lastSignedIn: new Date(),
+      ...(shouldPromote ? { role: "admin" as const } : {}),
     });
 
-    return user;
+    // Return the promoted role rather than the row as it was read a moment
+    // ago: otherwise the request that triggers the promotion still sees the
+    // old role, and the owner has to retry once for admin routes to open.
+    return shouldPromote ? { ...user, role: "admin" as const } : user;
   }
 }
 
