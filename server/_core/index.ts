@@ -14,6 +14,7 @@ import { appStoreNotificationHandler } from "../handlers/appStoreNotifications";
 import { googleAuthRedirect, googleAuthCallback } from "../handlers/googleOAuth";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { trpcRateLimitHandler } from "./rateLimitEnvelope";
 
 // Real-time was moved to Supabase Realtime (Stage 6): the server no longer runs
 // a Socket.IO server. The client subscribes to Postgres INSERTs directly, and
@@ -39,13 +40,16 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 // ── Rate limiters ─────────────────────────────────────────────────────────────
+// All four are mounted on /api/trpc/* routes, so their throttled replies go
+// through trpcRateLimitHandler to stay decodable by tRPC clients.
+
 /** Login: max 10 attempts per 15 minutes per IP */
 const loginRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many login attempts. Please try again in 15 minutes." },
+  handler: trpcRateLimitHandler("Too many login attempts. Please try again in 15 minutes."),
   keyGenerator: (req) => {
     // Use x-forwarded-for if behind proxy, else remote address
     const forwarded = req.headers["x-forwarded-for"];
@@ -61,7 +65,7 @@ const signupRateLimit = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many sign-up attempts. Please try again in an hour." },
+  handler: trpcRateLimitHandler("Too many sign-up attempts. Please try again in an hour."),
   keyGenerator: (req) => {
     const forwarded = req.headers["x-forwarded-for"];
     return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
@@ -76,7 +80,7 @@ const forgotPasswordRateLimit = rateLimit({
   max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many password reset requests. Please try again in an hour." },
+  handler: trpcRateLimitHandler("Too many password reset requests. Please try again in an hour."),
   keyGenerator: (req) => {
     const forwarded = req.headers["x-forwarded-for"];
     return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
@@ -96,7 +100,7 @@ const licenseVerifyRateLimit = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many license verification attempts. Please try again in 15 minutes." },
+  handler: trpcRateLimitHandler("Too many license verification attempts. Please try again in 15 minutes."),
   keyGenerator: (req) => {
     const forwarded = req.headers["x-forwarded-for"];
     return (typeof forwarded === "string" ? forwarded.split(",")[0].trim() : null)
