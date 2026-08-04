@@ -137,8 +137,11 @@ export const subscriptionRouter = router({
     // App Store or MyFatoorah webhook firing against the owner's account would
     // silently downgrade it — whereas this check runs on every read and cannot
     // be clobbered by payment state.
+    // `period` is carried even though nothing here expires: ProfilePanel reads
+    // `period ?? "monthly"`, so omitting it displayed the owner's permanent
+    // access as a monthly plan on their own profile.
     if (isOwnerEmail(ctx.user.email)) {
-      return { plan: "prime_pro", status: "active", expiresAt: null, licenseKey: null };
+      return { plan: "prime_pro", status: "active", period: "lifetime", expiresAt: null, licenseKey: null };
     }
 
     const userId = ctx.user.openId;
