@@ -16,12 +16,16 @@ import { workoutRouter } from "./routers/workout";
 import { exerciseFavoritesRouter } from "./routers/exerciseFavorites";
 import { gymClassesRouter } from "./routers/gymClasses";
 import { cmsRouter } from "./routers/cms";
+import { serializeUser } from "./_core/serializeUser";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    // Serialized rather than returned raw: the row's numeric weight columns
+    // arrive from the driver as strings, and clients that type them as numbers
+    // fail to decode the whole user. See serializeUser.
+    me: publicProcedure.query(opts => serializeUser(opts.ctx.user)),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
