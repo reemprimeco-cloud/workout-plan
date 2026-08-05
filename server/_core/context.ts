@@ -21,15 +21,22 @@ export async function createContext(
   }
 
   // ── Single-device enforcement ────────────────────────────────────────────
-  // NOTE: Temporarily disabled — activeDeviceId column migration is pending.
-  // Will be re-enabled once the DB migration is applied.
-  // if (user && (user as any).isCron !== true && user.activeDeviceId) {
-  //   const requestDeviceId = opts.req.headers["x-device-id"] as string | undefined;
-  //   if (!requestDeviceId || requestDeviceId !== user.activeDeviceId) {
-  //     console.log(`[Auth] Device mismatch for user ${user.id}`);
-  //     user = null;
-  //   }
-  // }
+  // One active device per account: signing in anywhere records that device as
+  // `activeDeviceId` and revokes the previous device's session, and any request
+  // carrying a different device is treated as signed out. The column and the
+  // device_sessions table shipped in migration 0000 — the note that previously
+  // stood here, saying the migration was still pending, was stale.
+  //
+  // Cron requests are exempt: they authenticate as a synthetic user with no
+  // device of their own, and would otherwise be locked out by their own
+  // scheduled runs.
+  if (user && (user as { isCron?: boolean }).isCron !== true && user.activeDeviceId) {
+    const requestDeviceId = opts.req.headers["x-device-id"] as string | undefined;
+    if (!requestDeviceId || requestDeviceId !== user.activeDeviceId) {
+      console.log(`[Auth] Device mismatch for user ${user.id}`);
+      user = null;
+    }
+  }
 
   return {
     req: opts.req,
