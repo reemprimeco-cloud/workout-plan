@@ -4,7 +4,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, verifyAccessCode, createAccessCode } from "../db";
 import { subscriptions, billingHistory, accessCodes } from "../../drizzle/schema";
 import { resendKeyEmail } from "../_core/email";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, ne, desc } from "drizzle-orm";
 import { createInvoice, getPaymentStatusByPaymentId, PLAN_PRICES, type PlanId, type Period } from "../_core/myfatoorah";
 import { generateLicenseKey } from "../handlers/licenseUtils";
 import { isOwnerEmail } from "../_core/env";
@@ -499,6 +499,42 @@ export const subscriptionRouter = router({
         .from(subscriptions)
         .where(eq(subscriptions.userId, userId))
         .limit(1);
+
+      // One Apple subscription entitles one app account at a time.
+      //
+      // `originalTransactionId` identifies the subscription itself rather than
+      // a single purchase event, so it is stable across renewals and upgrades
+      // and is the only durable link back to the paying Apple ID. Nothing here
+      // checked it, which made receipts replayable: sign in as somebody else,
+      // let the client verify the same transaction again, and that account was
+      // upgraded too. One payment, unlimited accounts — and it is not
+      // hypothetical, two accounts on this deployment ended up sharing a
+      // transaction during testing.
+      //
+      // The prior holder is cancelled rather than the new claim refused. The
+      // legitimate version of this — someone deleting their account and
+      // signing up again, or moving to a new email — is indistinguishable
+      // from the abusive one at this layer, so revoking the old row keeps
+      // exactly one account entitled per subscription without stranding a
+      // real customer who holds a valid receipt.
+      const claimedElsewhere = await database
+        .select()
+        .from(subscriptions)
+        .where(and(
+          eq(subscriptions.transactionId, input.originalTransactionId),
+          ne(subscriptions.userId, userId),
+        ));
+
+      for (const stale of claimedElsewhere) {
+        await database
+          .update(subscriptions)
+          .set({ status: "cancelled", autoRenew: false, updatedAt: new Date() })
+          .where(eq(subscriptions.userId, stale.userId));
+        console.warn(
+          `[Subscription] Apple transaction ${input.originalTransactionId} claimed by ${userId}; ` +
+          `revoked the entitlement previously held by ${stale.userId}`,
+        );
+      }
 
       const commonFields = {
         plan: input.plan,
