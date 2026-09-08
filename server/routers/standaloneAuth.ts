@@ -703,8 +703,13 @@ export const standaloneAuthRouter = router({
    * that supports account creation must also let the user delete that
    * account from within the app, not just via a support request). Deletes
    * the caller's own row only — never another user's, unlike the
-   * admin-only `admin.deleteUser`. Relies on the same FK cascade behavior
-   * that procedure already depends on.
+   * admin-only `admin.deleteUser`.
+   *
+   * Dependent rows are removed by ON DELETE CASCADE (migration 0003). Until
+   * that migration the schema declared no foreign keys at all, so this
+   * deleted the login and left the account's workouts, meals, chat history,
+   * health reports and notifications behind — the comment here claimed a
+   * cascade that did not exist.
    */
   deleteMyAccount: protectedProcedure
     .mutation(async ({ ctx }) => {
