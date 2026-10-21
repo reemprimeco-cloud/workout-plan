@@ -13,6 +13,22 @@ here means web and iOS, each in its own idiom. The iOS app ships iPhone-only —
 iPad support was deliberately dropped before the 1.0 release because no screen
 had been designed or verified at that size.
 
+**The iPhone app is the product. The web is not a consumer surface.**
+
+Customers subscribe and train in the app; they are never asked to use a
+browser. The web retains exactly four public pages, and each is there for a
+concrete reason rather than as a sales channel:
+
+| Page | Why it cannot be hidden |
+|---|---|
+| `/privacy` | Submitted to Apple in the app's metadata and checked by review |
+| `/terms` | Same |
+| `/reset-password` | The app's "Forgot password?" email links here — gating it breaks password recovery for every iPhone user |
+| Landing page | One page introducing Prime Fit and pointing to the App Store. No pricing, no sign-up, no payment |
+
+Everything else on the web — the dashboard, nutrition, coach, community and the
+subscription flow — is internal: admin and operations, behind authentication.
+
 ## Users
 
 Anyone in Kuwait and the wider Gulf who wants training and nutrition coaching in
@@ -60,7 +76,8 @@ Four claims, all confirmed and all currently true in the code:
 - Someone opens the phone app between sets, one-handed, in a gym. Scanability
   and large tap targets matter more than density.
 - The paywall is reached cold from an App Store listing, before any trust
-  exists.
+  exists — and it is reached **inside the app**, never in a browser. The web
+  landing page's only job is to send someone to the App Store.
 - Language is switched inside the app, not inferred from the device. A user may
   flip mid-session and every string must follow immediately.
 - Health reports are uploaded as photographs or PDFs, often of printed lab
@@ -88,17 +105,22 @@ an admin.
 **Subscription tiers:** Free (7-day trial, one per email address), Prime Plus,
 Prime Pro.
 
-**Prices diverge by surface and this is a known open question, not a bug:**
+**Apple's USD prices are the only prices.** Decided, not open:
 
-| | Web (KWD, MyFatoorah) | iOS (USD, StoreKit) |
+| | Monthly | Yearly |
 |---|---|---|
-| Prime Plus | 2.626 / mo · 25.354 / yr | 9.99 / mo · 89.99 / yr |
-| Prime Pro | 4.646 / mo · 45.556 / yr | 19.99 / mo · 179.99 / yr |
+| Prime Plus | $9.99 | $89.99 |
+| Prime Pro | $19.99 | $179.99 |
 
-Apple prices in USD tiers that the exact KWD figures cannot map to, so iOS
-subscribers currently pay substantially more than web subscribers for the same
-tier. Nobody has decided whether to reconcile them. Future work must not present
-a single price as though both surfaces charged it.
+Apple converts these to each storefront, so a Kuwaiti subscriber sees roughly
+3.05 KWD for Prime Plus monthly. There is no second price list.
+
+The KWD figures still in `PLAN_PRICES` (2.626 / 25.354 / 4.646 / 45.556) and the
+MyFatoorah web checkout they drive are **retired**, not live alternatives. They
+were never a deliberate second price tier — they undercut Apple's by 9–32%
+because Apple sells only at fixed price points and the nearest tier upward also
+had to absorb Apple's 15–30% commission. No surface should quote them, and the
+web checkout is no longer a path a customer can reach.
 
 **Authentication:** email + password, Google, and Sign in with Apple (iOS).
 
