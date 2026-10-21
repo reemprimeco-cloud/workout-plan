@@ -4,7 +4,7 @@
 export const privacyPolicy = {
   en: {
     title: "Privacy Policy",
-    lastUpdated: "May 2026",
+    lastUpdated: "October 2026",
     sections: [
       {
         heading: "1. Introduction",
@@ -32,7 +32,7 @@ export const privacyPolicy = {
       },
       {
         heading: "7. Payment Information",
-        body: `Prime Fit offers subscription plans processed through MyFatoorah, a licensed payment gateway operating in Kuwait and the GCC region. When you subscribe, your payment details are handled directly by MyFatoorah and are not stored on our servers. We receive only a transaction confirmation and your subscription status. All payment processing complies with applicable financial regulations in Kuwait.`,
+        body: `Prime Fit subscriptions are sold exclusively through Apple's In-App Purchase system. Your payment is processed by Apple using the payment method on your Apple Account. We never see, receive or store your card details. Apple provides us only with a transaction identifier and your subscription status, which we use to unlock your plan. Apple's handling of your payment information is governed by Apple's own privacy policy.`,
       },
       {
         heading: "8. Data Security",
@@ -48,7 +48,7 @@ export const privacyPolicy = {
       },
       {
         heading: "11. Third-Party Services",
-        body: `Prime Fit integrates with the following third-party services: Google OAuth for authentication, MyFatoorah for payment processing, Supabase for database and file storage, Vercel for application hosting, and OpenAI for AI coaching and food-photo analysis capabilities. Each of these services has its own privacy policy and data practices. We recommend reviewing their policies to understand how they handle your information. We are not responsible for the privacy practices of third-party services.`,
+        body: `Prime Fit integrates with the following third-party services: Apple for Sign in with Apple and for all subscription payments, Google OAuth for authentication, Supabase for database and file storage, Vercel for application hosting, and OpenAI for AI coaching and food-photo analysis capabilities. Each of these services has its own privacy policy and data practices. We recommend reviewing their policies to understand how they handle your information. We are not responsible for the privacy practices of third-party services.`,
       },
       {
         heading: "12. Contact Information",
@@ -62,7 +62,7 @@ export const privacyPolicy = {
   },
   ar: {
     title: "سياسة الخصوصية",
-    lastUpdated: "مايو 2026",
+    lastUpdated: "أكتوبر 2026",
     sections: [
       {
         heading: "١. المقدمة",
@@ -90,7 +90,7 @@ export const privacyPolicy = {
       },
       {
         heading: "٧. معلومات الدفع",
-        body: `يقدّم برايم فت خطط اشتراك تُعالَج عبر بوابة MyFatoorah، وهي بوابة دفع مرخّصة تعمل في الكويت ومنطقة الخليج العربي. عند اشتراكك، تُعالَج تفاصيل الدفع مباشرةً من قِبل MyFatoorah ولا تُخزَّن على خوادمنا. نتلقى فقط تأكيد المعاملة وحالة اشتراكك. تمتثل جميع عمليات معالجة المدفوعات للأنظمة المالية المعمول بها في الكويت.`,
+        body: `تُباع اشتراكات برايم فت حصرياً عبر نظام الشراء داخل التطبيق من آبل. تُعالَج دفعتك من قِبل آبل باستخدام وسيلة الدفع المرتبطة بحساب Apple الخاص بك، ولا نرى بيانات بطاقتك ولا نستلمها ولا نخزّنها إطلاقاً. تزوّدنا آبل برقم المعاملة وحالة اشتراكك فقط، ونستخدمهما لتفعيل خطتك. وتخضع معالجة آبل لمعلومات الدفع لسياسة الخصوصية الخاصة بآبل.`,
       },
       {
         heading: "٨. أمان البيانات",
@@ -106,7 +106,7 @@ export const privacyPolicy = {
       },
       {
         heading: "١١. خدمات الطرف الثالث",
-        body: `يتكامل برايم فت مع خدمات الطرف الثالث التالية: Google OAuth للمصادقة، وMyFatoorah لمعالجة المدفوعات، وSupabase لقاعدة البيانات وتخزين الملفات، وVercel لاستضافة التطبيق، وOpenAI لقدرات المدرب الذكي وتحليل صور الطعام. لكل من هذه الخدمات سياسة خصوصية وممارسات بيانات خاصة بها. نوصي بمراجعة سياساتها لفهم كيفية تعاملها مع معلوماتك. لسنا مسؤولين عن ممارسات الخصوصية لخدمات الطرف الثالث.`,
+        body: `يتكامل برايم فت مع خدمات الطرف الثالث التالية: آبل لتسجيل الدخول عبر Apple ولجميع مدفوعات الاشتراك، وGoogle OAuth للمصادقة، وSupabase لقاعدة البيانات وتخزين الملفات، وVercel لاستضافة التطبيق، وOpenAI لقدرات المدرب الذكي وتحليل صور الطعام. لكل من هذه الخدمات سياسة خصوصية وممارسات بيانات خاصة بها. نوصي بمراجعة سياساتها لفهم كيفية تعاملها مع معلوماتك. لسنا مسؤولين عن ممارسات الخصوصية لخدمات الطرف الثالث.`,
       },
       {
         heading: "١٢. معلومات التواصل",
@@ -123,7 +123,7 @@ export const privacyPolicy = {
 export const termsOfService = {
   en: {
     title: "Terms of Service",
-    lastUpdated: "May 2026",
+    lastUpdated: "October 2026",
     sections: [
       {
         heading: "1. Acceptance of Terms",
@@ -135,11 +135,11 @@ export const termsOfService = {
       },
       {
         heading: "3. Subscription & Billing",
-        body: `Prime Fit offers subscription plans that unlock premium features. Subscriptions are billed on a monthly or annual basis, depending on the plan you select. All payments are processed through MyFatoorah, a licensed payment gateway in Kuwait. Subscription fees are charged at the beginning of each billing period. By subscribing, you authorize us to charge your selected payment method on a recurring basis until you cancel. Prices are displayed in Kuwaiti Dinar (KWD) and are inclusive of applicable taxes.`,
+        body: `Prime Fit offers subscription plans that unlock premium features, sold exclusively through Apple's In-App Purchase system inside the Prime Fit iPhone app. Prices are set in US dollars; Apple converts them to your local currency and shows the exact amount before you confirm. Payment is charged to your Apple Account at confirmation of purchase. Subscriptions renew automatically for the same period unless cancelled at least 24 hours before the current period ends, and your Apple Account is charged for the renewal within 24 hours of that date. You can manage or cancel your subscription at any time in Settings, your name, then Subscriptions on your device. Refunds are handled by Apple under Apple's refund policy; we are not able to issue refunds for App Store purchases.`,
       },
       {
         heading: "4. Free Trial Terms",
-        body: `We may offer a free trial period for new subscribers. During the free trial, you have access to premium features at no charge. At the end of the trial period, your subscription will automatically convert to a paid plan unless you cancel before the trial ends. We will notify you before the trial period expires. Only one free trial is permitted per user account. We reserve the right to modify or discontinue free trial offers at any time.`,
+        body: `We may offer a free 7-day trial to new users. During the trial you have full access to premium features at no charge. The trial requires no payment method and does not convert into a paid subscription: when the seven days end, access to premium features simply stops and you decide whether to subscribe. Only one free trial is permitted per email address. We reserve the right to modify or discontinue free trial offers at any time.`,
       },
       {
         heading: "5. Community Rules",
@@ -181,7 +181,7 @@ export const termsOfService = {
   },
   ar: {
     title: "شروط الخدمة",
-    lastUpdated: "مايو 2026",
+    lastUpdated: "أكتوبر 2026",
     sections: [
       {
         heading: "١. قبول الشروط",
@@ -193,11 +193,11 @@ export const termsOfService = {
       },
       {
         heading: "٣. الاشتراك والفوترة",
-        body: `يقدّم برايم فت خطط اشتراك تُتيح الميزات المميزة. تُفوتَر الاشتراكات على أساس شهري أو سنوي، حسب الخطة التي تختارها. تُعالَج جميع المدفوعات عبر بوابة MyFatoorah، وهي بوابة دفع مرخّصة في الكويت. تُحصَّل رسوم الاشتراك في بداية كل فترة فوترة. بالاشتراك، فإنك تُفوّضنا بخصم المبلغ من طريقة الدفع التي اخترتها بشكل متكرر حتى تلغي الاشتراك. تُعرض الأسعار بالدينار الكويتي (KWD) وتشمل الضرائب المعمول بها.`,
+        body: `يقدّم برايم فت خطط اشتراك تُتيح الميزات المميزة، وتُباع حصرياً عبر نظام الشراء داخل التطبيق من آبل في تطبيق برايم فت للآيفون. تُحدَّد الأسعار بالدولار الأمريكي، وتتولى آبل تحويلها إلى عملتك المحلية وعرض المبلغ الدقيق قبل تأكيدك. يُخصم المبلغ من حساب Apple عند تأكيد الشراء. ويتجدّد الاشتراك تلقائياً للفترة نفسها ما لم تُلغِه قبل 24 ساعة على الأقل من انتهاء الفترة الحالية، ويُخصم مبلغ التجديد من حساب Apple خلال 24 ساعة من ذلك التاريخ. يمكنك إدارة اشتراكك أو إلغاؤه في أي وقت من الإعدادات، ثم اسمك، ثم الاشتراكات على جهازك. وتتولى آبل معالجة طلبات الاسترداد وفق سياستها، ولا يمكننا إصدار مبالغ مستردة لمشتريات App Store.`,
       },
       {
         heading: "٤. شروط التجربة المجانية",
-        body: `قد نقدّم فترة تجربة مجانية للمشتركين الجدد. خلال فترة التجربة المجانية، يمكنك الوصول إلى الميزات المميزة دون رسوم. في نهاية فترة التجربة، سيتحوّل اشتراكك تلقائيًا إلى خطة مدفوعة ما لم تلغِه قبل انتهاء التجربة. سنُخطرك قبل انتهاء فترة التجربة. يُسمح بتجربة مجانية واحدة فقط لكل حساب مستخدم. نحتفظ بالحق في تعديل عروض التجربة المجانية أو إيقافها في أي وقت.`,
+        body: `قد نقدّم تجربة مجانية مدتها 7 أيام للمستخدمين الجدد. خلال التجربة تحصل على وصول كامل إلى الميزات المميزة دون رسوم. ولا تتطلب التجربة أي وسيلة دفع ولا تتحوّل تلقائياً إلى اشتراك مدفوع: عند انتهاء الأيام السبعة يتوقّف الوصول إلى الميزات المميزة ببساطة، وأنت من يقرّر الاشتراك من عدمه. ويُسمح بتجربة مجانية واحدة فقط لكل بريد إلكتروني. نحتفظ بالحق في تعديل عروض التجربة المجانية أو إيقافها في أي وقت.`,
       },
       {
         heading: "٥. قواعد المجتمع",
