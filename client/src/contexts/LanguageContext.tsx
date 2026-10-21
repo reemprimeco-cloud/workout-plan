@@ -333,13 +333,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return deviceLang.toLowerCase().startsWith('ar') ? 'ar' : 'en';
   });
 
-  // The document element has to agree with the language, not just the layout.
-  // Screen readers pick their voice from `lang`, and text shaping and font
-  // fallback both read it; a page of Arabic declared `lang="en"` is read aloud
-  // by an English voice.
+  // The document's `lang` has to agree with the language. Screen readers pick
+  // their voice from it; a page of Arabic declared `lang="en"` is read aloud by
+  // an English voice. `dir` is deliberately left alone: each page sets it on its
+  // own root, and the signed-in app's portals (dialogs, menus, toasts) were laid
+  // out against an LTR document. Flipping it is a separate, tested change.
   useEffect(() => {
     document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
   const setLang = (l: Lang) => {
