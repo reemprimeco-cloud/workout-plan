@@ -1,3 +1,4 @@
+import { APP_STORE_URL } from "@/lib/appStore";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { CheckCircle, XCircle, Copy, Check, Loader2 } from "lucide-react";
@@ -269,7 +270,7 @@ export function SubscriptionError() {
             : <>An error occurred while processing your payment. Please try again or contact us at{" "}<strong>65068000</strong>.</>}
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Link href="/pricing">
+          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
             <Button
               style={{
                 background: NAVY,
@@ -283,7 +284,7 @@ export function SubscriptionError() {
             >
               {isAr ? 'المحاولة مرة أخرى' : 'Try Again'}
             </Button>
-          </Link>
+          </a>
           <a
             href="https://wa.me/96565068000"
             target="_blank"
