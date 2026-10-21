@@ -12,6 +12,7 @@ import AdminPanel from "./pages/AdminPanel";
 import { SubscriptionSuccess, SubscriptionError } from "./pages/SubscriptionResult";
 import { LicenseGate } from "./components/LicenseGate";
 import AuthPage from "./pages/AuthPage";
+import Landing from "./pages/Landing";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
@@ -50,6 +51,7 @@ function Router() {
       <Route path={"/profile-setup"} component={ProfileSetupPage} />
       <Route path={"/privacy"} component={() => <LegalPage type="privacy" />} />
       <Route path={"/terms"} component={() => <LegalPage type="terms" />} />
+      <Route path={"/signin"}>{() => { window.location.replace("/"); return null; }}</Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -111,10 +113,14 @@ function AppWithSocket() {
   // that is no longer reachable.
   const isLegalPage = ["/privacy", "/terms"].includes(window.location.pathname);
   if (!authLoading && !currentUser && !isPublicPage && !isAdminPage && !isLegalPage) {
+    // The root is the marketing page: a stranger arriving from the App Store
+    // listing should meet the product, not a login form. Any deeper path is
+    // someone reaching for the app itself, so that gets the sign-in screen.
+    const atRoot = window.location.pathname === "/";
     return (
       <TooltipProvider>
         <Toaster />
-        <AuthPage />
+        {atRoot ? <Landing /> : <AuthPage />}
       </TooltipProvider>
     );
   }

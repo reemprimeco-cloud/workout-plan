@@ -124,3 +124,6 @@ api/_bundle.js
 # Surface briefs and design.json are durable and stay tracked.
 .impeccable/questions/
 .impeccable/config.local.json
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/
