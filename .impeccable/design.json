@@ -198,6 +198,18 @@
           "oklch(89% 0.080 27)",
           "oklch(96% 0.030 27)"
         ]
+      },
+      "signal-safe-text": {
+        "role": "signal",
+        "displayName": "Signal Safe Text",
+        "canonical": "#15803D",
+        "note": "Text-legible counterpart to signal-success. 5.02:1 on Surface White."
+      },
+      "signal-caution-text": {
+        "role": "signal",
+        "displayName": "Signal Caution Text",
+        "canonical": "#B45309",
+        "note": "Text-legible counterpart to signal-warning. 5.02:1 on Surface White."
       }
     },
     "typographyMeta": {

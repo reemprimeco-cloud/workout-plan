@@ -157,8 +157,8 @@ const COPY = {
     en: "Prime Fit reads your situation — your injury, your hours, your lab results — and builds the programme around it. In Arabic, from the first word.",
   },
   synthetic: {
-    ar: "الأمثلة أدناه من تأليفنا، تُظهر ما يُنتجه التطبيق. ليست حالات لأشخاص حقيقيين.",
-    en: "The examples below are authored to show what the app produces. They are not real people's cases.",
+    ar: "كل الأمثلة في هذه الصفحة من تأليفنا، تُظهر شكل ما يُنتجه التطبيق. ولا واحد منها حالة شخص حقيقي.",
+    en: "Every example on this page is authored, to show the shape of what the app produces. None of them is a real person's case.",
   },
   closeTitle: { ar: "جاهز تبدأ؟", en: "Ready to start?" },
   closeBody: {
@@ -216,6 +216,11 @@ export default function Landing() {
             {isRTL ? "English" : "العربية"}
           </button>
           <a className="l-quiet" href="/signin">{pick(COPY.signIn)}</a>
+          {/* The hero action scrolls away and the exchanges run for another two
+              thousand pixels. The bar carries it the rest of the way. */}
+          <a className="l-bar-cta" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+            {pick(COPY.download)}
+          </a>
         </nav>
       </header>
 
@@ -223,16 +228,23 @@ export default function Landing() {
       <main>
         <section className="l-open">
           <h1 className="l-ask l-ask--lead">{pick(EXCHANGES[0].ask)}</h1>
+          {/* The aside is first in the markup so that a narrow screen, which
+              stacks this grid into one column, meets the page's own voice and
+              the action before the demonstration. At desktop the two sit side
+              by side and grid placement puts the card at the reading start. */}
           <div className="l-open-answer">
-            <ReplyCard exchange={EXCHANGES[0]} isRTL={isRTL} pick={pick} shown />
             <aside className="l-open-aside">
+              <p className="l-lead">{pick(COPY.lead)}</p>
               <p className="l-sub">{pick(COPY.sub)}</p>
               <a className="l-cta" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
                 <span className="l-cta-main">{pick(COPY.download)}</span>
                 <span className="l-cta-sub">{pick(COPY.onAppStore)}</span>
               </a>
-              <p className="l-synthetic">{pick(COPY.synthetic)}</p>
             </aside>
+            <div className="l-open-main">
+              <p className="l-synthetic">{pick(COPY.synthetic)}</p>
+              <ReplyCard exchange={EXCHANGES[0]} isRTL={isRTL} pick={pick} shown />
+            </div>
           </div>
         </section>
 
@@ -241,12 +253,14 @@ export default function Landing() {
         ))}
 
         <section className="l-close">
-          <h2 className="l-close-title">{pick(COPY.closeTitle)}</h2>
-          <p className="l-close-body">{pick(COPY.closeBody)}</p>
-          <a className="l-cta l-cta-light" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-            <span className="l-cta-main">{pick(COPY.download)}</span>
-            <span className="l-cta-sub">{pick(COPY.onAppStore)}</span>
-          </a>
+          <div className="l-close-in">
+            <h2 className="l-close-title">{pick(COPY.closeTitle)}</h2>
+            <p className="l-close-body">{pick(COPY.closeBody)}</p>
+            <a className="l-cta" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <span className="l-cta-main">{pick(COPY.download)}</span>
+              <span className="l-cta-sub">{pick(COPY.onAppStore)}</span>
+            </a>
+          </div>
         </section>
       </main>
 
@@ -288,7 +302,7 @@ function ReplyCard({
   const reply = isRTL ? exchange.ar : exchange.en;
   return (
     <div className={shown ? "is-shown" : ""}>
-      <article className="l-reply" aria-label={pick(exchange.replyLabel)}>
+      <article className={`l-reply l-reply--${reply.kind}`} aria-label={pick(exchange.replyLabel)}>
         <h3 className="l-reply-title">{pick(exchange.replyLabel)}</h3>
 
         {reply.kind === "plan" && (
@@ -350,12 +364,16 @@ function ReplyCard({
 const LANDING_CSS = `
 .landing {
   --l-gut: clamp(20px, 6vw, 72px);
+  /* The reading axis as a signed offset, so an entrance can come from the
+     start of the line in either script without a second rule per element. */
+  --l-in: -10px;
   text-align: start;
   background: var(--bg-main, #F0F4F8);
   color: var(--text-dark, #1B2E5E);
   font-family: 'Tajawal', 'Inter', sans-serif;
   min-height: 100dvh;
 }
+.landing[dir="rtl"] { --l-in: 10px; }
 .landing ::selection { background: var(--secondary-light, #A8D4E8); color: var(--primary, #1B2E5E); }
 .landing a:focus-visible,
 .landing button:focus-visible {
@@ -385,15 +403,20 @@ const LANDING_CSS = `
   padding: 8px 2px; min-height: 44px; display: inline-flex; align-items: center;
 }
 .l-lang:hover, .l-quiet:hover { color: var(--primary, #1B2E5E); }
+.l-bar-cta {
+  font-family: 'Inter', 'Tajawal', sans-serif; font-size: 12px; font-weight: 700;
+  background: var(--secondary, #7BB8D4); color: var(--primary, #1B2E5E);
+  text-decoration: none; border-radius: 10px; white-space: nowrap;
+  padding: 0 18px; min-height: 44px; display: inline-flex; align-items: center;
+  transition: background .2s ease, transform .08s ease;
+}
+.l-bar-cta:hover { background: var(--secondary-light, #A8D4E8); }
+.l-bar-cta:active { transform: scale(.97); }
 
 /* ── Opening ─────────────────────────────────────────────────────────── */
-.l-open { padding: clamp(40px, 7vw, 76px) var(--l-gut) clamp(40px, 7vw, 72px); max-width: 1180px; }
-.l-ask--lead {
-  font-size: clamp(30px, 5.4vw, 60px);
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  max-width: 19ch;
-  margin-bottom: clamp(26px, 4vw, 42px);
+.l-open {
+  padding: clamp(40px, 7vw, 76px) var(--l-gut) clamp(40px, 7vw, 72px);
+  max-width: 1180px; margin-inline: auto;
 }
 .l-open-answer {
   display: grid;
@@ -401,31 +424,40 @@ const LANDING_CSS = `
   gap: clamp(24px, 4vw, 52px);
   align-items: start;
 }
-.l-open-aside { padding-top: 6px; }
+.l-open-main { grid-column: 1; grid-row: 1; }
+.l-open-aside { grid-column: 2; grid-row: 1; padding-top: 6px; }
+.l-lead {
+  font-family: 'Inter', 'Tajawal', sans-serif; font-weight: 600;
+  font-size: clamp(17px, 1.8vw, 21px); line-height: 1.45; letter-spacing: -0.01em;
+  color: var(--primary, #1B2E5E);
+  margin: 0 0 12px; max-width: 28ch;
+}
 .l-sub {
   font-size: clamp(15px, 1.5vw, 18px); line-height: 1.75;
   color: var(--text-medium, #3D5A80);
   margin: 0 0 26px; max-width: 44ch;
 }
+/* Sits above the demonstration it qualifies: a visitor should know the plans
+   are authored before reading one, not after. */
 .l-synthetic {
-  font-size: 12px; line-height: 1.6; color: var(--text-light, #7A9BB5);
-  margin: 28px 0 0; max-width: 52ch;
+  font-size: 13px; line-height: 1.6; color: var(--text-medium, #3D5A80);
+  margin: 0 0 14px; max-width: 56ch;
 }
 
 /* ── Call to action ──────────────────────────────────────────────────── */
 .l-cta {
   display: inline-flex; flex-direction: column; gap: 2px;
-  background: var(--primary, #1B2E5E); color: #fff;
+  background: var(--secondary, #7BB8D4); color: var(--primary, #1B2E5E);
   text-decoration: none; border-radius: 12px;
   padding: 14px 30px; min-height: 44px;
   transition: background .2s ease, transform .08s ease;
 }
-.l-cta:hover { background: var(--primary-light, #2A4A8C); }
+.l-cta:hover { background: var(--secondary-light, #A8D4E8); }
 .l-cta:active { transform: scale(.97); }
 .l-cta-main { font-family: 'Inter','Tajawal',sans-serif; font-weight: 700; font-size: 15px; }
-.l-cta-sub { font-size: 12px; opacity: .72; }
-.l-cta-light { background: var(--secondary, #7BB8D4); color: var(--primary, #1B2E5E); }
-.l-cta-light:hover { background: var(--secondary-light, #A8D4E8); }
+/* No opacity: navy at 72% over Shallow Water Blue measures 3.5:1, and this
+   line is 12px. The step down is carried by size and weight instead. */
+.l-cta-sub { font-size: 12px; font-weight: 500; }
 
 /* ── Exchange ────────────────────────────────────────────────────────── */
 /* Ask and answer face each other: the exchange reads as a conversation across
@@ -434,7 +466,7 @@ const LANDING_CSS = `
 .l-x {
   position: relative;
   padding: clamp(40px, 7vw, 76px) var(--l-gut);
-  max-width: 1180px;
+  max-width: 1180px; margin-inline: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
   gap: clamp(20px, 5vw, 64px);
@@ -452,6 +484,16 @@ const LANDING_CSS = `
   max-width: 20ch;
   padding-top: 4px;
   text-wrap: balance;
+}
+/* The opening ask carries the page: display scale, and the only ask with a
+   gap under it. Declared after .l-ask because it overrides it: equal
+   specificity, so source order is the whole argument. */
+.l-ask--lead {
+  font-size: clamp(30px, 5.4vw, 60px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  max-width: 19ch;
+  margin-bottom: clamp(40px, 7vw, 48px);
 }
 .l-reply {
   background: var(--bg-card, #fff);
@@ -474,12 +516,22 @@ const LANDING_CSS = `
   margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--border, #D0DFF0);
 }
 
-/* rows, week, report, rhythm all stagger in behind the card */
+/* The card lifts; its contents follow. Each artifact arrives the way it is
+   read — the ordered lists write themselves down the page, the week fills
+   along the reading axis, the two report columns settle in together — so the
+   four exchanges are not one entrance played four times. One easing curve
+   throughout, the same one the card uses. */
 .l-row, .l-day, .l-beat, .l-report li {
-  opacity: 0; transform: translateY(8px);
-  transition: opacity .5s ease-out, transform .5s ease-out;
+  opacity: 0;
+  transition: opacity .55s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1);
   transition-delay: calc(.18s + var(--i, 0) * .07s);
 }
+.l-row, .l-beat { transform: translateY(10px); }
+.l-day {
+  transform: translate(var(--l-in), 0);
+  transition-delay: calc(.16s + var(--i, 0) * .05s);
+}
+.l-report li { transform: scale(.97); transform-origin: center top; }
 .l-x.is-shown .l-row, .is-shown .l-row,
 .l-x.is-shown .l-day, .is-shown .l-day,
 .l-x.is-shown .l-beat, .is-shown .l-beat,
@@ -504,7 +556,9 @@ const LANDING_CSS = `
   color: var(--primary, #1B2E5E); min-width: 6.5ch;
 }
 .l-day-focus { font-size: 15px; }
-.l-day.is-rest .l-day-name, .l-day.is-rest .l-day-focus { color: var(--text-light, #7A9BB5); font-weight: 400; }
+/* A rest day reads quieter than a training day, but it is still text: the
+   step down is Navy Text at the medium tone, not the 2.9:1 light tone. */
+.l-day.is-rest .l-day-name, .l-day.is-rest .l-day-focus { color: var(--text-medium, #3D5A80); font-weight: 400; }
 
 .l-report { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .l-report-col ul { list-style: none; margin: 0; padding: 0; }
@@ -514,14 +568,16 @@ const LANDING_CSS = `
   margin: 0 0 8px; padding-bottom: 7px;
   border-bottom: 2px solid currentColor;
 }
-.l-report-head--avoid { color: #B45309; }
-.l-report-head--safe { color: #15803D; }
+.l-report-head--avoid { color: var(--signal-caution-text, #B45309); }
+.l-report-head--safe { color: var(--signal-safe-text, #15803D); }
 
 .l-beat { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; }
 .l-beat + .l-beat { border-top: 1px solid var(--border, #D0DFF0); }
+/* Shallow Water Blue measures 2.2:1 on Surface White and cannot carry 12px
+   text. The accent stays on the card's rule; the times take Navy Text. */
 .l-beat-at {
   font-family: 'Inter','Tajawal',sans-serif; font-size: 12px; font-weight: 700;
-  color: var(--secondary, #7BB8D4); min-width: 6ch; font-variant-numeric: tabular-nums;
+  color: var(--text-medium, #3D5A80); min-width: 6ch; font-variant-numeric: tabular-nums;
 }
 .l-beat-what { font-size: 15px; }
 
@@ -531,6 +587,7 @@ const LANDING_CSS = `
   padding: clamp(56px, 9vw, 104px) var(--l-gut);
   margin-top: clamp(40px, 6vw, 72px);
 }
+.l-close-in { max-width: 1180px; margin-inline: auto; }
 .l-close-title {
   font-family: 'Inter','Tajawal',sans-serif; font-weight: 800;
   font-size: clamp(27px, 4.6vw, 46px); line-height: 1.15; letter-spacing: -0.02em;
@@ -541,14 +598,19 @@ const LANDING_CSS = `
 /* ── Foot ────────────────────────────────────────────────────────────── */
 .l-foot {
   display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between;
-  padding: 26px var(--l-gut); font-size: 12px; color: var(--text-light, #7A9BB5);
+  padding: 26px var(--l-gut); font-size: 12px; color: var(--text-medium, #3D5A80);
+  max-width: 1180px; margin-inline: auto;
 }
 .l-foot-links { display: flex; gap: 20px; }
 .l-foot a { color: inherit; text-decoration: none; text-underline-offset: 3px; }
-.l-foot a:hover { color: var(--text-medium, #3D5A80); text-decoration: underline; }
+.l-foot a:hover { color: var(--primary, #1B2E5E); text-decoration: underline; }
 
 @media (max-width: 980px) {
   .l-open-answer { grid-template-columns: minmax(0, 1fr); }
+  /* One column: the grid falls back to source order, which puts the lead, the
+     subcopy and the action above the demonstration card. */
+  .l-open-main, .l-open-aside { grid-column: 1; grid-row: auto; }
+  .l-open-aside { padding-top: 0; }
   .l-x { grid-template-columns: minmax(0, 1fr); gap: clamp(18px, 4vw, 30px); }
   .l-ask { max-width: 24ch; }
 }
@@ -556,6 +618,11 @@ const LANDING_CSS = `
   .l-report { grid-template-columns: 1fr; gap: 18px; }
   .l-reply { margin-inline-start: 0; }
   .l-row { flex-direction: column; gap: 3px; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+  .l-bar { padding-inline: 16px; }
+  .l-bar-actions { gap: 10px; }
+  .l-bar-cta { padding: 0 13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
