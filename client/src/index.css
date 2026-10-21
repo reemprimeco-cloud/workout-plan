@@ -6,7 +6,7 @@
   Fonts: Inter (headings), Tajawal (body Arabic)
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -33,6 +33,11 @@
   --text-medium: #3D5A80;
   --text-light: #7A9BB5;
   --border: #D0DFF0;
+  /* Signal text tones. The display signals (--success #22C55E, warning
+     #F59E0B, danger #EF4444) measure 2.15:1 to 3.76:1 on white and cannot
+     legally carry text; these are the same hues at a readable lightness. */
+  --signal-caution-text: #B45309;
+  --signal-safe-text: #15803D;
   --shadow: 0 4px 20px rgba(27,46,94,0.08);
   --shadow-hover: 0 8px 32px rgba(27,46,94,0.18);
 }

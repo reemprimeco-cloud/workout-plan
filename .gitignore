@@ -119,3 +119,11 @@ client/public/__manus__/version.json
 
 # Generated Vercel function bundle
 api/_bundle.js
+
+# Impeccable: transient round state (the roll record serve-question reads).
+# Surface briefs and design.json are durable and stay tracked.
+.impeccable/questions/
+.impeccable/config.local.json
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/

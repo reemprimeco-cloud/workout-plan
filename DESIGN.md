@@ -15,6 +15,8 @@ colors:
   signal-success: "#22C55E"
   signal-warning: "#F59E0B"
   signal-danger: "#EF4444"
+  signal-safe-text: "#15803D"
+  signal-caution-text: "#B45309"
 typography:
   display:
     fontFamily: "Inter, Tajawal, sans-serif"
@@ -169,6 +171,10 @@ warmth admitted only when the interface needs to signal state.
 - **Signal Success** (`#22C55E`) · **Signal Warning** (`#F59E0B`) ·
   **Signal Danger** (`#EF4444`): State only — confirmation, caution, error and
   the free-trial CTA. These are the only non-blue hues the system admits.
+- **Signal Safe Text** (`#15803D`) · **Signal Caution Text** (`#B45309`): the
+  same two hues at a lightness that can legally carry text. The display signals
+  above measure 2.15:1 to 3.76:1 on Surface White — they are fills, dots and
+  bars, never words. Any signal-coloured *text* uses this pair.
 
 ### Named Rules
 
@@ -179,6 +185,13 @@ decorative accent — a gold border, an orange heading, a red that isn't an erro
 
 **The Navy Text Rule.** Body text is Deep Harbour Navy, not black and not grey.
 Pure black on Sea Mist reads as a foreign element pasted into the page.
+
+**The Single Action Rule.** On a surface whose job is to persuade rather than to
+operate, Shallow Water Blue is the only actionable colour, and every instance of
+the action wears it — in the bar, in the first viewport and in the closing band.
+Navy is the voice of the page; a navy button competes with the headline for the
+same authority and loses the eye. In-product surfaces are unaffected: there the
+navy primary button stays, because there the page is not arguing for itself.
 
 ## Typography
 
@@ -198,6 +211,11 @@ and critically, neither script ever falls back to a system default.
 - **Body** (400, 14px, 1.6): Running text, table cells, descriptions.
 - **Label** (600, 12px, 1.4): Badges, captions, metadata. Error text drops to
   11px at the same weight.
+- **Persuade display** (700–800, `clamp(30px, 5.4vw, 60px)`, 1.1, tracking
+  −0.025em): the opening line of a public marketing surface, and nothing else.
+  The scale above is the in-product scale, sized for a phone held at arm's
+  length with a task to finish; a stranger reading a page in a browser needs a
+  line that is unmissable before it is read. One such line per page.
 
 ### Named Rules
 
@@ -209,6 +227,12 @@ sentence.
 **The Heavy-Head Rule.** Hierarchy is carried by weight, not size. The jump from
 body to display is 14px to 20px but 400 to 800. Reaching for a larger size
 before a heavier weight produces the wrong system.
+
+*Persuade exception.* The rule governs surfaces where the reader already wants
+to be there. A public page has to earn the second line before it gets to use
+hierarchy at all, so its opening statement is allowed the size as well as the
+weight — once, at the top, in the Persuade display band. Everything below it
+returns to the rule.
 
 ## Layout
 
@@ -264,6 +288,15 @@ than light.
 **The Lift-on-Touch Rule.** The 2px rise on hover is the system's one physical
 gesture. It belongs to things that can actually be picked up — cards, tappable
 rows. A static panel that lifts is lying about what it does.
+
+**The Arrival Rule.** A card that enters on scroll lifts once, from a visible
+default, on `cubic-bezier(.16,1,.3,1)` — the system's only entrance curve. Its
+contents follow on a stagger, and that stagger takes the axis the content is
+read on: an ordered list arrives down the page, a row of days along the reading
+axis, paired columns together. Repeating the same section arrival is allowed and
+intended where the repetition is the page's structure — a sequence of like
+exchanges reads as a rhythm, not as one effect played four times — but the
+contents inside must still differ, or the repetition is a loop instead.
 
 ## Shapes
 
