@@ -13,7 +13,7 @@ export function SubscriptionSuccess() {
   const [copied, setCopied] = useState(false);
   const { lang } = useLanguage();
   const isAr = lang === 'ar';
-  const fontFamily = isAr ? "Cairo, sans-serif" : "Inter, system-ui, sans-serif";
+  const fontFamily = isAr ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif";
 
   // MyFatoorah appends ?paymentId=xxx to the CallBackUrl automatically
   const params = new URLSearchParams(window.location.search);
@@ -78,7 +78,7 @@ export function SubscriptionSuccess() {
         <h1 style={{ fontSize: 26, fontWeight: 900, color: NAVY, margin: "0 0 8px" }}>
           {isAr ? 'تم الدفع بنجاح!' : 'Payment Successful!'}
         </h1>
-        <p style={{ color: "#64748b", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
+        <p style={{ color: "#3D5A80", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
           {isAr
             ? 'شكراً لاشتراكك في Prime Fit. كود التفعيل الخاص بك جاهز أدناه وقد أُرسل أيضاً إلى بريدك الإلكتروني.'
             : 'Thank you for subscribing to Prime Fit. Your activation code is ready below and has also been sent to your email.'}
@@ -100,7 +100,7 @@ export function SubscriptionSuccess() {
             }}
           >
             <Loader2 size={28} color={SKY} className="animate-spin" />
-            <p style={{ color: "#7A9BB5", fontSize: 13, margin: 0 }}>
+            <p style={{ color: "#506A88", fontSize: 13, margin: 0 }}>
               {isAr ? 'جاري تجهيز كود التفعيل...' : 'Preparing your activation code...'}
             </p>
           </div>
@@ -114,7 +114,7 @@ export function SubscriptionSuccess() {
               marginBottom: 24,
             }}
           >
-            <p style={{ color: "#9CA3AF", fontSize: 11, margin: "0 0 8px", letterSpacing: "1px", textTransform: "uppercase" }}>
+            <p style={{ color: "#506A88", fontSize: 11, margin: "0 0 8px", letterSpacing: "1px", textTransform: "uppercase" }}>
               {isAr ? 'كود التفعيل' : 'Activation Code'}
             </p>
             <div
@@ -194,7 +194,7 @@ export function SubscriptionSuccess() {
           <p style={{ color: NAVY, fontWeight: 700, fontSize: 13, margin: "0 0 8px" }}>
             {isAr ? 'كيفية الاستخدام:' : 'How to use:'}
           </p>
-          <ol style={{ color: "#64748b", fontSize: 12, lineHeight: 2, margin: 0, paddingRight: isAr ? 16 : 0, paddingLeft: isAr ? 0 : 16 }}>
+          <ol style={{ color: "#3D5A80", fontSize: 12, lineHeight: 2, margin: 0, paddingRight: isAr ? 16 : 0, paddingLeft: isAr ? 0 : 16 }}>
             {isAr ? (
               <>
                 <li>افتح تطبيق Prime Fit</li>
@@ -234,7 +234,7 @@ export function SubscriptionSuccess() {
 export function SubscriptionError() {
   const { lang } = useLanguage();
   const isAr = lang === 'ar';
-  const fontFamily = isAr ? "Cairo, sans-serif" : "Inter, system-ui, sans-serif";
+  const fontFamily = isAr ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif";
 
   return (
     <div
@@ -264,7 +264,7 @@ export function SubscriptionError() {
         <h1 style={{ fontSize: 26, fontWeight: 900, color: NAVY, margin: "0 0 8px" }}>
           {isAr ? 'فشل الدفع' : 'Payment Failed'}
         </h1>
-        <p style={{ color: "#64748b", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
+        <p style={{ color: "#3D5A80", fontSize: 14, marginBottom: 28, lineHeight: 1.7 }}>
           {isAr
             ? <>حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى أو التواصل معنا على{" "}<strong>65068000</strong>.</>
             : <>An error occurred while processing your payment. Please try again or contact us at{" "}<strong>65068000</strong>.</>}

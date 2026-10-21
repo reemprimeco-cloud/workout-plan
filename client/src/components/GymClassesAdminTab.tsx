@@ -68,7 +68,7 @@ export default function GymClassesAdminTab({ lang }: Props) {
             style={{
               padding: '10px 20px', border: 'none', background: 'none', cursor: 'pointer',
               fontSize: 13, fontWeight: 700,
-              color: subTab === st.id ? NAVY : '#7A9BB5',
+              color: subTab === st.id ? NAVY : '#506A88',
               borderBottom: subTab === st.id ? `3px solid ${NAVY}` : '3px solid transparent',
               marginBottom: -2,
             }}
@@ -185,7 +185,7 @@ function GymsTab({ isAr }: { isAr: boolean }) {
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           {/* Logo upload area */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{isAr ? 'شعار الجيم' : 'Gym Logo'}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80' }}>{isAr ? 'شعار الجيم' : 'Gym Logo'}</label>
             <div
               onClick={() => addFileRef.current?.click()}
               style={{
@@ -205,12 +205,12 @@ function GymsTab({ isAr }: { isAr: boolean }) {
               )}
             </div>
             <input ref={addFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleLogoChange(e, 'add')} />
-            <span style={{ fontSize: 10, color: '#94A3B8' }}>{isAr ? 'انقر للرفع' : 'Click to upload'}</span>
+            <span style={{ fontSize: 10, color: '#506A88' }}>{isAr ? 'انقر للرفع' : 'Click to upload'}</span>
           </div>
 
           {/* Name input */}
           <div style={{ flex: 1, minWidth: 160 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الجيم *' : 'Gym Name *'}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الجيم *' : 'Gym Name *'}</label>
             <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder={isAr ? 'مثال: Prime Fit' : 'e.g. Prime Fit'} />
           </div>
 
@@ -224,8 +224,8 @@ function GymsTab({ isAr }: { isAr: boolean }) {
       {/* ── Gym list ── */}
       <div style={card}>
         <p style={sectionTitle}>{isAr ? 'الجيمات المسجّلة' : 'Registered Gyms'}</p>
-        {isLoading ? <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : gymList.length === 0 ? (
-          <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'لا توجد جيمات بعد.' : 'No gyms yet.'}</p>
+        {isLoading ? <p style={{ color: '#506A88', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : gymList.length === 0 ? (
+          <p style={{ color: '#506A88', fontSize: 13 }}>{isAr ? 'لا توجد جيمات بعد.' : 'No gyms yet.'}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {gymList.map((g: any) => (
@@ -241,7 +241,7 @@ function GymsTab({ isAr }: { isAr: boolean }) {
                   )}
                   <div>
                     <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{g.name}</span>
-                    <div style={{ fontSize: 11, color: '#94A3B8' }}>ID: {g.id}</div>
+                    <div style={{ fontSize: 11, color: '#506A88' }}>ID: {g.id}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -289,12 +289,12 @@ function GymsTab({ isAr }: { isAr: boolean }) {
                 )}
               </div>
               <input ref={editFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleLogoChange(e, 'edit')} />
-              <span style={{ fontSize: 11, color: '#94A3B8' }}>{isAr ? 'انقر لتغيير الشعار' : 'Click to change logo'}</span>
+              <span style={{ fontSize: 11, color: '#506A88' }}>{isAr ? 'انقر لتغيير الشعار' : 'Click to change logo'}</span>
             </div>
 
             {/* Name input */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الجيم' : 'Gym Name'}</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الجيم' : 'Gym Name'}</label>
               <input style={inputStyle} value={editName} onChange={e => setEditName(e.target.value)} />
             </div>
 
@@ -341,18 +341,18 @@ function BranchesTab({ isAr }: { isAr: boolean }) {
         <p style={sectionTitle}>{isAr ? 'إضافة فرع جديد' : 'Add New Branch'}</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'الجيم *' : 'Gym *'}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80', display: 'block', marginBottom: 4 }}>{isAr ? 'الجيم *' : 'Gym *'}</label>
             <select style={inputStyle} value={gymId} onChange={e => setGymId(e.target.value ? Number(e.target.value) : '')}>
               <option value="">{isAr ? 'اختر الجيم' : 'Select gym'}</option>
               {gyms.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الفرع *' : 'Branch Name *'}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80', display: 'block', marginBottom: 4 }}>{isAr ? 'اسم الفرع *' : 'Branch Name *'}</label>
             <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder={isAr ? 'مثال: الفرع الرئيسي' : 'e.g. Main Branch'} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{isAr ? 'الموقع' : 'Location'}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80', display: 'block', marginBottom: 4 }}>{isAr ? 'الموقع' : 'Location'}</label>
             <input style={inputStyle} value={location} onChange={e => setLocation(e.target.value)} placeholder={isAr ? 'مثال: الكويت، حولي' : 'e.g. Kuwait, Hawalli'} />
           </div>
           <button onClick={handleCreate} disabled={createBranch.isPending} style={btn()}>
@@ -370,16 +370,16 @@ function BranchesTab({ isAr }: { isAr: boolean }) {
             {gyms.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
         </div>
-        {isLoading ? <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : branches.length === 0 ? (
-          <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'لا توجد فروع.' : 'No branches.'}</p>
+        {isLoading ? <p style={{ color: '#506A88', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : branches.length === 0 ? (
+          <p style={{ color: '#506A88', fontSize: 13 }}>{isAr ? 'لا توجد فروع.' : 'No branches.'}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {branches.map((b: any) => (
               <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #E2E8F0' }}>
                 <div>
                   <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}>{b.name}</span>
-                  {b.location && <span style={{ fontSize: 12, color: '#64748B', marginLeft: 8 }}>{b.location}</span>}
-                  <span style={{ fontSize: 11, color: '#94A3B8', marginLeft: 8 }}>Gym ID: {b.gymId}</span>
+                  {b.location && <span style={{ fontSize: 12, color: '#3D5A80', marginLeft: 8 }}>{b.location}</span>}
+                  <span style={{ fontSize: 11, color: '#506A88', marginLeft: 8 }}>Gym ID: {b.gymId}</span>
                 </div>
                 <button onClick={() => { if (confirm(isAr ? `حذف "${b.name}"؟` : `Delete "${b.name}"?`)) deleteBranch.mutate({ id: b.id }); }} style={dangerBtn}>
                   {isAr ? 'حذف' : 'Delete'}
@@ -498,7 +498,7 @@ function ClassesTab({ isAr }: { isAr: boolean }) {
               { label: isAr ? 'ملاحظات' : 'Notes', el: <input style={inputStyle} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder={isAr ? 'اختياري' : 'Optional'} /> },
             ].map(({ label, el }) => (
               <div key={label}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#64748B', display: 'block', marginBottom: 4 }}>{label}</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#3D5A80', display: 'block', marginBottom: 4 }}>{label}</label>
                 {el}
               </div>
             ))}
@@ -516,15 +516,15 @@ function ClassesTab({ isAr }: { isAr: boolean }) {
       {/* Classes list */}
       <div style={card}>
         <p style={sectionTitle}>{isAr ? 'قائمة الحصص' : 'Class Schedule'} {classes.length > 0 && `(${classes.length})`}</p>
-        {isLoading ? <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : classes.length === 0 ? (
-          <p style={{ color: '#94A3B8', fontSize: 13 }}>{isAr ? 'لا توجد حصص.' : 'No classes found.'}</p>
+        {isLoading ? <p style={{ color: '#506A88', fontSize: 13 }}>{isAr ? 'جاري التحميل...' : 'Loading...'}</p> : classes.length === 0 ? (
+          <p style={{ color: '#506A88', fontSize: 13 }}>{isAr ? 'لا توجد حصص.' : 'No classes found.'}</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#F1F5F9' }}>
                   {[isAr?'الحصة':'Class', isAr?'المدرب':'Coach', isAr?'اليوم':'Day', isAr?'الوقت':'Time', isAr?'المدة':'Duration', isAr?'المستوى':'Intensity', isAr?'الفرع':'Branch', ''].map((h, i) => (
-                    <th key={i} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#64748B', whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={i} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#3D5A80', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -532,12 +532,12 @@ function ClassesTab({ isAr }: { isAr: boolean }) {
                 {classes.map((c: any) => (
                   <tr key={c.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                     <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY }}>{c.className}</td>
-                    <td style={{ padding: '10px 12px', color: '#475569' }}>{c.coach}</td>
-                    <td style={{ padding: '10px 12px', color: '#475569' }}>{dayLabel[c.day] || c.day}</td>
-                    <td style={{ padding: '10px 12px', color: '#475569' }}>{c.time}</td>
-                    <td style={{ padding: '10px 12px', color: '#475569' }}>{c.durationMin} {isAr?'د':'min'}</td>
+                    <td style={{ padding: '10px 12px', color: '#3D5A80' }}>{c.coach}</td>
+                    <td style={{ padding: '10px 12px', color: '#3D5A80' }}>{dayLabel[c.day] || c.day}</td>
+                    <td style={{ padding: '10px 12px', color: '#3D5A80' }}>{c.time}</td>
+                    <td style={{ padding: '10px 12px', color: '#3D5A80' }}>{c.durationMin} {isAr?'د':'min'}</td>
                     <td style={{ padding: '10px 12px' }}><span style={badge(c.intensity)}>{c.intensity}</span></td>
-                    <td style={{ padding: '10px 12px', color: '#94A3B8', fontSize: 12 }}>ID: {c.branchId}</td>
+                    <td style={{ padding: '10px 12px', color: '#506A88', fontSize: 12 }}>ID: {c.branchId}</td>
                     <td style={{ padding: '10px 12px' }}>
                       <button onClick={() => { if (confirm(isAr ? `حذف "${c.className}"؟` : `Delete "${c.className}"?`)) deleteClass.mutate({ id: c.id }); }} style={dangerBtn}>
                         {isAr ? 'حذف' : 'Del'}
@@ -584,7 +584,7 @@ function ImportTab({ isAr }: { isAr: boolean }) {
     <div>
       <div style={card}>
         <p style={sectionTitle}>{isAr ? 'استيراد جدول الحصص من Excel' : 'Import Class Schedule from Excel'}</p>
-        <p style={{ fontSize: 13, color: '#64748B', marginBottom: 16, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 13, color: '#3D5A80', marginBottom: 16, lineHeight: 1.6 }}>
           {isAr
             ? 'قم بتحميل ملف Excel (.xlsx) يحتوي على ورقة "Schedule" مع الأعمدة التالية: Gym Name, Branch, Day, Time, Class Name, Coach, Duration (min), Intensity, Calories (اختياري), Notes (اختياري).'
             : 'Upload an Excel (.xlsx) file containing a "Schedule" sheet with columns: Gym Name, Branch, Day, Time, Class Name, Coach, Duration (min), Intensity, Calories (optional), Notes (optional).'}
@@ -595,7 +595,7 @@ function ImportTab({ isAr }: { isAr: boolean }) {
           <button onClick={() => fileRef.current?.click()} style={btn()}>
             {isAr ? 'اختر ملف Excel' : 'Choose Excel File'}
           </button>
-          {filename && <span style={{ fontSize: 13, color: '#475569' }}>{filename}</span>}
+          {filename && <span style={{ fontSize: 13, color: '#3D5A80' }}>{filename}</span>}
           {importMutation.isPending && <span style={{ fontSize: 13, color: SKY }}>{isAr ? 'جاري الاستيراد...' : 'Importing...'}</span>}
         </div>
 
@@ -613,7 +613,7 @@ function ImportTab({ isAr }: { isAr: boolean }) {
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ textAlign: 'center', padding: '12px', background: 'white', borderRadius: 10 }}>
                   <div style={{ fontSize: 24, fontWeight: 900, color }}>{value}</div>
-                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{label}</div>
+                  <div style={{ fontSize: 11, color: '#3D5A80', marginTop: 2 }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -629,7 +629,7 @@ function ImportTab({ isAr }: { isAr: boolean }) {
 
       {/* Template download hint */}
       <div style={{ ...card, background: '#F8FAFC', border: '1px dashed #CBD5E1' }}>
-        <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>
+        <p style={{ fontSize: 13, color: '#3D5A80', margin: 0 }}>
           {isAr
             ? 'تحتاج إلى قالب Excel؟ اطلب من المسؤول تنزيل ملف "PrimeFit_Branch_Schedule_Template.xlsx" وأرسله للفروع لملئه.'
             : 'Need a template? Ask the administrator to download the "PrimeFit_Branch_Schedule_Template.xlsx" file and send it to branches to fill in.'}

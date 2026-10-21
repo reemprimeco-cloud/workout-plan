@@ -25,10 +25,10 @@ const SHADOW    = "0 2px 12px rgba(27,46,94,0.08)";
 const TEXT      = "#1B2E5E";
 const TEXT2     = "#4A6080";
 const MUTED     = "#8FA8C0";
-const C_PROTEIN = "#EF4444";
-const C_CARBS   = "#F59E0B";
-const C_FAT     = "#8B5CF6";
-const C_GREEN   = "#22C55E";
+const C_PROTEIN = "#4F5BA6";   // Dusk Indigo (sea family, DESIGN.md)
+const C_CARBS   = "#17697A";   // Lagoon Teal, text-safe tone
+const C_FAT     = "#226B54";   // Seagrass, text-safe tone
+const C_GREEN   = "#15803D";   // goal met: Signal Safe
 const DANGER    = "#EF4444";
 
 // ── Translations ───────────────────────────────────────────────────────────────
@@ -192,10 +192,10 @@ function IconStar({ size = 18, color = NAVY }: { size?: number; color?: string }
 
 // ── Meal type config ───────────────────────────────────────────────────────────
 const MEAL_CONFIG: Record<MealTypeKey, { icon: React.ReactNode; color: string; bg: string }> = {
-  breakfast: { icon: <IconSun size={18} color="#F59E0B" />, color: "#F59E0B", bg: "#FFFBEB" },
-  lunch:     { icon: <IconUtensils size={18} color="#22C55E" />, color: "#22C55E", bg: "#F0FDF4" },
-  dinner:    { icon: <IconMoon size={18} color="#6366F1" />, color: "#6366F1", bg: "#EEF2FF" },
-  snack:     { icon: <IconApple size={18} color="#EF4444" />, color: "#EF4444", bg: "#FFF1F2" },
+  breakfast: { icon: <IconSun size={18} color="#17697A" />, color: "#17697A", bg: "#E2F0F3" },
+  lunch:     { icon: <IconUtensils size={18} color="#226B54" />, color: "#226B54", bg: "#E3F1EC" },
+  dinner:    { icon: <IconMoon size={18} color="#4F5BA6" />, color: "#4F5BA6", bg: "#E8EAF5" },
+  snack:     { icon: <IconApple size={18} color="#4A5D78" />, color: "#4A5D78", bg: "#E8ECF2" },
 };
 
 // ── Macro bar ──────────────────────────────────────────────────────────────────
@@ -246,10 +246,10 @@ function DailySummaryCard({ lang, goals }: { lang: string; goals: any }) {
               style={{ transition: "stroke-dashoffset 0.8s ease" }} />
           </svg>
           <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 900, color: ringColor, lineHeight: 1 }}>{totals.cal}</div>
-            <div style={{ fontSize: 9, color: MUTED, marginTop: 2 }}>{tl("kcal", lang)}</div>
-            <div style={{ fontSize: 9, color: MUTED, fontWeight: 700 }}>{tl("consumed", lang)}</div>
-            <div style={{ fontSize: 8, color: MUTED }}>{lang === "ar" ? "أكلته اليوم" : "Eaten today"}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: ringColor, lineHeight: 1 }}>{totals.cal}</div>
+            <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{tl("kcal", lang)}</div>
+            <div style={{ fontSize: 11, color: MUTED, fontWeight: 700 }}>{tl("consumed", lang)}</div>
+            <div style={{ fontSize: 11, color: MUTED }}>{lang === "ar" ? "أكلته اليوم" : "Eaten today"}</div>
           </div>
         </div>
 
@@ -272,8 +272,8 @@ function DailySummaryCard({ lang, goals }: { lang: string; goals: any }) {
             ].map(({ label, sublabel, val, color }) => (
               <div key={label} style={{ background: PAGE_BG, borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color }}>{val}</div>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 700 }}>{label}</div>
-                <div style={{ fontSize: 9, color: MUTED, marginTop: 1 }}>{sublabel}</div>
+                <div style={{ fontSize: 11, color: MUTED, fontWeight: 700 }}>{label}</div>
+                <div style={{ fontSize: 11, color: MUTED, marginTop: 1 }}>{sublabel}</div>
               </div>
             ))}
           </div>
@@ -286,8 +286,8 @@ function DailySummaryCard({ lang, goals }: { lang: string; goals: any }) {
           ].map(({ key, val, goal, color }) => (
             <div key={key} style={{ marginBottom: 5 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                <span style={{ fontSize: 10, color: TEXT2, fontWeight: 600 }}>{tl(key, lang)}</span>
-                <span style={{ fontSize: 10, color: MUTED }}>{val}g / {goal}g</span>
+                <span style={{ fontSize: 11, color: TEXT2, fontWeight: 600 }}>{tl(key, lang)}</span>
+                <span style={{ fontSize: 11, color: MUTED }}>{val}g / {goal}g</span>
               </div>
               <MacroBar value={val} goal={goal} color={color} />
             </div>
@@ -366,15 +366,15 @@ function MealItem({ meal, lang, onDelete, onSaveToFav }: { meal: any; lang: stri
           <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
             <IconClock size={11} color={MUTED} />
-            <span style={{ fontSize: 10, color: MUTED }}>{time}</span>
-            {meal.totalProtein > 0 && <span style={{ fontSize: 10, color: MUTED }}>• P:{Math.round(meal.totalProtein)}g</span>}
-            {meal.totalCarbs > 0 && <span style={{ fontSize: 10, color: MUTED }}>C:{Math.round(meal.totalCarbs)}g</span>}
-            {meal.totalFat > 0 && <span style={{ fontSize: 10, color: MUTED }}>F:{Math.round(meal.totalFat)}g</span>}
+            <span style={{ fontSize: 11, color: MUTED }}>{time}</span>
+            {meal.totalProtein > 0 && <span style={{ fontSize: 11, color: MUTED }}>• P:{Math.round(meal.totalProtein)}g</span>}
+            {meal.totalCarbs > 0 && <span style={{ fontSize: 11, color: MUTED }}>C:{Math.round(meal.totalCarbs)}g</span>}
+            {meal.totalFat > 0 && <span style={{ fontSize: 11, color: MUTED }}>F:{Math.round(meal.totalFat)}g</span>}
           </div>
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>{Math.round(meal.totalCalories)}</div>
-          <div style={{ fontSize: 10, color: MUTED }}>{tl("kcal", lang)}</div>
+          <div style={{ fontSize: 11, color: MUTED }}>{tl("kcal", lang)}</div>
         </div>
         <IconChevronRight size={14} color={MUTED} />
       </div>
@@ -402,12 +402,12 @@ function MealItem({ meal, lang, onDelete, onSaveToFav }: { meal: any; lang: stri
 // ── Quick-add picker modal ─────────────────────────────────────────────────────
 function QuickAddPicker({ lang, onSelect, onClose }: { lang: string; onSelect: (type: string) => void; onClose: () => void }) {
   const options = [
-    { type: "breakfast", icon: <IconSun size={22} color="#F59E0B" />, label: tl("breakfast", lang), bg: "#FFFBEB" },
-    { type: "lunch",     icon: <IconUtensils size={22} color="#22C55E" />, label: tl("lunch", lang), bg: "#F0FDF4" },
-    { type: "dinner",    icon: <IconMoon size={22} color="#6366F1" />, label: tl("dinner", lang), bg: "#EEF2FF" },
-    { type: "snack",     icon: <IconApple size={22} color="#EF4444" />, label: tl("snack", lang), bg: "#FFF1F2" },
-    { type: "drink",     icon: <IconDroplet size={22} color="#38BDF8" />, label: tl("addDrink", lang), bg: "#F0F9FF" },
-    { type: "coffee",    icon: <IconCoffee size={22} color="#92400E" />, label: tl("addCoffee", lang), bg: "#FFFBEB" },
+    { type: "breakfast", icon: <IconSun size={22} color="#17697A" />, label: tl("breakfast", lang), bg: "#E2F0F3" },
+    { type: "lunch",     icon: <IconUtensils size={22} color="#226B54" />, label: tl("lunch", lang), bg: "#E3F1EC" },
+    { type: "dinner",    icon: <IconMoon size={22} color="#4F5BA6" />, label: tl("dinner", lang), bg: "#E8EAF5" },
+    { type: "snack",     icon: <IconApple size={22} color="#4A5D78" />, label: tl("snack", lang), bg: "#E8ECF2" },
+    { type: "drink",     icon: <IconDroplet size={22} color="#2B6F8E" />, label: tl("addDrink", lang), bg: "#E3F0F6" },
+    { type: "coffee",    icon: <IconCoffee size={22} color="#2A4A8C" />, label: tl("addCoffee", lang), bg: "#E5EAF4" },
   ];
 
   return (
@@ -650,7 +650,7 @@ function HistoryPanel({ lang }: { lang: string }) {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: NAVY }}>{day.totalCalories}</div>
-                <div style={{ fontSize: 10, color: MUTED }}>{tl("kcal", lang)}</div>
+                <div style={{ fontSize: 11, color: MUTED }}>{tl("kcal", lang)}</div>
               </div>
               <div style={{ marginLeft: 4, transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s" }}>
                 <IconChevronDown size={14} color={MUTED} />
@@ -666,7 +666,7 @@ function HistoryPanel({ lang }: { lang: string }) {
                   ].map(({ label, val, color }) => (
                     <div key={label} style={{ flex: 1, background: PAGE_BG, borderRadius: 8, padding: "6px", textAlign: "center" }}>
                       <div style={{ fontSize: 13, fontWeight: 800, color }}>{val}g</div>
-                      <div style={{ fontSize: 10, color: MUTED }}>{label}</div>
+                      <div style={{ fontSize: 11, color: MUTED }}>{label}</div>
                     </div>
                   ))}
                 </div>

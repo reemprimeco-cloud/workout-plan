@@ -22,7 +22,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useCMS } from '../contexts/CMSContext';
 import { AppIcons } from '../components/AppIcons';
 import MyCoach from './MyCoach';
-import Community from './Community';
+const Community = React.lazy(() => import('./Community'));
 import Nutrition from './Nutrition';
 import { useGymSync } from '../hooks/useGymSync';
 import { useHaptic } from '../hooks/useHaptic';
@@ -38,15 +38,16 @@ const LOGO_URL = '/api/img/primefit_logo_11f9ef29.PNG';
 // Inline SVG logo — renders on all browsers without image loading issues
 function PrimeFitLogo({ size = 40 }: { size?: number }) {
   return (
-    <div style={{
-      width: size, height: size, borderRadius: size * 0.22,
-      background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
+    <div aria-hidden style={{
+      width: size, height: size, borderRadius: size * 0.28,
+      background: NAVY,
+      boxShadow: '0 2px 8px rgba(27,46,94,0.18)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexShrink: 0,
     }}>
-      <svg width={size * 0.58} height={size * 0.58} viewBox="0 0 24 24" fill="none">
+      <svg width={size * 0.52} height={size * 0.52} viewBox="0 0 24 24" fill="none">
         <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z"
-          fill="white" stroke="white" strokeWidth="0.5" strokeLinejoin="round" />
+          fill={SKY} stroke={SKY} strokeWidth="0.5" strokeLinejoin="round" />
       </svg>
     </div>
   );
@@ -94,38 +95,20 @@ export default function Home() {
     setTimeout(() => setStartingSession(false), 300);
   };
 
-  // Inline SVG icons for tabs without CDN webp icons
-  const TabSVGIcons: Record<string, (active: boolean) => React.ReactElement> = {
-    pricing: (active) => (
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: active ? 1 : 0.45 }}>
-        <circle cx="15" cy="15" r="12" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
-        <path d="M15 8v14M11 11.5c0-1.1.9-2 2-2h3.5a2 2 0 010 4H13a2 2 0 000 4H17a2 2 0 002-2"
-          stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
-      </svg>
-    ),
-    nutrition: (active) => (
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: active ? 1 : 0.45 }}>
-        {/* Plate */}
-        <circle cx="15" cy="17" r="9" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" fill="none"/>
-        {/* Fork */}
-        <path d="M9 6v4M9 10c0 1.1.9 2 2 2v5" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
-        <path d="M7 6v3M11 6v3" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round"/>
-        {/* Knife */}
-        <path d="M21 6c0 0 1 2 1 4s-1 3-1 3v4" stroke={active ? NAVY : '#7A9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  };
-  const tabs: { id: Tab; iconUrl?: string; label: string }[] = [
-    { id: 'home',      iconUrl: '/api/img/nav_home_f8e94025.webp',      label: t('navHome') },
-    { id: 'stats',     iconUrl: '/api/img/nav_stats_b03246bb.webp',     label: t('navStats') },
-    { id: 'nutrition', label: isRTL ? 'تغذية' : 'Nutrition' },
-    { id: 'exercises', iconUrl: '/api/img/nav_exercises_76a3e7fb.webp', label: isRTL ? 'التمارين' : 'Exercises' },
-    { id: 'coach',     iconUrl: '/api/img/nav_coach_27ad6440.webp',     label: isRTL ? 'مدربي' : 'Coach' },
-    { id: 'community', iconUrl: '/api/img/nav_community_f198d8dd.webp', label: isRTL ? 'المجتمع' : 'Community' },
-    { id: 'profile',   iconUrl: '/api/img/nav_profile_bcc2b31d.webp',   label: t('navProfile') },
+  // Community is built but deliberately hidden (PRODUCT.md): it shipped as a
+  // placeholder once, and advertising an unfinished feature is worse than its
+  // absence. The tab renderer below is kept for when it returns.
+  const tabs: { id: Tab; Icon: (p: { size?: number; strokeWidth?: number }) => React.ReactElement; label: string }[] = [
+    { id: 'home',      Icon: AppIcons.Home,      label: t('navHome') },
+    { id: 'stats',     Icon: AppIcons.Stats,     label: t('navStats') },
+    { id: 'nutrition', Icon: AppIcons.Nutrition, label: isRTL ? 'التغذية' : 'Nutrition' },
+    { id: 'exercises', Icon: AppIcons.Exercises, label: isRTL ? 'التمارين' : 'Exercises' },
+    { id: 'coach',     Icon: AppIcons.Coach,     label: isRTL ? 'مدربي' : 'Coach' },
+    { id: 'profile',   Icon: AppIcons.Profile,   label: t('navProfile') },
   ];
+  const goalLine = data.profile.targetWeight > 0
+    ? `${t('goal')} ${data.profile.targetWeight} ${t('kg')}`
+    : null;
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} style={{
@@ -134,68 +117,75 @@ export default function Home() {
       flexDirection: 'column',
       overflow: 'hidden',
       background: '#F0F4F8',
-      fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+      color: NAVY,
+      fontFamily: lang === 'ar' ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
     }}>
       {/* ── Top Header ── */}
       <header style={{
-        background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
-        paddingBottom: '12px',
-        paddingLeft: '20px',
-        paddingRight: '20px',
+        background: 'rgba(240,244,248,0.88)',
+        backdropFilter: 'saturate(1.4) blur(14px)',
+        WebkitBackdropFilter: 'saturate(1.4) blur(14px)',
+        borderBottom: '1px solid #D0DFF0',
+        paddingTop: 'calc(10px + env(safe-area-inset-top, 0px))',
+        paddingBottom: 10,
+        paddingInline: 'max(16px, calc((100vw - 800px) / 2 + 16px))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 12,
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        boxShadow: '0 4px 20px rgba(27,46,94,0.35)',
       }}>
-        {/* Left: Logo + App Name */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Prime Fit Logo (small) — inline SVG, renders on all browsers */}
-          <PrimeFitLogo size={40} />
-
-          <div>
-            <h1 style={{ margin: 0, color: 'white', fontSize: 17, fontWeight: 900, lineHeight: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+          <PrimeFitLogo size={36} />
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.01em', fontFamily: 'Inter, Tajawal, sans-serif' }}>
               Prime Fit
             </h1>
-            <p style={{ margin: 0, color: SKY_LIGHT, fontSize: 11 }}>
-              {data.profile.name} • {t('goal')} {data.profile.targetWeight} {t('kg')}
-            </p>
+            {(data.profile.name || goalLine) && (
+              <p style={{ margin: '2px 0 0', color: '#3D5A80', fontSize: 12, fontWeight: 500, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {[data.profile.name, goalLine].filter(Boolean).join(' · ')}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Right: active session indicator + admin button */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
           {activeSession && (
-            <div style={{
-              background: SKY, borderRadius: 20, padding: '4px 12px',
-              color: NAVY, fontSize: 12, fontWeight: 700,
-              animation: 'pulse 2s infinite',
-            }}>
-              <span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Flame size={14} className='text-red-500' /> {t('activeSession')}</span>
-            </div>
+            <button
+              onClick={() => handleTabChange('home')}
+              style={{
+                background: SKY_LIGHT, color: NAVY, border: 'none', cursor: 'pointer',
+                borderRadius: 999, padding: '0 12px', minHeight: 32,
+                fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <span className="pf-live-dot" aria-hidden />
+              {t('activeSession')}
+            </button>
           )}
           {(currentUser as any)?.role === 'admin' && (
             <a
               href="/admin"
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '1.5px solid rgba(255,255,255,0.35)',
+                background: 'white',
+                border: '1px solid #D0DFF0',
                 borderRadius: 10,
-                padding: '5px 12px',
-                color: 'white',
+                padding: '0 12px',
+                minHeight: 36,
+                color: NAVY,
                 fontSize: 12,
                 fontWeight: 700,
                 textDecoration: 'none',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: 5,
-                backdropFilter: 'blur(4px)',
+                gap: 6,
               }}
             >
-              <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Settings size={16} /> {lang === 'ar' ? 'الإدارة' : 'Admin'}</span>
+              <AppIcons.Settings size={16} />
+              {lang === 'ar' ? 'الإدارة' : 'Admin'}
             </a>
           )}
         </div>
@@ -211,14 +201,14 @@ export default function Home() {
       {/* Community tab gets its own full-height container — avoids overflow:hidden clipping fixed panels */}
       {activeTab === 'community' && (
         <div key={`community-${tabKey}`} className="tab-enter" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-          <Community
+          <React.Suspense fallback={null}><Community
             userId={currentUser?.id}
             streak={stats.streak}
             weeklyCompletion={stats.progressPercent}
             currentWeight={data.profile.currentWeight}
             targetWeight={data.profile.targetWeight}
             name={data.profile.name}
-          />
+          /></React.Suspense>
         </div>
       )}
       <main
@@ -227,8 +217,9 @@ export default function Home() {
         style={(activeTab === 'coach' || activeTab === 'community') ? { display: 'none' } : { flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', maxWidth: 800, margin: '0 auto', width: '100%', paddingBottom: 16, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
       >
 
-        {/* Active Session Banner */}
-        {activeSession && (
+        {/* Active Session Banner — on other tabs only; on Home the session
+            itself is the screen, and the banner repeated it above itself. */}
+        {activeSession && activeTab !== 'home' && (
           <div style={{
             background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`,
             borderRadius: 16, padding: '14px 18px', marginBottom: 16,
@@ -236,8 +227,8 @@ export default function Home() {
             boxShadow: `0 8px 24px ${NAVY}44`,
           }}>
             <div>
-              <div style={{ color: 'white', fontWeight: 900, fontSize: 15 }}>
-                {sessionTypes[activeSession.sessionType].icon} {t('activeSession')}
+              <div style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AppIcons.Dumbbell size={16} />{t('activeSession')}</span>
               </div>
               <div style={{ color: SKY_LIGHT, fontSize: 12, marginTop: 2 }}>
                 {lang === 'ar' ? sessionTypes[activeSession.sessionType].nameAr : (sessionTypes[activeSession.sessionType] as any).nameEn || sessionTypes[activeSession.sessionType].nameAr} • {activeSession.checkInTime}
@@ -262,7 +253,7 @@ export default function Home() {
             {activeSession ? (
               <ActiveSession session={activeSession} tracker={tracker} gender={(data.profile.gender as "male" | "female") || "female"} weightKg={data.profile.currentWeight || 65} />
             ) : (
-              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} />
+              <CheckInPanel onStart={handleStart} stats={stats} profile={data.profile} onOpenProfile={() => handleTabChange('profile')} />
             )}
           </>
         )}
@@ -276,10 +267,10 @@ export default function Home() {
               <h2 style={{ color: '#1B2E5E', fontWeight: 800, fontSize: 20, margin: 0 }}>
                 <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={20} className='text-[#1B2E5E]' />{isRTL ? 'قائمة التمارين' : 'Exercise Library'}</span>
               </h2>
-              <p style={{ color: '#64748b', fontSize: 13, margin: '4px 0 0' }}>
+              <p style={{ color: '#3D5A80', fontSize: 13, margin: '4px 0 0' }}>
                 {isRTL
-                  ? `برنامج ${data.profile.gender === 'female' ? 'المرأة' : 'الرجل'} — ${data.profile.name || ''}`
-                  : `${data.profile.gender === 'female' ? "Women's" : "Men's"} Program — ${data.profile.name || ''}`}
+                  ? `برنامج ${data.profile.gender === 'female' ? 'المرأة' : 'الرجل'}`
+                  : `${data.profile.gender === 'female' ? "Women's" : "Men's"} Program`}
               </p>
             </div>
             <ExerciseLibrary
@@ -294,44 +285,60 @@ export default function Home() {
 
       {/* ── Bottom Navigation ── */}
 
-      <nav style={{
-        background: 'white',
-        borderTop: `2px solid ${SKY_LIGHT}`,
+      <nav aria-label={isRTL ? 'التنقل الرئيسي' : 'Main'} style={{
+        background: 'rgba(255,255,255,0.94)',
+        backdropFilter: 'saturate(1.4) blur(14px)',
+        WebkitBackdropFilter: 'saturate(1.4) blur(14px)',
+        borderTop: '1px solid #D0DFF0',
         display: 'flex',
-        boxShadow: '0 -4px 20px rgba(27,46,94,0.10)',
         flexShrink: 0,
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingTop: 6,
+        paddingInline: 'max(4px, calc((100vw - 640px) / 2))',
+        paddingBottom: 'max(6px, env(safe-area-inset-bottom, 0px))',
       }}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            className="haptic-press no-select touch-target"
-            style={{
-              flex: 1, padding: '10px 4px 8px',
-              border: 'none', background: 'none', cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              transition: 'all 0.2s',
-              borderTop: activeTab === tab.id ? `3px solid ${NAVY}` : '3px solid transparent',
-              minHeight: 56,
-            }}
-          >
-            {TabSVGIcons[tab.id]
-              ? TabSVGIcons[tab.id](activeTab === tab.id)
-              : <img src={tab.iconUrl} alt={tab.label} style={{ width: 30, height: 30, objectFit: 'contain', opacity: activeTab === tab.id ? 1 : 0.45, filter: activeTab === tab.id ? 'none' : 'grayscale(30%)' }} />
-            }
-            <span style={{
-              fontSize: 10, fontWeight: 700,
-              color: activeTab === tab.id ? NAVY : '#7A9BB5',
-            }}>{tab.label}</span>
-          </button>
-        ))}
+        {tabs.map(({ id, Icon, label }) => {
+          const active = activeTab === id;
+          return (
+            <button
+              key={id}
+              onClick={() => handleTabChange(id)}
+              aria-current={active ? 'page' : undefined}
+              className="haptic-press no-select pf-tab"
+              style={{
+                flex: 1, minWidth: 0, minHeight: 54, padding: '2px 2px 4px',
+                border: 'none', background: 'none', cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                color: active ? NAVY : '#3D5A80',
+                fontFamily: 'inherit',
+              }}
+            >
+              <span className="pf-tab-pill" data-active={active || undefined}>
+                <Icon size={22} strokeWidth={active ? 2.1 : 1.8} />
+              </span>
+              <span style={{
+                fontSize: 11, lineHeight: 1.2, fontWeight: active ? 700 : 500,
+                maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{label}</span>
+            </button>
+          );
+        })}
       </nav>
 
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+        .pf-tab-pill {
+          display: flex; align-items: center; justify-content: center;
+          width: 56px; height: 30px; border-radius: 15px;
+          transition: background-color .25s cubic-bezier(.16,1,.3,1), transform .25s cubic-bezier(.16,1,.3,1);
+        }
+        .pf-tab-pill[data-active] { background: #DCEBF4; }
+        .pf-tab:active .pf-tab-pill { transform: scale(.94); }
+        .pf-tab:focus-visible { outline: none; }
+        .pf-tab:focus-visible .pf-tab-pill { box-shadow: 0 0 0 2px ${NAVY}; }
+        .pf-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #15803D; animation: pulse 2s infinite; }
+        @media (prefers-reduced-motion: reduce) { .pf-live-dot { animation: none; } .pf-tab-pill { transition: none; } }
         @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
         *, *::before, *::after { box-sizing: border-box; }
         html, body, #root { height: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden; }
@@ -341,6 +348,15 @@ export default function Home() {
       `}</style>
     </div>
   );
+}
+
+// Counted noun. English needs the plural; Arabic needs the dual and the 3–10
+// plural, and returns to the singular from 11.
+function sessionsWord(n: number, lang: string) {
+  if (lang !== 'ar') return n === 1 ? 'session' : 'sessions';
+  if (n === 2) return 'جلستان';
+  if (n >= 3 && n <= 10) return 'جلسات';
+  return 'جلسة';
 }
 
 // ── Check-In Panel ─────────────────────────────────────────
@@ -362,8 +378,9 @@ const SESSION_CATEGORY_MAP: Partial<Record<SessionType, string[]>> = {
 // Glutes included in lower_body for all genders
 const GLUTES_SESSION: SessionType = 'lower_body';
 
-function CheckInPanel({ onStart, stats, profile }: {
+function CheckInPanel({ onStart, stats, profile, onOpenProfile }: {
   onStart: (type: SessionType) => void;
+  onOpenProfile: () => void;
   stats: ReturnType<typeof useGymTracker>['stats'];
   profile: ReturnType<typeof useGymTracker>['data']['profile'];
 }) {
@@ -432,37 +449,58 @@ function CheckInPanel({ onStart, stats, profile }: {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <p style={{ margin: '0 0 4px', color: SKY_LIGHT, fontSize: 13 }}><span style={{display:'flex',alignItems:'center',gap:6}}>{greeting}<AppIcons.Wave size={16} /></span></p>
-          <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 900 }}>
-            {profile.name}
+          <h2 style={{ margin: '0 0 4px', color: 'white', fontSize: 22, fontWeight: 800 }}>
+            {(profile.name || '').trim().split(/\s+/)[0]}
           </h2>
           <p style={{ margin: '0 0 0', color: `${SKY_LIGHT}CC`, fontSize: 12 }}>{dayName}، {dateStr}</p>
           <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
             {[
-              { label: t('thisWeek'), value: `${stats.thisWeek} ${t('session')}` },
-              { label: t('thisMonth'), value: `${stats.thisMonth} ${t('session')}` },
-              { label: t('total'), value: `${stats.totalSessions} ${t('session')}` },
+              { label: t('thisWeek'), value: `${stats.thisWeek} ${sessionsWord(stats.thisWeek, lang)}` },
+              { label: t('thisMonth'), value: `${stats.thisMonth} ${sessionsWord(stats.thisMonth, lang)}` },
+              { label: t('total'), value: `${stats.totalSessions} ${sessionsWord(stats.totalSessions, lang)}` },
             ].map(s => (
               <div key={s.label} style={{
                 background: 'rgba(255,255,255,0.10)', borderRadius: 10, padding: '8px 14px',
                 border: `1px solid ${SKY}33`,
               }}>
-                <div style={{ color: SKY_LIGHT, fontSize: 10 }}>{s.label}</div>
-                <div style={{ color: 'white', fontWeight: 900, fontSize: 16 }}>{s.value}</div>
+                <div style={{ color: SKY_LIGHT, fontSize: 11 }}>{s.label}</div>
+                <div style={{ color: 'white', fontWeight: 800, fontSize: 16 }}>{s.value}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Weight Progress */}
+      {/* Weight Progress — or, before any weights exist, the one step that
+          makes this card mean something. */}
+      {!(profile.currentWeight > 0 && profile.targetWeight > 0) ? (
+        <button onClick={onOpenProfile} style={{
+          width: '100%', textAlign: 'start', cursor: 'pointer', fontFamily: 'inherit',
+          background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 16,
+          boxShadow: '0 4px 20px rgba(27,46,94,0.08)', border: 'none',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <span style={{ width: 40, height: 40, borderRadius: 12, background: '#EAF2F8', color: NAVY, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <AppIcons.Scale size={20} />
+          </span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontWeight: 700, color: NAVY, fontSize: 14 }}>
+              {lang === 'ar' ? 'أضف وزنك الحالي وهدفك' : 'Add your current and target weight'}
+            </span>
+            <span style={{ display: 'block', fontSize: 12, color: '#506A88', marginTop: 2 }}>
+              {lang === 'ar' ? 'حتى نحسب تقدمك ونبني خطتك عليه.' : 'So your progress can be tracked and your plan built around it.'}
+            </span>
+          </span>
+          <span style={{ color: '#3D5A80', display: 'inline-flex' }}>{isRTL ? <AppIcons.ChevronLeft size={18} /> : <AppIcons.ChevronRight size={18} />}</span>
+        </button>
+      ) : (
       <div style={{
         background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 16,
-        boxShadow: '0 2px 12px rgba(27,46,94,0.08)',
-        border: `1px solid ${SKY_LIGHT}55`,
+        boxShadow: '0 4px 20px rgba(27,46,94,0.08)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontWeight: 700, color: NAVY, fontSize: 14 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Scale size={16} />{t('weightProgress')}</span></span>
-          <span style={{ fontSize: 12, color: '#7A9BB5' }}>
+          <span style={{ fontSize: 12, color: '#506A88' }}>
             {profile.currentWeight} {t('kg')} {isRTL ? '←' : '→'} {profile.targetWeight} {t('kg')}
           </span>
         </div>
@@ -476,21 +514,22 @@ function CheckInPanel({ onStart, stats, profile }: {
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-          <span style={{ fontSize: 11, color: '#7A9BB5' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
+          <span style={{ fontSize: 11, color: '#506A88' }}>{lang === 'ar' ? 'بداية' : 'Start'}: {profile.startWeight} {t('kg')}</span>
           <span style={{ fontSize: 11, color: NAVY, fontWeight: 700 }}>
             {stats.progressPercent}% • {lang === 'ar' ? (gender === 'female' ? 'خسرتِ' : 'خسرت') : 'Lost'} {stats.weightLost.toFixed(1)} {t('kg')} 
           </span>
         </div>
       </div>
+      )}
 
 
 
       {/* Check-In Title */}
       <div style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 900 }}>
+        <h3 style={{ margin: 0, color: NAVY, fontSize: 17, fontWeight: 800 }}>
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={18} className='text-[#1B2E5E]' />{t('chooseWorkout')}</span>
         </h3>
-        <p style={{ margin: '4px 0 0', color: '#7A9BB5', fontSize: 12 }}>
+        <p style={{ margin: '4px 0 0', color: '#506A88', fontSize: 12 }}>
           {t('autoTime')}
         </p>
       </div>
@@ -514,10 +553,10 @@ function CheckInPanel({ onStart, stats, profile }: {
               key={type}
               style={{
                 background: 'white',
-                border: `2px solid ${isExpanded ? SKY : SKY_LIGHT}`,
+                border: `1.5px solid ${isExpanded ? def.color : 'transparent'}`,
                 borderRadius: 16,
                 overflow: 'hidden',
-                boxShadow: isExpanded ? `0 8px 20px ${NAVY}22` : '0 2px 8px rgba(27,46,94,0.06)',
+                boxShadow: isExpanded ? '0 8px 32px rgba(27,46,94,0.14)' : '0 4px 20px rgba(27,46,94,0.08)',
                 transition: 'all 0.2s',
                 gridColumn: isExpanded ? '1 / -1' : 'auto',
               }}
@@ -537,35 +576,37 @@ function CheckInPanel({ onStart, stats, profile }: {
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: 6 }}>
+                    {/* The type's tint from the sea family carries the icon, so a
+                        glance at the grid reads the body area before the words. */}
+                    <div style={{ marginBottom: 8, width: 52, height: 52, borderRadius: 14, background: def.bgColor, color: def.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {SESSION_ICON_URLS[type] ? (
                         <img
                           src={SESSION_ICON_URLS[type]}
-                          alt={nameDisplay}
-                          style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }}
+                          alt=""
+                          style={{ width: 40, height: 40, objectFit: 'contain', display: 'block' }}
                           onError={(e) => {
                             console.warn('[CMS] IMAGE SRC failed on home card:', type, SESSION_ICON_URLS[type]);
                             (e.target as HTMLImageElement).style.display = 'none';
                           }}
                         />
                       ) : (
-                        <span style={{ fontSize: 28 }}>{def.icon}</span>
+                        <AppIcons.Dumbbell size={24} />
                       )}
                     </div>
-                    <div style={{ fontWeight: 900, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
+                    <div style={{ fontWeight: 800, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
                       {nameDisplay.split(' - ')[0]}
                     </div>
-                    <div style={{ fontSize: 10, color: '#7A9BB5', marginTop: 4, lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 11, color: '#506A88', marginTop: 4, lineHeight: 1.4 }}>
                       {descDisplay}
                     </div>
                     {sessionExercises.length > 0 && (
-                      <div style={{ fontSize: 10, color: SKY, marginTop: 4, fontWeight: 600 }}>
+                      <div style={{ fontSize: 11, color: def.color, marginTop: 4, fontWeight: 700 }}>
                         {sessionExercises.length} {lang === 'ar' ? 'تمرين' : 'exercises'}
                       </div>
                     )}
                   </div>
                   {sessionExercises.length > 0 && (
-                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
+                    <span style={{ color: def.color, fontSize: 14, marginTop: 4 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
                   )}
                 </div>
               </button>
@@ -577,7 +618,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                   padding: '12px',
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
-                  <div style={{ marginBottom: 10, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
+                  <div style={{ marginBottom: 10, color: '#506A88', fontSize: 11, fontWeight: 600 }}>
                     {lang === 'ar' ? 'أجهزة الكارديو — سجّل بياناتك بعد التمرين:' : 'Cardio Machines — Log your data after workout:'}
                   </div>
 
@@ -653,20 +694,20 @@ function CheckInPanel({ onStart, stats, profile }: {
 
                         {/* Tip */}
                         <div style={{ padding: '8px 12px 4px' }}>
-                          <div style={{ color: '#7A9BB5', fontSize: 10, fontWeight: 600 }}>
+                          <div style={{ color: '#506A88', fontSize: 11, fontWeight: 600 }}>
                             <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={14} className='text-blue-500' />{lang === 'ar' ? machine.tip : (machine.tipEn || machine.tip)}</span>
                           </div>
                         </div>
 
                         {/* Input fields */}
                         <div style={{ padding: '8px 12px 12px' }}>
-                          <div style={{ color: '#7A9BB5', fontSize: 10, marginBottom: 8, fontWeight: 600 }}>
+                          <div style={{ color: '#506A88', fontSize: 11, marginBottom: 8, fontWeight: 600 }}>
                             <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Stats size={14} />{lang === 'ar' ? 'سجّل بياناتك بعد التمرين:' : 'Log your data after workout:'}</span>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                             {fields.map(field => (
                               <div key={field.key} style={{ gridColumn: field.fullRow ? '1 / -1' : 'auto' }}>
-                                <div style={{ fontSize: 10, color: NAVY, fontWeight: 700, marginBottom: 4 }}>
+                                <div style={{ fontSize: 11, color: NAVY, fontWeight: 700, marginBottom: 4 }}>
                                   {lang === 'ar' ? field.labelAr : field.labelEn}
                                 </div>
                                 <input
@@ -707,7 +748,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                               color: 'white', border: 'none', borderRadius: 10,
                               padding: '10px 12px', fontSize: 13, fontWeight: 700,
                               cursor: 'pointer', transition: 'background 0.3s',
-                              fontFamily: 'Cairo, sans-serif',
+                              fontFamily: 'Tajawal, Inter, sans-serif',
                             }}
                           >
                             {isSaved
@@ -730,7 +771,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                   overflowY: 'auto',
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}>
-                  <div style={{ marginBottom: 8, color: '#7A9BB5', fontSize: 11, fontWeight: 600 }}>
+                  <div style={{ marginBottom: 8, color: '#506A88', fontSize: 11, fontWeight: 600 }}>
                     <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{lang === 'ar' ? 'تمارين هذا القسم:' : 'Exercises in this section:'}</span>
                   </div>
                   {sessionExercises.map((ex, idx) => (
@@ -763,7 +804,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                         <div style={{ color: NAVY, fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>
                           {lang === 'ar' ? ex.nameAr : ex.name}
                         </div>
-                        <div style={{ color: '#7A9BB5', fontSize: 10, marginTop: 2 }}>
+                        <div style={{ color: '#506A88', fontSize: 11, marginTop: 2 }}>
                           {ex.sets} {lang === 'ar' ? 'جولات' : 'sets'} × {ex.reps} {lang === 'ar' ? 'تكرار' : 'reps'}
                           &nbsp;·&nbsp;⏱ {lang === 'ar' ? ex.restAr : `${ex.rest}s`}
                         </div>
@@ -779,7 +820,7 @@ function CheckInPanel({ onStart, stats, profile }: {
                           color: 'white',
                           borderRadius: 6,
                           padding: '4px 8px',
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: 700,
                           textDecoration: 'none',
                           flexShrink: 0,
@@ -946,20 +987,20 @@ function TodayGymClasses() {
     <div style={{ marginBottom: 16 }}>
       {/* Section header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <h3 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 900 }}>
+        <h3 style={{ margin: 0, color: NAVY, fontSize: 16, fontWeight: 800 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <AppIcons.Calendar size={18} />
             {lang === 'ar' ? 'حصص اليوم' : "Today's Classes"}
           </span>
         </h3>
-        <span style={{ fontSize: 11, color: '#7A9BB5', fontWeight: 600 }}>{todayDay}</span>
+        <span style={{ fontSize: 11, color: '#506A88', fontWeight: 600 }}>{todayDay}</span>
       </div>
 
       {/* Loading skeleton */}
       {isLoading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2].map(i => (
-            <div key={i} style={{ height: 72, background: '#E2E8F0', borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
+            <div key={i} style={{ height: 72, background: '#D0DFF0', borderRadius: 16, animation: 'pulse 1.5s infinite' }} />
           ))}
         </div>
       )}
@@ -1008,7 +1049,7 @@ function TodayGymClasses() {
                   width: 40, height: 40, borderRadius: 10, flexShrink: 0,
                   background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontWeight: 900, fontSize: 18,
+                  color: 'white', fontWeight: 800, fontSize: 18,
                 }}>
                   {gym.gymName.charAt(0).toUpperCase()}
                 </div>
@@ -1016,8 +1057,8 @@ function TodayGymClasses() {
 
               {/* Gym name + class count */}
               <div style={{ flex: 1, textAlign: 'left' }}>
-                <div style={{ fontWeight: 900, color: NAVY, fontSize: 15 }}>{gym.gymName}</div>
-                <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>
+                <div style={{ fontWeight: 800, color: NAVY, fontSize: 15 }}>{gym.gymName}</div>
+                <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>
                   {totalClasses} {lang === 'ar' ? 'حصة اليوم' : totalClasses === 1 ? 'class today' : 'classes today'}
                   {' · '}{gym.branches.size} {lang === 'ar' ? 'فرع' : gym.branches.size === 1 ? 'branch' : 'branches'}
                 </div>
@@ -1049,10 +1090,10 @@ function TodayGymClasses() {
                       }}
                     >
                       <AppIcons.Location size={11} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#7A9BB5', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1, textAlign: 'left' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#506A88', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1, textAlign: 'left' }}>
                         {branch.branchName || (lang === 'ar' ? 'الفرع الرئيسي' : 'Main Branch')}
                       </span>
-                      <span style={{ fontSize: 10, color: '#94A3B8', marginRight: 4 }}>
+                      <span style={{ fontSize: 11, color: '#506A88', marginRight: 4 }}>
                         {branch.classes.length} {lang === 'ar' ? 'حصة' : branch.classes.length === 1 ? 'class' : 'classes'}
                       </span>
                       <svg width={13} height={13} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, transition: 'transform 0.2s', transform: isBranchExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
@@ -1076,7 +1117,7 @@ function TodayGymClasses() {
                             borderRadius: 12,
                             background: joined ? '#F0FDF4' : '#F8FAFC',
                             marginBottom: cIdx < branch.classes.length - 1 ? 6 : 0,
-                            border: `1px solid ${joined ? '#BBF7D0' : '#E2E8F0'}`,
+                            border: `1px solid ${joined ? '#BBF7D0' : '#D0DFF0'}`,
                             transition: 'background 0.3s, border-color 0.3s',
                           }}
                         >
@@ -1087,15 +1128,15 @@ function TodayGymClasses() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <span style={{ fontWeight: 800, color: NAVY, fontSize: 13 }}>{cls.className}</span>
-                              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ic.bg, color: ic.text }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: ic.bg, color: ic.text }}>
                                 {cls.intensity}
                               </span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, flexWrap: 'wrap' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#3D5A80' }}>
                                 <AppIcons.Coach size={11} />{cls.coach}
                               </span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#475569' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#3D5A80' }}>
                                 <AppIcons.Timer size={11} />{cls.time} · {cls.durationMin}{lang === 'ar' ? 'د' : 'min'}
                               </span>
                               <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#F97316', fontWeight: 600 }}>
@@ -1103,7 +1144,7 @@ function TodayGymClasses() {
                               </span>
                             </div>
                             {cls.notes && (
-                              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 2 }}>{cls.notes}</div>
+                              <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>{cls.notes}</div>
                             )}
                           </div>
 
@@ -1217,10 +1258,10 @@ function NutritionSummaryCard() {
 
       {/* Calories row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#475569'}}><AppIcons.Flame size={12} className='text-orange-500' />{lang === 'ar' ? 'سعرات' : 'Calories'}</span>
-        <span style={{ fontSize: 12, color: '#475569' }}>{calories} / {goalCal} kcal</span>
+        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#3D5A80'}}><AppIcons.Flame size={12} className='text-orange-500' />{lang === 'ar' ? 'سعرات' : 'Calories'}</span>
+        <span style={{ fontSize: 12, color: '#3D5A80' }}>{calories} / {goalCal} kcal</span>
       </div>
-      <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+      <div style={{ height: 6, background: '#D0DFF0', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
         <div style={{ height: '100%', width: `${calPct}%`, background: `linear-gradient(90deg, ${SKY}, ${NAVY})`, borderRadius: 3, transition: 'width 0.6s ease' }} />
       </div>
 
@@ -1228,23 +1269,23 @@ function NutritionSummaryCard() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         {[
           { label: lang === 'ar' ? 'بروتين' : 'Protein', value: `${Math.round(protein)}g`, color: '#EF4444', bg: '#FEF2F2' },
-          { label: lang === 'ar' ? 'كربو' : 'Carbs', value: `${Math.round(carbs)}g`, color: '#F59E0B', bg: '#FFFBEB' },
+          { label: lang === 'ar' ? 'كربو' : 'Carbs', value: `${Math.round(carbs)}g`, color: '#B45309', bg: '#FFFBEB' },
           { label: lang === 'ar' ? 'دهون' : 'Fat', value: `${Math.round(fat)}g`, color: '#8B5CF6', bg: '#F5F3FF' },
         ].map(m => (
           <div key={m.label} style={{ flex: 1, background: m.bg, borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}>
             <div style={{ fontWeight: 800, color: m.color, fontSize: 14 }}>{m.value}</div>
-            <div style={{ color: '#94a3b8', fontSize: 10 }}>{m.label}</div>
+            <div style={{ color: '#506A88', fontSize: 11 }}>{m.label}</div>
           </div>
         ))}
       </div>
 
       {/* Water row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#475569'}}><AppIcons.Water size={12} className='text-blue-500' />{lang === 'ar' ? 'ماء' : 'Water'}</span>
+        <span style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:'#3D5A80'}}><AppIcons.Water size={12} className='text-blue-500' />{lang === 'ar' ? 'ماء' : 'Water'}</span>
         <span style={{ fontSize: 12, color: SKY, fontWeight: 700 }}>{water} / {goalWater} ml</span>
       </div>
-      <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${waterPct}%`, background: `linear-gradient(90deg, #38BDF8, #0EA5E9)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+      <div style={{ height: 6, background: '#D0DFF0', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${waterPct}%`, background: `linear-gradient(90deg, #5BA3C4, #5BA3C4)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
       </div>
     </div>
   );
@@ -1285,7 +1326,7 @@ function SetupForm({ tracker, onComplete: _onComplete }: { onComplete: () => voi
   const inputStyle: React.CSSProperties = {
     width: '100%', border: `2px solid #D0DFF0`, borderRadius: 12,
     padding: '10px 14px', fontSize: 15, outline: 'none', boxSizing: 'border-box',
-    fontFamily: 'Inter, system-ui, sans-serif', color: NAVY,
+    fontFamily: 'Inter, Tajawal, sans-serif', color: NAVY,
   };
   const labelStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: '#3D5A80', display: 'block', marginBottom: 4 };
 
@@ -1333,14 +1374,14 @@ function SetupForm({ tracker, onComplete: _onComplete }: { onComplete: () => voi
       {previewBMI && (
         <div style={{ background: '#EAF3F9', borderRadius: 12, padding: '10px 14px', textAlign: 'center', border: `1px solid ${SKY_LIGHT}` }}>
           <span style={{ fontSize: 12, color: '#3D5A80' }}>BMI Preview: </span>
-          <span style={{ fontSize: 18, fontWeight: 900, color: previewBMI < 18.5 ? '#3B82F6' : previewBMI < 25 ? '#10B981' : previewBMI < 30 ? '#F59E0B' : '#EF4444' }}>{previewBMI}</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: previewBMI < 18.5 ? '#2A4A8C' : previewBMI < 25 ? '#15803D' : previewBMI < 30 ? '#B45309' : '#EF4444' }}>{previewBMI}</span>
           <span style={{ fontSize: 12, color: '#3D5A80', marginLeft: 6 }}>{previewBMI < 18.5 ? 'Underweight' : previewBMI < 25 ? 'Normal' : previewBMI < 30 ? 'Overweight' : 'Obese'}</span>
         </div>
       )}
-      {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Warning size={14} className='text-red-500' />{error}</span></p>}
+      {error && <p style={{ color: '#EF4444', fontSize: 13, margin: 0 }}><span style={{display:'flex',alignItems:'center',gap:4}}><AppIcons.Warning size={14} className='text-[#B91C1C]' />{error}</span></p>}
       <button onClick={handleSubmit} style={{
         background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`, color: '#fff', border: 'none', borderRadius: 14,
-        padding: '14px', fontSize: 16, fontWeight: 900, cursor: 'pointer', marginTop: 4,
+        padding: '14px', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginTop: 4,
         boxShadow: `0 4px 16px ${NAVY}44`,
       }}>
         <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lightning size={16} />Start My Program</span>

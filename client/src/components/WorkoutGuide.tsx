@@ -181,7 +181,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 20,
             border: 'none', cursor: 'pointer',
-            fontFamily: ar ? 'Cairo, sans-serif' : 'Inter, system-ui, sans-serif',
+            fontFamily: ar ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
             fontWeight: 700, fontSize: 12, transition: 'all 0.2s',
             background: tab === t.id ? '#E05A00' : 'white',
             color: tab === t.id ? 'white' : '#4A4A6A',
@@ -276,7 +276,7 @@ export function WorkoutGuide({ gender = 'female' }: { gender?: 'male' | 'female'
                   border: `2px solid ${selectedType === type ? def.color : '#E2E8F0'}`,
                   background: selectedType === type ? def.bgColor : 'white',
                   color: selectedType === type ? def.color : '#4A4A6A',
-                  fontFamily: ar ? 'Cairo, sans-serif' : 'Inter, system-ui, sans-serif',
+                  fontFamily: ar ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
                   fontWeight: 700, fontSize: 11, cursor: 'pointer',
                 }}>
                   {def.icon} {ar

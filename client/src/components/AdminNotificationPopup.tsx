@@ -123,7 +123,7 @@ export default function AdminNotificationPopup() {
             {title}
           </h3>
           <p style={{
-            margin: 0, color: '#475569', fontSize: 14, lineHeight: 1.6,
+            margin: 0, color: '#3D5A80', fontSize: 14, lineHeight: 1.6,
             whiteSpace: 'pre-wrap',
           }}>
             {message}
@@ -149,7 +149,7 @@ export default function AdminNotificationPopup() {
               onClick={handleClose}
               style={{
                 flex: ctaText && current.ctaLink ? 0 : 1,
-                background: '#F1F5F9', color: '#475569',
+                background: '#F1F5F9', color: '#3D5A80',
                 border: '1.5px solid #E2E8F0', borderRadius: 12,
                 padding: '12px 20px', fontSize: 14, fontWeight: 700,
                 cursor: 'pointer',

@@ -103,11 +103,11 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               borderRadius: 20,
               border: 'none',
               cursor: 'pointer',
-              fontFamily: 'Cairo, sans-serif',
+              fontFamily: 'Tajawal, Inter, sans-serif',
               fontWeight: 600,
               fontSize: 13,
               background: mode === m ? modeColor : '#F4F6F8',
-              color: mode === m ? 'white' : '#4A4A6A',
+              color: mode === m ? 'white' : '#3D5A80',
               transition: 'all 0.2s',
             }}
           >
@@ -120,7 +120,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
         <div style={{ position: 'relative', width: 130, height: 130 }}>
           <svg width="130" height="130" style={{ transform: 'rotate(-90deg)' }}>
-            <circle cx="65" cy="65" r="54" fill="none" stroke="#F0F0F0" strokeWidth="8" />
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#D0DFF0" strokeWidth="8" />
             <circle
               cx="65" cy="65" r="54" fill="none"
               stroke={isFinished ? '#DC2626' : isLow ? '#F59E0B' : modeColor}
@@ -137,14 +137,14 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             alignItems: 'center', justifyContent: 'center',
           }}>
             <div style={{
-              fontSize: 28, fontWeight: 900,
-              fontFamily: 'Cairo, sans-serif',
-              color: isFinished ? '#DC2626' : isLow ? '#F59E0B' : '#1A1A2E',
+              fontSize: 28, fontWeight: 800,
+              fontFamily: 'Tajawal, Inter, sans-serif',
+              color: isFinished ? '#DC2626' : isLow ? '#B45309' : '#1B2E5E',
               lineHeight: 1,
             }}>
               {isFinished ? <AppIcons.Check size={32} /> : formatTime(seconds)}
             </div>
-            <div style={{ fontSize: 11, color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: '#506A88', fontFamily: 'Tajawal, sans-serif', marginTop: 2 }}>
               {isFinished ? (isAr ? 'انتهى!' : 'Done!') : modeLabel}
             </div>
           </div>
@@ -164,7 +164,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               background: seconds === p.seconds && !isRunning ? `${modeColor}15` : 'white',
               color: modeColor,
               fontSize: 12,
-              fontFamily: 'Cairo, sans-serif',
+              fontFamily: 'Tajawal, Inter, sans-serif',
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'all 0.2s',
@@ -177,8 +177,8 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
           onClick={() => setShowInput(!showInput)}
           style={{
             padding: '4px 10px', borderRadius: 8,
-            border: `1px solid #E2E8F0`, background: 'white',
-            color: '#4A4A6A', fontSize: 12, fontFamily: 'Cairo, sans-serif',
+            border: `1px solid #D0DFF0`, background: 'white',
+            color: '#3D5A80', fontSize: 12, fontFamily: 'Tajawal, Inter, sans-serif',
             cursor: 'pointer',
           }}
         >
@@ -196,8 +196,8 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             onChange={e => setCustomInput(e.target.value)}
             style={{
               width: 80, padding: '6px 10px', borderRadius: 8,
-              border: '1px solid #E2E8F0', textAlign: 'center',
-              fontFamily: 'Cairo, sans-serif', fontSize: 14,
+              border: '1px solid #D0DFF0', textAlign: 'center',
+              fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 14,
             }}
           />
           <button
@@ -206,7 +206,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
               padding: '6px 14px', borderRadius: 8,
               background: modeColor, color: 'white',
               border: 'none', cursor: 'pointer',
-              fontFamily: 'Cairo, sans-serif', fontWeight: 600, fontSize: 13,
+              fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 600, fontSize: 13,
             }}
           >
             {isAr ? 'تعيين' : 'Set'}
@@ -223,7 +223,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
             borderRadius: 12,
             border: 'none',
             cursor: 'pointer',
-            fontFamily: 'Cairo, sans-serif',
+            fontFamily: 'Tajawal, Inter, sans-serif',
             fontWeight: 700,
             fontSize: 15,
             background: isRunning
@@ -241,7 +241,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
           style={{
             padding: '10px 16px',
             borderRadius: 12,
-            border: '1px solid #E2E8F0',
+            border: '1px solid #D0DFF0',
             background: 'white',
             cursor: 'pointer',
             fontSize: 16,
@@ -256,7 +256,7 @@ export function WorkoutTimer({ defaultSeconds = 60 }: WorkoutTimerProps) {
           marginTop: 12, padding: '8px 14px',
           background: '#E8F5EE', borderRadius: 10,
           textAlign: 'center',
-          fontFamily: 'Cairo, sans-serif', fontSize: 13,
+          fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 13,
           color: '#1A7A4A', fontWeight: 600,
         }}>
           {isAr ? 'أحسنتِ! انتقلي للتمرين التالي' : 'Well done! Move to the next exercise'}

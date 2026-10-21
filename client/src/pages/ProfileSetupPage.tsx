@@ -63,7 +63,7 @@ export default function ProfileSetupPage() {
     <div dir={isAr ? 'rtl' : 'ltr'} style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-      fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+      fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -87,7 +87,7 @@ export default function ProfileSetupPage() {
           <h1 style={{ fontSize: 22, fontWeight: 900, color: NAVY, margin: 0 }}>
             {isAr ? 'مرحباً بك في Prime Fit' : 'Welcome to Prime Fit'}
           </h1>
-          <p style={{ color: '#7A9BB5', fontSize: 13, marginTop: 6 }}>
+          <p style={{ color: '#506A88', fontSize: 13, marginTop: 6 }}>
             {isAr ? 'أكمل ملفك الشخصي للبدء' : 'Complete your profile to get started'}
           </p>
         </div>

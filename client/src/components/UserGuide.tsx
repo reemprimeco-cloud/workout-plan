@@ -183,7 +183,7 @@ const sections: Section[] = [
     titleEn: 'Support & Help',
     titleAr: 'الدعم والمساعدة',
     steps: [
-      { icon: 'message', en: 'Need help? Tap "Need Help? 💬" on the login screen to open WhatsApp support.', ar: 'تحتاج مساعدة؟ اضغط "Need Help? 💬" في شاشة الدخول لفتح دعم WhatsApp.' },
+      { icon: 'message', en: 'Need help? Tap "Need Help?" on the sign-in screen to open WhatsApp support.', ar: 'تحتاج مساعدة؟ اضغط "تحتاج مساعدة؟" في شاشة الدخول لفتح دعم WhatsApp.' },
       { icon: 'phone', en: 'WhatsApp support: +965 6506 8000', ar: 'دعم WhatsApp: 96565068000+' },
       { icon: 'lock', en: 'Your data is private and secure — we never share your personal information.', ar: 'بياناتك خاصة وآمنة — لا نشارك معلوماتك الشخصية أبداً.' },
     ],
@@ -198,7 +198,7 @@ export default function UserGuide() {
   const [openSection, setOpenSection] = useState<string | null>('start');
 
   return (
-    <div dir={isAr ? 'rtl' : 'ltr'} style={{ fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif' }}>
+    <div dir={isAr ? 'rtl' : 'ltr'} style={{ fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif' }}>
 
       {/* Header */}
       <div style={{
@@ -232,7 +232,7 @@ export default function UserGuide() {
               color: openSection === s.id ? 'white' : NAVY,
               border: `1.5px solid ${openSection === s.id ? NAVY : SKY_LIGHT}`,
               fontSize: 12, fontWeight: 700,
-              fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+              fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
               transition: 'all 0.2s',
             }}
           >
@@ -264,12 +264,12 @@ export default function UserGuide() {
               <span style={{
                 fontWeight: 800, fontSize: 15,
                 color: openSection === section.id ? 'white' : NAVY,
-                fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+                fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
               }}>
                 {isAr ? section.titleAr : section.titleEn}
               </span>
             </div>
-            <span style={{ color: openSection === section.id ? SKY_LIGHT : '#94A3B8', fontSize: 18 }}>
+            <span style={{ color: openSection === section.id ? SKY_LIGHT : '#506A88', fontSize: 18 }}>
               {openSection === section.id ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}
             </span>
           </button>
@@ -291,8 +291,8 @@ export default function UserGuide() {
                   <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{step.icon}</span>
                   <p style={{
                     margin: 0, fontSize: 13, lineHeight: 1.6,
-                    color: '#374151',
-                    fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+                    color: '#1B2E5E',
+                    fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
                   }}>
                     {isAr ? step.ar : step.en}
                   </p>
@@ -310,7 +310,7 @@ export default function UserGuide() {
                 }}>
                   <p style={{
                     margin: 0, fontSize: 12, color: NAVY, fontWeight: 600,
-                    fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+                    fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
                   }}>
                     <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={14} />{isAr ? section.tipAr : section.tipEn}</span>
                   </p>
@@ -334,7 +334,7 @@ export default function UserGuide() {
             background: 'rgba(37,211,102,0.08)',
             borderRadius: 20, padding: '9px 20px',
             border: '1.5px solid rgba(37,211,102,0.3)',
-            fontFamily: isAr ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+            fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">

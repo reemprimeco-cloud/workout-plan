@@ -110,8 +110,12 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// Stored as ASCII "HH:MM". This used the ar-SA locale, which writes
+// Arabic-Indic digits ("١٢:٣٥"): parseInt reads those as NaN, so every
+// duration and duration-based calorie estimate came out NaN, and English
+// screens showed Arabic numerals.
 function formatTime(date: Date) {
-  return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function formatDate(date: Date) {
@@ -433,10 +437,14 @@ export function useGymTracker() {
     })(),
 
     weightLost: Math.max(0, data.profile.startWeight - data.profile.currentWeight),
-    progressPercent: Math.min(100, Math.round(
-      ((data.profile.startWeight - data.profile.currentWeight) /
-        (data.profile.startWeight - data.profile.targetWeight)) * 100
-    )),
+    // 0 until there is a real distance to cover: a new account (all weights 0)
+    // divided 0 by 0 and printed "NaN%".
+    progressPercent: (() => {
+      const { startWeight: s, currentWeight: c, targetWeight: t } = data.profile;
+      const span = s - t;
+      if (!s || !c || !t || span <= 0) return 0;
+      return Math.max(0, Math.min(100, Math.round(((s - c) / span) * 100)));
+    })(),
     sessionsByType: Object.keys(sessionTypes).reduce((acc, type) => {
       acc[type as SessionType] = completedSessions.filter(s => s.sessionType === type).length;
       return acc;

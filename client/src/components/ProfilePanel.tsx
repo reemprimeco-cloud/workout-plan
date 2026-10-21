@@ -19,10 +19,10 @@ function calcBMI(weight: number, height: number): number {
 }
 
 function getBMICategory(bmi: number, lang: 'ar' | 'en') {
-  if (bmi < 18.5) return { label: lang === 'ar' ? 'نقص وزن' : 'Underweight', color: '#3B82F6' };
-  if (bmi < 25)   return { label: lang === 'ar' ? 'طبيعي' : 'Normal', color: '#10B981' };
-  if (bmi < 30)   return { label: lang === 'ar' ? 'زيادة وزن' : 'Overweight', color: '#F59E0B' };
-  return { label: lang === 'ar' ? 'سمنة' : 'Obese', color: '#EF4444' };
+  if (bmi < 18.5) return { label: lang === 'ar' ? 'نقص وزن' : 'Underweight', color: '#2A4A8C' };
+  if (bmi < 25)   return { label: lang === 'ar' ? 'طبيعي' : 'Normal', color: '#15803D' };
+  if (bmi < 30)   return { label: lang === 'ar' ? 'زيادة وزن' : 'Overweight', color: '#B45309' };
+  return { label: lang === 'ar' ? 'سمنة' : 'Obese', color: '#B91C1C' };
 }
 
 function calcPlan(age: number, weight: number, targetWeight: number, height: number, gender: 'female' | 'male') {
@@ -80,7 +80,7 @@ function WeightLogSection() {
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-5">
-      <h3 className="font-bold text-gray-800 mb-3">{lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
+      <h3 className="font-bold text-[#1B2E5E] mb-3">{lang === 'ar' ? 'سجل الوزن' : 'Weight Log'}</h3>
       {/* Input */}
       <div className="flex gap-2 mb-4">
         <input
@@ -88,7 +88,7 @@ function WeightLogSection() {
           value={newWeight}
           onChange={e => setNewWeight(e.target.value)}
           placeholder={lang === 'ar' ? 'وزنك اليوم (كجم)' : "Today's weight (kg)"}
-          className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2.5 text-gray-800 focus:border-[#E05A00] outline-none text-sm"
+          className="flex-1 border-2 border-[#D0DFF0] rounded-xl px-3 py-2.5 text-[#1B2E5E] focus:border-[#1B2E5E] outline-none text-sm"
         />
         <button
           onClick={handleLog}
@@ -105,12 +105,12 @@ function WeightLogSection() {
             const prev = sorted[sorted.length - last5.length + (last5.length - 1 - i) - 1];
             const diff = prev ? entry.weight - prev.weight : 0;
             return (
-              <div key={entry.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <span className="text-sm text-gray-500">
+              <div key={entry.date} className="flex items-center justify-between py-2 border-b border-[#D0DFF0] last:border-0">
+                <span className="text-sm text-[#3D5A80]">
                   {new Date(entry.date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US', { month: 'short', day: 'numeric' })}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800">{entry.weight} kg</span>
+                  <span className="font-bold text-[#1B2E5E]">{entry.weight} kg</span>
                   {i < last5.length - 1 && diff !== 0 && (
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{
                       background: diff < 0 ? '#D1FAE5' : '#FEE2E2',
@@ -143,15 +143,15 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
           className="w-full flex items-center justify-between px-5 py-4 text-left"
           style={{ background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          <span className="font-bold text-gray-800 text-sm">
+          <span className="font-bold text-[#1B2E5E] text-sm">
             {isRTL ? 'دليل الاستخدام' : 'Help & User Guide'}
           </span>
-          <span className="text-gray-400 text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
+          <span className="text-[#506A88] text-lg transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
             <AppIcons.ChevronDown size={14} />
           </span>
         </button>
         {open && (
-          <div className="border-t border-gray-100">
+          <div className="border-t border-[#D0DFF0]">
             <UserGuide />
           </div>
         )}
@@ -169,7 +169,7 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
         <div
           style={{
             padding: '12px 20px 8px',
-            color: '#9CA3AF',
+            color: '#506A88',
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: '0.06em',
@@ -198,19 +198,19 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 32, height: 32,
-              background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+              background: 'linear-gradient(135deg, #EFF6FF, #EAF2F8)',
               borderRadius: 8,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A4A8C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1F2937' }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#1B2E5E' }}>
               {isRTL ? 'سياسة الخصوصية' : 'Privacy Policy'}
             </span>
           </div>
-          <AppIcons.ChevronRight size={14} style={{ color: '#9CA3AF', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
+          <AppIcons.ChevronRight size={14} style={{ color: '#506A88', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
         </button>
         {/* Terms of Service */}
         <button
@@ -244,11 +244,11 @@ function HelpSection({ lang }: { lang: 'ar' | 'en' }) {
                 <polyline points="10 9 9 9 8 9" />
               </svg>
             </div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1F2937' }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#1B2E5E' }}>
               {isRTL ? 'شروط الخدمة' : 'Terms of Service'}
             </span>
           </div>
-          <AppIcons.ChevronRight size={14} style={{ color: '#9CA3AF', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
+          <AppIcons.ChevronRight size={14} style={{ color: '#506A88', transform: isRTL ? 'rotate(180deg)' : 'none' }} />
         </button>
       </div>
     </div>
@@ -266,7 +266,7 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
   let planDisplay = '';
   let periodDisplay = '';
   let statusLabel = '';
-  let statusColor = '#22C55E';
+  let statusColor = '#15803D';
   let expiresAt: Date | null = null;
   let daysLeft: number | null = null;
   let isExpired = false;
@@ -276,7 +276,7 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
     planDisplay = lang === 'ar' ? 'مدير' : 'Admin';
     periodDisplay = lang === 'ar' ? 'وصول كامل' : 'Full Access';
     statusLabel = lang === 'ar' ? 'نشط' : 'Active';
-    statusColor = '#22C55E';
+    statusColor = '#15803D';
   } else if (sub) {
     const planLabels: Record<string, Record<'ar' | 'en', string>> = {
       free:       { ar: 'مجاني',      en: 'Free' },
@@ -295,7 +295,7 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
     expiresAt = sub.expiresAt ? new Date(sub.expiresAt) : null;
     daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000) : null;
     isExpired = expiresAt ? expiresAt < new Date() : false;
-    statusColor = isExpired ? '#EF4444' : (daysLeft !== null && daysLeft <= 3 ? '#F59E0B' : '#22C55E');
+    statusColor = isExpired ? '#B91C1C' : (daysLeft !== null && daysLeft <= 3 ? '#B45309' : '#15803D');
     statusLabel = isExpired
       ? (lang === 'ar' ? 'منتهي' : 'Expired')
       : sub.status === 'trialing'
@@ -316,7 +316,7 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
           {lang === 'ar' ? 'الاشتراك' : 'Subscription'}
         </span>
         <span style={{
-          background: `${statusColor}22`, color: statusColor,
+          background: `${statusColor}14`, color: statusColor,
           borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 800,
         }}>
           {statusLabel}
@@ -324,8 +324,8 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <p style={{ margin: '0 0 2px', color: '#374151', fontSize: 15, fontWeight: 800 }}>{periodDisplay || planDisplay}</p>
-          <p style={{ margin: 0, color: '#6B7280', fontSize: 13, fontWeight: 600 }}>{planDisplay}</p>
+          <p style={{ margin: '0 0 2px', color: '#1B2E5E', fontSize: 15, fontWeight: 800 }}>{periodDisplay || planDisplay}</p>
+          <p style={{ margin: 0, color: '#3D5A80', fontSize: 13, fontWeight: 600 }}>{planDisplay}</p>
         </div>
         <div style={{ textAlign: 'end' }}>
           {expiresAt && (
@@ -337,7 +337,7 @@ function SubscriptionCard({ lang, isAdmin }: { lang: 'ar' | 'en'; isAdmin: boole
             </p>
           )}
           {expiresAt && (
-            <p style={{ margin: '2px 0 0', color: '#9CA3AF', fontSize: 10 }}>
+            <p style={{ margin: '2px 0 0', color: '#506A88', fontSize: 11 }}>
               {expiresAt.toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
             </p>
           )}
@@ -403,6 +403,7 @@ export function ProfilePanel() {
   const plan = calcPlan(profile.age, profile.currentWeight, profile.targetWeight, profile.height, profile.gender);
   const bmiCat = getBMICategory(plan.bmi, lang);
   const bmiPercent = Math.min(100, Math.max(0, ((plan.bmi - 15) / (40 - 15)) * 100));
+  const hasBMI = plan.bmi > 0;
 
   const handleSave = () => {
     const cw = Number(form.currentWeight);
@@ -427,7 +428,7 @@ export function ProfilePanel() {
       <div className="flex gap-2 pt-4 justify-end">
         {(['ar', 'en'] as const).map(l => (
           <button key={l} onClick={() => setLang(l)}
-            className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${lang === l ? 'bg-[#1B2E5E] text-white border-[#1B2E5E]' : 'bg-white text-gray-500 border-gray-200'}`}>
+            className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${lang === l ? 'bg-[#1B2E5E] text-white border-[#1B2E5E]' : 'bg-white text-[#3D5A80] border-[#D0DFF0]'}`}>
             {l === 'ar' ? 'العربية' : 'English'}
           </button>
         ))}
@@ -445,7 +446,7 @@ export function ProfilePanel() {
               width: 82, height: 82, borderRadius: '50%',
               background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 34, fontWeight: 900, color: 'white',
+              fontSize: 34, fontWeight: 800, color: 'white',
               boxShadow: '0 0 0 3px white, 0 0 0 4.5px #1B2E5E22',
               userSelect: 'none',
             }}>
@@ -470,14 +471,14 @@ export function ProfilePanel() {
                     value={inlineWeight} autoFocus
                     onChange={e => setInlineWeight(e.target.value)}
                     onBlur={() => { const w = parseFloat(inlineWeight); if (w >= 30 && w <= 250) updateProfile({ ...profile, currentWeight: w }); setEditingWeight(false); }}
-                    style={{ width: 52, textAlign: 'center', fontSize: 17, fontWeight: 900, color: '#1B2E5E', borderBottom: '2px solid #1B2E5E', outline: 'none', background: 'transparent' }}
+                    style={{ width: 52, textAlign: 'center', fontSize: 17, fontWeight: 800, color: '#1B2E5E', borderBottom: '2px solid #1B2E5E', outline: 'none', background: 'transparent' }}
                   />
                 </form>
               ) : (
-                <div style={{ fontSize: 17, fontWeight: 900, color: '#111827' }}>{profile.currentWeight}</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#1B2E5E' }}>{profile.currentWeight}</div>
               )}
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>{lang === 'ar' ? 'الوزن' : 'Weight'}</div>
-              <div style={{ fontSize: 10, color: '#D1D5DB' }}>kg</div>
+              <div style={{ fontSize: 11, color: '#506A88', marginTop: 3 }}>{lang === 'ar' ? 'الوزن' : 'Weight'}</div>
+              <div style={{ fontSize: 11, color: '#506A88' }}>kg</div>
             </div>
 
             {/* Divider */}
@@ -497,14 +498,14 @@ export function ProfilePanel() {
                     value={inlineTarget} autoFocus
                     onChange={e => setInlineTarget(e.target.value)}
                     onBlur={() => { const w = parseFloat(inlineTarget); if (w >= 30 && w <= 250) updateProfile({ ...profile, targetWeight: w }); setEditingTarget(false); }}
-                    style={{ width: 52, textAlign: 'center', fontSize: 17, fontWeight: 900, color: '#1B2E5E', borderBottom: '2px solid #1B2E5E', outline: 'none', background: 'transparent' }}
+                    style={{ width: 52, textAlign: 'center', fontSize: 17, fontWeight: 800, color: '#1B2E5E', borderBottom: '2px solid #1B2E5E', outline: 'none', background: 'transparent' }}
                   />
                 </form>
               ) : (
-                <div style={{ fontSize: 17, fontWeight: 900, color: '#111827' }}>{profile.targetWeight}</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#1B2E5E' }}>{profile.targetWeight}</div>
               )}
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>{lang === 'ar' ? 'الهدف' : 'Target'}</div>
-              <div style={{ fontSize: 10, color: '#D1D5DB' }}>kg</div>
+              <div style={{ fontSize: 11, color: '#506A88', marginTop: 3 }}>{lang === 'ar' ? 'الهدف' : 'Target'}</div>
+              <div style={{ fontSize: 11, color: '#506A88' }}>kg</div>
             </div>
 
             {/* Divider */}
@@ -512,32 +513,34 @@ export function ProfilePanel() {
 
             {/* BMI */}
             <div style={{ minWidth: 52 }}>
-              <div style={{ fontSize: 17, fontWeight: 900, color: bmiCat.color }}>{plan.bmi}</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3 }}>BMI</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'white', background: bmiCat.color, borderRadius: 20, padding: '1px 7px', marginTop: 2, display: 'inline-block' }}>
-                {bmiCat.label}
-              </div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: hasBMI ? bmiCat.color : '#1B2E5E' }}>{hasBMI ? plan.bmi : '—'}</div>
+              <div style={{ fontSize: 11, color: '#506A88', marginTop: 3 }}>BMI</div>
+              {hasBMI && (
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'white', background: bmiCat.color, borderRadius: 20, padding: '1px 7px', marginTop: 2, display: 'inline-block' }}>
+                  {bmiCat.label}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Name + meta + email */}
         <div style={{ padding: '0 20px 4px' }}>
-          <p style={{ fontSize: 16, fontWeight: 900, color: '#111827', margin: 0 }}>
+          <p style={{ fontSize: 16, fontWeight: 800, color: '#1B2E5E', margin: 0 }}>
             {profile.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}
           </p>
           {userEmail && (
-            <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 0', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+            <p style={{ fontSize: 12, color: '#3D5A80', margin: '2px 0 0', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
               {userEmail}
             </p>
           )}
-          <p style={{ fontSize: 12, color: '#9CA3AF', margin: '3px 0 0', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: '#506A88', margin: '3px 0 0', lineHeight: 1.5 }}>
             {lang === 'ar'
               ? `${profile.age} سنة · ${profile.height} سم · ${profile.gender === 'female' ? 'أنثى' : 'ذكر'}`
               : `${profile.age} yrs · ${profile.height} cm · ${profile.gender === 'female' ? 'Female' : 'Male'}`}
           </p>
           {isAdmin && (
-            <span style={{ display: 'inline-block', marginTop: 4, background: '#1B2E5E', color: 'white', fontSize: 10, fontWeight: 800, borderRadius: 20, padding: '2px 10px', letterSpacing: '0.05em' }}>
+            <span style={{ display: 'inline-block', marginTop: 4, background: '#1B2E5E', color: 'white', fontSize: 11, fontWeight: 800, borderRadius: 20, padding: '2px 10px', letterSpacing: '0.05em' }}>
               {lang === 'ar' ? 'مدير' : 'Admin'}
             </span>
           )}
@@ -549,9 +552,9 @@ export function ProfilePanel() {
             onClick={() => { setForm({ ...profile }); setEditing(true); }}
             style={{
               width: '100%', padding: '7px 0',
-              background: 'white', border: '1.5px solid #E5E7EB',
+              background: 'white', border: '1.5px solid #D0DFF0',
               borderRadius: 10, fontSize: 13, fontWeight: 700,
-              color: '#374151', cursor: 'pointer', fontFamily: 'inherit',
+              color: '#1B2E5E', cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
             {lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
@@ -559,16 +562,37 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      {/* BMI Meter */}
+      {/* BMI Meter. A BMI of 0 means height or weight is missing, not that
+          the person is underweight; it used to be labelled exactly that. */}
+      {!hasBMI ? (
+        <button onClick={() => { setForm({ ...profile }); setEditing(true); }}
+          className="bg-white rounded-2xl shadow-md p-5 w-full"
+          style={{ border: 'none', textAlign: 'start', cursor: 'pointer', fontFamily: 'inherit', display: 'block' }}>
+          <h3 className="font-bold mb-1" style={{ color: '#1B2E5E' }}>{t('bmiLabel')}</h3>
+          <p style={{ margin: 0, fontSize: 13, color: '#3D5A80' }}>
+            {lang === 'ar' ? 'أضف طولك ووزنك في ملفك لحساب مؤشر كتلة الجسم.' : 'Add your height and weight to your profile to see your BMI.'}
+          </p>
+        </button>
+      ) : (
       <div className="bg-white rounded-2xl shadow-md p-5">
-        <h3 className="font-bold text-gray-800 mb-3">{t('bmiLabel')}</h3>
-        <div className="relative h-4 rounded-full overflow-hidden mb-2"
-          style={{ background: 'linear-gradient(to right, #3B82F6 0%, #10B981 25%, #F59E0B 55%, #EF4444 80%, #7C3AED 100%)' }}>
-          <div className="absolute top-0 w-4 h-4 bg-white border-2 border-gray-800 rounded-full shadow-md transition-all duration-500"
-            style={{ left: `calc(${bmiPercent}% - 8px)` }} />
-        </div>
-        <div className="flex justify-between text-xs text-gray-400 mb-3">
-          <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+        <h3 className="font-bold mb-3" style={{ color: '#1B2E5E' }}>{t('bmiLabel')}</h3>
+        {/* A number line reads left to right in Arabic too, so the meter is
+            pinned LTR; under RTL the labels used to mirror while the gradient
+            and marker did not, plotting 24.2 near 30. Band edges sit at their
+            true positions on the 15–40 scale (18.5 → 14%, 25 → 40%, 30 → 60%)
+            instead of at evenly spaced labels. */}
+        <div dir="ltr">
+          <div className="relative mb-2" style={{ height: 12 }}>
+            <div className="absolute inset-0 overflow-hidden" style={{ borderRadius: 6, background: 'linear-gradient(to right, #5BA3C4 0 14%, #22C55E 14% 40%, #F59E0B 40% 60%, #EF4444 60% 100%)' }} />
+            <div className="absolute rounded-full transition-all duration-500"
+              style={{ top: -3, width: 18, height: 18, left: `calc(${bmiPercent}% - 9px)`, background: 'white', border: '3px solid #1B2E5E', boxShadow: '0 2px 6px rgba(27,46,94,0.25)' }} />
+          </div>
+          <div className="relative mb-3" style={{ height: 16, fontSize: 11, color: '#506A88', fontVariantNumeric: 'tabular-nums' }}>
+            {[15, 18.5, 25, 30, 40].map(v => {
+              const p = ((v - 15) / 25) * 100;
+              return <span key={v} className="absolute" style={{ left: `${p}%`, transform: p === 0 ? 'none' : p === 100 ? 'translateX(-100%)' : 'translateX(-50%)' }}>{v}</span>;
+            })}
+          </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-2xl font-black" style={{ color: bmiCat.color }}>{plan.bmi}</span>
@@ -577,8 +601,11 @@ export function ProfilePanel() {
           </span>
         </div>
       </div>
+      )}
 
-      {/* ── Personalized Plan — modern minimalist ── */}
+      {/* ── Personalized Plan — modern minimalist. Built from BMI, so it waits
+          for one rather than recommending a plan for "normal range" at 0. ── */}
+      {hasBMI && (
       <div style={{
         background: 'white',
         borderRadius: 18,
@@ -592,10 +619,10 @@ export function ProfilePanel() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <p style={{ color: '#7BB8D4', fontSize: 10, fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <p style={{ color: '#7BB8D4', fontSize: 11, fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: 1 }}>
               {t('recommendedPlan')}
             </p>
-            <p style={{ color: 'white', fontSize: 15, fontWeight: 900, margin: '3px 0 0' }}>
+            <p style={{ color: 'white', fontSize: 15, fontWeight: 800, margin: '3px 0 0' }}>
               {lang === 'ar' ? plan.planName : plan.planNameEn}
             </p>
           </div>
@@ -609,7 +636,7 @@ export function ProfilePanel() {
 
         {/* Description */}
         <div style={{ padding: '12px 18px 4px', borderBottom: '1px solid #F3F4F6' }}>
-          <p style={{ color: '#6B7280', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: '#3D5A80', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
             {lang === 'ar' ? plan.planDesc : plan.planDescEn}
           </p>
         </div>
@@ -664,16 +691,17 @@ export function ProfilePanel() {
             </div>
             {/* Label */}
             <div style={{ flex: 1 }}>
-              <p style={{ color: '#9CA3AF', fontSize: 11, margin: 0, fontWeight: 600 }}>{row.label}</p>
+              <p style={{ color: '#506A88', fontSize: 11, margin: 0, fontWeight: 600 }}>{row.label}</p>
             </div>
             {/* Value */}
             <div style={{ textAlign: 'end' }}>
-              <span style={{ color: '#111827', fontSize: 16, fontWeight: 900 }}>{row.value}</span>
-              <span style={{ color: '#9CA3AF', fontSize: 11, marginRight: 4, marginLeft: 4 }}>{row.unit}</span>
+              <span style={{ color: '#1B2E5E', fontSize: 16, fontWeight: 800 }}>{row.value}</span>
+              <span style={{ color: '#506A88', fontSize: 11, marginRight: 4, marginLeft: 4 }}>{row.unit}</span>
             </div>
           </div>
         ))}
       </div>
+      )}
 
       {/* Subscription Status Card — uses DB subscription via trpc */}
       <SubscriptionCard lang={lang} isAdmin={isAdmin} />
@@ -688,7 +716,7 @@ export function ProfilePanel() {
             }
           }}
           className="w-full py-3 rounded-xl border-2 font-semibold text-sm transition-all"
-          style={{ borderColor: '#EF4444', color: '#DC2626', background: 'rgba(239,68,68,0.08)' }}
+          style={{ borderColor: '#F3B4B4', color: '#B91C1C', background: '#FFFFFF', minHeight: 48 }}
         >
           {lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}
         </button>
@@ -697,7 +725,7 @@ export function ProfilePanel() {
       {/* Reset Button */}
       <div className="pb-2">
         <button onClick={() => setShowReset(true)}
-          className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 font-semibold text-sm hover:bg-red-50 transition-all">
+          className="w-full py-3 rounded-xl border-2 border-red-200 text-[#B91C1C] font-semibold text-sm hover:bg-red-50 transition-all">
           {t('resetData')}
         </button>
       </div>
@@ -708,9 +736,9 @@ export function ProfilePanel() {
       <HelpSection lang={lang} />
 
       {/* App Info Footer */}
-      <div className="pb-6 text-center" style={{ borderTop: '1px solid #F0F0F0', paddingTop: 12, marginTop: 4 }}>
-        <p className="text-xs mt-2" style={{ color: '#C8C8D0', letterSpacing: '0.03em' }}>
-          Made by <span style={{ fontWeight: 700, color: '#B0B0C0' }}>Primeco</span> © {new Date().getFullYear()} All rights reserved
+      <div className="pb-6 text-center" style={{ borderTop: '1px solid #D0DFF0', paddingTop: 12, marginTop: 4 }}>
+        <p className="text-xs mt-2" style={{ color: '#506A88', letterSpacing: '0.03em' }}>
+          Made by <span style={{ fontWeight: 700, color: '#506A88' }}>Primeco</span> © {new Date().getFullYear()} All rights reserved
         </p>
       </div>
 
@@ -720,18 +748,18 @@ export function ProfilePanel() {
           position: 'fixed', inset: 0, zIndex: 99999,
           background: 'white',
           overflowY: 'auto',
-          fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+          fontFamily: lang === 'ar' ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
         }}>
           <div dir={isRTL ? 'rtl' : 'ltr'} style={{ maxWidth: 520, margin: '0 auto', minHeight: '100vh', background: 'white' }}>
 
             {/* ── Header ── */}
             <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #F3F4F6' }}>
-              <button onClick={() => setEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#374151', fontSize: 20, lineHeight: 1 }}>←</button>
+              <button onClick={() => setEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#1B2E5E', fontSize: 20, lineHeight: 1 }}>←</button>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#111827' }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1B2E5E' }}>
                   {lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
                 </h2>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#506A88' }}>
                   {lang === 'ar' ? 'تحديث معلوماتك وتتبع تقدمك' : 'Update your information and track your progress'}
                 </p>
               </div>
@@ -744,16 +772,16 @@ export function ProfilePanel() {
                 width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
                 background: 'linear-gradient(135deg, #1B2E5E 0%, #7BB8D4 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 26, fontWeight: 900, color: 'white',
+                fontSize: 26, fontWeight: 800, color: 'white',
                 border: '3px solid #1B2E5E',
               }}>
                 {form.name ? form.name.trim()[0].toUpperCase() : '?'}
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#111827' }}>{form.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</p>
-                {userEmail && <p style={{ margin: '2px 0 4px', fontSize: 12, color: '#6B7280', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userEmail}</p>}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#EFF6FF', color: '#2563EB', borderRadius: 8, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#1B2E5E' }}>{form.name || (lang === 'ar' ? 'بطلتي' : 'Champion')}</p>
+                {userEmail && <p style={{ margin: '2px 0 4px', fontSize: 12, color: '#3D5A80', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userEmail}</p>}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#EFF6FF', color: '#2A4A8C', borderRadius: 8, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2A4A8C" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                   {lang === 'ar' ? 'حساب البريد' : 'Email Account'}
                 </span>
               </div>
@@ -763,7 +791,7 @@ export function ProfilePanel() {
             <div style={{ padding: '20px 16px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#1B2E5E' }}>{lang === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}</span>
               </div>
 
               {/* Field helper */}
@@ -775,12 +803,12 @@ export function ProfilePanel() {
               ] as const).map((f) => (
                 <div key={f.field} style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2A4A8C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d={f.icon} />
                     </svg>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 2px', fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{f.label}</p>
+                    <p style={{ margin: '0 0 2px', fontSize: 11, color: '#506A88', fontWeight: 600 }}>{f.label}</p>
                     <input
                       type={f.type}
                       step={f.step}
@@ -790,7 +818,7 @@ export function ProfilePanel() {
                       onChange={e => setForm({ ...form, [f.field]: f.type === 'number' ? (e.target.value === '' ? 0 : Number(e.target.value)) : e.target.value })}
                       placeholder={f.placeholder}
                       autoFocus={f.field === 'currentWeight'}
-                      style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: 'inherit' }}
+                      style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#1B2E5E', fontFamily: 'inherit' }}
                     />
                   </div>
                 </div>
@@ -804,19 +832,19 @@ export function ProfilePanel() {
                 ] as const).map(f => (
                   <div key={f.field} style={{ background: '#F8FAFC', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2A4A8C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d={f.icon} />
                       </svg>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ margin: '0 0 2px', fontSize: 10, color: '#9CA3AF', fontWeight: 600 }}>{f.label}</p>
+                      <p style={{ margin: '0 0 2px', fontSize: 11, color: '#506A88', fontWeight: 600 }}>{f.label}</p>
                       <input
                         type="number"
                         min={f.min} max={f.max}
                         value={(form[f.field] as number) || ''}
                         onChange={e => setForm({ ...form, [f.field]: Number(e.target.value) })}
                         placeholder={f.placeholder}
-                        style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#111827', fontFamily: 'inherit' }}
+                        style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, color: '#1B2E5E', fontFamily: 'inherit' }}
                       />
                     </div>
                   </div>
@@ -827,7 +855,7 @@ export function ProfilePanel() {
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'الجنس' : 'Gender'}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#1B2E5E' }}>{lang === 'ar' ? 'الجنس' : 'Gender'}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, background: '#F3F4F6', borderRadius: 12, padding: 4 }}>
                   {(['male', 'female'] as const).map(g => (
@@ -835,8 +863,8 @@ export function ProfilePanel() {
                       style={{
                         padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
                         fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
-                        background: form.gender === g ? '#2563EB' : 'transparent',
-                        color: form.gender === g ? 'white' : '#6B7280',
+                        background: form.gender === g ? '#2A4A8C' : 'transparent',
+                        color: form.gender === g ? 'white' : '#3D5A80',
                         transition: 'all 0.2s',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                       }}>
@@ -854,7 +882,7 @@ export function ProfilePanel() {
                   <div style={{ marginBottom: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B2E5E" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#111827' }}>{lang === 'ar' ? 'ملخص الصحة' : 'Health Summary'}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#1B2E5E' }}>{lang === 'ar' ? 'ملخص الصحة' : 'Health Summary'}</span>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       {/* Weight Status */}
@@ -863,18 +891,18 @@ export function ProfilePanel() {
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={previewCat.color} strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </div>
                         <div>
-                          <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{previewCat.label}</p>
-                          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: previewCat.color }}>{previewBMI}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: '#3D5A80' }}>{previewCat.label}</p>
+                          <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: previewCat.color }}>{previewBMI}</p>
                         </div>
                       </div>
                       {/* BMI */}
-                      <div style={{ background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ background: '#F8FAFC', border: '1.5px solid #D0DFF0', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: 8, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2A4A8C" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         </div>
                         <div>
-                          <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{lang === 'ar' ? 'مؤشر كتلة الجسم' : 'Body Mass Index (BMI)'}</p>
-                          <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#2563EB' }}>{previewBMI}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: '#3D5A80' }}>{lang === 'ar' ? 'مؤشر كتلة الجسم' : 'Body Mass Index (BMI)'}</p>
+                          <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#2A4A8C' }}>{previewBMI}</p>
                         </div>
                       </div>
                     </div>
@@ -885,16 +913,16 @@ export function ProfilePanel() {
               {/* ── Save / Cancel ── */}
               <div style={{ paddingBottom: 32 }}>
                 <button onClick={handleSave}
-                  style={{ width: '100%', padding: '14px 0', borderRadius: 14, border: 'none', background: '#2563EB', color: 'white', fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  style={{ width: '100%', padding: '14px 0', borderRadius: 14, border: 'none', background: '#2A4A8C', color: 'white', fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                   {lang === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
                 </button>
                 <button onClick={() => setEditing(false)}
-                  style={{ width: '100%', padding: '13px 0', borderRadius: 14, border: '1.5px solid #E5E7EB', background: 'white', color: '#374151', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  style={{ width: '100%', padding: '13px 0', borderRadius: 14, border: '1.5px solid #D0DFF0', background: 'white', color: '#1B2E5E', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                   {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                 </button>
-                <p style={{ textAlign: 'center', margin: '12px 0 0', fontSize: 11, color: '#9CA3AF' }}>
+                <p style={{ textAlign: 'center', margin: '12px 0 0', fontSize: 11, color: '#506A88' }}>
                   <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lock size={14} />{lang === 'ar' ? 'بياناتك آمنة وخاصة' : 'Your data is secure and private'}</span>
                 </p>
               </div>
@@ -910,7 +938,7 @@ export function ProfilePanel() {
           background: 'rgba(0,0,0,0.65)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '20px',
-          fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+          fontFamily: 'Tajawal, Inter, sans-serif',
         }}>
           <div dir={isRTL ? 'rtl' : 'ltr'} style={{
             background: 'white', borderRadius: 20,
@@ -920,10 +948,10 @@ export function ProfilePanel() {
           }}>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <div style={{ marginBottom: 8, display:"flex", justifyContent:"center" }}><AppIcons.Warning size={36} className="text-red-600" /></div>
-              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: '#DC2626' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#DC2626' }}>
                 {t('resetData')}
               </h3>
-              <p style={{ margin: 0, color: '#6B7280', fontSize: 13, lineHeight: 1.6 }}>
+              <p style={{ margin: 0, color: '#3D5A80', fontSize: 13, lineHeight: 1.6 }}>
                 {t('resetWarning')}
               </p>
             </div>
@@ -942,8 +970,8 @@ export function ProfilePanel() {
                 onClick={() => setShowReset(false)}
                 style={{
                   flex: 1, padding: '12px 0', borderRadius: 12,
-                  border: '2px solid #E5E7EB', background: 'white',
-                  color: '#6B7280', fontSize: 14, fontWeight: 700,
+                  border: '2px solid #D0DFF0', background: 'white',
+                  color: '#3D5A80', fontSize: 14, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
@@ -954,7 +982,7 @@ export function ProfilePanel() {
                 style={{
                   flex: 1, padding: '12px 0', borderRadius: 12,
                   border: 'none', background: '#EF4444',
-                  color: 'white', fontSize: 14, fontWeight: 900,
+                  color: 'white', fontSize: 14, fontWeight: 800,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >

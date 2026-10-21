@@ -46,7 +46,7 @@ const PLANS = [
     descAr: "7 أيام وصول كامل — بدون دفع",
     monthly: 0,
     yearly: 0,
-    color: "#64748b",
+    color: "#3D5A80",
     features: [
       { en: "Workout tracking",    ar: "تتبع التمارين" },
       { en: "Exercise library",    ar: "مكتبة التمارين" },
@@ -115,7 +115,7 @@ export default function PricingSelector({ onPlanSelected }: PricingSelectorProps
       style={{
         minHeight: "100vh",
         background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
+        fontFamily: isRTL ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif",
         padding: "24px 16px 48px",
       }}
     >
@@ -213,7 +213,7 @@ export default function PricingSelector({ onPlanSelected }: PricingSelectorProps
                     <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: NAVY }}>
                       {lang === "en" ? plan.nameEn : plan.nameAr}
                     </h3>
-                    <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "#3D5A80" }}>
                       {lang === "en" ? plan.descEn : plan.descAr}
                     </p>
                   </div>
@@ -231,7 +231,7 @@ export default function PricingSelector({ onPlanSelected }: PricingSelectorProps
                   ) : (
                     <>
                       <span style={{ fontSize: 30, fontWeight: 900, color: NAVY }}>{price.toFixed(2)}</span>
-                      <span style={{ fontSize: 14, color: "#64748b", marginInlineStart: 4 }}>
+                      <span style={{ fontSize: 14, color: "#3D5A80", marginInlineStart: 4 }}>
                         KWD{period === "monthly" ? t("perMonth") : t("perYear")}
                       </span>
                     </>
@@ -241,7 +241,7 @@ export default function PricingSelector({ onPlanSelected }: PricingSelectorProps
                 {/* Features */}
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 8 }}>
                   {plan.features.map((f, i) => (
-                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#374151" }}>
+                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#1B2E5E" }}>
                       <Check size={16} color={GREEN} strokeWidth={3} />
                       {lang === "en" ? f.en : f.ar}
                     </li>
@@ -264,7 +264,7 @@ export default function PricingSelector({ onPlanSelected }: PricingSelectorProps
                 </Button>
 
                 {plan.id === "free" && (
-                  <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
+                  <p style={{ textAlign: "center", color: "#506A88", fontSize: 11, margin: "8px 0 0" }}>
                     {t("trialNote")}
                   </p>
                 )}

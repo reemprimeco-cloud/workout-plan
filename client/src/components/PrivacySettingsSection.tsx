@@ -24,7 +24,7 @@ function Toggle({ checked, onChange, disabled }: ToggleProps) {
       disabled={disabled}
       style={{
         width: 44, height: 24, borderRadius: 12,
-        background: checked ? NAVY : "#D1D5DB",
+        background: checked ? NAVY : "#D0DFF0",
         border: "none", cursor: disabled ? "not-allowed" : "pointer",
         position: "relative", transition: "background 0.2s", flexShrink: 0,
         opacity: disabled ? 0.5 : 1,
@@ -68,9 +68,9 @@ function SettingRow({ icon, label, sublabel, checked, onChange }: RowProps) {
         {icon}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, color: "#111827", fontSize: 14, fontWeight: 600 }}>{label}</p>
+        <p style={{ margin: 0, color: "#1B2E5E", fontSize: 14, fontWeight: 600 }}>{label}</p>
         {sublabel && (
-          <p style={{ margin: 0, color: "#9CA3AF", fontSize: 11, marginTop: 1 }}>{sublabel}</p>
+          <p style={{ margin: 0, color: "#506A88", fontSize: 11, marginTop: 1 }}>{sublabel}</p>
         )}
       </div>
       <Toggle checked={checked} onChange={onChange} />
@@ -122,19 +122,19 @@ export default function PrivacySettingsSection({ lang = "en" }: { lang?: string 
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Shield style={{ width: 18, height: 18, color: NAVY }} />
-          <span style={{ color: "#111827", fontWeight: 700, fontSize: 15 }}>
+          <span style={{ color: "#1B2E5E", fontWeight: 700, fontSize: 15 }}>
             {lang === "ar" ? "الخصوصية والإشعارات" : "Privacy & Notifications"}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {saved && (
-            <span style={{ color: "#10B981", fontSize: 12, fontWeight: 600 }}>
+            <span style={{ color: "#15803D", fontSize: 12, fontWeight: 600 }}>
               {lang === "ar" ? "تم الحفظ" : "Saved"}
             </span>
           )}
           {open
-            ? <ChevronUp style={{ width: 16, height: 16, color: "#9CA3AF" }} />
-            : <ChevronDown style={{ width: 16, height: 16, color: "#9CA3AF" }} />
+            ? <ChevronUp style={{ width: 16, height: 16, color: "#506A88" }} />
+            : <ChevronDown style={{ width: 16, height: 16, color: "#506A88" }} />
           }
         </div>
       </button>
@@ -142,17 +142,17 @@ export default function PrivacySettingsSection({ lang = "en" }: { lang?: string 
       {open && (
         <div style={{ padding: "0 18px 14px", borderTop: "1px solid #F3F4F6" }}>
           {isLoading ? (
-            <div style={{ padding: "20px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+            <div style={{ padding: "20px 0", textAlign: "center", color: "#506A88", fontSize: 13 }}>
               Loading...
             </div>
           ) : !s ? (
-            <div style={{ padding: "20px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+            <div style={{ padding: "20px 0", textAlign: "center", color: "#506A88", fontSize: 13 }}>
               {lang === "ar" ? "تعذّر تحميل الإعدادات" : "Could not load settings"}
             </div>
           ) : (
             <>
               {/* Account Privacy */}
-              <p style={{ margin: "12px 0 4px", color: "#6B7280", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <p style={{ margin: "12px 0 4px", color: "#3D5A80", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {lang === "ar" ? "الحساب" : "Account"}
               </p>
               <SettingRow
@@ -163,14 +163,14 @@ export default function PrivacySettingsSection({ lang = "en" }: { lang?: string 
                 onChange={v => handleChange("isPrivate", v)}
               />
               <SettingRow
-                icon={<UserPlus style={{ width: 16, height: 16, color: "#10B981" }} />}
+                icon={<UserPlus style={{ width: 16, height: 16, color: "#15803D" }} />}
                 label={lang === "ar" ? "السماح بالمتابعة" : "Allow Follows"}
                 sublabel={lang === "ar" ? "يمكن للأعضاء متابعتك" : "Members can follow your profile"}
                 checked={!!s.allowFollows}
                 onChange={v => handleChange("allowFollows", v)}
               />
               <SettingRow
-                icon={<MessageCircle style={{ width: 16, height: 16, color: "#3B82F6" }} />}
+                icon={<MessageCircle style={{ width: 16, height: 16, color: "#2A4A8C" }} />}
                 label={lang === "ar" ? "السماح بالرسائل الخاصة" : "Allow Direct Messages"}
                 sublabel={lang === "ar" ? "يمكن للأعضاء مراسلتك" : "Members can send you DMs"}
                 checked={!!s.allowDms}
@@ -185,7 +185,7 @@ export default function PrivacySettingsSection({ lang = "en" }: { lang?: string 
               />
 
               {/* Notification Preferences */}
-              <p style={{ margin: "16px 0 4px", color: "#6B7280", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <p style={{ margin: "16px 0 4px", color: "#3D5A80", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {lang === "ar" ? "الإشعارات" : "Notifications"}
               </p>
               <SettingRow
@@ -196,14 +196,14 @@ export default function PrivacySettingsSection({ lang = "en" }: { lang?: string 
                 onChange={v => handleChange("notifyLikes", v)}
               />
               <SettingRow
-                icon={<MessageCircle style={{ width: 16, height: 16, color: "#3B82F6" }} />}
+                icon={<MessageCircle style={{ width: 16, height: 16, color: "#2A4A8C" }} />}
                 label={lang === "ar" ? "إشعارات التعليقات" : "Comment Notifications"}
                 sublabel={lang === "ar" ? "عند تعليق أحدهم على منشورك" : "When someone comments on your post"}
                 checked={!!s.notifyComments}
                 onChange={v => handleChange("notifyComments", v)}
               />
               <SettingRow
-                icon={<UserPlus style={{ width: 16, height: 16, color: "#10B981" }} />}
+                icon={<UserPlus style={{ width: 16, height: 16, color: "#15803D" }} />}
                 label={lang === "ar" ? "إشعارات المتابعة" : "Follow Notifications"}
                 sublabel={lang === "ar" ? "عند متابعة أحدهم لك" : "When someone follows you"}
                 checked={!!s.notifyFollows}

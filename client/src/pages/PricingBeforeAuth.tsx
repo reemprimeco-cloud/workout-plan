@@ -148,7 +148,7 @@ function PostAuthActivator({
         background: 'linear-gradient(135deg, #0F1E3D 0%, #1B2E5E 100%)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexDirection: 'column', gap: 16,
-        fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
+        fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
       }}>
         <div style={{
           width: 48, height: 48,

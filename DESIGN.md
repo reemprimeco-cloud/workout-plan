@@ -11,6 +11,14 @@ colors:
   surface-white: "#FFFFFF"
   harbour-mid: "#3D5A80"
   harbour-haze: "#7A9BB5"
+  harbour-haze-text: "#506A88"
+  tide-wash: "#EAF2F8"
+  tide-inset: "#F3F7FB"
+  sea-lagoon: "#17697A"
+  sea-seagrass: "#226B54"
+  sea-indigo: "#4F5BA6"
+  sea-slate: "#4A5D78"
+  sea-open-water: "#2B6F8E"
   tide-line: "#D0DFF0"
   signal-success: "#22C55E"
   signal-warning: "#F59E0B"
@@ -164,7 +172,15 @@ warmth admitted only when the interface needs to signal state.
   makes white cards read as objects sitting on a surface.
 - **Surface White** (`#FFFFFF`): Card and panel fills only.
 - **Harbour Mid** (`#3D5A80`): Secondary text and resting tab labels.
-- **Harbour Haze** (`#7A9BB5`): Tertiary text, placeholders, muted metadata.
+- **Harbour Haze** (`#7A9BB5`): Strokes, dividers on dark, decorative marks.
+  **Never text**: it measures 2.9:1 on white.
+- **Harbour Haze Text** (`#506A88`, `--text-light`): Tertiary text, placeholders,
+  units, captions. The darkest tone that still reads as a step below Harbour
+  Mid; 5.6:1 on white, 5.1:1 on Sea Mist, 4.6:1 on the Tide Wash tint.
+- **Tide Wash** (`#EAF2F8`) and **Tide Inset** (`#F3F7FB`): the two tints a card
+  may hold. Tide Wash backs an icon tile or a selected chip count; Tide Inset
+  backs a sub-tile inside a card (the four weight figures, an exercise's
+  sets / reps / rest). Neither is a page or card background.
 - **Tide Line** (`#D0DFF0`): Borders, dividers, progress-bar troughs.
 
 ### Signal
@@ -175,6 +191,33 @@ warmth admitted only when the interface needs to signal state.
   same two hues at a lightness that can legally carry text. The display signals
   above measure 2.15:1 to 3.76:1 on Surface White — they are fills, dots and
   bars, never words. Any signal-coloured *text* uses this pair.
+
+### Categorical palette — the sea family
+Chosen by the owner in October 2026 (Option A of the colour chart) because the
+all-navy refresh had made categories indistinguishable. These colours tell
+*kinds of thing* apart. They never carry status; green, amber and red keep that.
+Each is listed as its text-safe tone (≥ 4.5:1 on white, on its own tint, and as
+a ground for white text), with the tint it sits on.
+
+| Name | Text-safe tone | Fill tone | Tint | Used for |
+|---|---|---|---|---|
+| **Lagoon Teal** | `#17697A` | `#1F7A8C` | `#E2F0F3` | Lower body · carbs · streaks · breakfast |
+| **Seagrass** | `#226B54` | `#287D63` | `#E3F1EC` | Core, cardio, warm-up, quick · fat · lunch |
+| **Dusk Indigo** | `#4F5BA6` | `#4F5BA6` | `#E8EAF5` | Upper body, chest & shoulders · protein · dinner |
+| **Slate** | `#4A5D78` | `#4A5D78` | `#E8ECF2` | Recovery: sauna, stretching, pilates, mobility · snack |
+| **Harbour Navy Light** | `#2A4A8C` | `#2A4A8C` | `#E5EAF4` | Full body, home workouts · totals · coffee |
+| **Open Water** | `#2B6F8E` | `#4A93B5` | `#E3F0F6` | Aqua · water and drinks · steps |
+
+- **Workout types are grouped, not individual.** Fourteen session types share
+  six colours by what they train, so a screen never shows fourteen hues.
+  `client/src/data/exercises.ts` and the iOS `ExerciseLibrary.json` hold the
+  same values.
+- **A session wears its type.** The active-session card or header takes the
+  type's text-safe tone as its ground, with white text on it.
+- **Tones by role in a set of tiles.** Stat tiles each take one tone for their
+  icon tile; the figure itself stays Deep Harbour Navy.
+- **iOS names** them `seaLagoon`, `seaSeagrass`, `seaIndigo`, `seaSlate`,
+  `seaNavyLight`, `seaOpenWater` (`PrimeFitTheme.swift`).
 
 ### Named Rules
 
@@ -211,6 +254,14 @@ and critically, neither script ever falls back to a system default.
 - **Body** (400, 14px, 1.6): Running text, table cells, descriptions.
 - **Label** (600, 12px, 1.4): Badges, captions, metadata. Error text drops to
   11px at the same weight.
+- **Floor: 11px.** Nothing in the app renders smaller. 8–10px labels (units,
+  "kcal", tab captions) were raised to 11px in the October refresh.
+- **Ceiling: 800.** App screens stop at 800. 900 was in heavy use and made
+  every heading shout; only the landing page's Persuade display may use it.
+- **Arabic is Tajawal everywhere.** Cairo was the de-facto Arabic face on most
+  screens (loaded twice, in `index.html` and again inside `Home`), contradicting
+  this document. It has been removed from every stack; English stacks also carry
+  Tajawal so a mixed string never falls to a system face.
 - **Persuade display** (700–800, `clamp(30px, 5.4vw, 60px)`, 1.1, tracking
   −0.025em): the opening line of a public marketing surface, and nothing else.
   The scale above is the in-product scale, sized for a phone held at arm's
@@ -289,6 +340,10 @@ than light.
 gesture. It belongs to things that can actually be picked up — cards, tappable
 rows. A static panel that lifts is lying about what it does.
 
+**The Reduced-Motion Rule.** Every screen honours `prefers-reduced-motion`:
+the tab change keeps its cross-fade (it tells you the tab changed) and drops the
+travel; pulses and smooth scrolling stop. Fewer, gentler — not none.
+
 **The Arrival Rule.** A card that enters on scroll lifts once, from a visible
 default, on `cubic-bezier(.16,1,.3,1)` — the system's only entrance curve. Its
 contents follow on a stagger, and that stagger takes the axis the content is
@@ -330,13 +385,23 @@ at rest so that showing the border on hover never moves anything.
   path, where the action is a gift rather than a charge.
 - **Hover / Focus:** Fill darkens; no shadow change. Press uses the `haptic-press`
   utility — `scale(0.95)` and 0.85 opacity over 0.08s.
-- **Known defect:** The project ships 53 shadcn/ui components, and `Button`'s
-  variants reference `bg-primary text-primary-foreground`, `border-ring` and
-  `bg-destructive` — none of which are defined, because there is no Tailwind
-  `@theme` block and no shadcn token layer. Every call site works around this by
-  overriding the component entirely with inline `style={{}}`. Treat the shadcn
-  variant API as non-functional until it is themed; do not write
-  `<Button variant="secondary">` and expect a colour.
+- **Secondary:** Surface White, 1px Tide Line border, Deep Harbour Navy text,
+  44px minimum height. Housekeeping actions (export, edit profile) use this;
+  two of them side by side are equals, never navy-and-sky.
+- **Destructive:** Surface White, `#F3B4B4` border, `#B91C1C` text. Red fills
+  are for confirming a destructive step, not for the button that opens it.
+- **Fixed (October 2026):** `index.css` carried Tailwind v3 directives
+  (`@tailwind base` …) that v4 does not read, so no Tailwind theme was ever
+  loaded and every theme-based utility in the app — `px-4`, `text-sm`,
+  `rounded-2xl`, `bg-white`, `text-white`, `shadow-sm` — compiled to nothing.
+  The theme and utilities layers are now imported (Preflight deliberately not,
+  since the app has always run without a reset).
+- **Still a defect:** shadcn's *semantic* tokens (`bg-primary`,
+  `text-primary-foreground`, `border-ring`, `bg-destructive`, `--popover`) are
+  still undefined: the default Tailwind theme has no `primary`. Treat the shadcn
+  variant API as non-functional until a token layer maps those names onto this
+  palette. `ui/sonner.tsx` has been wired directly to the palette as the one
+  exception, because every toast was drawing on a transparent background.
 
 ### Cards / Containers
 - **Corner Style:** 16px.
@@ -367,12 +432,31 @@ at rest so that showing the border on hover never moves anything.
 - **Error:** Border and 11px helper text in Signal Danger.
 
 ### Navigation
-- **Style:** A 56px sticky top bar with a bottom border and a backdrop blur.
-- **Known defect:** The bar is written as `bg-background/95`, which is undefined
-  in this project — the same missing shadcn token layer as `Button`. The chrome
-  is relying on a token that does not exist.
+- **App bar:** Sea Mist glass (`rgba(240,244,248,.88)` + 14px blur), 1px Tide
+  Line rule, 36px navy logo tile, "Prime Fit" in navy 800 and one line of
+  context (first name · goal) in Harbour Mid. The navy slab with a heavy shadow
+  it replaced put the brand colour on every screen as chrome; navy now marks
+  content that matters instead. Screens do not add a second header beneath it.
+- **Tab bar:** Six sections — Home, Stats, Nutrition, Exercises, Coach, Profile —
+  drawn from `AppIcons` (one stroke family, 22px). The active tab sits on a
+  56×30 Tide pill (`#DCEBF4`) with a heavier stroke and 700 label; inactive tabs
+  are Harbour Mid, never faded or greyscale-filtered. Community is built and
+  hidden (PRODUCT.md) and has no tab.
+- **Width:** Both bars run edge to edge but their contents align to the 800px
+  content column, so on a desktop the tabs do not spread across the window.
+- **In-screen sections** (Coach: Chat / Check-in / Insights; Nutrition:
+  Dashboard / Meals / Scanner; Stats: Statistics / History) use one segmented
+  control: a white 14px track, a navy selected segment, 16px icon inline with
+  the label, 40px height.
 - **Mobile:** Bottom-anchored navigation respects the home indicator via
-  `bottom-nav-safe` (`padding-bottom: max(8px, var(--safe-bottom))`).
+  `max(6px, env(safe-area-inset-bottom))`.
+
+### Stat tile
+A Surface White card; a 34px Tide Wash icon tile in navy; the figure in navy
+800 with tabular numerals; the label in Harbour Haze Text. Counts of the same
+kind share one colour. A figure takes a signal colour only when it *is* the
+signal (weight lost → Signal Safe Text; weight gained → Signal Caution Text);
+a streak is not an alarm and "remaining" is not an error.
 
 ### Progress Bar (signature)
 A 12px trough in Tide Line at 6px radius, filled with a left-to-right gradient
@@ -414,3 +498,9 @@ it is the only sanctioned use of a border as emphasis.
   mean success, caution and error — nothing else.
 - **Don't** use pure black or neutral grey for text or shadow anywhere.
 - **Don't** trust the `.badge-*` colour names; three of them are blue.
+- **Don't** give a workout type a colour from outside the sea family. The
+  fourteen types used to carry fourteen unrelated hues (orange, purple, red,
+  yellow, pink…); they now share six, grouped by what they train.
+- **Don't** colour a prescription. Rest time was traffic-lit green → red, which
+  told people a 90-second rest was a problem.
+- **Don't** use an emoji as an icon. `AppIcons` is the icon set.

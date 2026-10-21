@@ -17,7 +17,7 @@ function HeartIcon({ filled, size = 18 }: { filled: boolean; size?: number }) {
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   ) : (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#506A88" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
@@ -39,12 +39,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   Cardio: "cardio",
 };
 
-const REST_COLOR = (seconds: number) => {
-  if (seconds <= 45) return "#22c55e";
-  if (seconds <= 60) return "#7BB8D4";
-  if (seconds <= 90) return "#f59e0b";
-  return "#ef4444";
-};
+const REST_COLOR = (_seconds: number) => "#3D5A80";
 
 export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
   const isAr = language === "ar";
@@ -99,10 +94,10 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
       {showGoalAlert && (
         <div
           style={{
-            background: "linear-gradient(135deg, #1B2E5E 0%, #0d1a3a 100%)",
-            border: "1px solid #7BB8D4",
-            borderRadius: 14,
+            background: "#1B2E5E",
+            borderRadius: 16,
             padding: "16px 18px",
+            boxShadow: "0 4px 20px rgba(27,46,94,0.12)",
             marginBottom: 14,
             position: "relative",
           }}
@@ -111,33 +106,34 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             onClick={() => setShowGoalAlert(false)}
             style={{
               position: "absolute",
-              top: 10,
-              [isAr ? "left" : "right"]: 12,
+              top: 6,
+              insetInlineEnd: 6,
               background: "none",
               border: "none",
-              color: "#7BB8D4",
-              fontSize: 18,
+              color: "#A8D4E8",
               cursor: "pointer",
               lineHeight: 1,
+              width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
             }}
+            aria-label={isAr ? "إخفاء" : "Dismiss"}
           >
-            ×
+            <AppIcons.Close size={16} />
           </button>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, color: "#A8D4E8", paddingInlineEnd: 28 }}>
             <AppIcons.Target size={22} />
             <div>
-              <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+              <div style={{ color: "#A8D4E8", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
                 {isAr ? "الهدف من البرنامج" : "Program Goal"}
               </div>
-              <div style={{ color: "#e2e8f0", fontSize: 13, lineHeight: 1.6 }}>
+              <div style={{ color: "#FFFFFF", fontSize: 14, lineHeight: 1.6 }}>
                 {isAr ? program.goalAr : program.goal}
               </div>
               <div style={{ marginTop: 8, display: "flex", gap: 16, flexWrap: "wrap" }}>
-                <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                <span style={{ color: "#A8D4E8", fontSize: 12 }}>
                   <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Calendar size={14} />{isAr ? program.scheduleAr : program.schedule}</span>
                 </span>
-                <span style={{ color: "#94a3b8", fontSize: 12 }}>
-                  ⏱ {isAr ? program.restBetweenSetsAr : program.restBetweenSets}
+                <span style={{ color: "#A8D4E8", fontSize: 12 }}>
+                  <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Timer size={14} />{isAr ? program.restBetweenSetsAr : program.restBetweenSets}</span>
                 </span>
               </div>
             </div>
@@ -150,20 +146,23 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
         onClick={() => setShowTipsAlert(!showTipsAlert)}
         style={{
           width: "100%",
-          background: showTipsAlert ? "#1B2E5E" : "rgba(27,46,94,0.4)",
-          border: "1px solid #7BB8D4",
-          borderRadius: 10,
-          padding: "10px 16px",
-          color: "#7BB8D4",
+          background: "#FFFFFF",
+          border: "1px solid #D0DFF0",
+          borderRadius: showTipsAlert ? "12px 12px 0 0" : 12,
+          padding: "0 16px",
+          minHeight: 44,
+          color: "#1B2E5E",
+          fontFamily: "inherit",
           fontSize: 13,
           fontWeight: 600,
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 14,
+          marginBottom: showTipsAlert ? 0 : 14,
           direction: isAr ? "rtl" : "ltr",
         }}
+        aria-expanded={showTipsAlert}
       >
         <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Info size={14} />{isAr ? "نصائح مهمة للبرنامج" : "Important Program Tips"}</span>
         <span style={{display:'inline-flex'}}>{showTipsAlert ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
@@ -172,32 +171,33 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
       {showTipsAlert && (
         <div
           style={{
-            background: "rgba(27,46,94,0.6)",
-            border: "1px solid rgba(123,184,212,0.3)",
-            borderRadius: 12,
+            background: "#FFFFFF",
+            border: "1px solid #D0DFF0",
+            borderTop: "none",
+            borderRadius: "0 0 12px 12px",
             padding: "14px 16px",
             marginBottom: 14,
           }}
         >
           <ul style={{ margin: 0, padding: isAr ? "0 18px 0 0" : "0 0 0 18px", listStyle: "disc" }}>
             {(isAr ? program.tipsAr : program.tips).map((tip, i) => (
-              <li key={i} style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.7 }}>
+              <li key={i} style={{ color: "#3D5A80", fontSize: 13, lineHeight: 1.7 }}>
                 {tip}
               </li>
             ))}
           </ul>
 
           {/* Weekly Plan */}
-          <div style={{ marginTop: 12, borderTop: "1px solid rgba(123,184,212,0.2)", paddingTop: 12 }}>
-            <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
+          <div style={{ marginTop: 12, borderTop: "1px solid #D0DFF0", paddingTop: 12 }}>
+            <div style={{ color: "#1B2E5E", fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
               <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{isAr ? "التقسيم الأسبوعي المقترح" : "Suggested Weekly Split"}</span>
             </div>
             {(isAr ? program.weeklyPlanAr : program.weeklyPlan).map((day, i) => (
               <div
                 key={i}
                 style={{
-                  color: "#94a3b8",
-                  fontSize: 12,
+                  color: "#3D5A80",
+                  fontSize: 13,
                   lineHeight: 1.8,
                   paddingRight: isAr ? 8 : 0,
                   paddingLeft: isAr ? 0 : 8,
@@ -226,13 +226,13 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
           onClick={() => { setShowCardioSection(true); setActiveCategory(''); setExpandedExercise(null); }}
           style={{
             flexShrink: 0,
-            background: showCardioSection
-              ? "linear-gradient(135deg, #1B2E5E, #2a4a8a)"
-              : "rgba(27,46,94,0.3)",
-            border: showCardioSection ? "1px solid #7BB8D4" : "1px solid rgba(123,184,212,0.2)",
+            background: showCardioSection ? "#1B2E5E" : "#FFFFFF",
+            border: showCardioSection ? "1px solid #1B2E5E" : "1px solid #D0DFF0",
             borderRadius: 20,
-            padding: "7px 14px",
-            color: showCardioSection ? "#7BB8D4" : "#64748b",
+            padding: "0 14px",
+            minHeight: 38,
+            color: showCardioSection ? "#FFFFFF" : "#1B2E5E",
+            fontFamily: "inherit",
             fontSize: 12,
             fontWeight: showCardioSection ? 700 : 500,
             cursor: "pointer",
@@ -257,13 +257,13 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
               }}
               style={{
                 flexShrink: 0,
-                background: isActive
-                  ? "linear-gradient(135deg, #1B2E5E, #2a4a8a)"
-                  : "rgba(27,46,94,0.3)",
-                border: isActive ? "1px solid #7BB8D4" : "1px solid rgba(123,184,212,0.2)",
+                background: isActive ? "#1B2E5E" : "#FFFFFF",
+                border: isActive ? "1px solid #1B2E5E" : "1px solid #D0DFF0",
                 borderRadius: 20,
-                padding: "7px 14px",
-                color: isActive ? "#7BB8D4" : "#64748b",
+                padding: "0 12px 0 14px",
+                minHeight: 38,
+                color: isActive ? "#FFFFFF" : "#1B2E5E",
+                fontFamily: "inherit",
                 fontSize: 12,
                 fontWeight: isActive ? 700 : 500,
                 cursor: "pointer",
@@ -278,8 +278,8 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
               <span>{label}</span>
               <span
                 style={{
-                  background: isActive ? "#7BB8D4" : "rgba(123,184,212,0.2)",
-                  color: isActive ? "#0d1a3a" : "#64748b",
+                  background: isActive ? "#7BB8D4" : "#EAF2F8",
+                  color: "#1B2E5E",
                   borderRadius: 10,
                   padding: "1px 7px",
                   fontSize: 11,
@@ -297,13 +297,13 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
       {showCardioSection && (
         <div style={{ marginBottom: 16 }}>
           <div style={{
-            background: "linear-gradient(135deg, #1B2E5E 0%, #0d1a3a 100%)",
-            borderRadius: 14, padding: "14px 16px", marginBottom: 14,
+            background: "#1B2E5E",
+            borderRadius: 16, padding: "14px 16px", marginBottom: 14,
           }}>
-            <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+            <div style={{ color: "#A8D4E8", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
               <span style={{display:'flex',alignItems:'center',gap:6}}><CardioIcon size={16} />{isAr ? "الإحماء والكارديو" : "Warm-up & Cardio"}</span>
             </div>
-            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>
+            <div style={{ color: "rgba(255,255,255,0.88)", fontSize: 13, lineHeight: 1.6 }}>
               {isAr
                 ? "ابدئي دائمًا بـ 5–10 دقائق إحماء قبل التمارين. الكارديو بعد التمرين يزيد من حرق الدهون."
                 : "Always start with 5–10 min warm-up. Post-workout cardio maximizes fat burn."}
@@ -324,9 +324,10 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
             <div
               key={ex.id}
               style={{
-                background: "linear-gradient(135deg, rgba(27,46,94,0.7) 0%, rgba(13,26,58,0.9) 100%)",
-                border: isExpanded ? "1px solid #7BB8D4" : "1px solid rgba(123,184,212,0.15)",
-                borderRadius: 14,
+                background: "#FFFFFF",
+                border: isExpanded ? "1px solid #7BB8D4" : "1px solid transparent",
+                boxShadow: "0 4px 20px rgba(27,46,94,0.08)",
+                borderRadius: 16,
                 overflow: "hidden",
                 transition: "all 0.2s",
               }}
@@ -345,29 +346,30 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                     alignItems: "center",
                     justifyContent: "space-between",
                     direction: isAr ? "rtl" : "ltr",
+                    fontFamily: "inherit",
                   }}
+                  aria-expanded={isExpanded}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
                     {/* Sets/Reps badge */}
                     <div
                       style={{
-                        background: "rgba(123,184,212,0.15)",
-                        border: "1px solid rgba(123,184,212,0.3)",
-                        borderRadius: 8,
+                        background: "#EAF2F8",
+                        borderRadius: 10,
                         padding: "6px 10px",
                         textAlign: "center",
                         minWidth: 52,
                       }}
                     >
-                      <div style={{ color: "#7BB8D4", fontSize: 14, fontWeight: 800 }}>{ex.sets}</div>
-                      <div style={{ color: "#64748b", fontSize: 10 }}>{isAr ? "جولات" : "sets"}</div>
+                      <div style={{ color: "#1B2E5E", fontSize: 16, fontWeight: 800, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>{ex.sets}</div>
+                      <div style={{ color: "#506A88", fontSize: 11 }}>{isAr ? "جولات" : "sets"}</div>
                     </div>
 
                     <div style={{ flex: 1, textAlign: isAr ? "right" : "left" }}>
-                      <div style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>
+                      <div style={{ color: "#1B2E5E", fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>
                         {isAr ? ex.nameAr : ex.name}
                       </div>
-                      <div style={{ color: "#64748b", fontSize: 12, marginTop: 2 }}>
+                      <div style={{ color: "#506A88", fontSize: 12, marginTop: 3 }}>
                         {ex.reps} {isAr ? "تكرار" : "reps"} &nbsp;·&nbsp;
                         <span style={{ color: REST_COLOR(restSec), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                           <AppIcons.Timer size={12} /> {isAr ? ex.restAr : `${ex.rest}s rest`}
@@ -375,7 +377,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                       </div>
                     </div>
                   </div>
-                  <span style={{ color: "#7BB8D4", fontSize: 16 }}>
+                  <span style={{ color: "#3D5A80", display: "inline-flex" }}>
                     {isExpanded ? <AppIcons.ChevronUp size={16} /> : <AppIcons.ChevronDown size={16} />}
                   </span>
                 </button>
@@ -407,7 +409,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                 <div
                   style={{
                     padding: "0 16px 16px",
-                    borderTop: "1px solid rgba(123,184,212,0.15)",
+                    borderTop: "1px solid #D0DFF0",
                     direction: isAr ? "rtl" : "ltr",
                   }}
                 >
@@ -433,22 +435,22 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                     }}
                   >
                     {[
-                      { label: isAr ? "الجولات" : "Sets", value: ex.sets, icon: "repeat" },
-                      { label: isAr ? "التكرارات" : "Reps", value: ex.reps, icon: "dumbbell" },
-                      { label: isAr ? "الراحة" : "Rest", value: isAr ? ex.restAr : `${ex.rest}s`, icon: "⏱" },
+                      { label: isAr ? "الجولات" : "Sets", value: ex.sets, icon: <AppIcons.Repeat size={16} /> },
+                      { label: isAr ? "التكرارات" : "Reps", value: ex.reps, icon: <AppIcons.Dumbbell size={16} /> },
+                      { label: isAr ? "الراحة" : "Rest", value: isAr ? ex.restAr : `${ex.rest}s`, icon: <AppIcons.Timer size={16} /> },
                     ].map((stat) => (
                       <div
                         key={stat.label}
                         style={{
-                          background: "rgba(123,184,212,0.08)",
-                          borderRadius: 10,
+                          background: "#F3F7FB",
+                          borderRadius: 12,
                           padding: "10px 8px",
                           textAlign: "center",
                         }}
                       >
-                        <div style={{ fontSize: 18 }}>{stat.icon}</div>
-                        <div style={{ color: "#7BB8D4", fontWeight: 700, fontSize: 13 }}>{stat.value}</div>
-                        <div style={{ color: "#64748b", fontSize: 11 }}>{stat.label}</div>
+                        <div style={{ color: "#3D5A80", display: "flex", justifyContent: "center", marginBottom: 4 }}>{stat.icon}</div>
+                        <div style={{ color: "#1B2E5E", fontWeight: 700, fontSize: 14, fontVariantNumeric: "tabular-nums" }}>{stat.value}</div>
+                        <div style={{ color: "#3D5A80", fontSize: 11 }}>{stat.label}</div>
                       </div>
                     ))}
                   </div>
@@ -457,8 +459,9 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                   {(isAr ? ex.notesAr : ex.notes) && (
                     <div
                       style={{
-                        background: "rgba(123,184,212,0.08)",
-                        borderRadius: 10,
+                        background: "#F3F7FB",
+                        color: "#3D5A80",
+                        borderRadius: 12,
                         padding: "10px 12px",
                         marginBottom: 12,
                         display: "flex",
@@ -467,7 +470,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                       }}
                     >
                       <AppIcons.Pin size={16} />
-                      <span style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6 }}>
+                      <span style={{ color: "#3D5A80", fontSize: 13, lineHeight: 1.6 }}>
                         {isAr ? ex.notesAr : ex.notes}
                       </span>
                     </div>
@@ -483,7 +486,7 @@ export function ExerciseLibrary({ gender, language }: ExerciseLibraryProps) {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
-                      background: "linear-gradient(135deg, #cc0000, #ff0000)",
+                      background: "#CC0000",
                       color: "#fff",
                       borderRadius: 10,
                       padding: "11px 16px",
@@ -516,7 +519,7 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
     <div style={{
       background: "white",
       borderRadius: 14,
-      border: "1.5px solid #E8EAF0",
+      border: "1.5px solid #D0DFF0",
       boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
       marginBottom: 12,
       overflow: "hidden",
@@ -576,9 +579,8 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
         </div>
         {/* Tip */}
         <div style={{
-          background: "linear-gradient(135deg, #EEF4FF, #E8F0FF)",
+          background: "#EAF2F8",
           borderRadius: 10, padding: "10px 12px",
-          borderRight: "3px solid #7BB8D4",
           marginBottom: 8,
         }}>
           <div style={{ fontSize: 11, color: "#1B2E5E", fontWeight: 600 }}>
@@ -590,9 +592,9 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
           onClick={() => setExpanded(!expanded)}
           style={{
             width: "100%", padding: "8px", borderRadius: 10,
-            border: `1px solid ${expanded ? "#1B2E5E" : "#E2E8F0"}`,
+            border: `1px solid ${expanded ? "#1B2E5E" : "#D0DFF0"}`,
             background: expanded ? "#EEF4FF" : "white",
-            color: expanded ? "#1B2E5E" : "#8A8AAA",
+            color: expanded ? "#1B2E5E" : "#506A88",
             fontSize: 12, fontWeight: 600, cursor: "pointer",
             fontFamily: "inherit",
           }}
@@ -601,7 +603,7 @@ function CardioMachineCard({ machine, isAr }: { machine: CardioTemplate; isAr: b
         </button>
         {expanded && (
           <div style={{ marginTop: 10 }}>
-            <div style={{ fontSize: 12, color: "#4A4A6A", lineHeight: 1.8 }}>
+            <div style={{ fontSize: 12, color: "#3D5A80", lineHeight: 1.8 }}>
               <div><strong>{isAr ? "المدة الافتراضية:" : "Default Duration:"}</strong> {machine.defaultDuration} {isAr ? "دقيقة" : "min"}</div>
               <div><strong>{isAr ? (machine.speedLabel || 'السرعة:') : (machine.speedLabel || 'Speed:')}:</strong> {machine.defaultSpeed}</div>
               <div><strong>{isAr ? (machine.inclineLabel || 'الانحدار:') : (machine.inclineLabel || 'Incline:')}:</strong> {machine.defaultIncline}</div>

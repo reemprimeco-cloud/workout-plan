@@ -29,7 +29,7 @@ const BG     = "#F5F7FA";
 const CARD   = "#FFFFFF";
 const BORDER = "#E8ECF0";
 const TEXT   = "#0F172A";
-const MUTED  = "#64748B";
+const MUTED  = "#3D5A80";
 const GREEN  = "#22C55E";
 const ORANGE = "#F97316";
 
@@ -948,28 +948,28 @@ export default function Community({
   // Sub-views
   if (subView === "profile" && profileUserId) {
     return (
-      <div style={{ height: "100%", overflow: "auto", fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif" }} dir={isRTL ? "rtl" : "ltr"}>
+      <div style={{ height: "100%", overflow: "auto", fontFamily: isRTL ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif" }} dir={isRTL ? "rtl" : "ltr"}>
         <UserProfileView userId={profileUserId} currentUserId={userId} lang={lang} onBack={() => setSubView("main")} onDM={handleDM} />
       </div>
     );
   }
   if (subView === "dm_list") {
     return (
-      <div style={{ height: "100%", overflow: "auto", fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif" }} dir={isRTL ? "rtl" : "ltr"}>
+      <div style={{ height: "100%", overflow: "auto", fontFamily: isRTL ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif" }} dir={isRTL ? "rtl" : "ltr"}>
         <DMListView lang={lang} onBack={() => setSubView("main")} onChat={id => { setDmPartnerId(id); setSubView("dm_chat"); }} />
       </div>
     );
   }
   if (subView === "dm_chat" && dmPartnerId && userId) {
     return (
-      <div style={{ height: "100%", display: "flex", flexDirection: "column", fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif" }} dir={isRTL ? "rtl" : "ltr"}>
+      <div style={{ height: "100%", display: "flex", flexDirection: "column", fontFamily: isRTL ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif" }} dir={isRTL ? "rtl" : "ltr"}>
         <DMChatView partnerId={dmPartnerId} currentUserId={userId} lang={lang} onBack={() => setSubView("dm_list")} />
       </div>
     );
   }
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} style={{ minHeight: "100vh", background: BG, fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif" }}>
+    <div dir={isRTL ? "rtl" : "ltr"} style={{ minHeight: "100vh", background: BG, fontFamily: isRTL ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif" }}>
 
       {/* ── Top Bar ── */}
       <div style={{ background: CARD, borderBottom: `1px solid ${BORDER}`, paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))', paddingBottom: '12px', paddingLeft: '16px', paddingRight: '16px', display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>

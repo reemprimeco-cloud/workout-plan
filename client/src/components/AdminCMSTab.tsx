@@ -92,7 +92,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
   border: `2px solid ${SKY_LIGHT}`, borderRadius: 10,
   padding: '9px 12px', fontSize: 13, color: NAVY, outline: 'none',
-  fontFamily: 'Cairo, Inter, sans-serif', background: '#FAFCFF',
+  fontFamily: 'Tajawal, Inter, sans-serif', background: '#FAFCFF',
 };
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 5,
@@ -100,7 +100,7 @@ const labelStyle: React.CSSProperties = {
 const btnStyle = (variant: 'primary' | 'danger' | 'ghost' = 'primary'): React.CSSProperties => ({
   border: 'none', borderRadius: 10, padding: '9px 18px',
   fontWeight: 700, fontSize: 13, cursor: 'pointer',
-  fontFamily: 'Cairo, Inter, sans-serif',
+  fontFamily: 'Tajawal, Inter, sans-serif',
   background: variant === 'primary' ? NAVY : variant === 'danger' ? '#E53E3E' : '#F0F4F8',
   color: variant === 'ghost' ? NAVY : 'white',
 });
@@ -233,7 +233,7 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
       {/* ── SESSION ICONS ── */}
       {activeSection === 'icons' && (
         <div>
-          <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>
+          <p style={{ color: '#3D5A80', fontSize: 13, marginBottom: 16 }}>
             {lang === 'ar'
               ? 'ارفع صورة مخصصة لكل نوع جلسة. سيتم استخدامها في بطاقات تسجيل الدخول.'
               : 'Upload a custom image for each session type. It will be used on the check-in cards.'}
@@ -258,7 +258,7 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
                     {isCustom && <div style={{ position: 'absolute', top: 2, right: 2, background: '#16A34A', borderRadius: 4, width: 10, height: 10 }} />}
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 4 }}>{lang === 'ar' ? st.labelAr : st.label}</div>
-                  <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 10 }}>{st.id}</div>
+                  <div style={{ fontSize: 10, color: '#506A88', marginBottom: 10 }}>{st.id}</div>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                     <label style={{ ...btnStyle('primary'), padding: '7px 12px', fontSize: 11, cursor: 'pointer', display: 'inline-block' }}>
                       {isUploading ? '...' : (lang === 'ar' ? 'رفع' : 'Upload')}
@@ -320,7 +320,7 @@ function ContentTab({ lang }: { lang: 'ar' | 'en' }) {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, lineHeight: 1.3 }}>{ov?.name ?? ex.name}</div>
-                      <div style={{ fontSize: 11, color: '#94a3b8' }}>{ex.gender === 'F' ? '♀' : '♂'} {ex.id}</div>
+                      <div style={{ fontSize: 11, color: '#506A88' }}>{ex.gender === 'F' ? '♀' : '♂'} {ex.id}</div>
                       {currentYT && (
                         <a href={currentYT} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#E53E3E', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 3 }}>
                           ▶ YouTube
@@ -516,7 +516,7 @@ function AppearanceTab({ lang }: { lang: 'ar' | 'en' }) {
                 <div style={{ width: '100%', height: type === 'banner' ? 100 : 72, borderRadius: 10, background: '#F0F4F8', border: `2px dashed ${SKY_LIGHT}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 }}>
                   {currentUrl
                     ? <img src={currentUrl} alt={type} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                    : <span style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'ar' ? 'لا توجد صورة' : 'No image'}</span>}
+                    : <span style={{ color: '#506A88', fontSize: 12 }}>{lang === 'ar' ? 'لا توجد صورة' : 'No image'}</span>}
                 </div>
                 <label style={{ ...btnStyle('ghost'), display: 'block', textAlign: 'center', cursor: 'pointer', fontSize: 12 }}>
                   {uploadingType === type ? '⏳...' : (lang === 'ar' ? '📤 رفع صورة' : '📤 Upload')}
@@ -550,7 +550,7 @@ function AppearanceTab({ lang }: { lang: 'ar' | 'en' }) {
             onChange={e => setForm(f => ({ ...f, footerLinks: e.target.value }))}
             placeholder='[{"label":"Privacy","url":"/privacy"},{"label":"Contact","url":"/contact"}]'
           />
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: '#506A88', marginTop: 4 }}>
             {lang === 'ar' ? 'صيغة JSON: [{"label":"الاسم","url":"/الرابط"}]' : 'JSON format: [{"label":"Name","url":"/link"}]'}
           </div>
         </div>
@@ -582,7 +582,7 @@ function ErrorMonitorTab({ lang }: { lang: 'ar' | 'en' }) {
   return (
     <div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: 1, fontSize: 14, color: '#64748b' }}>
+        <div style={{ flex: 1, fontSize: 14, color: '#3D5A80' }}>
           {lang === 'ar' ? `${logs.length} سجل` : `${logs.length} log${logs.length !== 1 ? 's' : ''}`}
           {!showResolved && (lang === 'ar' ? ' غير محلول' : ' unresolved')}
         </div>
@@ -600,10 +600,10 @@ function ErrorMonitorTab({ lang }: { lang: 'ar' | 'en' }) {
         </button>
       </div>
 
-      {logsQuery.isLoading && <div style={{ textAlign: 'center', color: '#94a3b8', padding: 40 }}>Loading...</div>}
+      {logsQuery.isLoading && <div style={{ textAlign: 'center', color: '#506A88', padding: 40 }}>Loading...</div>}
 
       {!logsQuery.isLoading && logs.length === 0 && (
-        <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: 60, color: '#506A88' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
           <div style={{ fontSize: 15, fontWeight: 700 }}>{lang === 'ar' ? 'لا توجد أخطاء' : 'No errors'}</div>
         </div>
@@ -615,14 +615,14 @@ function ErrorMonitorTab({ lang }: { lang: 'ar' | 'en' }) {
             <span style={{ background: severityBg(log.severity), color: severityColor(log.severity), borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
               {log.severity.toUpperCase()}
             </span>
-            <span style={{ background: '#F0F4F8', color: '#64748b', borderRadius: 6, padding: '3px 8px', fontSize: 11, flexShrink: 0 }}>
+            <span style={{ background: '#F0F4F8', color: '#3D5A80', borderRadius: 6, padding: '3px 8px', fontSize: 11, flexShrink: 0 }}>
               {log.url ? 'client' : 'server'}
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, wordBreak: 'break-word' }}>{log.message}</div>
-              {log.url && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>📍 {log.url}</div>}
-              {log.userEmail && <div style={{ fontSize: 11, color: '#94a3b8' }}>👤 {log.userEmail}</div>}
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+              {log.url && <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>📍 {log.url}</div>}
+              {log.userEmail && <div style={{ fontSize: 11, color: '#506A88' }}>👤 {log.userEmail}</div>}
+              <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>
                 {new Date(log.createdAt).toLocaleString()}
                 {log.resolved && ` · ✓ ${lang === 'ar' ? 'محلول' : 'Resolved'}`}
               </div>
@@ -636,8 +636,8 @@ function ErrorMonitorTab({ lang }: { lang: 'ar' | 'en' }) {
           </div>
           {log.stack && (
             <details style={{ marginTop: 10 }}>
-              <summary style={{ fontSize: 11, color: '#94a3b8', cursor: 'pointer' }}>Stack trace</summary>
-              <pre style={{ fontSize: 10, color: '#64748b', background: '#F8FAFC', borderRadius: 6, padding: 10, overflow: 'auto', marginTop: 6, maxHeight: 200 }}>
+              <summary style={{ fontSize: 11, color: '#506A88', cursor: 'pointer' }}>Stack trace</summary>
+              <pre style={{ fontSize: 10, color: '#3D5A80', background: '#F8FAFC', borderRadius: 6, padding: 10, overflow: 'auto', marginTop: 6, maxHeight: 200 }}>
                 {log.stack}
               </pre>
             </details>
@@ -670,9 +670,9 @@ export default function AdminCMSTab({ lang }: { lang: 'ar' | 'en' }) {
           <button key={s.id} onClick={() => setSection(s.id)} style={{
             flex: 1, border: 'none', borderRadius: 9, padding: '10px 0',
             fontWeight: 700, fontSize: 13, cursor: 'pointer',
-            fontFamily: 'Cairo, Inter, sans-serif',
+            fontFamily: 'Tajawal, Inter, sans-serif',
             background: section === s.id ? NAVY : 'transparent',
-            color: section === s.id ? 'white' : '#7A9BB5',
+            color: section === s.id ? 'white' : '#506A88',
             transition: 'all 0.2s',
             ...(s.id === 'errors' && errorCount > 0 && section !== 'errors' ? { color: '#E53E3E' } : {}),
           }}>

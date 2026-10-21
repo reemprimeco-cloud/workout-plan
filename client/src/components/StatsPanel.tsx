@@ -96,8 +96,8 @@ function WeightTooltip({ active, payload, label }: any) {
       background: 'white', border: `1px solid ${SKY}`, borderRadius: 10,
       padding: '8px 14px', boxShadow: '0 4px 16px rgba(27,46,94,0.15)',
     }}>
-      <div style={{ fontSize: 11, color: '#7A9BB5', marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 900, color: NAVY }}>{payload[0].value} kg</div>
+      <div style={{ fontSize: 11, color: '#506A88', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: NAVY }}>{payload[0].value} kg</div>
     </div>
   );
 }
@@ -167,10 +167,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
             style={{
               flex: 1, padding: '9px 0', borderRadius: 10, border: 'none',
               background: subTab === t ? '#1B2E5E' : 'transparent',
-              color: subTab === t ? 'white' : '#7A9BB5',
+              color: subTab === t ? 'white' : '#506A88',
               fontWeight: 700, fontSize: 13, cursor: 'pointer',
               transition: 'all 0.2s',
-              fontFamily: isAr ? 'Cairo, sans-serif' : 'Inter, system-ui, sans-serif',
+              fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
             }}
           >
             <span style={{display:'flex',alignItems:'center',gap:6}}>{t === 'stats' ? <AppIcons.Stats size={14} /> : <AppIcons.Clipboard size={14} />}{t === 'stats' ? (isAr ? 'الإحصائيات' : 'Statistics') : (isAr ? 'السجل' : 'History')}</span>
@@ -189,21 +189,26 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
       {/* ── Main Stats ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
-          { icon: 'flame', label: isAr ? 'أيام متتالية' : 'Day Streak', value: stats.streak, color: '#DC2626' },
-          { icon: 'trophy', label: isAr ? 'إجمالي الجلسات' : 'Total Sessions', value: stats.totalSessions, color: NAVY },
-          { icon: 'calendar', label: isAr ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, color: SKY },
-          { icon: 'calendarcheck', label: isAr ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, color: '#3D5A80' },
+          { icon: 'flame', label: isAr ? 'أيام متتالية' : 'Day Streak', value: stats.streak, ink: '#17697A', tint: '#E2F0F3' },
+          { icon: 'trophy', label: isAr ? 'إجمالي الجلسات' : 'Total Sessions', value: stats.totalSessions, ink: '#2A4A8C', tint: '#E5EAF4' },
+          { icon: 'calendar', label: isAr ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, ink: '#4F5BA6', tint: '#E8EAF5' },
+          { icon: 'calendarcheck', label: isAr ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, ink: '#226B54', tint: '#E3F1EC' },
         ].map(s => (
+          // Each count gets a sea-family icon tile so the four read apart at a
+          // glance; the figures stay navy. No red or green: a streak is not an
+          // alarm and a count is not a success.
           <div key={s.label} style={{
-            background: 'white', borderRadius: 16, padding: '16px',
-            boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
-            border: `2px solid ${s.color}22`,
+            background: 'white', borderRadius: 16, padding: '14px 16px 16px',
+            boxShadow: '0 4px 20px rgba(27,46,94,0.08)',
+            display: 'flex', flexDirection: 'column', gap: 10,
           }}>
-            <div style={{ marginBottom: 6, display:'flex', justifyContent:'center' }}>
-              {s.icon === 'flame' ? <AppIcons.Flame size={28} color={s.color} /> : s.icon === 'trophy' ? <AppIcons.Trophy size={28} color={s.color} /> : s.icon === 'calendar' ? <AppIcons.Calendar size={28} color={s.color} /> : <AppIcons.CalendarCheck size={28} color={s.color} />}
+            <span style={{ width: 34, height: 34, borderRadius: 10, background: s.tint, color: s.ink, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              {s.icon === 'flame' ? <AppIcons.Flame size={18} /> : s.icon === 'trophy' ? <AppIcons.Trophy size={18} /> : s.icon === 'calendar' ? <AppIcons.Calendar size={18} /> : <AppIcons.CalendarCheck size={18} />}
+            </span>
+            <div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: NAVY, lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: 'Inter, Tajawal, sans-serif' }}>{s.value}</div>
+              <div style={{ fontSize: 12, fontWeight: 500, color: '#506A88', marginTop: 6 }}>{s.label}</div>
             </div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
-            <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 4 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -214,22 +219,26 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
         boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
         border: `1px solid ${SKY_LIGHT}55`,
       }}>
-        <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+        <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 15, fontWeight: 800 }}>
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Scale size={18} />{isAr ? 'تتبع الوزن' : 'Weight Tracking'}</span>
         </h3>
         <div style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
           {[
-            { label: isAr ? 'الوزن الحالي' : 'Current', value: `${profile.currentWeight} kg`, color: NAVY },
-            { label: isAr ? 'الهدف' : 'Target', value: `${profile.targetWeight} kg`, color: '#10B981' },
-            { label: isAr ? 'المفقود' : 'Lost', value: `${stats.weightLost.toFixed(1)} kg`, color: SKY },
-            { label: isAr ? 'المتبقي' : 'Remaining', value: `${Math.max(0, profile.currentWeight - profile.targetWeight).toFixed(1)} kg`, color: '#DC2626' },
+            { label: isAr ? 'الوزن الحالي' : 'Current', value: profile.currentWeight, color: NAVY },
+            { label: isAr ? 'الهدف' : 'Target', value: profile.targetWeight, color: NAVY },
+            // Weight lost is the one figure here that is good news, so it alone
+            // carries the success tone; "remaining" is a distance, not an error.
+            { label: isAr ? 'المفقود' : 'Lost', value: stats.weightLost.toFixed(1), color: stats.weightLost > 0 ? '#15803D' : NAVY },
+            { label: isAr ? 'المتبقي' : 'Remaining', value: Math.max(0, profile.currentWeight - profile.targetWeight).toFixed(1), color: NAVY },
           ].map(s => (
             <div key={s.label} style={{
-              flex: 1, minWidth: 70, background: `${s.color}12`,
-              borderRadius: 10, padding: '10px 12px', textAlign: 'center',
+              flex: 1, minWidth: 70, background: '#F3F7FB',
+              borderRadius: 12, padding: '10px 8px', textAlign: 'center',
             }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: '#7A9BB5', marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: s.color, fontVariantNumeric: 'tabular-nums', fontFamily: 'Inter, Tajawal, sans-serif', whiteSpace: 'nowrap' }}>
+                {s.value}<span style={{ fontSize: 11, fontWeight: 600, marginInlineStart: 2 }}>kg</span>
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: '#506A88', marginTop: 3 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -248,8 +257,8 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
             }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-            <span style={{ fontSize: 10, color: '#7A9BB5' }}>{profile.startWeight} kg</span>
-            <span style={{ fontSize: 10, color: '#7A9BB5' }}>{profile.targetWeight} kg</span>
+            <span style={{ fontSize: 11, color: '#506A88' }}>{profile.startWeight} kg</span>
+            <span style={{ fontSize: 11, color: '#506A88' }}>{profile.targetWeight} kg</span>
           </div>
         </div>
 
@@ -283,10 +292,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
           boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h3 style={{ margin: 0, color: NAVY, fontSize: 15, fontWeight: 900 }}>
+            <h3 style={{ margin: 0, color: NAVY, fontSize: 15, fontWeight: 800 }}>
               <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Stats size={18} />{isAr ? 'منحنى الوزن' : 'Weight Trend'}</span>
             </h3>
-            <span style={{ fontSize: 11, color: '#7A9BB5' }}>
+            <span style={{ fontSize: 11, color: '#506A88' }}>
               {isAr ? `آخر ${chartData.length} قراءة` : `Last ${chartData.length} readings`}
             </span>
           </div>
@@ -299,10 +308,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF7" />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#7A9BB5' }} tickLine={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#506A88' }} tickLine={false} />
               <YAxis
                 domain={['auto', 'auto']}
-                tick={{ fontSize: 10, fill: '#7A9BB5' }}
+                tick={{ fontSize: 11, fill: '#506A88' }}
                 tickLine={false}
                 axisLine={false}
               />
@@ -310,9 +319,9 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
               {profile.targetWeight > 0 && (
                 <ReferenceLine
                   y={profile.targetWeight}
-                  stroke="#10B981"
+                  stroke="#15803D"
                   strokeDasharray="5 5"
-                  label={{ value: `${profile.targetWeight}`, fill: '#10B981', fontSize: 10, position: 'right' }}
+                  label={{ value: `${profile.targetWeight}`, fill: '#15803D', fontSize: 11, position: 'right' }}
                 />
               )}
               <Area
@@ -332,7 +341,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
               <span style={{ fontSize: 11, color: '#3D5A80' }}>{isAr ? 'الوزن الفعلي' : 'Actual Weight'}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 12, height: 0, border: '1.5px dashed #10B981', borderRadius: 2 }} />
+              <div style={{ width: 12, height: 0, border: '1.5px dashed #15803D', borderRadius: 2 }} />
               <span style={{ fontSize: 11, color: '#3D5A80' }}>{isAr ? 'الهدف' : 'Target'}</span>
             </div>
           </div>
@@ -345,7 +354,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
           background: 'white', borderRadius: 16, padding: '18px', marginBottom: 16,
           boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
         }}>
-          <h3 style={{ margin: '0 0 12px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+          <h3 style={{ margin: '0 0 12px', color: NAVY, fontSize: 15, fontWeight: 800 }}>
             <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={18} />{isAr ? 'سجل الوزن' : 'Weight Log'}</span>
           </h3>
           {sortedLog.slice(0, 10).map((entry, i) => {
@@ -363,11 +372,11 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {diff !== 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: diff < 0 ? '#10B981' : '#DC2626' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: diff < 0 ? '#15803D' : '#B45309' }}>
                       <span style={{display:'inline-flex',alignItems:'center',gap:2}}>{diff < 0 ? <AppIcons.ChevronDown size={12} /> : <AppIcons.ChevronUp size={12} />}{Math.abs(diff).toFixed(1)}</span>
                     </span>
                   )}
-                  <span style={{ fontSize: 14, fontWeight: 900, color: NAVY }}>{entry.weight} kg</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>{entry.weight} kg</span>
                 </div>
               </div>
             );
@@ -380,7 +389,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
         background: 'white', borderRadius: 16, padding: '18px', marginBottom: 16,
         boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
       }}>
-        <h3 style={{ margin: '0 0 12px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+        <h3 style={{ margin: '0 0 12px', color: NAVY, fontSize: 15, fontWeight: 800 }}>
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Stats size={18} />{isAr ? 'توزيع الجلسات' : 'Sessions by Type'}</span>
         </h3>
         {(Object.entries(stats.sessionsByType) as [SessionType, number][])
@@ -396,21 +405,22 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                     {isAr ? def.nameAr.split(' - ')[0] : def.nameEn}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>
-                    {count} {isAr ? 'جلسة' : 'sessions'}
+                    {count} {isAr ? (count === 2 ? 'جلستان' : count >= 3 && count <= 10 ? 'جلسات' : 'جلسة') : (count === 1 ? 'session' : 'sessions')}
                   </span>
                 </div>
-                <div style={{ height: 8, background: '#D0DFF0', borderRadius: 4, overflow: 'hidden' }}>
+                {/* Each bar in its session type's colour, on that type's tint. */}
+                <div style={{ height: 8, background: def.bgColor, borderRadius: 4, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${(count / maxCount) * 100}%`,
-                    background: `linear-gradient(90deg, ${SKY}, ${NAVY})`,
-                    borderRadius: 4, transition: 'width 0.5s ease',
+                    background: def.color,
+                    borderRadius: 4, transition: 'width 0.5s cubic-bezier(.16,1,.3,1)',
                   }} />
                 </div>
               </div>
             );
           })}
         {stats.totalSessions === 0 && (
-          <p style={{ textAlign: 'center', color: '#7A9BB5', fontSize: 13 }}>
+          <p style={{ textAlign: 'center', color: '#506A88', fontSize: 13 }}>
             {isAr ? 'ابدئي جلساتك لترى الإحصائيات هنا' : 'Start your sessions to see stats here'}
           </p>
         )}
@@ -422,10 +432,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
         boxShadow: '0 2px 8px rgba(27,46,94,0.07)',
         border: `1px solid ${SKY_LIGHT}55`,
       }}>
-        <h3 style={{ margin: '0 0 6px', color: NAVY, fontSize: 15, fontWeight: 900 }}>
+        <h3 style={{ margin: '0 0 6px', color: NAVY, fontSize: 15, fontWeight: 800 }}>
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Download size={18} />{isAr ? 'تصدير البيانات' : 'Export Data'}</span>
         </h3>
-        <p style={{ fontSize: 12, color: '#7A9BB5', marginBottom: 14, marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: '#506A88', marginBottom: 14, marginTop: 4 }}>
           {isAr
             ? 'قومي بتصدير بياناتك كملف CSV لحفظها أو مشاركتها مع مدربتك'
             : 'Export your data as CSV to save or share with your trainer'}
@@ -434,10 +444,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
           <button
             onClick={handleExportSessions}
             style={{
-              flex: 1, minWidth: 130, padding: '11px 16px', borderRadius: 12,
-              background: `linear-gradient(135deg, ${NAVY}, ${NAVY_DARK})`,
-              color: 'white', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              boxShadow: `0 4px 12px ${NAVY}33`,
+              flex: 1, minWidth: 130, minHeight: 44, padding: '0 16px', borderRadius: 12,
+              background: 'white', color: NAVY, border: '1px solid #D0DFF0',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{isAr ? 'تصدير الجلسات' : 'Export Sessions'}</span>
@@ -445,10 +455,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
           <button
             onClick={handleExportWeight}
             style={{
-              flex: 1, minWidth: 130, padding: '11px 16px', borderRadius: 12,
-              background: `linear-gradient(135deg, ${SKY}, #5BA3C4)`,
-              color: 'white', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              boxShadow: `0 4px 12px ${SKY}44`,
+              flex: 1, minWidth: 130, minHeight: 44, padding: '0 16px', borderRadius: 12,
+              background: 'white', color: NAVY, border: '1px solid #D0DFF0',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Scale size={14} />{isAr ? 'تصدير سجل الوزن' : 'Export Weight Log'}</span>
@@ -485,10 +495,10 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
         return (
           <div style={{
             background: 'white', borderRadius: 16, padding: '18px', marginBottom: 16,
-            boxShadow: '0 2px 8px rgba(27,46,94,0.07)', border: '1px solid #FED7AA55',
+            boxShadow: '0 4px 20px rgba(27,46,94,0.08)',
           }}>
-            <h3 style={{ margin: '0 0 14px', color: '#C2410C', fontSize: 15, fontWeight: 900 }}>
-              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Flame size={18} className='text-orange-500' />{isAr ? 'السعرات المحروقة التقديرية' : 'Estimated Calories Burned'}</span>
+            <h3 style={{ margin: '0 0 14px', color: NAVY, fontSize: 15, fontWeight: 800 }}>
+              <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Flame size={18} />{isAr ? 'السعرات المحروقة التقديرية' : 'Estimated Calories Burned'}</span>
             </h3>
             {/* Summary cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
@@ -498,34 +508,34 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                 { label: isAr ? 'الشهر' : 'This Month', value: monthTotal, icon: 'calendarcheck' },
               ].map(c => (
                 <div key={c.label} style={{
-                  background: '#FFF7ED', borderRadius: 12, padding: '12px 8px', textAlign: 'center',
-                  border: '1px solid #FED7AA',
+                  background: '#F3F7FB', borderRadius: 12, padding: '12px 8px', textAlign: 'center',
+                  border: 'none',
                 }}>
                   <div style={{ display:'flex', justifyContent:'center', marginBottom:2 }}>
-                    {c.icon === 'sun' ? <AppIcons.Sun size={20} color='#C2410C' /> : c.icon === 'calendar' ? <AppIcons.Calendar size={20} color='#C2410C' /> : <AppIcons.CalendarCheck size={20} color='#C2410C' />}
+                    {c.icon === 'sun' ? <AppIcons.Sun size={20} color={NAVY} /> : c.icon === 'calendar' ? <AppIcons.Calendar size={20} color={NAVY} /> : <AppIcons.CalendarCheck size={20} color={NAVY} />}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#C2410C', lineHeight: 1.1 }}>{c.value}</div>
-                  <div style={{ fontSize: 9, color: '#9A3412', marginTop: 1 }}>kcal</div>
-                  <div style={{ fontSize: 10, color: '#7A9BB5', marginTop: 2 }}>{c.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: NAVY, lineHeight: 1.1 }}>{c.value}</div>
+                  <div style={{ fontSize: 11, color: '#506A88', marginTop: 1 }}>kcal</div>
+                  <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>{c.label}</div>
                 </div>
               ))}
             </div>
             {/* Weekly bar chart */}
             {hasData && (
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#7A9BB5', marginBottom: 8, fontWeight: 600 }}>
+                <div style={{ fontSize: 12, color: '#506A88', marginBottom: 8, fontWeight: 600 }}>
                   {isAr ? 'آخر 7 أيام' : 'Last 7 Days'}
                 </div>
                 <ResponsiveContainer width="100%" height={110}>
                   <BarChart data={weekly} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#FED7AA" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#7A9BB5' }} />
-                    <YAxis tick={{ fontSize: 9, fill: '#7A9BB5' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF7" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#506A88' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#506A88' }} />
                     <Tooltip
                       formatter={(v: number) => [`${v} kcal`, isAr ? 'سعرات' : 'Cal']}
                       contentStyle={{ fontSize: 12, borderRadius: 8 }}
                     />
-                    <Bar dataKey="calories" fill="#F97316" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="calories" fill="#1F7A8C" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -533,29 +543,29 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
             {/* Monthly bar chart */}
             {monthly.some(w => w.calories > 0) && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 12, color: '#7A9BB5', marginBottom: 8, fontWeight: 600 }}>
+                <div style={{ fontSize: 12, color: '#506A88', marginBottom: 8, fontWeight: 600 }}>
                   {isAr ? 'آخر 4 أسابيع' : 'Last 4 Weeks'}
                 </div>
                 <ResponsiveContainer width="100%" height={100}>
                   <BarChart data={monthly} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#FED7AA" />
-                    <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#7A9BB5' }} />
-                    <YAxis tick={{ fontSize: 9, fill: '#7A9BB5' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E8EFF7" />
+                    <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#506A88' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#506A88' }} />
                     <Tooltip
                       formatter={(v: number) => [`${v} kcal`, isAr ? 'سعرات' : 'Cal']}
                       contentStyle={{ fontSize: 12, borderRadius: 8 }}
                     />
-                    <Bar dataKey="calories" fill="#EA580C" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="calories" fill="#4F5BA6" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             )}
             {!hasData && (
-              <div style={{ textAlign: 'center', padding: '12px 0', color: '#9A3412', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: '12px 0', color: '#506A88', fontSize: 13 }}>
                 {isAr ? 'أكملي جلسة تدريب لتظهر بيانات السعرات' : 'Complete a workout to see calorie data'}
               </div>
             )}
-            <p style={{ fontSize: 10, color: '#9CA3AF', margin: '8px 0 0', textAlign: 'center' }}>
+            <p style={{ fontSize: 11, color: '#506A88', margin: '8px 0 0', textAlign: 'center' }}>
               {isAr ? 'جميع القيم تقديرية بناءً على معادلة MET. ليست قيمًا طبية دقيقة.' : 'All values are MET-based estimates. Not medically exact.'}
             </p>
           </div>

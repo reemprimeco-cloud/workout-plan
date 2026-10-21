@@ -7,20 +7,30 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { SocketProvider } from "./contexts/SocketContext";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
-import Home from "./pages/Home";
-import AdminPanel from "./pages/AdminPanel";
-import { SubscriptionSuccess, SubscriptionError } from "./pages/SubscriptionResult";
 import { LicenseGate } from "./components/LicenseGate";
-import AuthPage from "./pages/AuthPage";
 import Landing from "./pages/Landing";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
-import LegalPage from "./pages/LegalPage";
+
 import InstallPromptBanner from "./components/InstallPromptBanner";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useLanguage } from "./contexts/LanguageContext";
+
+// Route-level code splitting. The landing page is the only screen an
+// anonymous visitor sees, so it stays in the entry chunk; everything behind a
+// session, and the admin panel above all, loads when it is reached.
+const Home = lazy(() => import("./pages/Home"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const ProfileSetupPage = lazy(() => import("./pages/ProfileSetupPage"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
+const SubscriptionSuccess = lazy(() => import("./pages/SubscriptionResult").then(m => ({ default: m.SubscriptionSuccess })));
+const SubscriptionError = lazy(() => import("./pages/SubscriptionResult").then(m => ({ default: m.SubscriptionError })));
+
+// Shown for the moment a route chunk is in flight: the page ground, not a
+// spinner, so a fast load reads as no wait at all.
+const RouteFallback = () => <div style={{ minHeight: "100dvh", background: "#F0F4F8" }} />;
 
 // Keyboard-aware layout: update CSS var when iOS keyboard opens/closes
 function useKeyboardAwareLayout() {
@@ -42,6 +52,7 @@ function useKeyboardAwareLayout() {
 
 function Router() {
   return (
+    <Suspense fallback={<RouteFallback />}>
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/admin"} component={AdminPanel} />
@@ -55,6 +66,7 @@ function Router() {
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
@@ -120,7 +132,7 @@ function AppWithSocket() {
     return (
       <TooltipProvider>
         <Toaster />
-        {atRoot ? <Landing /> : <AuthPage />}
+        {atRoot ? <Landing /> : <Suspense fallback={<RouteFallback />}><AuthPage /></Suspense>}
       </TooltipProvider>
     );
   }
