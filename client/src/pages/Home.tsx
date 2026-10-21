@@ -350,6 +350,18 @@ export default function Home() {
   );
 }
 
+// Drawn fallback for a session card whose CMS image is missing or failed.
+// Inherits the card's colour (the type's sea-family tone) via currentColor.
+const SESSION_GLYPH: Partial<Record<SessionType, keyof typeof AppIcons>> = {
+  lower_body: 'Running', upper_arms: 'Dumbbell', chest_shoulders: 'Weight', core_cardio: 'Flame',
+  full_body: 'Body', aqua: 'Swim', sauna: 'Spa', active_rest: 'Cardio', warm_up: 'Sunrise',
+  stretching: 'Yoga', home_workouts: 'Home', pilates: 'Yoga', mobility: 'Running', quick_workouts: 'Lightning',
+};
+function SessionGlyph({ type }: { type: SessionType }) {
+  const Icon = AppIcons[SESSION_GLYPH[type] ?? 'Dumbbell'] as (p: { size?: number }) => React.ReactElement;
+  return <Icon size={26} />;
+}
+
 // Counted noun. English needs the plural; Arabic needs the dual and the 3–10
 // plural, and returns to the singular from 11.
 function sessionsWord(n: number, lang: string) {
@@ -421,6 +433,9 @@ function CheckInPanel({ onStart, stats, profile, onOpenProfile }: {
     ) as Partial<Record<SessionType, string>>,
   };
   const [expandedSession, setExpandedSession] = useState<SessionType | null>(null);
+  // Card icons are CMS images; when one fails, the card falls back to a drawn
+  // icon in the type's colour instead of an empty tinted square.
+  const [failedIcons, setFailedIcons] = useState<Partial<Record<SessionType, true>>>({});
   // Cardio machines state — 4 machines
   type CardioFields = { speed: string; incline: string; time: string; distance: string; calories: string };
   const emptyFields = (): CardioFields => ({ speed: '', incline: '', time: '', distance: '', calories: '' });
@@ -579,18 +594,18 @@ function CheckInPanel({ onStart, stats, profile, onOpenProfile }: {
                     {/* The type's tint from the sea family carries the icon, so a
                         glance at the grid reads the body area before the words. */}
                     <div style={{ marginBottom: 8, width: 52, height: 52, borderRadius: 14, background: def.bgColor, color: def.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {SESSION_ICON_URLS[type] ? (
+                      {SESSION_ICON_URLS[type] && !failedIcons[type] ? (
                         <img
                           src={SESSION_ICON_URLS[type]}
                           alt=""
                           style={{ width: 40, height: 40, objectFit: 'contain', display: 'block' }}
-                          onError={(e) => {
+                          onError={() => {
                             console.warn('[CMS] IMAGE SRC failed on home card:', type, SESSION_ICON_URLS[type]);
-                            (e.target as HTMLImageElement).style.display = 'none';
+                            setFailedIcons(f => ({ ...f, [type]: true }));
                           }}
                         />
                       ) : (
-                        <AppIcons.Dumbbell size={24} />
+                        <SessionGlyph type={type} />
                       )}
                     </div>
                     <div style={{ fontWeight: 800, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
