@@ -83,7 +83,7 @@ const PLANS = [
     descAr: "7 أيام وصول كامل — بدون دفع",
     monthly: 0,
     yearly: 0,
-    color: "#64748b",
+    color: "#3D5A80",
     features: [
       { en: "Workout tracking",          ar: "تتبع التمارين" },
       { en: "Exercise library",          ar: "مكتبة التمارين" },
@@ -146,7 +146,7 @@ function InfoField({
       <div style={{ position: "relative" }}>
         <div style={{
           position: "absolute", top: "50%", transform: "translateY(-50%)",
-          [isRTL ? "right" : "left"]: 12, color: "#94a3b8", pointerEvents: "none",
+          [isRTL ? "right" : "left"]: 12, color: "#506A88", pointerEvents: "none",
         }}>
           <Icon size={16} />
         </div>
@@ -293,7 +293,7 @@ export default function Pricing() {
       style={{
         minHeight: "100vh",
         background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-        fontFamily: isRTL ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
+        fontFamily: isRTL ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif",
         padding: "24px 16px 48px",
       }}
     >
@@ -315,7 +315,7 @@ export default function Pricing() {
             <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 900, color: NAVY }}>
               {t("keyReady")}
             </h2>
-            <p style={{ margin: "0 0 20px", fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: "#3D5A80", lineHeight: 1.6 }}>
               {t("keyReadyNote")}
             </p>
 
@@ -346,7 +346,7 @@ export default function Pricing() {
             </div>
 
             {trialExpiry && (
-              <p style={{ margin: "0 0 20px", color: "#64748b", fontSize: 12 }}>
+              <p style={{ margin: "0 0 20px", color: "#3D5A80", fontSize: 12 }}>
                 {lang === "ar" ? "تاريخ الانتهاء:" : "Expires:"} <strong>{new Date(trialExpiry).toLocaleDateString()}</strong>
               </p>
             )}
@@ -409,7 +409,7 @@ export default function Pricing() {
               <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 900, color: NAVY }}>
                 {(selectedPlan as string) === "free" ? t("trialDetails") : t("orderDetails")}
               </h2>
-              <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+              <p style={{ margin: 0, fontSize: 13, color: "#3D5A80" }}>
                 {(selectedPlan as string) === "free" ? t("trialSubtitle") : t("orderSubtitle")}
               </p>
             </div>
@@ -419,7 +419,7 @@ export default function Pricing() {
               background: `${NAVY}08`, border: `1.5px solid ${SKY_LIGHT}`,
               borderRadius: 12, padding: "12px 16px", marginBottom: 20,
             }}>
-              <p style={{ margin: "0 0 4px", fontSize: 12, color: "#64748b", fontWeight: 600 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 12, color: "#3D5A80", fontWeight: 600 }}>
                 {t("orderSummary")}
               </p>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -431,7 +431,7 @@ export default function Pricing() {
                     ? (lang === "ar" ? "مجاناً — ٧ أيام" : "Free — 7 days")
                     : `${getPlanPrice(selectedPlan).toFixed(2)} KWD`}
                   {(selectedPlan as string) !== "free" && (
-                    <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>
+                    <span style={{ fontSize: 11, color: "#3D5A80", fontWeight: 500 }}>
                       {period === "monthly" ? t("perMonth") : t("perYear")}
                     </span>
                   )}
@@ -477,7 +477,7 @@ export default function Pricing() {
               onClick={() => { setShowInfoModal(false); setCheckoutLoading(false); }}
               style={{
                 width: "100%", background: "none", border: "none",
-                color: "#94a3b8", fontSize: 13, cursor: "pointer",
+                color: "#506A88", fontSize: 13, cursor: "pointer",
                 fontFamily: "inherit", marginTop: 10, padding: "6px",
               }}
             >
@@ -573,7 +573,7 @@ export default function Pricing() {
                     <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: NAVY }}>
                       {lang === "en" ? plan.nameEn : plan.nameAr}
                     </h3>
-                    <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "#3D5A80" }}>
                       {lang === "en" ? plan.descEn : plan.descAr}
                     </p>
                   </div>
@@ -591,7 +591,7 @@ export default function Pricing() {
                   ) : (
                     <>
                       <span style={{ fontSize: 30, fontWeight: 900, color: NAVY }}>{price.toFixed(2)}</span>
-                      <span style={{ fontSize: 14, color: "#64748b", marginInlineStart: 4 }}>
+                      <span style={{ fontSize: 14, color: "#3D5A80", marginInlineStart: 4 }}>
                         KWD{period === "monthly" ? t("perMonth") : t("perYear")}
                       </span>
                     </>
@@ -601,7 +601,7 @@ export default function Pricing() {
                 {/* Features */}
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 8 }}>
                   {plan.features.map((f, i) => (
-                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#374151" }}>
+                    <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#1B2E5E" }}>
                       <Check size={16} color={GREEN} strokeWidth={3} />
                       {lang === "en" ? f.en : f.ar}
                     </li>
@@ -629,7 +629,7 @@ export default function Pricing() {
                         >
                           {t("startTrial")}
                         </Button>
-                        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
+                        <p style={{ textAlign: "center", color: "#506A88", fontSize: 11, margin: "8px 0 0" }}>
                           {t("trialNote")}
                         </p>
                       </div>
@@ -657,7 +657,7 @@ export default function Pricing() {
                         }}>
                           {trialKey}
                         </div>
-                        <p style={{ margin: "0 0 10px", color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>
+                        <p style={{ margin: "0 0 10px", color: "#3D5A80", fontSize: 11, lineHeight: 1.5 }}>
                           {t("keyNote")}
                           {trialExpiry && (
                             <> · {lang === "ar" ? "ينتهي في" : "Expires"}: <strong>{new Date(trialExpiry).toLocaleDateString()}</strong></>
@@ -700,7 +700,7 @@ export default function Pricing() {
                         >
                           {t("startTrial")}
                         </Button>
-                        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "8px 0 0" }}>
+                        <p style={{ textAlign: "center", color: "#506A88", fontSize: 11, margin: "8px 0 0" }}>
                           {t("trialNote")}
                         </p>
                       </div>

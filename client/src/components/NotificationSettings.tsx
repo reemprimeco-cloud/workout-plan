@@ -256,7 +256,7 @@ export default function NotificationSettings() {
           >
             <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Bell size={18} />{ar ? "تذكيرات التمرين" : "Workout Reminders"}</span>
           </h3>
-          <p style={{ margin: "3px 0 0", color: "#7A9BB5", fontSize: 12 }}>
+          <p style={{ margin: "3px 0 0", color: "#506A88", fontSize: 12 }}>
             {ar
               ? "احصلي على إشعار يومي لتذكيرك بوقت التمرين"
               : "Get a daily push notification to remind you to work out"}
@@ -366,7 +366,7 @@ export default function NotificationSettings() {
                 boxSizing: "border-box",
               }}
             />
-            <p style={{ margin: "4px 0 0", color: "#7A9BB5", fontSize: 11 }}>
+            <p style={{ margin: "4px 0 0", color: "#506A88", fontSize: 11 }}>
               {ar
                 ? "الوقت بتوقيت UTC — الكويت UTC+3، اطرح 3 ساعات من وقتك المحلي"
                 : "Time is in UTC — Kuwait is UTC+3, subtract 3 hours from your local time"}
@@ -398,7 +398,7 @@ export default function NotificationSettings() {
                       borderRadius: 8,
                       border: `2px solid ${active ? NAVY : SKY_LIGHT}`,
                       background: active ? NAVY : "white",
-                      color: active ? "white" : "#7A9BB5",
+                      color: active ? "white" : "#506A88",
                       fontSize: 11,
                       fontWeight: 700,
                       cursor: "pointer",
@@ -501,7 +501,7 @@ export default function NotificationSettings() {
               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: NAVY }}>
                 {pref.icon} {ar ? pref.labelAr : pref.labelEn}
               </p>
-              <p style={{ margin: "2px 0 0", fontSize: 11, color: "#7A9BB5" }}>
+              <p style={{ margin: "2px 0 0", fontSize: 11, color: "#506A88" }}>
                 {ar ? pref.descAr : pref.descEn}
               </p>
             </div>

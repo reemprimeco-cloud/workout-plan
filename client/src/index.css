@@ -6,11 +6,17 @@
   Fonts: Inter (headings), Tajawal (body Arabic)
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800;900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4. The v3 `@tailwind` directives that stood here are not read by
+   v4, so no theme was ever loaded and every theme-based utility in the app
+   (px-4, text-sm, rounded-2xl, bg-white, text-white, shadow-sm...) compiled to
+   nothing. Theme and utilities only: Preflight is deliberately left out,
+   because the app has always run without a reset and every screen's base
+   styling assumes that. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 
 /* ── iOS / Mobile Viewport & Safe Area ─────────────────────────── */
 :root {
@@ -31,7 +37,9 @@
   --bg-card: #FFFFFF;
   --text-dark: #1B2E5E;
   --text-medium: #3D5A80;
-  --text-light: #7A9BB5;
+  /* Harbour Haze as text. #7A9BB5 measured 2.9:1 on white and could not
+     legally carry text; this holds 4.5:1 on white, Sea Mist and tide tints. */
+  --text-light: #506A88;
   --border: #D0DFF0;
   /* Signal text tones. The display signals (--success #22C55E, warning
      #F59E0B, danger #EF4444) measure 2.15:1 to 3.76:1 on white and cannot
@@ -62,7 +70,9 @@ body {
   margin: 0;
   padding: 0;
   direction: rtl;
-  text-align: right;
+  /* start, not right: every screen sets dir on its root, and English screens
+     were inheriting a hard right alignment from here. */
+  text-align: start;
   /* Prevent rubber-band overscroll on iOS at body level */
   overscroll-behavior: none;
   /* Ensure full height */
@@ -160,7 +170,7 @@ th {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: white;
   padding: 10px 14px;
-  text-align: right;
+  text-align: start;
   font-family: 'Inter', 'Tajawal', sans-serif;
   font-weight: 600;
   font-size: 13px;
@@ -170,7 +180,7 @@ td {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   color: var(--text-dark);
-  text-align: right;
+  text-align: start;
 }
 
 tr:nth-child(even) td { background: #F5F9FC; }
@@ -365,7 +375,16 @@ nav, button, .no-select {
 }
 
 .tab-enter {
-  animation: tabFadeIn 0.2s ease-out forwards;
+  animation: tabFadeIn .22s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes tabFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Reduced motion keeps the cross-fade (it tells you the tab changed) and
+   drops the travel, the pulses and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter { animation: tabFade .15s linear both; }
+  html { scroll-behavior: auto !important; }
+  .animate-pulse, .animate-bounce, .animate-ping { animation: none !important; }
 }
 
 /* ── Pull-to-Refresh Indicator ───────────────────────────────── */
@@ -408,4 +427,14 @@ nav, button, .no-select {
 
 .lazy-img[data-loaded="true"] {
   opacity: 1;
+}
+
+/* Toast description: sonner greys it out by default; keep it legible. */
+.pf-toast-desc { color: #3D5A80 !important; }
+
+/* Sonner's phone layout sets left, right and width:100% together. Inside the
+   RTL <body> the browser resolves that over-constraint by dropping `left`,
+   which pushed every toast 32px off the screen edge. */
+@media (max-width: 600px) {
+  [data-sonner-toaster] { width: auto !important; }
 }

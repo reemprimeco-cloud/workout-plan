@@ -16,7 +16,7 @@ import { trpc } from "@/lib/trpc";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getDailyCaloriesBurned } from "../lib/calorieCalc";
 import { AppIcons } from "../components/AppIcons";
-import { NutritionDashboardIcon, NutritionMealsIcon, NutritionScannerIcon, NutritionRobotIcon, WaterDropIcon, MacroCloudIcon, FlameIcon, PlateIcon, CoffeeCupIcon, JuiceCupIcon, MealFoodIcon, CoffeeDrinkIcon, DrinkIcon } from "../components/ColorIcons";
+import { NutritionRobotIcon, WaterDropIcon, MacroCloudIcon, FlameIcon, PlateIcon, CoffeeCupIcon, JuiceCupIcon, MealFoodIcon, CoffeeDrinkIcon, DrinkIcon } from "../components/ColorIcons";
 
 // ── Design tokens (matches main app light theme) ──────────────────────────────
 const PAGE_BG   = "#F0F4F8";
@@ -29,7 +29,7 @@ const BORDER    = "#DDE6F0";
 const SHADOW    = "0 2px 12px rgba(27,46,94,0.08)";
 const TEXT      = "#1B2E5E";
 const TEXT2     = "#4A6080";
-const MUTED     = "#8FA8C0";
+const MUTED     = "#506A88";
 
 // Macro accent colors
 const C_PROTEIN = "#EF4444";   // red dot
@@ -37,7 +37,7 @@ const C_CARBS   = "#F59E0B";   // amber dot
 const C_FAT     = "#8B5CF6";   // purple dot
 const C_CAL     = "#1B2E5E";   // navy (calorie ring)
 const C_GREEN   = "#22C55E";   // goal met bar
-const C_WATER   = "#38BDF8";   // water blue
+const C_WATER   = "#5BA3C4";   // water blue
 
 // ── Translations ──────────────────────────────────────────────────────────────
 const T: Record<string, Record<string, string>> = {
@@ -115,8 +115,8 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
 
   return (
     <div style={card()}>
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 4 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><FlameIcon size={18} />{tl("dailyCal", lang)}</span>
+      <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", marginBottom: 4 }}>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight: 800}}><FlameIcon size={18} />{tl("dailyCal", lang)}</span>
       </div>
 
       {/* Ring */}
@@ -132,7 +132,7 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
             position: "absolute", top: "50%", left: "50%",
             transform: "translate(-50%, -50%)", textAlign: "center",
           }}>
-            <div style={{ color: TEXT, fontSize: 36, fontWeight: 900, lineHeight: 1 }}>
+            <div style={{ color: TEXT, fontSize: 36, fontWeight: 800, lineHeight: 1 }}>
               {Math.round(consumed)}
             </div>
             <div style={{ color: MUTED, fontSize: 13, marginTop: 4 }}>/ {goal}</div>
@@ -152,39 +152,39 @@ function CalorieRing({ consumed, goal, lang, workoutCalories = 0 }: { consumed: 
           borderRadius: 14, padding: "10px 6px", textAlign: "center",
           border: `1px solid ${remaining === 0 ? '#FECACA' : '#BBF7D0'}`,
         }}>
-          <div style={{ color: remaining === 0 ? '#DC2626' : C_GREEN, fontSize: 18, fontWeight: 900 }}>{Math.round(remaining)}</div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
+          <div style={{ color: remaining === 0 ? '#B45309' : '#15803D', fontSize: 18, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{Math.round(remaining)}</div>
+          <div style={{ color: MUTED, fontSize: 11, marginTop: 1 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("remaining", lang)}</div>
         </div>
         <div style={{
           flex: 1, minWidth: 60, background: PAGE_BG, borderRadius: 14, padding: "10px 6px", textAlign: "center",
           border: `1px solid ${BORDER}`,
         }}>
-          <div style={{ color: TEXT, fontSize: 18, fontWeight: 900 }}>{Math.round(consumed)}</div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
+          <div style={{ color: TEXT, fontSize: 18, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{Math.round(consumed)}</div>
+          <div style={{ color: MUTED, fontSize: 11, marginTop: 1 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("consumed", lang)}</div>
         </div>
         {workoutCalories > 0 && (
           <div style={{
-            flex: 1, minWidth: 60, background: '#FFF7ED', borderRadius: 14, padding: "10px 6px", textAlign: "center",
-            border: '1px solid #FED7AA',
+            flex: 1, minWidth: 60, background: PAGE_BG, borderRadius: 14, padding: "10px 6px", textAlign: "center",
+            border: `1px solid ${BORDER}`,
           }}>
-            <div style={{ color: '#C2410C', fontSize: 18, fontWeight: 900 }}>{workoutCalories}</div>
-            <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-            <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{lang === 'ar' ? 'محروقة' : 'Burned'}</div>
+            <div style={{ color: TEXT, fontSize: 18, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{workoutCalories}</div>
+            <div style={{ color: MUTED, fontSize: 11, marginTop: 1 }}>{tl("kcal", lang)}</div>
+            <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{lang === 'ar' ? 'محروقة' : 'Burned'}</div>
           </div>
         )}
         <div style={{
           flex: 1, minWidth: 60, background: SKY_LIGHT, borderRadius: 14, padding: "10px 6px", textAlign: "center",
           border: `1px solid ${SKY}44`,
         }}>
-          <div style={{ color: SKY, fontSize: 18, fontWeight: 900 }}>{goal}</div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{tl("kcal", lang)}</div>
-          <div style={{ color: TEXT2, fontSize: 10, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
+          <div style={{ color: TEXT, fontSize: 18, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{goal}</div>
+          <div style={{ color: MUTED, fontSize: 11, marginTop: 1 }}>{tl("kcal", lang)}</div>
+          <div style={{ color: TEXT2, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{tl("goal", lang)}</div>
         </div>
       </div>
       {workoutCalories > 0 && (
-        <p style={{ fontSize: 10, color: MUTED, textAlign: 'center', margin: '8px 0 0' }}>
+        <p style={{ fontSize: 11, color: MUTED, textAlign: 'center', margin: '8px 0 0' }}>
           {lang === 'ar'
             ? `المتبقي = الهدف − الطعام + السعرات المحروقة التقديرية`
             : 'Remaining = Goal − Food + Est. Calories Burned'}
@@ -219,10 +219,10 @@ function SmallRing({ value, max, color, label }: { value: number; max: number; c
           position: "absolute", top: "50%", left: "50%",
           transform: "translate(-50%, -50%)", textAlign: "center",
         }}>
-          <div style={{ color: TEXT, fontSize: 15, fontWeight: 900, lineHeight: 1 }}>
+          <div style={{ color: TEXT, fontSize: 15, fontWeight: 800, lineHeight: 1 }}>
             {Math.round(value)}
           </div>
-          <div style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>/ {max}</div>
+          <div style={{ color: MUTED, fontSize: 11, marginTop: 1 }}>/ {max}</div>
         </div>
       </div>
       <div style={{ color: TEXT, fontSize: 12, fontWeight: 700, marginTop: 6 }}>{label}</div>
@@ -268,15 +268,15 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
   return (
     <div style={card()}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><WaterDropIcon size={18} />{tl("waterIntake", lang)}</span>
-        <span style={{ color: C_WATER, fontSize: 13, fontWeight: 700 }}>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight: 800}}><WaterDropIcon size={18} />{tl("waterIntake", lang)}</span>
+        <span style={{ color: "#2A4A8C", fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
           {totalMl}{tl("ml", lang)} / {goalMl}{tl("ml", lang)}
         </span>
       </div>
       <div style={{ background: "#E8EDF4", borderRadius: 8, height: 8, marginBottom: 16, overflow: "hidden" }}>
         <div style={{
           width: `${pct * 100}%`, height: "100%",
-          background: `linear-gradient(90deg, ${C_WATER}, #0EA5E9)`,
+          background: `linear-gradient(90deg, ${C_WATER}, #5BA3C4)`,
           borderRadius: 8, transition: "width 0.5s ease",
         }} />
       </div>
@@ -290,7 +290,7 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
           }}>
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><WaterDropIcon size={28} /></span>
             <span style={{ color: TEXT, fontSize: 11, fontWeight: 700 }}>{c.label}</span>
-            <span style={{ color: C_WATER, fontSize: 10 }}>{c.ml}{tl("ml", lang)}</span>
+            <span style={{ color: "#2A4A8C", fontSize: 12, fontWeight: 600 }}>{c.ml}{tl("ml", lang)}</span>
           </button>
         ))}
       </div>
@@ -305,8 +305,8 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
 
   return (
     <div style={card()}>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><AppIcons.Stats size={18} />{tl("weeklyTrend", lang)}</span>
+      <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12 }}>
+        <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight: 800}}><AppIcons.Stats size={18} />{tl("weeklyTrend", lang)}</span>
       </div>
 
       {/* Chart area */}
@@ -319,7 +319,7 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
             display: "flex", flexDirection: "column", justifyContent: "space-between",
           }}>
             {[4, 3, 2, 1, 0].map(v => (
-              <span key={v} style={{ color: MUTED, fontSize: 9 }}>{v}</span>
+              <span key={v} style={{ color: MUTED, fontSize: 11 }}>{v}</span>
             ))}
           </div>
 
@@ -343,7 +343,7 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
                       boxShadow: SHADOW, marginBottom: 4,
                     }}>
                       <div style={{ color: TEXT, fontSize: 11, fontWeight: 700 }}>{d.dayLabel}</div>
-                      <div style={{ color: TEXT2, fontSize: 10 }}>
+                      <div style={{ color: TEXT2, fontSize: 11 }}>
                         {lang === "ar" ? "السعرات" : "Calories"} : {Math.round(d.calories)} kcal
                       </div>
                     </div>
@@ -365,7 +365,7 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
         <div style={{ display: "flex", paddingLeft: 28, marginTop: 4, gap: 4 }}>
           {trend.map(d => (
             <div key={d.date} style={{ flex: 1, textAlign: "center" }}>
-              <span style={{ color: MUTED, fontSize: 9 }}>{d.dayLabel}</span>
+              <span style={{ color: MUTED, fontSize: 11 }}>{d.dayLabel}</span>
             </div>
           ))}
         </div>
@@ -389,8 +389,8 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
 // ── Goals Modal Field (must be outside GoalsModal to avoid remount on each render) ──
 function GoalField({ label, value, onChange, unit }: { label: string; value: string; onChange: (v: string) => void; unit: string }) {
   const TEXT = "#1B2E5E";
-  const MUTED = "#94A3B8";
-  const BORDER = "#E2E8F0";
+  const MUTED = "#506A88";
+  const BORDER = "#D0DFF0";
   const PAGE_BG = "#F0F4F8";
   return (
     <div style={{ marginBottom: 14 }}>
@@ -522,7 +522,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 900, margin: 0 }}>
+          <h2 style={{ color: TEXT, fontSize: 18, fontWeight: 800, margin: 0 }}>
             <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Target size={18} />{tl("goals", lang)}</span>
           </h2>
           <button onClick={onClose} style={{
@@ -567,8 +567,8 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
               marginBottom: 14, border: `1px solid ${BORDER}`,
             }}>
               {!hasProfile ? (
-                <p style={{ color: "#F59E0B", fontSize: 12, margin: 0, textAlign: "center" }}>
-                  <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-red-500" />{lang === "ar"
+                <p style={{ color: "#B45309", fontSize: 12, margin: 0, textAlign: "center" }}>
+                  <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-[#B91C1C]" />{lang === "ar"
                     ? "أكمل بيانات ملفك الشخصي (الوزن، الطول، العمر) أولاً"
                     : "Complete your profile (weight, height, age) first"}</span>
                 </p>
@@ -647,13 +647,13 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
                     }}>
                       {[
                         { label: lang === "ar" ? "سعرات" : "Calories", value: `${preview.cal} kcal`, color: "#EF4444" },
-                        { label: lang === "ar" ? "بروتين" : "Protein",  value: `${preview.prot}g`,    color: "#3B82F6" },
-                        { label: lang === "ar" ? "كارب" : "Carbs",     value: `${preview.carbs}g`,   color: "#F59E0B" },
+                        { label: lang === "ar" ? "بروتين" : "Protein",  value: `${preview.prot}g`,    color: "#2A4A8C" },
+                        { label: lang === "ar" ? "كارب" : "Carbs",     value: `${preview.carbs}g`,   color: "#B45309" },
                         { label: lang === "ar" ? "دهون" : "Fat",       value: `${preview.fat}g`,     color: "#8B5CF6" },
                       ].map(item => (
                         <div key={item.label} style={{ textAlign: "center", flex: 1 }}>
-                          <div style={{ color: item.color, fontSize: 14, fontWeight: 900 }}>{item.value}</div>
-                          <div style={{ color: MUTED, fontSize: 10 }}>{item.label}</div>
+                          <div style={{ color: item.color, fontSize: 14, fontWeight: 800 }}>{item.value}</div>
+                          <div style={{ color: MUTED, fontSize: 11 }}>{item.label}</div>
                         </div>
                       ))}
                     </div>
@@ -664,7 +664,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
                     style={{
                       width: "100%", background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
                       color: WHITE, border: "none", borderRadius: 10,
-                      padding: "10px", fontSize: 13, fontWeight: 900,
+                      padding: "10px", fontSize: 13, fontWeight: 800,
                       cursor: "pointer", fontFamily: "inherit",
                     }}
                   >
@@ -694,7 +694,7 @@ function GoalsModal({ lang, goals, onClose }: { lang: string; goals: any; onClos
             ? `linear-gradient(135deg, #EF4444, #DC2626)`
             : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
           color: WHITE, border: "none", borderRadius: 14,
-          padding: "14px", fontSize: 15, fontWeight: 900,
+          padding: "14px", fontSize: 15, fontWeight: 800,
           cursor: (status === "saving" || status === "saved") ? "not-allowed" : "pointer",
           fontFamily: "inherit", marginTop: 4,
           opacity: status === "saving" ? 0.7 : 1,
@@ -731,7 +731,7 @@ function ExceedWarning({ lang, exceeded, onOpenGoals }: {
       borderRadius: 16, padding: "14px 16px", marginBottom: 14,
       display: "flex", alignItems: "flex-start", gap: 10,
     }}>
-      <span style={{flexShrink:0}}><AppIcons.Warning size={22} className="text-red-500" /></span>
+      <span style={{flexShrink:0}}><AppIcons.Warning size={22} className="text-[#B91C1C]" /></span>
       <div style={{ flex: 1 }}>
         <p style={{ color: "#DC2626", fontSize: 13, fontWeight: 800, margin: "0 0 6px" }}>
           {lang === "ar" ? "تجاوزت الهدف اليومي!" : "Daily Target Exceeded!"}
@@ -818,8 +818,8 @@ function DashboardTab({ lang, onOpenGoals }: { lang: string; onOpenGoals: () => 
 
       {/* Macronutrients card */}
       <div style={card()}>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-          <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight:900}}><MacroCloudIcon size={18} />{tl("macros", lang)}</span>
+        <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 14 }}>
+          <span style={{display:"flex",alignItems:"center",gap:8,color:TEXT,fontSize:16,fontWeight: 800}}><MacroCloudIcon size={18} />{tl("macros", lang)}</span>
         </div>
 
         {/* Progress bars */}
@@ -884,7 +884,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
                 : meal.items?.[0]?.name || tl(meal.meal_type, lang)}
               {meal.items?.length > 1 ? ` +${meal.items.length - 1}` : ""}
             </p>
-            <p style={{ color: MUTED, fontSize: 10, margin: "2px 0 0" }}>{date} · {time}</p>
+            <p style={{ color: MUTED, fontSize: 11, margin: "2px 0 0" }}>{date} · {time}</p>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -917,7 +917,7 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
                 borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
               }}>
                 <div style={{ color: m.c, fontSize: 13, fontWeight: 800 }}>{Math.round(m.v)}g</div>
-                <div style={{ color: MUTED, fontSize: 9 }}>{m.l}</div>
+                <div style={{ color: MUTED, fontSize: 11 }}>{m.l}</div>
               </div>
             ))}
           </div>
@@ -1090,7 +1090,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             <button onClick={() => cameraInputRef.current?.click()} style={{
               flex: 1, background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
               border: "none", borderRadius: 18, padding: "22px 12px",
-              color: WHITE, fontWeight: 900, fontSize: 14,
+              color: WHITE, fontWeight: 800, fontSize: 14,
               cursor: "pointer", fontFamily: "inherit",
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               boxShadow: `0 4px 16px ${NAVY}44`,
@@ -1101,7 +1101,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             <button onClick={() => fileInputRef.current?.click()} style={{
               flex: 1, background: WHITE, border: `1.5px solid ${BORDER}`,
               borderRadius: 18, padding: "22px 12px",
-              color: TEXT, fontWeight: 900, fontSize: 14,
+              color: TEXT, fontWeight: 800, fontSize: 14,
               cursor: "pointer", fontFamily: "inherit",
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               boxShadow: SHADOW,
@@ -1117,7 +1117,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             display: "flex", alignItems: "center", gap: 10,
           }}>
             <AppIcons.Stats size={22} />
-            <span style={{ color: "#F59E0B", fontSize: 12, fontWeight: 700 }}>
+            <span style={{ color: "#B45309", fontSize: 12, fontWeight: 700 }}>
               {tl("barcodeHint", lang)}
             </span>
           </div>
@@ -1205,7 +1205,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                 </span>
                 <button onClick={() => removeItem(idx)} style={{
                   background: "#FEF2F2", border: "1px solid #FECACA", color: "#EF4444",
-                  borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer",
+                  borderRadius: 6, padding: "3px 8px", fontSize: 11, cursor: "pointer",
                 }}><AppIcons.Close size={16} /></button>
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -1251,8 +1251,8 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                           {Math.round(item[m.k] ?? 0)}
                         </div>
                       )}
-                      <div style={{ color: MUTED, fontSize: 9 }}>{m.unit}</div>
-                      <div style={{ color: MUTED, fontSize: 9 }}>{m.label}</div>
+                      <div style={{ color: MUTED, fontSize: 11 }}>{m.unit}</div>
+                      <div style={{ color: MUTED, fontSize: 11 }}>{m.label}</div>
                       {!isEditing && <div style={{ color: m.color, opacity: 0.6, marginTop: 1 }}><AppIcons.Edit size={10} /></div>}
                     </div>
                   );
@@ -1280,8 +1280,8 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
                   borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
                 }}>
                   <div style={{ color: m.c, fontSize: 13, fontWeight: 800 }}>{Math.round(m.v)}</div>
-                  <div style={{ color: MUTED, fontSize: 9 }}>{m.u}</div>
-                  <div style={{ color: MUTED, fontSize: 9 }}>{m.l}</div>
+                  <div style={{ color: MUTED, fontSize: 11 }}>{m.u}</div>
+                  <div style={{ color: MUTED, fontSize: 11 }}>{m.l}</div>
                 </div>
               ))}
             </div>
@@ -1305,7 +1305,7 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               ? `linear-gradient(135deg, #22C55E, #16A34A)`
               : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
             color: WHITE, border: "none", borderRadius: 14,
-            padding: "14px", fontSize: 15, fontWeight: 900,
+            padding: "14px", fontSize: 15, fontWeight: 800,
             cursor: saveStatus !== "idle" ? "not-allowed" : "pointer",
             fontFamily: "inherit", opacity: saveStatus === "saving" ? 0.7 : 1,
             boxShadow: `0 4px 16px ${NAVY}44`,
@@ -1483,24 +1483,24 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
                 <span style={{
                   background: "#FFF7ED", color: "#F97316",
-                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 700,
+                  borderRadius: 8, padding: "2px 6px", fontSize: 11, fontWeight: 700,
                 }}>
                   <span style={{display:"inline-flex",alignItems:"center",gap:4}}><AppIcons.Flame size={12} className="text-orange-500" />{item.calories}</span>
                 </span>
                 <span style={{
                   background: "#FEF2F2", color: C_PROTEIN,
-                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 600,
+                  borderRadius: 8, padding: "2px 6px", fontSize: 11, fontWeight: 600,
                 }}>
                   P {item.protein}g
                 </span>
                 <span style={{
                   background: "#FFFBEB", color: C_CARBS,
-                  borderRadius: 8, padding: "2px 6px", fontSize: 10, fontWeight: 600,
+                  borderRadius: 8, padding: "2px 6px", fontSize: 11, fontWeight: 600,
                 }}>
                   C {item.carbs}g
                 </span>
               </div>
-              <span style={{ color: MUTED, fontSize: 9, marginTop: 1 }}>{item.serving}</span>
+              <span style={{ color: MUTED, fontSize: 11, marginTop: 1 }}>{item.serving}</span>
             </button>
           );
         })}
@@ -1574,8 +1574,8 @@ function ManualSearch({ lang, mealType, setMealType }: {
                 borderRadius: 10, padding: "6px 10px", textAlign: "center", minWidth: 60,
               }}>
                 <div style={{ color: m.c, fontSize: 13, fontWeight: 800 }}>{Math.round(m.v)}</div>
-                <div style={{ color: MUTED, fontSize: 9 }}>{m.u}</div>
-                <div style={{ color: MUTED, fontSize: 9 }}>{m.l}</div>
+                <div style={{ color: MUTED, fontSize: 11 }}>{m.u}</div>
+                <div style={{ color: MUTED, fontSize: 11 }}>{m.l}</div>
               </div>
             ))}
           </div>
@@ -1610,7 +1610,7 @@ function ManualSearch({ lang, mealType, setMealType }: {
               ? `linear-gradient(135deg, #22C55E, #16A34A)`
               : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
             color: WHITE, border: "none", borderRadius: 12,
-            padding: "10px", fontSize: 13, fontWeight: 900,
+            padding: "10px", fontSize: 13, fontWeight: 800,
             cursor: adding ? "not-allowed" : "pointer", fontFamily: "inherit",
           }}>
             <span style={{display:"flex",alignItems:"center",gap:4}}>{added ? <AppIcons.Check size={14} /> : <AppIcons.Plus size={14} />}{added ? tl("saved", lang) : adding ? tl("saving", lang) : tl("addFood", lang)}</span>
@@ -1654,7 +1654,7 @@ function InsightsTab({ lang }: { lang: string }) {
             : `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`,
           color: generateInsights.isPending ? MUTED : WHITE,
           border: generateInsights.isPending ? `1px solid ${BORDER}` : "none",
-          borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 900,
+          borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 800,
           cursor: generateInsights.isPending ? "not-allowed" : "pointer",
           fontFamily: "inherit", marginBottom: 16,
           boxShadow: generateInsights.isPending ? "none" : `0 4px 16px ${NAVY}44`,
@@ -1670,7 +1670,7 @@ function InsightsTab({ lang }: { lang: string }) {
           background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 12,
           padding: "10px 14px", marginBottom: 12, color: "#DC2626", fontSize: 13, fontWeight: 600,
         }}>
-          <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-red-500" />{genError}</span>
+          <span style={{display:"flex",alignItems:"center",gap:6}}><AppIcons.Warning size={14} className="text-[#B91C1C]" />{genError}</span>
         </div>
       )}
 
@@ -1713,13 +1713,13 @@ function InsightsTab({ lang }: { lang: string }) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{
-                    color: pColor, fontSize: 10, fontWeight: 700,
+                    color: pColor, fontSize: 11, fontWeight: 700,
                     background: pBg, borderRadius: 20, padding: "2px 8px",
                     textTransform: "uppercase",
                   }}>
                     {insight.priority ?? "info"}
                   </span>
-                  <span style={{ color: MUTED, fontSize: 10 }}>
+                  <span style={{ color: MUTED, fontSize: 11 }}>
                     {new Date(insight.createdAt ?? Date.now()).toLocaleDateString("en-GB")}
                   </span>
                 </div>
@@ -1750,23 +1750,25 @@ export default function Nutrition() {
   });
 
   const tabs: { id: NutritionTab; icon: React.ReactNode; label: string }[] = [
-    { id: "dashboard", icon: <NutritionDashboardIcon size={22} />, label: tl("dashboard", lang) },
-    { id: "meals",     icon: <NutritionMealsIcon size={22} />,     label: tl("meals",     lang) },
-    { id: "scanner",   icon: <NutritionScannerIcon size={22} />,   label: tl("scanner",   lang) },
+    // Same segmented control as the coach screen: one drawn icon family in
+    // the label colour, not three multicolour illustrations.
+    { id: "dashboard", icon: <AppIcons.Dashboard size={16} />, label: tl("dashboard", lang) },
+    { id: "meals",     icon: <AppIcons.Fork size={16} />,      label: tl("meals",     lang) },
+    { id: "scanner",   icon: <AppIcons.Scan size={16} />,      label: tl("scanner",   lang) },
   ];
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       minHeight: "100vh",
       background: PAGE_BG,
-      fontFamily: lang === "ar" ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
+      fontFamily: lang === "ar" ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif",
       color: TEXT,
     }}>
       {/* Page header */}
       <div style={{ padding: "16px 16px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
           <div>
-            <h1 style={{ color: TEXT, fontSize: 24, fontWeight: 900, margin: 0 }}>
+            <h1 style={{ color: TEXT, fontSize: 24, fontWeight: 800, margin: 0 }}>
               <span style={{display:"flex",alignItems:"center",gap:8}}><AppIcons.Salad size={20} />{tl("title", lang)}</span>
             </h1>
             <p style={{ color: MUTED, fontSize: 12, margin: "3px 0 0" }}>{today}</p>
@@ -1788,26 +1790,26 @@ export default function Nutrition() {
 
         {/* Tab bar — icon style */}
         <div style={{
-          background: WHITE, borderRadius: 16, padding: "6px",
+          background: WHITE, borderRadius: 14, padding: 4,
           display: "flex", gap: 4, marginBottom: 16,
-          border: `1px solid ${BORDER}`, boxShadow: SHADOW,
+          boxShadow: SHADOW,
         }}>
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                flex: 1, padding: "10px 4px",
+                flex: 1, minHeight: 40, padding: "0 6px",
                 background: activeTab === tab.id ? NAVY : "transparent",
-                border: "none", borderRadius: 12,
-                color: activeTab === tab.id ? WHITE : MUTED,
-                fontSize: 10, fontWeight: 700, cursor: "pointer",
+                border: "none", borderRadius: 10,
+                color: activeTab === tab.id ? WHITE : "#3D5A80",
+                fontSize: 12, fontWeight: 700, cursor: "pointer",
                 fontFamily: "inherit",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-                transition: "all 0.2s",
+                display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+                transition: "background-color .2s cubic-bezier(.16,1,.3,1), color .2s",
               }}
             >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", opacity: activeTab === tab.id ? 1 : 0.6 }}>{tab.icon}</span>
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>{tab.icon}</span>
               {tab.label}
             </button>
           ))}

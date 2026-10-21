@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
     border: `1.5px solid ${SKY_LIGHT}`,
     borderRadius: 12,
     fontSize: 14,
-    fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
+    fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
     outline: 'none',
     color: NAVY,
     background: '#F8FAFC',
@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
     <div dir={isAr ? 'rtl' : 'ltr'} style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-      fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
+      fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }}>
       <div style={{
@@ -79,7 +79,7 @@ export default function ResetPasswordPage() {
           <div style={{ marginTop: 20 }}>
             <div style={{display:"flex",justifyContent:"center",marginBottom:12}}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
             <h2 style={{ color: NAVY, fontSize: 18, fontWeight: 900 }}>{isAr ? 'تم تغيير كلمة المرور' : 'Password Changed'}</h2>
-            <p style={{ color: '#6B7280', fontSize: 13, marginBottom: 20 }}>{isAr ? 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة' : 'You can now log in with your new password'}</p>
+            <p style={{ color: '#3D5A80', fontSize: 13, marginBottom: 20 }}>{isAr ? 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة' : 'You can now log in with your new password'}</p>
             <button
               onClick={() => window.location.href = '/'}
               style={{
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
                 background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
                 color: 'white', border: 'none', borderRadius: 14,
                 fontSize: 14, fontWeight: 900, cursor: 'pointer',
-                fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
+                fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
               }}
             >
               {isAr ? 'تسجيل الدخول' : 'Log In'}
@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <>
-            <p style={{ color: '#7A9BB5', fontSize: 13, margin: '4px 0 24px' }}>{isAr ? 'أدخل كلمة المرور الجديدة' : 'Enter your new password'}</p>
+            <p style={{ color: '#506A88', fontSize: 13, margin: '4px 0 24px' }}>{isAr ? 'أدخل كلمة المرور الجديدة' : 'Enter your new password'}</p>
 
             {!token && (
               <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '10px 14px', marginBottom: 16, color: '#DC2626', fontSize: 13 }}>
@@ -120,11 +120,12 @@ export default function ResetPasswordPage() {
                     placeholder={isAr ? '8 أحرف على الأقل' : 'At least 8 characters'}
                     required
                     disabled={!token}
-                    style={{ ...inputStyle, paddingLeft: 44 }}
+                    style={{ ...inputStyle, paddingInlineEnd: 76 }}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 16,
+                    position: 'absolute', insetInlineEnd: 4, top: '50%', transform: 'translateY(-50%)',
+                    minWidth: 56, minHeight: 40, padding: '0 10px', borderRadius: 8,
+                    background: 'none', border: 'none', cursor: 'pointer', color: '#3D5A80', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}>
                     {showPassword ? (isAr ? 'إخفاء' : 'Hide') : (isAr ? 'إظهار' : 'Show')}
                   </button>
@@ -152,7 +153,7 @@ export default function ResetPasswordPage() {
                   background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
                   color: 'white', border: 'none', borderRadius: 14,
                   fontSize: 15, fontWeight: 900, cursor: resetMutation.isPending ? 'not-allowed' : 'pointer',
-                  fontFamily: isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif',
+                  fontFamily: isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
                   opacity: resetMutation.isPending ? 0.7 : 1,
                 }}
               >
@@ -164,7 +165,7 @@ export default function ResetPasswordPage() {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
       `}</style>
     </div>
   );

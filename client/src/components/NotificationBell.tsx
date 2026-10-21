@@ -46,7 +46,7 @@ function getNotifIcon(type: string) {
     case "follow":  return <UserPlus {...s} style={{ color: "#10B981" }} />;
     case "mention": return <AtSign {...s} style={{ color: "#06B6D4" }} />;
     case "message": return <MessageCircle {...s} style={{ color: "#1B2E5E" }} />;
-    default:        return <Bell {...s} style={{ color: "#6B7280" }} />;
+    default:        return <Bell {...s} style={{ color: "#3D5A80" }} />;
   }
 }
 
@@ -147,7 +147,7 @@ export default function NotificationBell({
           position: "fixed", top: 70, left: "50%", transform: "translateX(-50%)",
           background: "white", border: "1px solid #E5E7EB",
           borderRadius: 12, padding: "10px 16px",
-          color: "#111827", fontSize: 13, fontWeight: 600,
+          color: "#1B2E5E", fontSize: 13, fontWeight: 600,
           boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
           zIndex: 2000, maxWidth: 320, textAlign: "center",
           animation: "slideDown 0.3s ease",
@@ -182,7 +182,7 @@ export default function NotificationBell({
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Bell style={{ width: 20, height: 20, color: "#1B2E5E" }} />
-                <span style={{ color: "#111827", fontWeight: 800, fontSize: 17 }}>
+                <span style={{ color: "#1B2E5E", fontWeight: 800, fontSize: 17 }}>
                   Notifications
                 </span>
                 {localUnread > 0 && (
@@ -214,7 +214,7 @@ export default function NotificationBell({
                   onClick={() => setOpen(false)}
                   style={{
                     background: "none", border: "none", cursor: "pointer",
-                    color: "#6B7280", padding: 4, borderRadius: 6,
+                    color: "#3D5A80", padding: 4, borderRadius: 6,
                     display: "flex", alignItems: "center",
                   }}
                 >
@@ -231,7 +231,7 @@ export default function NotificationBell({
                   justifyContent: "center", padding: "60px 20px", gap: 12,
                 }}>
                   <Bell style={{ width: 40, height: 40, color: "#D1D5DB" }} />
-                  <p style={{ color: "#9CA3AF", fontSize: 14, margin: 0, textAlign: "center" }}>
+                  <p style={{ color: "#506A88", fontSize: 14, margin: 0, textAlign: "center" }}>
                     No notifications yet
                   </p>
                   <p style={{ color: "#D1D5DB", fontSize: 12, margin: 0, textAlign: "center" }}>
@@ -242,7 +242,7 @@ export default function NotificationBell({
                 <div key={group.label}>
                   <div style={{
                     padding: "8px 16px 4px",
-                    fontSize: 11, fontWeight: 700, color: "#9CA3AF",
+                    fontSize: 11, fontWeight: 700, color: "#506A88",
                     textTransform: "uppercase", letterSpacing: "0.06em",
                   }}>
                     {group.label}
@@ -269,12 +269,12 @@ export default function NotificationBell({
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{
-                          color: "#111827", fontSize: 13, margin: "0 0 2px",
+                          color: "#1B2E5E", fontSize: 13, margin: "0 0 2px",
                           lineHeight: 1.4, fontWeight: n.isRead ? 400 : 600,
                         }}>
                           {n.message}
                         </p>
-                        <span style={{ color: "#9CA3AF", fontSize: 11 }}>
+                        <span style={{ color: "#506A88", fontSize: 11 }}>
                           {timeAgo(n.createdAt)}
                         </span>
                       </div>

@@ -205,6 +205,24 @@
         "canonical": "#15803D",
         "note": "Text-legible counterpart to signal-success. 5.02:1 on Surface White."
       },
+      "harbour-haze-text": {
+        "role": "neutral",
+        "displayName": "Harbour Haze Text",
+        "canonical": "#506A88",
+        "note": "Tertiary text. 5.6:1 on white, 5.1:1 on Sea Mist. Harbour Haze itself is never text."
+      },
+      "tide-wash": {
+        "role": "neutral",
+        "displayName": "Tide Wash",
+        "canonical": "#EAF2F8",
+        "note": "Icon tiles and selected-chip counts inside a card."
+      },
+      "tide-inset": {
+        "role": "neutral",
+        "displayName": "Tide Inset",
+        "canonical": "#F3F7FB",
+        "note": "Sub-tiles inside a card."
+      },
       "signal-caution-text": {
         "role": "signal",
         "displayName": "Signal Caution Text",

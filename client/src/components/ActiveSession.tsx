@@ -7,8 +7,14 @@ import { sessionTypes, masterExercises, upperBodyExercises, cardioTemplates, aqu
 import { getProgramByGender } from '../lib/exerciseData';
 import { WorkoutTimer } from './WorkoutTimer';
 import { useLanguage } from '../contexts/LanguageContext';
-import { calcSessionCalories } from '../lib/calorieCalc';
+import { calcSessionCalories, toAsciiDigits } from '../lib/calorieCalc';
 import { AppIcons } from './AppIcons';
+import { toast } from 'sonner';
+
+// One accent for every session type. Each type used to bring its own hue
+// (orange, purple, yellow, pink...), several of which failed as text on white
+// and none of which belonged to the system.
+const ACCENT = '#1B2E5E';
 import { muscleGroupEn } from './WorkoutGuide';
 import { translateWeight, translateReps } from '../lib/exerciseTranslations';
 
@@ -32,7 +38,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
 
   // Elapsed time counter
   useEffect(() => {
-    const startMs = new Date(`${session.date}T${session.checkInTime}`).getTime();
+    const startMs = new Date(`${session.date}T${toAsciiDigits(session.checkInTime)}`).getTime();
     const start = isNaN(startMs) ? Date.now() : startMs;
     const update = () => setElapsed(Math.floor((Date.now() - start) / 1000));
     update();
@@ -63,6 +69,12 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
 
   const handleCheckOut = () => {
     setCheckingOut(true);
+    const mins = Math.max(1, Math.round(elapsed / 60));
+    toast.success(isAr ? 'تم حفظ الجلسة' : 'Session saved', {
+      description: isAr
+        ? `${mins} دقيقة · ${liveCalories} سعرة · ${completedCount} من ${totalCount} تمارين`
+        : `${mins} min · ${liveCalories} kcal · ${completedCount} of ${totalCount} exercises`,
+    });
     tracker.checkOut(session.id, {
       mood: session.mood,
       energyLevel: session.energyLevel,
@@ -85,7 +97,8 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
     <div style={{ animation: 'slideUp 0.3s ease' }}>
       {/* Session Header */}
       <div style={{
-        background: `linear-gradient(135deg, ${typeDef.color}, ${typeDef.color}CC)`,
+        background: ACCENT,
+        boxShadow: '0 4px 20px rgba(27,46,94,0.18)',
         borderRadius: 20, padding: '18px 20px', marginBottom: 14,
         color: 'white',
       }}>
@@ -97,16 +110,15 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
                 style={{
                   background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8,
                   color: 'white', padding: '4px 10px', fontSize: 13, cursor: 'pointer',
-                  fontFamily: 'Cairo, sans-serif', fontWeight: 700,
+                  fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700,
                 }}
               >
                 ← {hasStartedWorkout ? (isAr ? 'حفظ وخروج' : 'Save & Exit') : (isAr ? 'إلغاء' : 'Cancel')}
               </button>
-              <div style={{ fontSize: 24 }}>{typeDef.icon}</div>
             </div>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>{isAr ? typeDef.nameAr : typeDef.nameEn}</h2>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{isAr ? typeDef.nameAr : typeDef.nameEn}</h2>
             <p style={{ margin: '4px 0 0', opacity: 0.85, fontSize: 12 }}>
-              ⏰ {isAr ? (gender === 'female' ? 'بدأتِ' : 'بدأت') : 'Started'}: {session.checkInTime} • {isAr ? 'مضى' : 'Elapsed'}: {formatElapsed(elapsed)}
+              <AppIcons.Timer size={13} style={{ verticalAlign: '-2px', marginInlineEnd: 4 }} />{isAr ? (gender === 'female' ? 'بدأتِ' : 'بدأت') : 'Started'}: {session.checkInTime} • {isAr ? 'مضى' : 'Elapsed'}: {formatElapsed(elapsed)}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -114,11 +126,11 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
               width: 60, height: 60, borderRadius: '50%',
               background: 'rgba(255,255,255,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 22, fontWeight: 900,
+              fontSize: 22, fontWeight: 800,
             }}>
               {progressPct}%
             </div>
-            <div style={{ fontSize: 10, marginTop: 4, opacity: 0.85 }}>{isAr ? 'مكتمل' : 'Done'}</div>
+            <div style={{ fontSize: 11, marginTop: 4, opacity: 0.85 }}>{isAr ? 'مكتمل' : 'Done'}</div>
           </div>
         </div>
 
@@ -141,7 +153,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
               padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
               <span style={{ fontSize: 12, opacity: 0.9 }}><span style={{display:'inline-flex',alignItems:'center',gap:4}}><AppIcons.Flame size={12} className='text-orange-400' />{isAr ? 'السعرات المحروقة التقديرية' : 'Est. Calories Burned'}</span></span>
-              <span style={{ fontSize: 18, fontWeight: 900 }}>{liveCalories} kcal</span>
+              <span style={{ fontSize: 18, fontWeight: 800 }}>{liveCalories} kcal</span>
             </div>
           </div>
         )}
@@ -153,10 +165,10 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
           onClick={() => setShowTimer(!showTimer)}
           style={{
             width: '100%', padding: '10px', borderRadius: 12,
-            border: `2px solid ${showTimer ? typeDef.color : '#E2E8F0'}`,
-            background: showTimer ? `${typeDef.color}10` : 'white',
-            color: showTimer ? typeDef.color : '#4A4A6A',
-            fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 14,
+            border: `2px solid ${showTimer ? ACCENT : '#D0DFF0'}`,
+            background: showTimer ? `${ACCENT}10` : 'white',
+            color: showTimer ? ACCENT : '#3D5A80',
+            fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700, fontSize: 14,
             cursor: 'pointer', transition: 'all 0.2s',
           }}
         >
@@ -187,7 +199,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
       {/* EXERCISES LIST */}
       {session.exercises.length > 0 && (
         <div style={{ marginBottom: 14 }}>
-          <h3 style={{ margin: '0 0 10px', color: '#1A1A2E', fontSize: 15, fontWeight: 900 }}>
+          <h3 style={{ margin: '0 0 10px', color: '#1B2E5E', fontSize: 15, fontWeight: 800 }}>
             <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Dumbbell size={16} />{isAr ? 'التمارين' : 'Exercises'} ({session.exercises.length})</span>
           </h3>
           {session.exercises.map((ex, idx) => {
@@ -197,7 +209,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
                 key={idx}
                 exercise={ex}
                 idx={idx}
-                color={typeDef.color}
+                color={ACCENT}
                 isEditing={editingIdx === idx}
                 youtubeUrl={exData?.youtubeUrl}
                 isAr={isAr}
@@ -216,7 +228,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
               style={{
                 width: '100%', padding: '10px 14px', borderRadius: 12,
                 border: '2px solid #F59E0B', background: '#FFFBEB',
-                color: '#92400E', fontFamily: 'Cairo, sans-serif',
+                color: '#92400E', fontFamily: 'Tajawal, Inter, sans-serif',
                 fontWeight: 700, fontSize: 13, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 marginTop: 6,
@@ -232,7 +244,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
       {session.cardio && (
         <CardioCard
           cardio={session.cardio}
-          color={typeDef.color}
+          color={ACCENT}
           isAr={isAr}
           onUpdate={u => tracker.updateCardio(session.id, u)}
         />
@@ -245,9 +257,9 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
             onClick={() => setShowAddExercise(!showAddExercise)}
             style={{
               width: '100%', padding: '12px',
-              borderRadius: 12, border: `2px dashed ${typeDef.color}66`,
-              background: `${typeDef.color}08`, color: typeDef.color,
-              fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 14,
+              borderRadius: 12, border: `2px dashed ${ACCENT}66`,
+              background: `${ACCENT}08`, color: ACCENT,
+              fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700, fontSize: 14,
               cursor: 'pointer',
             }}
           >
@@ -255,7 +267,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
           </button>
           {showAddExercise && (
             <AddExercisePanel
-              color={typeDef.color}
+              color={ACCENT}
               gender={gender}
               isAr={isAr}
               onAdd={ex => {
@@ -277,32 +289,32 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
         background: 'white', borderRadius: 16, padding: '16px', marginBottom: 14,
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}>
-        <h4 style={{ margin: '0 0 12px', color: '#1A1A2E', fontSize: 14, fontWeight: 700 }}>
+        <h4 style={{ margin: '0 0 12px', color: '#1B2E5E', fontSize: 14, fontWeight: 700 }}>
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Notes size={16} />{isAr ? 'ملاحظات الجلسة' : 'Session Notes'}</span>
         </h4>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>{isAr ? 'المزاج' : 'Mood'}:</span>
+          <span style={{ fontSize: 12, color: '#3D5A80', alignSelf: 'center' }}>{isAr ? 'المزاج' : 'Mood'}:</span>
           {(['sleep', 'neutral', 'happy', 'strong', 'fire'] as const).map((m, idx) => {
             const moodIcons = [<AppIcons.Moon size={22} />, <AppIcons.Minus size={22} />, <AppIcons.Smile size={22} />, <AppIcons.Dumbbell size={22} />, <AppIcons.Flame size={22} />];
             return (
             <button key={m} onClick={() => tracker.updateSessionMeta(session.id, { mood: m as any })}
               style={{
                 display:'flex',alignItems:'center',justifyContent:'center',
-                border: `2px solid ${(session.mood as string) === m ? typeDef.color : '#E2E8F0'}` ,
+                border: `2px solid ${(session.mood as string) === m ? ACCENT : '#D0DFF0'}` ,
                 borderRadius: 10, padding: '4px 8px', cursor: 'pointer',
-                background: (session.mood as string) === m ? `${typeDef.color}15` : 'white',
+                background: (session.mood as string) === m ? `${ACCENT}15` : 'white',
               }}>{moodIcons[idx]}</button>
           );})}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#4A4A6A', alignSelf: 'center' }}>{isAr ? 'الطاقة' : 'Energy'}:</span>
+          <span style={{ fontSize: 12, color: '#3D5A80', alignSelf: 'center' }}>{isAr ? 'الطاقة' : 'Energy'}:</span>
           {([1, 2, 3, 4, 5] as const).map(n => (
             <button key={n} onClick={() => tracker.updateSessionMeta(session.id, { energyLevel: n })}
               style={{
                 width: 32, height: 32, borderRadius: 8,
-                border: `2px solid ${session.energyLevel >= n ? typeDef.color : '#E2E8F0'}`,
-                background: session.energyLevel >= n ? typeDef.color : 'white',
-                color: session.energyLevel >= n ? 'white' : '#8A8AAA',
+                border: `2px solid ${session.energyLevel >= n ? ACCENT : '#D0DFF0'}`,
+                background: session.energyLevel >= n ? ACCENT : 'white',
+                color: session.energyLevel >= n ? 'white' : '#506A88',
                 fontWeight: 700, fontSize: 12, cursor: 'pointer',
               }}>{n}</button>
           ))}
@@ -314,7 +326,7 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
           rows={2}
           style={{
             width: '100%', padding: '10px 12px', borderRadius: 10,
-            border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+            border: '1px solid #D0DFF0', fontFamily: 'Tajawal, Inter, sans-serif',
             fontSize: 13, resize: 'none', outline: 'none',
           }}
         />
@@ -326,9 +338,9 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
         disabled={checkingOut}
         style={{
           width: '100%', padding: '16px',
-          background: checkingOut ? '#8A8AAA' : 'linear-gradient(135deg, #1A7A4A, #2EA86A)',
+          background: checkingOut ? '#506A88' : 'linear-gradient(135deg, #1A7A4A, #2EA86A)',
           color: 'white', border: 'none', borderRadius: 16,
-          fontFamily: 'Cairo, sans-serif', fontWeight: 900, fontSize: 17,
+          fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 800, fontSize: 17,
           cursor: checkingOut ? 'not-allowed' : 'pointer',
           boxShadow: '0 6px 20px rgba(26,122,74,0.4)',
         }}
@@ -354,7 +366,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
     <div style={{
       background: exercise.completed ? `${color}08` : 'white',
       borderRadius: 14, marginBottom: 8, overflow: 'hidden',
-      border: `2px solid ${exercise.completed ? color : '#E8EAF0'}`,
+      border: `2px solid ${exercise.completed ? color : '#D0DFF0'}`,
       boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       transition: 'all 0.2s',
     }}>
@@ -376,13 +388,13 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontWeight: 700, fontSize: 13, color: '#1A1A2E',
+            fontWeight: 700, fontSize: 13, color: '#1B2E5E',
             textDecoration: exercise.completed ? 'line-through' : 'none',
             opacity: exercise.completed ? 0.6 : 1,
           }}>
             {isAr ? exercise.nameAr : (exercise.nameEn || exercise.nameAr)}
           </div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>
             {exercise.sets} {isAr ? 'جولات' : 'sets'} × {exercise.reps} • {exercise.weight}
           </div>
         </div>
@@ -403,9 +415,9 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
           )}
           <button onClick={onEdit} style={{
             padding: '4px 8px', borderRadius: 8,
-            border: `1px solid ${isEditing ? color : '#E2E8F0'}`,
+            border: `1px solid ${isEditing ? color : '#D0DFF0'}`,
             background: isEditing ? `${color}15` : 'white',
-            color: isEditing ? color : '#8A8AAA',
+            color: isEditing ? color : '#506A88',
             fontSize: 12, cursor: 'pointer',
           }}><AppIcons.Edit size={14} /></button>
           <button onClick={onRemove} style={{
@@ -451,11 +463,11 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
           };
 
           return (
-            <div style={{ padding: '12px 14px', borderTop: '1px solid #F0F0F0', background: '#FAFAFA' }}>
+            <div style={{ padding: '12px 14px', borderTop: '1px solid #D0DFF0', background: '#FAFAFA' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {/* Duration */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{isAr ? '⛱ المدة (دقيقة)' : '⛱ Duration (min)'}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700 }}>{isAr ? '⛱ المدة (دقيقة)' : '⛱ Duration (min)'}</label>
                   <input
                     type="number"
                     value={exercise.sets === 1 && (exercise.reps.includes('دقيقة') || exercise.reps.includes('min')) ? exercise.reps.replace(/[^\d]/g, '') : exercise.sets}
@@ -463,14 +475,14 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                     placeholder="20"
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
                     }}
                   />
                 </div>
                 {/* Speed */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{speedLabel}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700 }}>{speedLabel}</label>
                   <input
                     type="text"
                     value={speedVal}
@@ -478,14 +490,14 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                     placeholder="5.5"
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
                     }}
                   />
                 </div>
                 {/* Incline */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{inclineLabel}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700 }}>{inclineLabel}</label>
                   <input
                     type="text"
                     value={inclineVal}
@@ -493,14 +505,14 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                     placeholder="3"
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
                     }}
                   />
                 </div>
                 {/* Calories */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{isAr ? 'الكالوريز' : 'Calories'}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700 }}>{isAr ? 'الكالوريز' : 'Calories'}</label>
                   <input
                     type="text"
                     value={calVal}
@@ -508,14 +520,14 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                     placeholder="150"
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
                     }}
                   />
                 </div>
                 {/* Distance - full row */}
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700 }}>{distLabel}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700 }}>{distLabel}</label>
                   <input
                     type="text"
                     value={distVal}
@@ -523,7 +535,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                     placeholder="1.8"
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white', textAlign: 'center',
                     }}
                   />
@@ -536,7 +548,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
         // Default: weights/core form
         return (
           <div style={{
-            padding: '12px 14px', borderTop: '1px solid #F0F0F0',
+            padding: '12px 14px', borderTop: '1px solid #D0DFF0',
             background: '#FAFAFA', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
           }}>
             {[
@@ -546,21 +558,21 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
               { label: isAr ? 'راحة (ث)' : 'Rest (s)', field: 'restSeconds' as const, type: 'number', value: String(exercise.restSeconds) },
             ].map(f => (
               <div key={f.field}>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{f.label}</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>{f.label}</label>
                 <input
                   type={f.type}
                   value={f.value}
                   onChange={e => onUpdate({ [f.field]: f.type === 'number' ? Number(e.target.value) : e.target.value })}
                   style={{
                     width: '100%', padding: '6px 10px', borderRadius: 8,
-                    border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+                    border: '1px solid #D0DFF0', fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 13, outline: 'none', background: 'white',
                   }}
                 />
               </div>
             ))}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? 'ملاحظة' : 'Notes'}</label>
+              <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>{isAr ? 'ملاحظة' : 'Notes'}</label>
               <input
                 type="text"
                 value={exercise.notes}
@@ -568,7 +580,7 @@ function ExerciseCard({ exercise, idx, color, isEditing, onToggle, onEdit, onUpd
                 placeholder={isAr ? 'أي ملاحظة...' : 'Any notes...'}
                 style={{
                   width: '100%', padding: '6px 10px', borderRadius: 8,
-                  border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+                  border: '1px solid #D0DFF0', fontFamily: 'Tajawal, Inter, sans-serif',
                   fontSize: 13, outline: 'none', background: 'white',
                 }}
               />
@@ -595,7 +607,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
     <div style={{
       background: cardio.completed ? `${color}08` : 'white',
       borderRadius: 14, marginBottom: 14,
-      border: `2px solid ${cardio.completed ? color : '#E8EAF0'}`,
+      border: `2px solid ${cardio.completed ? color : '#D0DFF0'}`,
       boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       overflow: 'hidden',
     }}>
@@ -612,8 +624,8 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
           {cardio.completed ? <AppIcons.Check size={14} /> : null}
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}><span style={{display:'inline-flex',alignItems:'center',gap:6}}>{cardioIconKey === 'running' ? <AppIcons.Running size={16} /> : cardioIconKey === 'rowing' ? <AppIcons.Rowing size={16} /> : <AppIcons.Cardio size={16} />}{isAr ? cardio.nameAr : (cardio.nameEn || cardio.nameAr)}</span></div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E' }}><span style={{display:'inline-flex',alignItems:'center',gap:6}}>{cardioIconKey === 'running' ? <AppIcons.Running size={16} /> : cardioIconKey === 'rowing' ? <AppIcons.Rowing size={16} /> : <AppIcons.Cardio size={16} />}{isAr ? cardio.nameAr : (cardio.nameEn || cardio.nameAr)}</span></div>
+          <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>
             {isRower ? (
               <>
                 ⏱ {cardio.duration} {isAr ? 'دقيقة' : 'min'}
@@ -634,15 +646,15 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
         </div>
         <button onClick={() => setExpanded(!expanded)} style={{
           padding: '4px 8px', borderRadius: 8,
-          border: `1px solid ${expanded ? color : '#E2E8F0'}`,
+          border: `1px solid ${expanded ? color : '#D0DFF0'}`,
           background: expanded ? `${color}15` : 'white',
-          color: expanded ? color : '#8A8AAA', fontSize: 12, cursor: 'pointer',
+          color: expanded ? color : '#506A88', fontSize: 12, cursor: 'pointer',
         }}><AppIcons.Edit size={14} /></button>
       </div>
       {/* Expanded Edit Form */}
       {expanded && (
         <div style={{
-          padding: '14px', borderTop: '1px solid #F0F0F0',
+          padding: '14px', borderTop: '1px solid #D0DFF0',
           background: '#FAFAFA',
         }}>
           {/* Rower-specific fields matching machine display: TIME, RATE, DISTANCE, PACE, CALORIES */}
@@ -650,7 +662,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {/* TIME - Elapsed */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>{isAr ? '⛱ TIME (دقيقة)' : '⛱ TIME (min)'}</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>{isAr ? '⛱ TIME (دقيقة)' : '⛱ TIME (min)'}</label>
                 <input
                   type="number"
                   value={String(cardio.duration)}
@@ -658,7 +670,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                   placeholder="0"
                   style={{
                     width: '100%', padding: '8px 10px', borderRadius: 8,
-                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                     textAlign: 'center',
                   }}
@@ -666,7 +678,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* RATE - Strokes/min */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>RATE (Strokes/min)</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>RATE (Strokes/min)</label>
                 <input
                   type="text"
                   value={cardio.speed}
@@ -674,7 +686,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                   placeholder="0"
                   style={{
                     width: '100%', padding: '8px 10px', borderRadius: 8,
-                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                     textAlign: 'center',
                   }}
@@ -682,7 +694,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* DISTANCE - Meters */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>DISTANCE (Meters)</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>DISTANCE (Meters)</label>
                 <input
                   type="text"
                   value={cardio.distanceKm}
@@ -690,7 +702,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                   placeholder="0"
                   style={{
                     width: '100%', padding: '8px 10px', borderRadius: 8,
-                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                     textAlign: 'center',
                   }}
@@ -698,7 +710,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* PACE - /500 Meters */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>PACE (/500m)</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>PACE (/500m)</label>
                 <input
                   type="text"
                   value={cardio.pace ?? ''}
@@ -706,7 +718,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                   placeholder="0:00"
                   style={{
                     width: '100%', padding: '8px 10px', borderRadius: 8,
-                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                     textAlign: 'center',
                   }}
@@ -714,7 +726,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* CALORIES - full width */}
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>CALORIES</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3, fontWeight: 700, letterSpacing: 0.5 }}>CALORIES</label>
                 <input
                   type="text"
                   value={cardio.caloriesBurned}
@@ -722,7 +734,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                   placeholder="0"
                   style={{
                     width: '100%', padding: '8px 10px', borderRadius: 8,
-                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                     textAlign: 'center',
                   }}
@@ -735,14 +747,14 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                 {/* Duration */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? '⛱ المدة (دقيقة)' : '⛱ Duration (min)'}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>{isAr ? '⛱ المدة (دقيقة)' : '⛱ Duration (min)'}</label>
                   <input
                     type="number"
                     value={String(cardio.duration)}
                     onChange={e => onUpdate({ duration: Number(e.target.value) })}
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                       textAlign: 'center',
                     }}
@@ -750,7 +762,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                 </div>
                 {/* Speed */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>
                     {isAr ? (isTreadmill ? 'السرعة (كم/ساعة)' : 'المقاومة (Level)') : (isTreadmill ? 'Speed (km/h)' : 'Resistance (Level)')}
                   </label>
                   <input
@@ -759,7 +771,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                     onChange={e => onUpdate({ speed: e.target.value })}
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                       textAlign: 'center',
                     }}
@@ -767,7 +779,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                 </div>
                 {/* Incline */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>
                     {isAr ? (isTreadmill ? 'الانحدار (%)' : 'الانحدار (Level)') : (isTreadmill ? 'Incline (%)' : 'Incline (Level)')}
                   </label>
                   <input
@@ -776,7 +788,7 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                     onChange={e => onUpdate({ incline: e.target.value })}
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                       textAlign: 'center',
                     }}
@@ -784,14 +796,14 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
                 </div>
                 {/* Calories */}
                 <div>
-                  <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? 'الكالوريز' : 'Calories'}</label>
+                  <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>{isAr ? 'الكالوريز' : 'Calories'}</label>
                   <input
                     type="text"
                     value={cardio.caloriesBurned}
                     onChange={e => onUpdate({ caloriesBurned: e.target.value })}
                     style={{
                       width: '100%', padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                      border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                       fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                       textAlign: 'center',
                     }}
@@ -800,14 +812,14 @@ function CardioCard({ cardio, color, onUpdate, isAr }: {
               </div>
               {/* Distance - full width */}
               <div>
-                <label style={{ fontSize: 10, color: '#8A8AAA', display: 'block', marginBottom: 3 }}>{isAr ? 'المسافة (كم)' : 'Distance (km)'}</label>
+                <label style={{ fontSize: 11, color: '#506A88', display: 'block', marginBottom: 3 }}>{isAr ? 'المسافة (كم)' : 'Distance (km)'}</label>
                 <input
                   type="text"
                   value={cardio.distanceKm}
                   onChange={e => onUpdate({ distanceKm: e.target.value })}
                   style={{
                     width: '100%', padding: '8px 10px', borderRadius: 8,
-                    border: `1.5px solid ${color}40`, fontFamily: 'Cairo, sans-serif',
+                    border: `1.5px solid ${color}40`, fontFamily: 'Tajawal, Inter, sans-serif',
                     fontSize: 14, fontWeight: 700, outline: 'none', background: 'white',
                     textAlign: 'center',
                   }}
@@ -934,7 +946,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
             flex: 1, padding: '7px', borderRadius: 8, border: 'none', cursor: 'pointer',
             background: activeTab === 'favorites' ? '#1B2E5E' : '#F0F4FF',
             color: activeTab === 'favorites' ? 'white' : '#1B2E5E',
-            fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
+            fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700, fontSize: 12,
           }}
         >
           <span style={{display:'flex',alignItems:'center',gap:6}}>
@@ -948,7 +960,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
             flex: 1, padding: '7px', borderRadius: 8, border: 'none', cursor: 'pointer',
             background: activeTab === 'all' ? '#1B2E5E' : '#F0F4FF',
             color: activeTab === 'all' ? 'white' : '#1B2E5E',
-            fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 12,
+            fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700, fontSize: 12,
           }}
         >
           <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Clipboard size={14} />{isAr ? 'كل التمارين' : 'All Exercises'}</span>
@@ -964,7 +976,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
           onChange={e => setSearch(e.target.value)}
           style={{
             width: '100%', padding: '10px 14px', borderRadius: 10,
-            border: '1px solid #E2E8F0', fontFamily: 'Cairo, sans-serif',
+            border: '1px solid #D0DFF0', fontFamily: 'Tajawal, Inter, sans-serif',
             fontSize: 13, marginBottom: 10, outline: 'none',
           }}
         />
@@ -977,10 +989,10 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
             <div style={{ marginBottom: 10 }}>
               <HeartIcon filled={false} size={36} />
             </div>
-            <div style={{ color: '#1B2E5E', fontWeight: 700, fontSize: 14, marginBottom: 6, fontFamily: 'Cairo, sans-serif' }}>
+            <div style={{ color: '#1B2E5E', fontWeight: 700, fontSize: 14, marginBottom: 6, fontFamily: 'Tajawal, Inter, sans-serif' }}>
               {isAr ? 'لا توجد تمارين مفضلة بعد' : 'No favorites yet'}
             </div>
-            <div style={{ color: '#8A8AAA', fontSize: 12, fontFamily: 'Cairo, sans-serif' }}>
+            <div style={{ color: '#506A88', fontSize: 12, fontFamily: 'Tajawal, Inter, sans-serif' }}>
               {isAr ? 'اضغط على القلب لإضافة تمرينك المفضل' : 'Tap the heart icon to add favorites'}
             </div>
           </div>
@@ -991,7 +1003,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
             key={ex.id}
             style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              borderRadius: 10, border: '1px solid #F0F0F0', background: 'white',
+              borderRadius: 10, border: '1px solid #D0DFF0', background: 'white',
               marginBottom: 4, overflow: 'hidden',
             }}
           >
@@ -1002,7 +1014,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
                 flex: 1, padding: '10px 12px',
                 border: 'none', background: 'transparent',
                 textAlign: 'right', cursor: 'pointer',
-                fontFamily: 'Cairo, sans-serif', display: 'flex', alignItems: 'center', gap: 10,
+                fontFamily: 'Tajawal, Inter, sans-serif', display: 'flex', alignItems: 'center', gap: 10,
                 transition: 'background 0.15s',
               }}
               onMouseEnter={e => (e.currentTarget.style.background = `${color}10`)}
@@ -1014,8 +1026,8 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
                 }} />
               )}
               <div style={{ flex: 1, textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: '#1A1A2E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
-                <div style={{ fontSize: 11, color: '#8A8AAA' }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
+                <div style={{ fontSize: 11, color: '#506A88' }}>
                   {isAr ? ex.muscleGroup : (muscleGroupEn[ex.muscleGroup] || ex.muscleGroup)} • {ex.defaultSets}×{isAr ? ex.defaultReps : ((ex as any).defaultRepsEn || translateReps(ex.defaultReps))}
                   {ex.defaultWeight && ex.defaultWeight !== '—' ? ` • ${isAr ? ex.defaultWeight : translateWeight(ex.defaultWeight)}` : ''}
                 </div>
@@ -1042,7 +1054,7 @@ function AddExercisePanel({ color, gender, onAdd, isAr }: {
         ))}
 
         {activeTab === 'all' && filtered.length === 0 && (
-          <p style={{ textAlign: 'center', color: '#8A8AAA', fontSize: 13, padding: '20px 0', fontFamily: 'Cairo, sans-serif' }}>
+          <p style={{ textAlign: 'center', color: '#506A88', fontSize: 13, padding: '20px 0', fontFamily: 'Tajawal, Inter, sans-serif' }}>
             {isAr ? 'لا توجد نتائج' : 'No results found'}
           </p>
         )}
@@ -1066,7 +1078,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <img src="/api/img/aqua_f892423a.jpg" alt="Aqua" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).src = '/api/img/placeholder_4de366d7.png'; }} />
         <div>
-          <h3 style={{ margin: 0, color: '#0891B2', fontSize: 15, fontWeight: 900 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Swimming size={18} />{isAr ? 'كلاس الأكوا' : 'Aqua Class'}</span></h3>
+          <h3 style={{ margin: 0, color: '#0891B2', fontSize: 15, fontWeight: 800 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Swimming size={18} />{isAr ? 'كلاس الأكوا' : 'Aqua Class'}</span></h3>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#0891B2' }}>{isAr ? 'تمارين مائية لحرق الدهون' : 'Water exercises for fat burn'}</p>
         </div>
       </div>
@@ -1075,13 +1087,13 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
           <label style={{ fontSize: 11, color: '#0891B2', display: 'block', marginBottom: 4 }}>{isAr ? 'المدة (دقيقة)' : 'Duration (min)'}</label>
           <input type="number" value={aqua.duration}
             onChange={e => onUpdate({ duration: Number(e.target.value) })}
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #B2EBF2', fontFamily: 'Cairo, sans-serif', fontSize: 14 }}
+            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #B2EBF2', fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 14 }}
           />
         </div>
         <div>
           <label style={{ fontSize: 11, color: '#0891B2', display: 'block', marginBottom: 4 }}>{isAr ? 'الشدة' : 'Intensity'}</label>
           <select value={aqua.intensity} onChange={e => onUpdate({ intensity: e.target.value as any })}
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #B2EBF2', fontFamily: 'Cairo, sans-serif', fontSize: 13 }}>
+            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #B2EBF2', fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 13 }}>
             {isAr ? (
               <><option value="خفيف">خفيف</option><option value="متوسط">متوسط</option><option value="مكثف">مكثف</option></>
             ) : (
@@ -1097,7 +1109,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
           border: '1px solid #B2EBF2',
         }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: '#0891B2' }}>{isAr ? ex.nameAr : (ex.nameEn || ex.nameAr)}</div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>{ex.duration} • {gender === 'male' && (ex as any).tipMale ? (ex as any).tipMale : ex.tip}</div>
+          <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>{ex.duration} • {gender === 'male' && (ex as any).tipMale ? (ex as any).tipMale : ex.tip}</div>
         </div>
       ))}
       <button
@@ -1107,7 +1119,7 @@ function AquaSessionPanel({ aqua, onUpdate, isAr, gender = 'female' }: {
           background: aqua.completed ? '#0891B2' : 'white',
           color: aqua.completed ? 'white' : '#0891B2',
           border: '2px solid #0891B2', borderRadius: 10,
-          fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+          fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}
       >
         <span style={{display:'flex',alignItems:'center',gap:4}}>{aqua.completed ? <AppIcons.Check size={14} /> : null}{aqua.completed ? (isAr ? 'مكتمل' : 'Completed') : (isAr ? 'تحديد كمكتمل' : 'Mark as Complete')}</span>
@@ -1132,7 +1144,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <img src="/api/img/sauna_721a5de2.jpg" alt="Sauna" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).src = '/api/img/placeholder_4de366d7.png'; }} />
         <div>
-          <h3 style={{ margin: 0, color: '#B45309', fontSize: 15, fontWeight: 900 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Spa size={18} />{isSaunaAr ? 'جلسة السونا' : 'Sauna Session'}</span></h3>
+          <h3 style={{ margin: 0, color: '#B45309', fontSize: 15, fontWeight: 800 }}><span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Spa size={18} />{isSaunaAr ? 'جلسة السونا' : 'Sauna Session'}</span></h3>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#B45309' }}>{isSaunaAr ? 'تعافٍ وحرق سعرات وإزالة سموم' : 'Recovery, calorie burn & detox'}</p>
         </div>
       </div>
@@ -1141,14 +1153,14 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
           <label style={{ fontSize: 11, color: '#B45309', display: 'block', marginBottom: 4 }}>{isSaunaAr ? 'إجمالي الدقائق' : 'Total Minutes'}</label>
           <input type="number" value={sauna.totalMinutes}
             onChange={e => onUpdate({ totalMinutes: Number(e.target.value) })}
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A', fontFamily: 'Cairo, sans-serif', fontSize: 14 }}
+            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A', fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 14 }}
           />
         </div>
         <div>
           <label style={{ fontSize: 11, color: '#B45309', display: 'block', marginBottom: 4 }}>{isSaunaAr ? 'عدد الجولات' : 'Rounds'}</label>
           <input type="number" value={sauna.rounds}
             onChange={e => onUpdate({ rounds: Number(e.target.value) })}
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A', fontFamily: 'Cairo, sans-serif', fontSize: 14 }}
+            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #FDE68A', fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 14 }}
           />
         </div>
       </div>
@@ -1159,7 +1171,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
           border: '1px solid #FDE68A',
         }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: '#B45309' }}>{p.phase} ({p.duration})</div>
-          <div style={{ fontSize: 11, color: '#8A8AAA', marginTop: 2 }}>{p.temp} • {gender === 'male' && (p as any).tipMale ? (p as any).tipMale : p.tip}</div>
+          <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>{p.temp} • {gender === 'male' && (p as any).tipMale ? (p as any).tipMale : p.tip}</div>
         </div>
       ))}
       <textarea value={sauna.notes} onChange={e => onUpdate({ notes: e.target.value })}
@@ -1167,7 +1179,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
         rows={2}
         style={{
           width: '100%', marginTop: 8, padding: '8px 10px', borderRadius: 8,
-          border: '1px solid #FDE68A', fontFamily: 'Cairo, sans-serif', fontSize: 13, resize: 'none',
+          border: '1px solid #FDE68A', fontFamily: 'Tajawal, Inter, sans-serif', fontSize: 13, resize: 'none',
         }}
       />
       <button
@@ -1177,7 +1189,7 @@ function SaunaSessionPanel({ sauna, onUpdate, gender = 'female' }: {
           background: sauna.completed ? '#B45309' : 'white',
           color: sauna.completed ? 'white' : '#B45309',
           border: '2px solid #B45309', borderRadius: 10,
-          fontFamily: 'Cairo, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+          fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}
       >
         <span style={{display:'flex',alignItems:'center',gap:4}}>{sauna.completed ? <AppIcons.Check size={14} /> : null}{sauna.completed ? (isSaunaAr ? 'مكتمل' : 'Completed') : (isSaunaAr ? 'تحديد كمكتمل' : 'Mark as Complete')}</span>

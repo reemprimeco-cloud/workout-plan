@@ -25,8 +25,8 @@ export default function LegalPage({ type }: LegalPageProps) {
         minHeight: "100vh",
         background: "#F8FAFC",
         fontFamily: isRTL
-          ? "Cairo, Tajawal, sans-serif"
-          : "Inter, system-ui, sans-serif",
+          ? "Tajawal, Inter, sans-serif"
+          : "Inter, Tajawal, sans-serif",
       }}
     >
       {/* ── Header ── */}
@@ -143,7 +143,7 @@ export default function LegalPage({ type }: LegalPageProps) {
             >
               {data.title}
             </h2>
-            <p style={{ color: "#7A9BB5", fontSize: 13, margin: "4px 0 0" }}>
+            <p style={{ color: "#506A88", fontSize: 13, margin: "4px 0 0" }}>
               {isRTL ? "آخر تحديث:" : "Last updated:"} {data.lastUpdated}
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function LegalPage({ type }: LegalPageProps) {
             </h3>
             <div
               style={{
-                color: "#374151",
+                color: "#1B2E5E",
                 fontSize: 14,
                 lineHeight: 1.85,
                 whiteSpace: "pre-line",
@@ -205,7 +205,7 @@ export default function LegalPage({ type }: LegalPageProps) {
             textAlign: "center",
             marginTop: 32,
             padding: "20px",
-            color: "#7A9BB5",
+            color: "#506A88",
             fontSize: 12,
           }}
         >
@@ -216,7 +216,7 @@ export default function LegalPage({ type }: LegalPageProps) {
       </main>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Inter:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
       `}</style>
     </div>

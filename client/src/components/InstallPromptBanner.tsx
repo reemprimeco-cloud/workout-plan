@@ -103,7 +103,7 @@ export default function InstallPromptBanner({ lang = 'ar' }: Props) {
           borderRadius: '20px 20px 0 0',
           padding: '24px 20px 36px',
           boxShadow: '0 -8px 40px rgba(27,46,94,0.25)',
-          fontFamily: lang === 'ar' ? 'Cairo, Tajawal, sans-serif' : 'Inter, system-ui, sans-serif',
+          fontFamily: lang === 'ar' ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif',
           animation: 'slideUpInstall 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
@@ -134,7 +134,7 @@ export default function InstallPromptBanner({ lang = 'ar' }: Props) {
             <div style={{ fontWeight: 900, fontSize: 18, color: NAVY, lineHeight: 1.2 }}>
               Prime Fit
             </div>
-            <div style={{ fontSize: 12, color: '#7A9BB5', marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: '#506A88', marginTop: 3 }}>
               {isRTL ? 'تطبيق اللياقة الشخصية' : 'Personal Fitness App'}
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function InstallPromptBanner({ lang = 'ar' }: Props) {
               background: isIOSDevice
                 ? `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`
                 : 'transparent',
-              color: isIOSDevice ? 'white' : '#7A9BB5',
+              color: isIOSDevice ? 'white' : '#506A88',
               border: isIOSDevice ? 'none' : `1.5px solid #D0DFF0`,
               borderRadius: 12,
               padding: isIOSDevice ? '14px' : '14px 20px',

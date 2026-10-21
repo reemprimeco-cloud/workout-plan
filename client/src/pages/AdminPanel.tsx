@@ -172,7 +172,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
           ].map(s => (
             <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '14px 16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(27,46,94,0.08)' }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: '#1B2E5E' }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -184,7 +184,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Gift size={18} />{lang === 'ar' ? 'قائمة المكافآت' : 'Reward List'}</span>
         </h3>
         {rewardsQuery.isLoading ? (
-          <div style={{ color: '#7A9BB5' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
+          <div style={{ color: '#506A88' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</div>
         ) : (rewardsQuery.data ?? []).map((r: any) => (
           <div key={r.id} style={{
             border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10,
@@ -238,7 +238,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    style={{ background: '#F1F5F9', color: '#64748B', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 13, cursor: 'pointer' }}>
+                    style={{ background: '#F1F5F9', color: '#3D5A80', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 13, cursor: 'pointer' }}>
                     {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                   </button>
                 </div>
@@ -257,7 +257,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
                     </span>
                     {!r.isActive && <span style={{display:'inline-flex',alignItems:'center',gap:4,color:'#DC2626',fontSize:11}}><AppIcons.Close size={10} />Disabled</span>}
                   </div>
-                  <div style={{ color: '#7A9BB5', fontSize: 12, marginTop: 2 }}>
+                  <div style={{ color: '#506A88', fontSize: 12, marginTop: 2 }}>
                     {lang === 'ar' ? 'الاحتمالية:' : 'Probability:'} <strong>{r.probability}%</strong>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
             <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #F1F5F9' }}>
               <div>
                 <div style={{ fontWeight: 700, color: '#1B2E5E', fontSize: 13 }}>{w.userName ?? w.userId}</div>
-                <div style={{ color: '#7A9BB5', fontSize: 11 }}>{lang === 'ar' ? w.rewardNameAr : w.rewardName}</div>
+                <div style={{ color: '#506A88', fontSize: 11 }}>{lang === 'ar' ? w.rewardNameAr : w.rewardName}</div>
               </div>
               <div style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700 }}>
                 {new Date(w.wonAt).toLocaleDateString()}
@@ -308,12 +308,12 @@ function AdminRewardsTab({ lang }: { lang: string }) {
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={18} />{lang === 'ar' ? 'سجل الدورات الأخيرة' : 'Recent Spin History'}</span>
         </h3>
         {(historyQuery.data ?? []).length === 0 ? (
-          <div style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد دورات بعد' : 'No spins yet'}</div>
+          <div style={{ color: '#506A88', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد دورات بعد' : 'No spins yet'}</div>
         ) : (historyQuery.data ?? []).map((h: any) => (
           <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
             <div>
               <div style={{ fontWeight: 700, color: '#1B2E5E', fontSize: 13 }}>{h.userName ?? h.userId}</div>
-              <div style={{ color: '#7A9BB5', fontSize: 11 }}>{lang === 'ar' ? h.rewardNameAr : h.rewardName}</div>
+              <div style={{ color: '#506A88', fontSize: 11 }}>{lang === 'ar' ? h.rewardNameAr : h.rewardName}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
               <span style={{
@@ -321,7 +321,7 @@ function AdminRewardsTab({ lang }: { lang: string }) {
                 fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 20,
                 textTransform: 'uppercase',
               }}>{h.tier}</span>
-              <span style={{ color: '#94A3B8', fontSize: 10 }}>{new Date(h.spunAt).toLocaleDateString()}</span>
+              <span style={{ color: '#506A88', fontSize: 10 }}>{new Date(h.spunAt).toLocaleDateString()}</span>
             </div>
           </div>
         ))}
@@ -435,9 +435,9 @@ function AdminChallengesTab({ lang }: { lang: string }) {
           <span style={{display:'flex',alignItems:'center',gap:8}}><AppIcons.Clipboard size={18} />{lang === 'ar' ? 'التحديات الحالية' : 'Active Challenges'}</span>
         </h2>
         {challengesQuery.isLoading ? (
-          <p style={{ color: '#94A3B8' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+          <p style={{ color: '#506A88' }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
         ) : !challengesQuery.data?.length ? (
-          <p style={{ color: '#94A3B8' }}>{lang === 'ar' ? 'لا توجد تحديات' : 'No challenges yet'}</p>
+          <p style={{ color: '#506A88' }}>{lang === 'ar' ? 'لا توجد تحديات' : 'No challenges yet'}</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {challengesQuery.data.map(ch => (
@@ -449,7 +449,7 @@ function AdminChallengesTab({ lang }: { lang: string }) {
                   <div style={{ fontWeight: 800, color: '#1B2E5E', fontSize: 14 }}>
                     {lang === 'ar' ? ch.titleAr : ch.title}
                   </div>
-                  <div style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>
+                  <div style={{ color: '#3D5A80', fontSize: 12, marginTop: 2 }}>
                     {lang === 'ar' ? `ينتهي: ${ch.endDate}` : `Ends: ${ch.endDate}`}
                     {' · '}{ch.xpReward} XP
                     {' · '}{ch.participantsCount} {lang === 'ar' ? 'مشارك' : 'participants'}
@@ -510,7 +510,7 @@ function AdminCommunityTab({ lang }: { lang: string }) {
           ].map(s => (
             <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '14px 16px', textAlign: 'center', boxShadow: '0 2px 8px rgba(27,46,94,0.08)' }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: '#7A9BB5', marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: '#506A88', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -522,7 +522,7 @@ function AdminCommunityTab({ lang }: { lang: string }) {
           <button key={tab} onClick={() => setSubTab(tab)} style={{
             padding: '8px 20px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
             background: subTab === tab ? '#1B2E5E' : '#F0F4F8',
-            color: subTab === tab ? 'white' : '#7A9BB5',
+            color: subTab === tab ? 'white' : '#506A88',
           }}>
             {tab === 'posts' ? (isRTL ? 'المنشورات' : 'Posts') : tab === 'users' ? (isRTL ? 'المستخدمون' : 'Users') : (isRTL ? 'البلاغات' : 'Reports')}
           </button>
@@ -537,14 +537,14 @@ function AdminCommunityTab({ lang }: { lang: string }) {
               <button key={f} onClick={() => setPostFilter(f)} style={{
                 padding: '6px 14px', borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
                 background: postFilter === f ? '#1B2E5E' : '#F0F4F8',
-                color: postFilter === f ? 'white' : '#7A9BB5',
+                color: postFilter === f ? 'white' : '#506A88',
               }}>
                 {f === 'all' ? (isRTL ? 'الكل' : 'All') : f === 'hidden' ? (isRTL ? 'مخفية' : 'Hidden') : (isRTL ? 'مثبتة' : 'Pinned')}
               </button>
             ))}
           </div>
-          {postsQ.isLoading ? <div style={{ color: '#7A9BB5' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (postsQ.data?.posts ?? []).length === 0 ? (
-            <div style={{ color: '#7A9BB5', textAlign: 'center', padding: 20 }}>{isRTL ? 'لا توجد منشورات' : 'No posts'}</div>
+          {postsQ.isLoading ? <div style={{ color: '#506A88' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (postsQ.data?.posts ?? []).length === 0 ? (
+            <div style={{ color: '#506A88', textAlign: 'center', padding: 20 }}>{isRTL ? 'لا توجد منشورات' : 'No posts'}</div>
           ) : (postsQ.data?.posts ?? []).map((post: any) => (
             <div key={post.id} style={{ border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -554,8 +554,8 @@ function AdminCommunityTab({ lang }: { lang: string }) {
                     {post.isPinned && <span style={{ background: '#FEF3C7', color: '#D97706', fontSize: 10, padding: '2px 6px', borderRadius: 8, fontWeight: 700 }}>{isRTL ? 'مثبت' : 'Pinned'}</span>}
                     {post.isHidden && <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: 10, padding: '2px 6px', borderRadius: 8, fontWeight: 700 }}>{isRTL ? 'مخفي' : 'Hidden'}</span>}
                   </div>
-                  <div style={{ fontSize: 13, color: '#374151', marginBottom: 4, wordBreak: 'break-word' }}>{post.content?.slice(0, 120)}{(post.content?.length ?? 0) > 120 ? '...' : ''}</div>
-                  <div style={{fontSize:11,color:'#9CA3AF',display:'flex',alignItems:'center',gap:8}}><AppIcons.Heart size={11} />{post.likesCount} <AppIcons.Message size={11} />{post.commentsCount} {new Date(post.createdAt).toLocaleDateString()}</div>
+                  <div style={{ fontSize: 13, color: '#1B2E5E', marginBottom: 4, wordBreak: 'break-word' }}>{post.content?.slice(0, 120)}{(post.content?.length ?? 0) > 120 ? '...' : ''}</div>
+                  <div style={{fontSize:11,color:'#506A88',display:'flex',alignItems:'center',gap:8}}><AppIcons.Heart size={11} />{post.likesCount} <AppIcons.Message size={11} />{post.commentsCount} {new Date(post.createdAt).toLocaleDateString()}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <button onClick={() => pinPostMut.mutate({ postId: post.id, isPinned: !post.isPinned })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #D97706', background: 'white', color: '#D97706', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
@@ -583,14 +583,14 @@ function AdminCommunityTab({ lang }: { lang: string }) {
             placeholder={isRTL ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'}
             style={{ width: '100%', padding: '10px 14px', border: '1px solid #CBD5E1', borderRadius: 10, fontSize: 13, marginBottom: 16, direction: isRTL ? 'rtl' : 'ltr' }}
           />
-          {usersQ.isLoading ? <div style={{ color: '#7A9BB5' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (usersQ.data?.users ?? []).map((u: any) => (
+          {usersQ.isLoading ? <div style={{ color: '#506A88' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (usersQ.data?.users ?? []).map((u: any) => (
             <div key={u.id} style={{ border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: u.isBanned ? '#FEE2E2' : 'linear-gradient(135deg, #1B2E5E, #7BB8D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: 16, flexShrink: 0 }}>
                 {u.name?.[0]?.toUpperCase() ?? 'U'}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E' }}>{u.name ?? 'Unknown'} {u.role === 'admin' && <span style={{ background: '#1B2E5E', color: 'white', fontSize: 10, padding: '1px 6px', borderRadius: 6 }}>Admin</span>} {u.isBanned && <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: 10, padding: '1px 6px', borderRadius: 6 }}>{isRTL ? 'محظور' : 'Banned'}</span>}</div>
-                <div style={{ fontSize: 11, color: '#9CA3AF' }}>{u.email}</div>
+                <div style={{ fontSize: 11, color: '#506A88' }}>{u.email}</div>
                 {u.isBanned && u.banReason && <div style={{ fontSize: 11, color: '#DC2626', marginTop: 2 }}>{isRTL ? 'سبب: ' : 'Reason: '}{u.banReason}</div>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -627,21 +627,21 @@ function AdminCommunityTab({ lang }: { lang: string }) {
               <button key={f} onClick={() => setReportFilter(f)} style={{
                 padding: '6px 14px', borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
                 background: reportFilter === f ? '#1B2E5E' : '#F0F4F8',
-                color: reportFilter === f ? 'white' : '#7A9BB5',
+                color: reportFilter === f ? 'white' : '#506A88',
               }}>
                 {f === 'pending' ? (isRTL ? 'معلقة' : 'Pending') : f === 'resolved' ? (isRTL ? 'محلولة' : 'Resolved') : f === 'dismissed' ? (isRTL ? 'مرفوضة' : 'Dismissed') : (isRTL ? 'الكل' : 'All')}
               </button>
             ))}
           </div>
-          {reportsQ.isLoading ? <div style={{ color: '#7A9BB5' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (reportsQ.data ?? []).length === 0 ? (
-            <div style={{ color: '#7A9BB5', textAlign: 'center', padding: 20 }}>{isRTL ? 'لا توجد بلاغات' : 'No reports'}</div>
+          {reportsQ.isLoading ? <div style={{ color: '#506A88' }}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div> : (reportsQ.data ?? []).length === 0 ? (
+            <div style={{ color: '#506A88', textAlign: 'center', padding: 20 }}>{isRTL ? 'لا توجد بلاغات' : 'No reports'}</div>
           ) : (reportsQ.data ?? []).map((r: any) => (
             <div key={r.id} style={{ border: '1px solid #E8EFF7', borderRadius: 12, padding: '12px 16px', marginBottom: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, color: '#1B2E5E', marginBottom: 4 }}>{isRTL ? 'من ' : 'From: '}{r.reporterName ?? 'Unknown'}</div>
-                  <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>{isRTL ? 'السبب: ' : 'Reason: '}{r.reason}</div>
-                  {r.postContent && <div style={{ fontSize: 11, color: '#9CA3AF', background: '#F8FAFC', borderRadius: 6, padding: '4px 8px', marginBottom: 4 }}>{r.postContent?.slice(0, 80)}...</div>}
+                  <div style={{ fontSize: 12, color: '#1B2E5E', marginBottom: 4 }}>{isRTL ? 'السبب: ' : 'Reason: '}{r.reason}</div>
+                  {r.postContent && <div style={{ fontSize: 11, color: '#506A88', background: '#F8FAFC', borderRadius: 6, padding: '4px 8px', marginBottom: 4 }}>{r.postContent?.slice(0, 80)}...</div>}
                   <div style={{ fontSize: 10, color: '#CBD5E1' }}>{new Date(r.createdAt).toLocaleDateString()}</div>
                 </div>
                 {r.status === 'pending' && (
@@ -649,13 +649,13 @@ function AdminCommunityTab({ lang }: { lang: string }) {
                     <button onClick={() => resolveReportMut.mutate({ reportId: r.id, status: 'resolved' })} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: '#16A34A', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                       {isRTL ? 'حل' : 'Resolve'}
                     </button>
-                    <button onClick={() => resolveReportMut.mutate({ reportId: r.id, status: 'dismissed' })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: 'white', color: '#6B7280', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    <button onClick={() => resolveReportMut.mutate({ reportId: r.id, status: 'dismissed' })} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid #CBD5E1', background: 'white', color: '#3D5A80', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                       {isRTL ? 'رفض' : 'Dismiss'}
                     </button>
                   </div>
                 )}
                 {r.status !== 'pending' && (
-                  <span style={{ background: r.status === 'resolved' ? '#DCFCE7' : '#F3F4F6', color: r.status === 'resolved' ? '#16A34A' : '#6B7280', fontSize: 11, padding: '4px 10px', borderRadius: 10, fontWeight: 700 }}>
+                  <span style={{ background: r.status === 'resolved' ? '#DCFCE7' : '#F3F4F6', color: r.status === 'resolved' ? '#16A34A' : '#3D5A80', fontSize: 11, padding: '4px 10px', borderRadius: 10, fontWeight: 700 }}>
                     {r.status === 'resolved' ? (isRTL ? 'محلول' : 'Resolved') : (isRTL ? 'مرفوض' : 'Dismissed')}
                   </span>
                 )}
@@ -810,24 +810,24 @@ export default function AdminPanel() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: SKY_LIGHT, fontSize: 16, fontFamily: 'Cairo, sans-serif' }}>{t('loading', lang)}</div>
+        <div style={{ color: SKY_LIGHT, fontSize: 16, fontFamily: 'Tajawal, Inter, sans-serif' }}>{t('loading', lang)}</div>
       </div>
     );
   }
   if (!user) {
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-        <div style={{ color: 'white', fontSize: 18, fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>{t('loginRequired', lang)}</div>
-        <a href={getLoginUrl()} style={{ background: SKY, color: NAVY, textDecoration: 'none', borderRadius: 10, padding: '10px 24px', fontWeight: 700, fontSize: 14, fontFamily: 'Cairo, sans-serif' }}>{t('loginBtn', lang)}</a>
+        <div style={{ color: 'white', fontSize: 18, fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700 }}>{t('loginRequired', lang)}</div>
+        <a href={getLoginUrl()} style={{ background: SKY, color: NAVY, textDecoration: 'none', borderRadius: 10, padding: '10px 24px', fontWeight: 700, fontSize: 14, fontFamily: 'Tajawal, Inter, sans-serif' }}>{t('loginBtn', lang)}</a>
       </div>
     );
   }
   if (user.role !== 'admin') {
     return (
       <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${NAVY_DARK}, ${NAVY})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-        <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><AppIcons.Close size={48} className="text-red-500" /></div>
-        <div style={{ color: 'white', fontSize: 18, fontFamily: 'Cairo, sans-serif', fontWeight: 700 }}>{t('forbidden', lang)}</div>
-        <div style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Cairo, sans-serif', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><AppIcons.Close size={48} className="text-[#B91C1C]" /></div>
+        <div style={{ color: 'white', fontSize: 18, fontFamily: 'Tajawal, Inter, sans-serif', fontWeight: 700 }}>{t('forbidden', lang)}</div>
+        <div style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Tajawal, Inter, sans-serif', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
           {lang === 'ar'
             ? `أنت مسجل دخول بحساب: ${user.email || user.name}. يرجى تسجيل الخروج والدخول بحساب المدير.`
             : `Logged in as: ${user.email || user.name}. Please sign out and log in with the admin account.`}
@@ -838,13 +838,13 @@ export default function AdminPanel() {
             background: `linear-gradient(135deg, ${CYAN}, #00B8D4)`,
             color: NAVY, border: 'none', borderRadius: 12,
             padding: '12px 28px', fontSize: 14, fontWeight: 900,
-            cursor: 'pointer', fontFamily: 'Cairo, sans-serif',
+            cursor: 'pointer', fontFamily: 'Tajawal, Inter, sans-serif',
             marginTop: 4,
           }}
         >
           <span style={{display:'flex',alignItems:'center',gap:6}}><AppIcons.Lock size={14} />{lang === 'ar' ? 'تسجيل الخروج والدخول بحساب آخر' : 'Sign Out & Switch Account'}</span>
         </button>
-        <a href="/" style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Cairo, sans-serif' }}>← {lang === 'ar' ? 'العودة للتطبيق' : 'Back to App'}</a>
+        <a href="/" style={{ color: SKY_LIGHT, fontSize: 13, fontFamily: 'Tajawal, Inter, sans-serif' }}>← {lang === 'ar' ? 'العودة للتطبيق' : 'Back to App'}</a>
       </div>
     );
   }
@@ -863,7 +863,7 @@ export default function AdminPanel() {
     width: '100%', boxSizing: 'border-box' as const,
     border: `2px solid ${SKY_LIGHT}`, borderRadius: 10,
     padding: '10px 12px', fontSize: 13, color: NAVY, outline: 'none',
-    fontFamily: 'Cairo, sans-serif',
+    fontFamily: 'Tajawal, Inter, sans-serif',
   };
 
   const labelStyle = { display: 'block' as const, fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 6 };
@@ -878,7 +878,7 @@ export default function AdminPanel() {
   ];
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', background: '#F0F4F8', fontFamily: 'Cairo, Tajawal, system-ui, sans-serif' }}>
+    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', background: '#F0F4F8', fontFamily: 'Tajawal, Inter, sans-serif' }}>
 
       {/* ── Header ── */}
       <header style={{
@@ -945,7 +945,7 @@ export default function AdminPanel() {
             style={{
               flex: '0 0 auto', padding: '14px 20px', border: 'none', background: 'none',
               cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
-              color: activeTab === id ? NAVY : '#7A9BB5',
+              color: activeTab === id ? NAVY : '#506A88',
               borderBottom: activeTab === id ? `3px solid ${NAVY}` : '3px solid transparent',
               transition: 'all 0.2s',
             }}
@@ -971,7 +971,7 @@ export default function AdminPanel() {
                 <div key={label} style={{ background: 'white', borderRadius: 16, padding: '20px 16px', textAlign: 'center', boxShadow: '0 2px 12px rgba(27,46,94,0.08)', border: `1px solid ${SKY_LIGHT}44` }}>
                   <div style={{ fontSize: 28, marginBottom: 8, display:'flex', justifyContent:'center' }}>{icon === 'users' ? <AppIcons.Users size={28} /> : icon === 'check' ? <AppIcons.Check size={28} /> : icon === 'expired' ? <AppIcons.Close size={28} /> : icon === 'broadcast' ? <AppIcons.Bell size={28} /> : <AppIcons.Message size={28} />}</div>
                   <div style={{ fontSize: 28, fontWeight: 900, color }}>{value}</div>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{label}</div>
+                  <div style={{ fontSize: 11, color: '#3D5A80', marginTop: 4 }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -980,7 +980,7 @@ export default function AdminPanel() {
             <div style={cardStyle}>
               <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>{t('broadcastHistory', lang)}</h2>
               {broadcasts.length === 0 ? (
-                <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{t('noHistory', lang)}</p>
+                <p style={{ color: '#506A88', fontSize: 13, margin: 0 }}>{t('noHistory', lang)}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {broadcasts.slice(0, 5).map(b => (
@@ -988,7 +988,7 @@ export default function AdminPanel() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                         <div>
                           <div style={{ fontWeight: 700, color: NAVY, fontSize: 13 }}>{b.subject}</div>
-                          <div style={{ color: '#64748b', fontSize: 11, marginTop: 3 }}>
+                          <div style={{ color: '#3D5A80', fontSize: 11, marginTop: 3 }}>
                             {new Date(b.createdAt).toLocaleString('en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'}
                           </div>
                         </div>
@@ -1039,7 +1039,7 @@ export default function AdminPanel() {
                   <input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
                     style={{ ...inputStyle, direction: 'ltr' }}
                     min={new Date().toISOString().split('T')[0]} />
-                  <p style={{ margin: '4px 0 0', fontSize: 11, color: '#94A3B8' }}>{t('neverExpires', lang)}</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 11, color: '#506A88' }}>{t('neverExpires', lang)}</p>
                 </div>
               </div>
               {formError && <p style={{display:'flex',alignItems:'center',gap:6,color:'#EF4444',fontSize:12,margin:'0 0 12px',fontWeight:600}}><AppIcons.Warning size={12} />{formError}</p>}
@@ -1065,9 +1065,9 @@ export default function AdminPanel() {
                   {t('refresh', lang)}
                 </button>
               </div>
-              {codesQuery.isLoading && <div style={{ textAlign: 'center', color: '#7A9BB5', padding: '20px' }}>...</div>}
+              {codesQuery.isLoading && <div style={{ textAlign: 'center', color: '#506A88', padding: '20px' }}>...</div>}
               {!codesQuery.isLoading && codes.length === 0 && (
-                <div style={{ textAlign: 'center', color: '#7A9BB5', padding: '32px', background: '#F8FBFF', borderRadius: 12 }}>
+                <div style={{ textAlign: 'center', color: '#506A88', padding: '32px', background: '#F8FBFF', borderRadius: 12 }}>
                   <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><AppIcons.Lock size={32} /></div>
                   <p style={{ margin: 0, fontSize: 13 }}>{t('noCodesYet', lang)}</p>
                 </div>
@@ -1095,7 +1095,7 @@ export default function AdminPanel() {
                                   background: copiedKey === c.code ? '#22C55E' : '#E2E8F0',
                                   border: 'none', borderRadius: 5, padding: '3px 7px',
                                   cursor: 'pointer', fontSize: 11, fontFamily: 'sans-serif',
-                                  color: copiedKey === c.code ? 'white' : '#475569',
+                                  color: copiedKey === c.code ? 'white' : '#3D5A80',
                                   transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 3,
                                 }}
                               >
@@ -1105,7 +1105,7 @@ export default function AdminPanel() {
                           </td>
                           <td style={{ padding: '10px 12px', color: '#334155' }}>{c.customerName || '—'}</td>
                           <td style={{ padding: '10px 12px', color: '#334155', direction: 'ltr', fontSize: 12 }}>{c.customerEmail || '—'}</td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, maxWidth: 140 }}>{c.note || '—'}</td>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', fontSize: 11, maxWidth: 140 }}>{c.note || '—'}</td>
                           <td style={{ padding: '10px 12px' }}>
                             <span style={{ background: c.isActive ? '#DCFCE7' : '#FEE2E2', color: c.isActive ? '#16A34A' : '#DC2626', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
                               {c.isActive ? t('active', lang) : t('inactive', lang)}
@@ -1116,12 +1116,12 @@ export default function AdminPanel() {
                               <span style={{ color: new Date((c as any).expiresAt) < new Date() ? '#DC2626' : '#0369A1', fontSize: 11, fontWeight: 700 }}>
                                 {new Date((c as any).expiresAt) < new Date() ? t('expired', lang) : new Date((c as any).expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                               </span>
-                            ) : <span style={{ color: '#94A3B8', fontSize: 11 }}>{t('neverExpires', lang)}</span>}
+                            ) : <span style={{ color: '#506A88', fontSize: 11 }}>{t('neverExpires', lang)}</span>}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', fontSize: 11, whiteSpace: 'nowrap' }}>
                             {c.usedAt ? new Date(c.usedAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 11, whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', fontSize: 11, whiteSpace: 'nowrap' }}>
                             {new Date(c.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
@@ -1183,9 +1183,9 @@ export default function AdminPanel() {
 
             {subMsg && <p style={{ color: subMsg.startsWith('err:') ? '#DC2626' : '#16A34A', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{subMsg}</p>}
             {usersQuery.isLoading ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+              <p style={{ color: '#506A88', fontSize: 13 }}>⏳ {lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
             ) : !usersQuery.data?.length ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا يوجد مستخدمون بعد.' : 'No users yet.'}</p>
+              <p style={{ color: '#506A88', fontSize: 13 }}>{lang === 'ar' ? 'لا يوجد مستخدمون بعد.' : 'No users yet.'}</p>
             ) : (() => {
               const filtered = usersQuery.data.filter(u => {
                 const q = userSearch.trim().toLowerCase();
@@ -1199,7 +1199,7 @@ export default function AdminPanel() {
                 return matchSearch && matchStatus;
               });
               return filtered.length === 0 ? (
-                <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد نتائج.' : 'No results found.'}</p>
+                <p style={{ color: '#506A88', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد نتائج.' : 'No results found.'}</p>
               ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', gap: 12 }}>
                 {filtered.map((u) => {
@@ -1226,8 +1226,8 @@ export default function AdminPanel() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
                         <div style={{ flex: 1, minWidth: 200 }}>
                           <div style={{ fontWeight: 800, color: NAVY, fontSize: 14 }}>{u.fullName || u.name || '—'}</div>
-                          <div style={{ color: '#64748b', fontSize: 12, marginTop: 2, direction: 'ltr' }}>{u.email || '—'}</div>
-                          <div style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>
+                          <div style={{ color: '#3D5A80', fontSize: 12, marginTop: 2, direction: 'ltr' }}>{u.email || '—'}</div>
+                          <div style={{ color: '#506A88', fontSize: 11, marginTop: 2 }}>
                             {lang === 'ar' ? 'انضم:' : 'Joined:'} {new Date(u.createdAt).toLocaleDateString('en-GB')}
                             {u.lastSignedIn ? ` · ${lang === 'ar' ? 'آخر دخول:' : 'Last login:'} ${new Date(u.lastSignedIn).toLocaleDateString('en-GB')}` : ''}
                           </div>
@@ -1236,30 +1236,30 @@ export default function AdminPanel() {
                           {sub ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
                               {/* Main plan badge */}
-                              <span style={{ background: statusBg[sub.status] ?? '#F8FAFC', color: statusColor[sub.status] ?? '#64748b', borderRadius: 8, padding: '5px 12px', fontWeight: 800, fontSize: 12, border: `1.5px solid ${statusColor[sub.status] ?? '#64748b'}44` }}>
+                              <span style={{ background: statusBg[sub.status] ?? '#F8FAFC', color: statusColor[sub.status] ?? '#3D5A80', borderRadius: 8, padding: '5px 12px', fontWeight: 800, fontSize: 12, border: `1.5px solid ${statusColor[sub.status] ?? '#64748b'}44` }}>
                                 {getSubLabel()}
                               </span>
                               {/* Status + Payment row */}
                               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}15`, color: statusColor[sub.status] ?? '#64748b', borderRadius: 5, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                                <span style={{ background: `${statusColor[sub.status] ?? '#64748b'}15`, color: statusColor[sub.status] ?? '#3D5A80', borderRadius: 5, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
                                   {sub.status === 'active' ? (lang === 'ar' ? '✓ نشط' : '✓ Active') :
                                    sub.status === 'trialing' ? (lang === 'ar' ? '◑ تجريبي' : '◑ Trial') :
                                    sub.status === 'expired' ? (lang === 'ar' ? '✗ منتهي' : '✗ Expired') :
                                    sub.status === 'cancelled' ? (lang === 'ar' ? '✗ ملغي' : '✗ Cancelled') : sub.status}
                                 </span>
-                                <span style={{ background: `${payStatusColor[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor[sub.paymentStatus] ?? '#64748b', borderRadius: 5, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
+                                <span style={{ background: `${payStatusColor[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor[sub.paymentStatus] ?? '#3D5A80', borderRadius: 5, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
                                   {payStatusLabel[sub.paymentStatus] ?? sub.paymentStatus}
                                 </span>
                               </div>
                               {/* Dates row */}
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                 {sub.startsAt && (
-                                  <span style={{ color: '#94A3B8', fontSize: 10 }}>
+                                  <span style={{ color: '#506A88', fontSize: 10 }}>
                                     {lang === 'ar' ? 'بدأ:' : 'Start:'} {new Date(sub.startsAt).toLocaleDateString('en-GB')}
                                   </span>
                                 )}
                                 {sub.expiresAt && (
-                                  <span style={{ color: '#94A3B8', fontSize: 10 }}>
+                                  <span style={{ color: '#506A88', fontSize: 10 }}>
                                     {lang === 'ar' ? 'ينتهي:' : 'Exp:'} {new Date(sub.expiresAt).toLocaleDateString('en-GB')}
                                   </span>
                                 )}
@@ -1271,7 +1271,7 @@ export default function AdminPanel() {
                               </div>
                             </div>
                           ) : (
-                            <span style={{ background: '#F1F5F9', color: '#94A3B8', borderRadius: 6, padding: '4px 10px', fontSize: 11 }}>{lang === 'ar' ? 'بدون اشتراك' : 'No subscription'}</span>
+                            <span style={{ background: '#F1F5F9', color: '#506A88', borderRadius: 6, padding: '4px 10px', fontSize: 11 }}>{lang === 'ar' ? 'بدون اشتراك' : 'No subscription'}</span>
                           )}
                           <button
                             onClick={() => {
@@ -1324,7 +1324,7 @@ export default function AdminPanel() {
                             <div>
                               <label style={labelStyle}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expires At'}</label>
                               <input type="date" value={subForm.expiresAt} onChange={e => setSubForm(f => ({ ...f, expiresAt: e.target.value }))} style={{ ...inputStyle, direction: 'ltr' }} />
-                              <p style={{ margin: '3px 0 0', fontSize: 10, color: '#94A3B8' }}>{lang === 'ar' ? 'اتركه فارغاً للاشتراك الدائم' : 'Leave empty for lifetime'}</p>
+                              <p style={{ margin: '3px 0 0', fontSize: 10, color: '#506A88' }}>{lang === 'ar' ? 'اتركه فارغاً للاشتراك الدائم' : 'Leave empty for lifetime'}</p>
                             </div>
                           </div>
                           <button
@@ -1357,8 +1357,8 @@ export default function AdminPanel() {
                     style={{
                       flex: 1, padding: '10px', border: `2px solid ${bMode === mode ? NAVY : SKY_LIGHT}`,
                       borderRadius: 10, background: bMode === mode ? NAVY : 'white',
-                      color: bMode === mode ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                      fontFamily: 'Cairo, sans-serif',
+                      color: bMode === mode ? 'white' : '#506A88', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                      fontFamily: 'Tajawal, Inter, sans-serif',
                     }}>
                     {mode === 'all' ? t('broadcastSend', lang) : t('broadcastSendOne', lang)}
                   </button>
@@ -1405,12 +1405,12 @@ export default function AdminPanel() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     {(['both', 'inapp', 'email'] as const).map(ch => (
                       <button key={ch} onClick={() => setBChannel(ch)}
-                        style={{ flex: 1, padding: '8px 4px', border: `2px solid ${bChannel === ch ? NAVY : SKY_LIGHT}`, borderRadius: 8, background: bChannel === ch ? NAVY : 'white', color: bChannel === ch ? 'white' : '#7A9BB5', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ flex: 1, padding: '8px 4px', border: `2px solid ${bChannel === ch ? NAVY : SKY_LIGHT}`, borderRadius: 8, background: bChannel === ch ? NAVY : 'white', color: bChannel === ch ? 'white' : '#506A88', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {ch === 'both' ? (lang === 'ar' ? 'الاثنان' : 'Both') : ch === 'inapp' ? (lang === 'ar' ? 'داخل التطبيق' : 'In-App') : (lang === 'ar' ? 'بريد إلكتروني' : 'Email')}
                       </button>
                     ))}
                   </div>
-                  <p style={{ margin: '4px 0 0', fontSize: 10, color: '#94A3B8' }}>{lang === 'ar' ? '"داخل التطبيق" = نافذة منبثقة للمستخدمين عند فتح التطبيق' : '"In-App" = popup shown to users when they open the app'}</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 10, color: '#506A88' }}>{lang === 'ar' ? '"داخل التطبيق" = نافذة منبثقة للمستخدمين عند فتح التطبيق' : '"In-App" = popup shown to users when they open the app'}</p>
                 </div>
                 <button
                   onClick={() => {
@@ -1436,7 +1436,7 @@ export default function AdminPanel() {
             <div style={cardStyle}>
               <h2 style={{ margin: '0 0 16px', color: NAVY, fontSize: 15, fontWeight: 900 }}>{t('broadcastHistory', lang)}</h2>
               {broadcasts.length === 0 ? (
-                <p style={{ color: '#7A9BB5', fontSize: 13, margin: 0 }}>{t('noHistory', lang)}</p>
+                <p style={{ color: '#506A88', fontSize: 13, margin: 0 }}>{t('noHistory', lang)}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {broadcasts.map(b => (
@@ -1447,8 +1447,8 @@ export default function AdminPanel() {
                           {typeOptions.find(o => o.value === b.type) ? t(typeOptions.find(o => o.value === b.type)!.labelKey, lang) : b.type}
                         </span>
                       </div>
-                      <div style={{ color: '#64748b', fontSize: 12, lineHeight: 1.6, marginBottom: 8, whiteSpace: 'pre-wrap' }}>{b.body.slice(0, 120)}{b.body.length > 120 ? '...' : ''}</div>
-                      <div style={{ color: '#94A3B8', fontSize: 11 }}>
+                      <div style={{ color: '#3D5A80', fontSize: 12, lineHeight: 1.6, marginBottom: 8, whiteSpace: 'pre-wrap' }}>{b.body.slice(0, 120)}{b.body.length > 120 ? '...' : ''}</div>
+                      <div style={{ color: '#506A88', fontSize: 11 }}>
                         {new Date(b.createdAt).toLocaleString('en-GB')} · {b.recipientCount} {lang === 'ar' ? 'مستلم' : 'recipients'} · {b.sentBy}
                       </div>
                     </div>
@@ -1464,9 +1464,9 @@ export default function AdminPanel() {
           <div style={cardStyle}>
             <h2 style={{ margin: '0 0 20px', color: NAVY, fontSize: 16, fontWeight: 900 }}>{t('tabSubscriptions', lang)}</h2>
             {subscriptionsQuery.isLoading ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+              <p style={{ color: '#506A88', fontSize: 13 }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
             ) : (subscriptionsQuery.data ?? []).length === 0 ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{t('subNoData', lang)}</p>
+              <p style={{ color: '#506A88', fontSize: 13 }}>{t('subNoData', lang)}</p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -1549,11 +1549,11 @@ export default function AdminPanel() {
                           <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, whiteSpace: 'nowrap' }}>
                             {planLabel2[sub.plan] ?? sub.plan}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#475569', fontSize: 11, whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', fontSize: 11, whiteSpace: 'nowrap' }}>
                             {periodLabel2[sub.period] ?? sub.period}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <span style={{ background: statusBg2[sub.status] ?? '#F8FAFC', color: statusColor[sub.status] ?? '#64748b', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11, border: `1px solid ${statusColor[sub.status] ?? '#64748b'}33` }}>
+                            <span style={{ background: statusBg2[sub.status] ?? '#F8FAFC', color: statusColor[sub.status] ?? '#3D5A80', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11, border: `1px solid ${statusColor[sub.status] ?? '#64748b'}33` }}>
                               {sub.status === 'active' ? (lang === 'ar' ? '✓ نشط' : '✓ Active') :
                                sub.status === 'trialing' ? (lang === 'ar' ? '◑ تجريبي' : '◑ Trial') :
                                sub.status === 'expired' ? (lang === 'ar' ? '✗ منتهي' : '✗ Expired') :
@@ -1562,18 +1562,18 @@ export default function AdminPanel() {
                           </td>
                           <td style={{ padding: '10px 12px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-start' }}>
-                              <span style={{ background: `${payStatusColor2[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor2[sub.paymentStatus] ?? '#64748b', borderRadius: 5, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>
+                              <span style={{ background: `${payStatusColor2[sub.paymentStatus] ?? '#64748b'}15`, color: payStatusColor2[sub.paymentStatus] ?? '#3D5A80', borderRadius: 5, padding: '3px 8px', fontSize: 10, fontWeight: 700 }}>
                                 {payStatusLabel2[sub.paymentStatus] ?? sub.paymentStatus}
                               </span>
-                              <span style={{ background: `${providerColor2[sub.paymentProvider] ?? '#64748b'}12`, color: providerColor2[sub.paymentProvider] ?? '#64748b', borderRadius: 5, padding: '2px 7px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              <span style={{ background: `${providerColor2[sub.paymentProvider] ?? '#64748b'}12`, color: providerColor2[sub.paymentProvider] ?? '#3D5A80', borderRadius: 5, padding: '2px 7px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
                                 {providerLabel2[sub.paymentProvider] ?? sub.paymentProvider}
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', whiteSpace: 'nowrap', fontSize: 11 }}>
                             {sub.startsAt ? new Date(sub.startsAt).toLocaleDateString('en-GB') : '—'}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', whiteSpace: 'nowrap', fontSize: 11 }}>
                             {sub.expiresAt ? new Date(sub.expiresAt).toLocaleDateString('en-GB') : (lang === 'ar' ? 'لا ينتهي' : 'Never')}
                           </td>
                           <td style={{ padding: '10px 12px', color: daysColor2, fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap' }}>
@@ -1590,7 +1590,7 @@ export default function AdminPanel() {
                                     background: copiedKey === sub.licenseKey ? '#22C55E' : '#E2E8F0',
                                     border: 'none', borderRadius: 5, padding: '3px 7px',
                                     cursor: 'pointer', fontSize: 11, fontFamily: 'sans-serif',
-                                    color: copiedKey === sub.licenseKey ? 'white' : '#475569',
+                                    color: copiedKey === sub.licenseKey ? 'white' : '#3D5A80',
                                     transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 3,
                                   }}
                                 >
@@ -1635,7 +1635,7 @@ export default function AdminPanel() {
                     { label: lang === 'ar' ? 'عدد المعاملات' : 'Transactions', value: `${paidRows.length}`, color: '#7BB8D4' },
                   ].map(stat => (
                     <div key={stat.label} style={{ background: '#F8FBFF', border: `1px solid ${SKY_LIGHT}`, borderRadius: 10, padding: '12px 18px', minWidth: 140 }}>
-                      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>{stat.label}</div>
+                      <div style={{ fontSize: 11, color: '#3D5A80', marginBottom: 4 }}>{stat.label}</div>
                       <div style={{ fontSize: 16, fontWeight: 900, color: stat.color }}>{stat.value}</div>
                     </div>
                   ))}
@@ -1644,9 +1644,9 @@ export default function AdminPanel() {
             })()}
 
             {billingHistoryQuery.isLoading ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
+              <p style={{ color: '#506A88', fontSize: 13 }}>{lang === 'ar' ? 'جاري التحميل...' : 'Loading...'}</p>
             ) : (billingHistoryQuery.data ?? []).length === 0 ? (
-              <p style={{ color: '#7A9BB5', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد معاملات بعد.' : 'No transactions yet.'}</p>
+              <p style={{ color: '#506A88', fontSize: 13 }}>{lang === 'ar' ? 'لا توجد معاملات بعد.' : 'No transactions yet.'}</p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -1677,7 +1677,7 @@ export default function AdminPanel() {
                       const displayEmail = tx.userEmail || '—';
                       return (
                         <tr key={tx.id} style={{ background: i % 2 === 0 ? '#F8FBFF' : 'white', borderBottom: `1px solid ${SKY_LIGHT}44` }}>
-                          <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: 11 }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', whiteSpace: 'nowrap', fontSize: 11 }}>
                             {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('en-GB') : '—'}
                           </td>
                           <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, fontSize: 12, whiteSpace: 'nowrap' }}>
@@ -1689,7 +1689,7 @@ export default function AdminPanel() {
                           <td style={{ padding: '10px 12px', fontWeight: 700, color: NAVY, whiteSpace: 'nowrap' }}>
                             {planLabel[tx.plan] ?? tx.plan}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#475569', fontSize: 11, whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', fontSize: 11, whiteSpace: 'nowrap' }}>
                             {periodLabel[tx.period] ?? tx.period}
                           </td>
                           <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: NAVY, whiteSpace: 'nowrap' }}>
@@ -1702,14 +1702,14 @@ export default function AdminPanel() {
                             {net.toFixed(3)} {tx.currency}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
-                            <span style={{ background: statusBg[tx.status] ?? '#F8FAFC', color: statusColor[tx.status] ?? '#64748b', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11, border: `1px solid ${statusColor[tx.status] ?? '#64748b'}33` }}>
+                            <span style={{ background: statusBg[tx.status] ?? '#F8FAFC', color: statusColor[tx.status] ?? '#3D5A80', borderRadius: 6, padding: '3px 8px', fontWeight: 700, fontSize: 11, border: `1px solid ${statusColor[tx.status] ?? '#64748b'}33` }}>
                               {tx.status === 'paid' ? (lang === 'ar' ? '✓ مدفوع' : '✓ Paid') :
                                tx.status === 'pending' ? (lang === 'ar' ? '◑ معلق' : '◑ Pending') :
                                tx.status === 'failed' ? (lang === 'ar' ? '✗ فشل' : '✗ Failed') :
                                tx.status === 'refunded' ? (lang === 'ar' ? '↺ مسترد' : '↺ Refunded') : tx.status}
                             </span>
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#64748b', fontSize: 10, fontFamily: 'monospace', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '10px 12px', color: '#3D5A80', fontSize: 10, fontFamily: 'monospace', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {tx.paymentRef || tx.invoiceId || '—'}
                           </td>
                         </tr>
@@ -1809,7 +1809,7 @@ export default function AdminPanel() {
       </main>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #E8EFF7; }

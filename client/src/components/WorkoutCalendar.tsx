@@ -51,7 +51,7 @@ export function WorkoutCalendar() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
           }}><AppIcons.Calendar size={16} /></div>
           <div>
-            <h3 style={{ margin: 0, fontFamily: 'Cairo, sans-serif', color: '#1A1A2E', fontSize: 18 }}>{isAr ? 'التقويم الشهري' : 'Monthly Calendar'}</h3>
+            <h3 style={{ margin: 0, fontFamily: 'Tajawal, Inter, sans-serif', color: '#1A1A2E', fontSize: 18 }}>{isAr ? 'التقويم الشهري' : 'Monthly Calendar'}</h3>
             <p style={{ margin: 0, fontSize: 12, color: '#8A8AAA', fontFamily: 'Tajawal, sans-serif' }}>
               {isAr ? `أنجزتِ ${completedCount} من ${trainingDays} يوم تدريب` : `Completed ${completedCount} of ${trainingDays} training days`}
             </p>
@@ -70,7 +70,7 @@ export function WorkoutCalendar() {
                 borderColor: activeMonth === m ? '#E05A00' : '#E2E8F0',
                 background: activeMonth === m ? '#E05A00' : 'white',
                 color: activeMonth === m ? 'white' : '#4A4A6A',
-                fontFamily: 'Cairo, sans-serif',
+                fontFamily: 'Tajawal, Inter, sans-serif',
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: 'pointer',
@@ -87,7 +87,7 @@ export function WorkoutCalendar() {
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
           <span style={{ fontSize: 12, color: '#4A4A6A', fontFamily: 'Tajawal, sans-serif' }}>{isAr ? 'تقدم التمارين' : 'Workout Progress'}</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#E05A00', fontFamily: 'Cairo, sans-serif' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#E05A00', fontFamily: 'Tajawal, Inter, sans-serif' }}>
             {completedCount}/{trainingDays} ({Math.round((completedCount / trainingDays) * 100)}%)
           </span>
         </div>
@@ -139,7 +139,7 @@ export function WorkoutCalendar() {
               textAlign: 'center',
               fontSize: 12,
               fontWeight: 700,
-              fontFamily: 'Cairo, sans-serif',
+              fontFamily: 'Tajawal, Inter, sans-serif',
               color: '#8A8AAA',
               padding: '4px 0',
             }}>{d}</div>
@@ -181,7 +181,7 @@ export function WorkoutCalendar() {
                   </div>
                   <div style={{
                     fontSize: 10,
-                    fontFamily: 'Cairo, sans-serif',
+                    fontFamily: 'Tajawal, Inter, sans-serif',
                     fontWeight: 700,
                     color: completed ? 'white' : style.color,
                     marginTop: 3,

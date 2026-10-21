@@ -76,7 +76,7 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--cms-accent',     data.accentColor  ?? '#7BB8D4');
     root.style.setProperty('--cms-bg',         data.bgColor      ?? '#F0F4F8');
     root.style.setProperty('--cms-text',       data.textColor    ?? '#1B2E5E');
-    root.style.setProperty('--cms-font',       `'${data.fontFamily ?? 'Inter'}', Inter, system-ui, sans-serif`);
+    root.style.setProperty('--cms-font',       `'${data.fontFamily ?? 'Inter'}', Inter, Tajawal, sans-serif`);
   }, [appearanceQuery.data]);
 
   const sessionIconOverridesMap = useMemo(() => {

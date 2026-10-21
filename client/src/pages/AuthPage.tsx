@@ -131,7 +131,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
 
   const isLoading = loginMutation.isPending || signUpMutation.isPending || forgotMutation.isPending;
 
-  const fontFamily = isAr ? 'Cairo, Tajawal, system-ui, sans-serif' : 'Inter, system-ui, sans-serif';
+  const fontFamily = isAr ? 'Tajawal, Inter, sans-serif' : 'Inter, Tajawal, sans-serif';
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -189,7 +189,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           <h2 style={{ color: NAVY, fontSize: 20, fontWeight: 900, margin: '0 0 12px' }}>
             {isAr ? 'تحقق من بريدك الإلكتروني' : 'Check Your Email'}
           </h2>
-          <p style={{ color: '#4B5563', fontSize: 14, lineHeight: 1.7, margin: '0 0 24px' }}>
+          <p style={{ color: '#3D5A80', fontSize: 14, lineHeight: 1.7, margin: '0 0 24px' }}>
             {isAr ? 'أرسلنا رابط إعادة تعيين كلمة المرور إلى' : 'We sent a password reset link to'}<br />
             <strong style={{ color: NAVY }}>{email}</strong>
           </p>
@@ -218,7 +218,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
           <button
             onClick={onBackToPricing}
             style={{
-              background: 'none', border: 'none', color: '#7A9BB5', cursor: 'pointer',
+              background: 'none', border: 'none', color: '#506A88', cursor: 'pointer',
               fontSize: 13, fontFamily,
               display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: 0,
             }}
@@ -231,7 +231,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <img src={LOGO_URL} alt="Prime Fit" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 18, marginBottom: 10 }} />
           <h1 style={{ fontSize: 24, fontWeight: 900, color: NAVY, margin: '0 0 4px' }}>Prime Fit</h1>
-          <p style={{ color: '#7A9BB5', fontSize: 12, margin: 0 }}>
+          <p style={{ color: '#506A88', fontSize: 12, margin: 0 }}>
             {mode === 'login'
               ? (isAr ? 'مرحباً بعودتك' : 'Welcome back')
               : mode === 'signup'
@@ -275,7 +275,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
             </a>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1, height: 1, background: '#E2ECF4' }} />
-              <span style={{ color: '#7A9BB5', fontSize: 12 }}>{isAr ? 'أو' : 'or'}</span>
+              <span style={{ color: '#506A88', fontSize: 12 }}>{isAr ? 'أو' : 'or'}</span>
               <div style={{ flex: 1, height: 1, background: '#E2ECF4' }} />
             </div>
           </>
@@ -337,14 +337,15 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
                   onChange={e => setPassword(e.target.value)}
                   placeholder={mode === 'signup' ? (isAr ? '8 أحرف على الأقل' : 'At least 8 characters') : (isAr ? 'كلمة المرور' : 'Password')}
                   required
-                  style={{ ...inputStyle, paddingLeft: 44, direction: 'ltr', textAlign: 'left' }}
+                  style={{ ...inputStyle, paddingRight: 76, direction: 'ltr', textAlign: 'left' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', fontSize: 16,
+                    position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)',
+                    minWidth: 56, minHeight: 40, padding: '0 10px', borderRadius: 8,
+                    background: 'none', border: 'none', cursor: 'pointer', color: '#3D5A80', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                   }}
                 >
                   {showPassword ? (isAr ? 'إخفاء' : 'Hide') : (isAr ? 'إظهار' : 'Show')}
@@ -373,9 +374,8 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
                 type="button"
                 onClick={() => { setMode('forgot'); setError(''); }}
                 style={{
-                  background: 'none', border: 'none', color: SKY, fontSize: 12,
-                  cursor: 'pointer', fontFamily,
-                  fontWeight: 600, padding: 0,
+                  background: 'none', border: 'none', color: '#2A4A8C', fontSize: 13, minHeight: 36,
+                  cursor: 'pointer', fontFamily, fontWeight: 600, padding: 0,
                 }}
               >
                 {isAr ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
@@ -397,7 +397,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
         {/* Switch mode */}
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           {mode === 'login' && (
-            <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>
+            <p style={{ color: '#3D5A80', fontSize: 13, margin: 0 }}>
               {isAr ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
               <button
                 type="button"
@@ -409,7 +409,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
             </p>
           )}
           {mode === 'signup' && (
-            <p style={{ color: '#6B7280', fontSize: 13, margin: 0 }}>
+            <p style={{ color: '#3D5A80', fontSize: 13, margin: 0 }}>
               {isAr ? 'لديك حساب بالفعل؟' : 'Already have an account?'}{' '}
               <button
                 type="button"
@@ -424,7 +424,7 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
             <button
               type="button"
               onClick={() => { setMode('login'); setError(''); }}
-              style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, fontFamily }}
+              style={{ background: 'none', border: 'none', color: '#3D5A80', cursor: 'pointer', fontSize: 13, fontFamily }}
             >
               {isAr ? '← العودة لتسجيل الدخول' : '← Back to Login'}
             </button>
@@ -441,9 +441,11 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              color: '#25D366',
+              // WhatsApp green stays on the mark; as text it measured 2:1.
+              color: '#15803D',
               fontSize: 13,
               fontWeight: 700,
+              minHeight: 36,
               textDecoration: 'none',
               background: 'rgba(37,211,102,0.08)',
               borderRadius: 20,
@@ -456,13 +458,13 @@ export default function AuthPage({ onSuccess, onBackToPricing, selectedPlan }: A
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            Need Help?
+            {isAr ? 'تحتاج مساعدة؟' : 'Need Help?'}
           </a>
         </div>
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
       `}</style>
     </div>
   );

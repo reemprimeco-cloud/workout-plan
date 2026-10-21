@@ -50,7 +50,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
           animation: 'spin 0.8s linear infinite',
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{ color: SKY_LIGHT, fontSize: 14, fontFamily: 'Cairo, sans-serif' }}>
+        <div style={{ color: SKY_LIGHT, fontSize: 14, fontFamily: 'Tajawal, Inter, sans-serif' }}>
           جاري التحقق من الاشتراك...
         </div>
       </div>
@@ -77,7 +77,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
     <div dir="rtl" style={{
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${NAVY_DARK} 0%, ${NAVY} 100%)`,
-      fontFamily: 'Cairo, Tajawal, system-ui, sans-serif',
+      fontFamily: 'Tajawal, Inter, sans-serif',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -104,7 +104,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
         <h1 style={{ fontSize: 24, fontWeight: 900, color: NAVY, margin: '0 0 8px' }}>
           Prime Fit
         </h1>
-        <p style={{ color: '#7A9BB5', fontSize: 13, margin: '0 0 28px', lineHeight: 1.6 }}>
+        <p style={{ color: '#506A88', fontSize: 13, margin: '0 0 28px', lineHeight: 1.6 }}>
           برنامج التدريب الشامل
         </p>
 
@@ -120,7 +120,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
           <p style={{ margin: '0 0 8px', color: NAVY, fontWeight: 700, fontSize: 15 }}>
             الاشتراك غير مفعّل
           </p>
-          <p style={{ margin: 0, color: '#7A9BB5', fontSize: 13, lineHeight: 1.7 }}>
+          <p style={{ margin: 0, color: '#506A88', fontSize: 13, lineHeight: 1.7 }}>
             حسابك لا يملك اشتراكاً نشطاً حالياً.
             <br />
             يرجى التواصل مع المسؤول لتفعيل اشتراكك.
@@ -162,7 +162,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             padding: '14px',
             fontSize: 15,
             fontWeight: 900,
-            fontFamily: 'Cairo, sans-serif',
+            fontFamily: 'Tajawal, Inter, sans-serif',
             marginBottom: 12,
           }}
         >
@@ -185,7 +185,7 @@ export function LicenseGate({ children }: LicenseGateProps) {
             fontSize: 13,
             fontWeight: 700,
             cursor: 'pointer',
-            fontFamily: 'Cairo, sans-serif',
+            fontFamily: 'Tajawal, Inter, sans-serif',
             marginBottom: 16,
           }}
         >

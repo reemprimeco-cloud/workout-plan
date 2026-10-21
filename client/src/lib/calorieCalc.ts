@@ -134,8 +134,13 @@ export const CARDIO_MET: Record<string, number> = {
 };
 
 // ── Parse HH:MM time string to minutes since midnight ─────
+// Sessions saved before the time format was fixed hold Arabic-Indic digits.
+export function toAsciiDigits(t: string): string {
+  return t.replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660));
+}
+
 function timeToMinutes(t: string): number {
-  const parts = t.split(':');
+  const parts = toAsciiDigits(t).split(':');
   if (parts.length < 2) return 0;
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }

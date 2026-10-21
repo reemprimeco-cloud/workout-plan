@@ -427,7 +427,7 @@ export default function SpinWheel({ challengeId, lang, onClose }: SpinWheelProps
       background: "rgba(0,0,0,0.85)",
       display: "flex", alignItems: "center", justifyContent: "center",
       flexDirection: "column",
-      fontFamily: lang === "ar" ? "Cairo, Tajawal, sans-serif" : "Inter, system-ui, sans-serif",
+      fontFamily: lang === "ar" ? "Tajawal, Inter, sans-serif" : "Inter, Tajawal, sans-serif",
     }}>
       {/* Confetti layer */}
       <canvas
