@@ -205,6 +205,36 @@
         "canonical": "#15803D",
         "note": "Text-legible counterpart to signal-success. 5.02:1 on Surface White."
       },
+      "sea-lagoon": {
+        "role": "categorical",
+        "displayName": "Lagoon Teal",
+        "canonical": "#17697A",
+        "note": "Text-safe tone. Fill #1F7A8C, tint #E2F0F3. Lower body, carbs, streaks. Never status."
+      },
+      "sea-seagrass": {
+        "role": "categorical",
+        "displayName": "Seagrass",
+        "canonical": "#226B54",
+        "note": "Text-safe tone. Fill #287D63, tint #E3F1EC. Core/cardio/warm-up, fat. Never status."
+      },
+      "sea-indigo": {
+        "role": "categorical",
+        "displayName": "Dusk Indigo",
+        "canonical": "#4F5BA6",
+        "note": "Text-safe tone. Fill #4F5BA6, tint #E8EAF5. Upper body, protein. Never status."
+      },
+      "sea-slate": {
+        "role": "categorical",
+        "displayName": "Slate",
+        "canonical": "#4A5D78",
+        "note": "Text-safe tone. Fill #4A5D78, tint #E8ECF2. Recovery. Never status."
+      },
+      "sea-open-water": {
+        "role": "categorical",
+        "displayName": "Open Water",
+        "canonical": "#2B6F8E",
+        "note": "Text-safe tone. Fill #4A93B5, tint #E3F0F6. Aqua, water. Never status."
+      },
       "harbour-haze-text": {
         "role": "neutral",
         "displayName": "Harbour Haze Text",

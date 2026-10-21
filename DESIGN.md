@@ -14,6 +14,11 @@ colors:
   harbour-haze-text: "#506A88"
   tide-wash: "#EAF2F8"
   tide-inset: "#F3F7FB"
+  sea-lagoon: "#17697A"
+  sea-seagrass: "#226B54"
+  sea-indigo: "#4F5BA6"
+  sea-slate: "#4A5D78"
+  sea-open-water: "#2B6F8E"
   tide-line: "#D0DFF0"
   signal-success: "#22C55E"
   signal-warning: "#F59E0B"
@@ -186,6 +191,33 @@ warmth admitted only when the interface needs to signal state.
   same two hues at a lightness that can legally carry text. The display signals
   above measure 2.15:1 to 3.76:1 on Surface White — they are fills, dots and
   bars, never words. Any signal-coloured *text* uses this pair.
+
+### Categorical palette — the sea family
+Chosen by the owner in October 2026 (Option A of the colour chart) because the
+all-navy refresh had made categories indistinguishable. These colours tell
+*kinds of thing* apart. They never carry status; green, amber and red keep that.
+Each is listed as its text-safe tone (≥ 4.5:1 on white, on its own tint, and as
+a ground for white text), with the tint it sits on.
+
+| Name | Text-safe tone | Fill tone | Tint | Used for |
+|---|---|---|---|---|
+| **Lagoon Teal** | `#17697A` | `#1F7A8C` | `#E2F0F3` | Lower body · carbs · streaks · breakfast |
+| **Seagrass** | `#226B54` | `#287D63` | `#E3F1EC` | Core, cardio, warm-up, quick · fat · lunch |
+| **Dusk Indigo** | `#4F5BA6` | `#4F5BA6` | `#E8EAF5` | Upper body, chest & shoulders · protein · dinner |
+| **Slate** | `#4A5D78` | `#4A5D78` | `#E8ECF2` | Recovery: sauna, stretching, pilates, mobility · snack |
+| **Harbour Navy Light** | `#2A4A8C` | `#2A4A8C` | `#E5EAF4` | Full body, home workouts · totals · coffee |
+| **Open Water** | `#2B6F8E` | `#4A93B5` | `#E3F0F6` | Aqua · water and drinks · steps |
+
+- **Workout types are grouped, not individual.** Fourteen session types share
+  six colours by what they train, so a screen never shows fourteen hues.
+  `client/src/data/exercises.ts` and the iOS `ExerciseLibrary.json` hold the
+  same values.
+- **A session wears its type.** The active-session card or header takes the
+  type's text-safe tone as its ground, with white text on it.
+- **Tones by role in a set of tiles.** Stat tiles each take one tone for their
+  icon tile; the figure itself stays Deep Harbour Navy.
+- **iOS names** them `seaLagoon`, `seaSeagrass`, `seaIndigo`, `seaSlate`,
+  `seaNavyLight`, `seaOpenWater` (`PrimeFitTheme.swift`).
 
 ### Named Rules
 
@@ -466,9 +498,9 @@ it is the only sanctioned use of a border as emphasis.
   mean success, caution and error — nothing else.
 - **Don't** use pure black or neutral grey for text or shadow anywhere.
 - **Don't** trust the `.badge-*` colour names; three of them are blue.
-- **Don't** give each workout type its own hue. The fourteen session types each
-  carried one (orange, purple, red, yellow, pink…) and the active-session screen
-  painted itself in it; the session accent is Deep Harbour Navy for every type.
+- **Don't** give a workout type a colour from outside the sea family. The
+  fourteen types used to carry fourteen unrelated hues (orange, purple, red,
+  yellow, pink…); they now share six, grouped by what they train.
 - **Don't** colour a prescription. Rest time was traffic-lit green → red, which
   told people a 90-second rest was a problem.
 - **Don't** use an emoji as an icon. `AppIcons` is the icon set.
