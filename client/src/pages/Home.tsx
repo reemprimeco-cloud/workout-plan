@@ -553,10 +553,10 @@ function CheckInPanel({ onStart, stats, profile, onOpenProfile }: {
               key={type}
               style={{
                 background: 'white',
-                border: `2px solid ${isExpanded ? SKY : SKY_LIGHT}`,
+                border: `1.5px solid ${isExpanded ? def.color : 'transparent'}`,
                 borderRadius: 16,
                 overflow: 'hidden',
-                boxShadow: isExpanded ? `0 8px 20px ${NAVY}22` : '0 2px 8px rgba(27,46,94,0.06)',
+                boxShadow: isExpanded ? '0 8px 32px rgba(27,46,94,0.14)' : '0 4px 20px rgba(27,46,94,0.08)',
                 transition: 'all 0.2s',
                 gridColumn: isExpanded ? '1 / -1' : 'auto',
               }}
@@ -576,19 +576,21 @@ function CheckInPanel({ onStart, stats, profile, onOpenProfile }: {
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: 6 }}>
+                    {/* The type's tint from the sea family carries the icon, so a
+                        glance at the grid reads the body area before the words. */}
+                    <div style={{ marginBottom: 8, width: 52, height: 52, borderRadius: 14, background: def.bgColor, color: def.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {SESSION_ICON_URLS[type] ? (
                         <img
                           src={SESSION_ICON_URLS[type]}
-                          alt={nameDisplay}
-                          style={{ width: 56, height: 56, objectFit: 'contain', display: 'block' }}
+                          alt=""
+                          style={{ width: 40, height: 40, objectFit: 'contain', display: 'block' }}
                           onError={(e) => {
                             console.warn('[CMS] IMAGE SRC failed on home card:', type, SESSION_ICON_URLS[type]);
                             (e.target as HTMLImageElement).style.display = 'none';
                           }}
                         />
                       ) : (
-                        <span style={{ fontSize: 28 }}>{def.icon}</span>
+                        <AppIcons.Dumbbell size={24} />
                       )}
                     </div>
                     <div style={{ fontWeight: 800, color: NAVY, fontSize: 13, lineHeight: 1.3 }}>
@@ -598,13 +600,13 @@ function CheckInPanel({ onStart, stats, profile, onOpenProfile }: {
                       {descDisplay}
                     </div>
                     {sessionExercises.length > 0 && (
-                      <div style={{ fontSize: 11, color: '#3D5A80', marginTop: 4, fontWeight: 600 }}>
+                      <div style={{ fontSize: 11, color: def.color, marginTop: 4, fontWeight: 700 }}>
                         {sessionExercises.length} {lang === 'ar' ? 'تمرين' : 'exercises'}
                       </div>
                     )}
                   </div>
                   {sessionExercises.length > 0 && (
-                    <span style={{ color: SKY, fontSize: 14, marginTop: 4 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
+                    <span style={{ color: def.color, fontSize: 14, marginTop: 4 }}>{isExpanded ? <AppIcons.ChevronUp size={14} /> : <AppIcons.ChevronDown size={14} />}</span>
                   )}
                 </div>
               </button>

@@ -11,10 +11,6 @@ import { calcSessionCalories, toAsciiDigits } from '../lib/calorieCalc';
 import { AppIcons } from './AppIcons';
 import { toast } from 'sonner';
 
-// One accent for every session type. Each type used to bring its own hue
-// (orange, purple, yellow, pink...), several of which failed as text on white
-// and none of which belonged to the system.
-const ACCENT = '#1B2E5E';
 import { muscleGroupEn } from './WorkoutGuide';
 import { translateWeight, translateReps } from '../lib/exerciseTranslations';
 
@@ -35,6 +31,9 @@ export function ActiveSession({ session, tracker, gender = 'female', weightKg = 
   const isAr = lang === 'ar';
 
   const typeDef = sessionTypes[session.sessionType];
+  // The session wears its type's colour from the sea family; every value
+  // there is text-safe on white and carries white text (DESIGN.md).
+  const ACCENT = typeDef.color;
 
   // Elapsed time counter
   useEffect(() => {

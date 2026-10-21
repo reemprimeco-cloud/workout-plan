@@ -25,10 +25,10 @@ const SHADOW    = "0 2px 12px rgba(27,46,94,0.08)";
 const TEXT      = "#1B2E5E";
 const TEXT2     = "#4A6080";
 const MUTED     = "#8FA8C0";
-const C_PROTEIN = "#EF4444";
-const C_CARBS   = "#F59E0B";
-const C_FAT     = "#8B5CF6";
-const C_GREEN   = "#22C55E";
+const C_PROTEIN = "#4F5BA6";   // Dusk Indigo (sea family, DESIGN.md)
+const C_CARBS   = "#17697A";   // Lagoon Teal, text-safe tone
+const C_FAT     = "#226B54";   // Seagrass, text-safe tone
+const C_GREEN   = "#15803D";   // goal met: Signal Safe
 const DANGER    = "#EF4444";
 
 // ── Translations ───────────────────────────────────────────────────────────────
@@ -192,10 +192,10 @@ function IconStar({ size = 18, color = NAVY }: { size?: number; color?: string }
 
 // ── Meal type config ───────────────────────────────────────────────────────────
 const MEAL_CONFIG: Record<MealTypeKey, { icon: React.ReactNode; color: string; bg: string }> = {
-  breakfast: { icon: <IconSun size={18} color="#F59E0B" />, color: "#B45309", bg: "#FFFBEB" },
-  lunch:     { icon: <IconUtensils size={18} color="#22C55E" />, color: "#15803D", bg: "#F0FDF4" },
-  dinner:    { icon: <IconMoon size={18} color="#6366F1" />, color: "#6366F1", bg: "#EEF2FF" },
-  snack:     { icon: <IconApple size={18} color="#EF4444" />, color: "#EF4444", bg: "#FFF1F2" },
+  breakfast: { icon: <IconSun size={18} color="#17697A" />, color: "#17697A", bg: "#E2F0F3" },
+  lunch:     { icon: <IconUtensils size={18} color="#226B54" />, color: "#226B54", bg: "#E3F1EC" },
+  dinner:    { icon: <IconMoon size={18} color="#4F5BA6" />, color: "#4F5BA6", bg: "#E8EAF5" },
+  snack:     { icon: <IconApple size={18} color="#4A5D78" />, color: "#4A5D78", bg: "#E8ECF2" },
 };
 
 // ── Macro bar ──────────────────────────────────────────────────────────────────
@@ -402,12 +402,12 @@ function MealItem({ meal, lang, onDelete, onSaveToFav }: { meal: any; lang: stri
 // ── Quick-add picker modal ─────────────────────────────────────────────────────
 function QuickAddPicker({ lang, onSelect, onClose }: { lang: string; onSelect: (type: string) => void; onClose: () => void }) {
   const options = [
-    { type: "breakfast", icon: <IconSun size={22} color="#F59E0B" />, label: tl("breakfast", lang), bg: "#FFFBEB" },
-    { type: "lunch",     icon: <IconUtensils size={22} color="#22C55E" />, label: tl("lunch", lang), bg: "#F0FDF4" },
-    { type: "dinner",    icon: <IconMoon size={22} color="#6366F1" />, label: tl("dinner", lang), bg: "#EEF2FF" },
-    { type: "snack",     icon: <IconApple size={22} color="#EF4444" />, label: tl("snack", lang), bg: "#FFF1F2" },
-    { type: "drink",     icon: <IconDroplet size={22} color="#5BA3C4" />, label: tl("addDrink", lang), bg: "#F0F9FF" },
-    { type: "coffee",    icon: <IconCoffee size={22} color="#92400E" />, label: tl("addCoffee", lang), bg: "#FFFBEB" },
+    { type: "breakfast", icon: <IconSun size={22} color="#17697A" />, label: tl("breakfast", lang), bg: "#E2F0F3" },
+    { type: "lunch",     icon: <IconUtensils size={22} color="#226B54" />, label: tl("lunch", lang), bg: "#E3F1EC" },
+    { type: "dinner",    icon: <IconMoon size={22} color="#4F5BA6" />, label: tl("dinner", lang), bg: "#E8EAF5" },
+    { type: "snack",     icon: <IconApple size={22} color="#4A5D78" />, label: tl("snack", lang), bg: "#E8ECF2" },
+    { type: "drink",     icon: <IconDroplet size={22} color="#2B6F8E" />, label: tl("addDrink", lang), bg: "#E3F0F6" },
+    { type: "coffee",    icon: <IconCoffee size={22} color="#2A4A8C" />, label: tl("addCoffee", lang), bg: "#E5EAF4" },
   ];
 
   return (

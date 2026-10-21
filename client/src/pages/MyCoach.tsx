@@ -56,7 +56,14 @@ const INSIGHT_ICONS: Record<string, string> = {
   progress: 'stats', warning: 'warning', motivation: 'info', recommendation: 'target',
 };
 
+// Icon tile tones from the sea family, matching the Stats tab's tiles.
+const STAT_TONE: Record<string, [string, string]> = {
+  dumbbell: ['#2A4A8C', '#E5EAF4'], stats: ['#4F5BA6', '#E8EAF5'], trending_down: ['#4F5BA6', '#E8EAF5'],
+  check: ['#226B54', '#E3F1EC'], flame: ['#17697A', '#E2F0F3'],
+};
+
 function StatCard({ icon, value, label, color }: { icon: string; value: string | number; label: string; color: string }) {
+  const [ink, tint] = STAT_TONE[icon] ?? [NAVY, '#EAF2F8'];
   // One drawn icon family in navy; the value carries any signal colour.
   const iconEl = icon === 'dumbbell' ? <AppIcons.Dumbbell size={16} /> :
     icon === 'trending_down' ? <AppIcons.Trending size={16} style={{ transform: 'scaleY(-1)' }} /> :
@@ -70,8 +77,8 @@ function StatCard({ icon, value, label, color }: { icon: string; value: string |
       textAlign: 'center', flex: 1, minWidth: 0,
       boxShadow: '0 4px 20px rgba(27,46,94,0.08)',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: NAVY }}>
-        <span style={{ width: 28, height: 28, borderRadius: 9, background: '#EAF2F8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{iconEl}</span>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: ink }}>
+        <span style={{ width: 28, height: 28, borderRadius: 9, background: tint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{iconEl}</span>
       </div>
       <div style={{ color, fontSize: 16, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', fontFamily: 'Inter, Tajawal, sans-serif' }}>{value}</div>
       <div style={{ color: '#506A88', fontSize: 11, fontWeight: 500, marginTop: 4, lineHeight: 1.25 }}>{label}</div>

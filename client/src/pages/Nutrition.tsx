@@ -32,12 +32,12 @@ const TEXT2     = "#4A6080";
 const MUTED     = "#506A88";
 
 // Macro accent colors
-const C_PROTEIN = "#EF4444";   // red dot
-const C_CARBS   = "#F59E0B";   // amber dot
-const C_FAT     = "#8B5CF6";   // purple dot
+const C_PROTEIN = "#4F5BA6";   // Dusk Indigo (sea family, DESIGN.md)
+const C_CARBS   = "#17697A";   // Lagoon Teal, text-safe tone
+const C_FAT     = "#226B54";   // Seagrass, text-safe tone
 const C_CAL     = "#1B2E5E";   // navy (calorie ring)
-const C_GREEN   = "#22C55E";   // goal met bar
-const C_WATER   = "#5BA3C4";   // water blue
+const C_GREEN   = "#15803D";   // goal met: Signal Safe
+const C_WATER   = "#4A93B5";   // Open Water (fills only)
 
 // ── Translations ──────────────────────────────────────────────────────────────
 const T: Record<string, Record<string, string>> = {
@@ -276,7 +276,7 @@ function WaterCard({ lang, totalMl, goalMl, onAdd }: {
       <div style={{ background: "#E8EDF4", borderRadius: 8, height: 8, marginBottom: 16, overflow: "hidden" }}>
         <div style={{
           width: `${pct * 100}%`, height: "100%",
-          background: `linear-gradient(90deg, ${C_WATER}, #5BA3C4)`,
+          background: C_WATER,
           borderRadius: 8, transition: "width 0.5s ease",
         }} />
       </div>
@@ -350,7 +350,7 @@ function WeeklyChart({ trend, lang, goalCalories }: { trend: any[]; lang: string
                   )}
                   <div style={{
                     width: "100%", height: Math.max(h, 4),
-                    background: metGoal ? C_GREEN : (isToday ? "#CBD5E1" : "#CBD5E1"),
+                    background: metGoal ? C_GREEN : "#BFD6E6",
                     borderRadius: "5px 5px 0 0",
                     transition: "height 0.4s ease",
                     opacity: isToday ? 1 : 0.7,
@@ -908,9 +908,9 @@ function MealCard({ meal, lang, onDelete }: { meal: any; lang: string; onDelete:
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12, marginBottom: 12 }}>
             {[
-              { l: tl("protein", lang), v: meal.total_protein, c: C_PROTEIN, bg: "#FEF2F2" },
-              { l: tl("carbs",   lang), v: meal.total_carbs,   c: C_CARBS,   bg: "#FFFBEB" },
-              { l: tl("fat",     lang), v: meal.total_fat,     c: C_FAT,     bg: "#F5F3FF" },
+              { l: tl("protein", lang), v: meal.total_protein, c: C_PROTEIN, bg: "#E8EAF5" },
+              { l: tl("carbs",   lang), v: meal.total_carbs,   c: C_CARBS,   bg: "#E2F0F3" },
+              { l: tl("fat",     lang), v: meal.total_fat,     c: C_FAT,     bg: "#E3F1EC" },
             ].map(m => (
               <div key={m.l} style={{
                 background: m.bg, border: `1px solid ${m.c}22`,
@@ -1211,9 +1211,9 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {[
                   { k: "calories", label: tl("calories", lang), unit: "kcal", color: "#F97316", bg: "#FFF7ED" },
-                  { k: "protein",  label: tl("protein",  lang), unit: "g",    color: C_PROTEIN, bg: "#FEF2F2" },
-                  { k: "carbs",    label: tl("carbs",    lang), unit: "g",    color: C_CARBS,   bg: "#FFFBEB" },
-                  { k: "fat",      label: tl("fat",      lang), unit: "g",    color: C_FAT,     bg: "#F5F3FF" },
+                  { k: "protein",  label: tl("protein",  lang), unit: "g",    color: C_PROTEIN, bg: "#E8EAF5" },
+                  { k: "carbs",    label: tl("carbs",    lang), unit: "g",    color: C_CARBS,   bg: "#E2F0F3" },
+                  { k: "fat",      label: tl("fat",      lang), unit: "g",    color: C_FAT,     bg: "#E3F1EC" },
                 ].map(m => {
                   const isEditing = editingCell?.idx === idx && editingCell?.field === m.k;
                   return (
@@ -1271,9 +1271,9 @@ function ScannerTab({ lang, onSaved }: { lang: string; onSaved: () => void }) {
             <div style={{ display: "flex", gap: 8, justifyContent: "space-around" }}>
               {[
                 { l: tl("calories", lang), v: totals.calories, u: "kcal", c: "#F97316", bg: "#FFF7ED" },
-                { l: tl("protein",  lang), v: totals.protein,  u: "g",    c: C_PROTEIN, bg: "#FEF2F2" },
-                { l: tl("carbs",    lang), v: totals.carbs,    u: "g",    c: C_CARBS,   bg: "#FFFBEB" },
-                { l: tl("fat",      lang), v: totals.fat,      u: "g",    c: C_FAT,     bg: "#F5F3FF" },
+                { l: tl("protein",  lang), v: totals.protein,  u: "g",    c: C_PROTEIN, bg: "#E8EAF5" },
+                { l: tl("carbs",    lang), v: totals.carbs,    u: "g",    c: C_CARBS,   bg: "#E2F0F3" },
+                { l: tl("fat",      lang), v: totals.fat,      u: "g",    c: C_FAT,     bg: "#E3F1EC" },
               ].map(m => (
                 <div key={m.l} style={{
                   background: m.bg, border: `1px solid ${m.c}22`,
@@ -1488,13 +1488,13 @@ function QuickMealsGrid({ lang, mealType, setMealType }: {
                   <span style={{display:"inline-flex",alignItems:"center",gap:4}}><AppIcons.Flame size={12} className="text-orange-500" />{item.calories}</span>
                 </span>
                 <span style={{
-                  background: "#FEF2F2", color: C_PROTEIN,
+                  background: "#E8EAF5", color: C_PROTEIN,
                   borderRadius: 8, padding: "2px 6px", fontSize: 11, fontWeight: 600,
                 }}>
                   P {item.protein}g
                 </span>
                 <span style={{
-                  background: "#FFFBEB", color: C_CARBS,
+                  background: "#E2F0F3", color: C_CARBS,
                   borderRadius: 8, padding: "2px 6px", fontSize: 11, fontWeight: 600,
                 }}>
                   C {item.carbs}g
@@ -1565,9 +1565,9 @@ function ManualSearch({ lang, mealType, setMealType }: {
           <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
             {[
               { l: tl("calories", lang), v: result.portion.calories, u: "kcal", c: "#F97316", bg: "#FFF7ED" },
-              { l: tl("protein",  lang), v: result.portion.protein,  u: "g",    c: C_PROTEIN, bg: "#FEF2F2" },
-              { l: tl("carbs",    lang), v: result.portion.carbs,    u: "g",    c: C_CARBS,   bg: "#FFFBEB" },
-              { l: tl("fat",      lang), v: result.portion.fat,      u: "g",    c: C_FAT,     bg: "#F5F3FF" },
+              { l: tl("protein",  lang), v: result.portion.protein,  u: "g",    c: C_PROTEIN, bg: "#E8EAF5" },
+              { l: tl("carbs",    lang), v: result.portion.carbs,    u: "g",    c: C_CARBS,   bg: "#E2F0F3" },
+              { l: tl("fat",      lang), v: result.portion.fat,      u: "g",    c: C_FAT,     bg: "#E3F1EC" },
             ].map(m => (
               <div key={m.l} style={{
                 background: m.bg, border: `1px solid ${m.c}22`,

@@ -189,19 +189,20 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
       {/* ── Main Stats ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
-          { icon: 'flame', label: isAr ? 'أيام متتالية' : 'Day Streak', value: stats.streak },
-          { icon: 'trophy', label: isAr ? 'إجمالي الجلسات' : 'Total Sessions', value: stats.totalSessions },
-          { icon: 'calendar', label: isAr ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek },
-          { icon: 'calendarcheck', label: isAr ? 'هذا الشهر' : 'This Month', value: stats.thisMonth },
+          { icon: 'flame', label: isAr ? 'أيام متتالية' : 'Day Streak', value: stats.streak, ink: '#17697A', tint: '#E2F0F3' },
+          { icon: 'trophy', label: isAr ? 'إجمالي الجلسات' : 'Total Sessions', value: stats.totalSessions, ink: '#2A4A8C', tint: '#E5EAF4' },
+          { icon: 'calendar', label: isAr ? 'هذا الأسبوع' : 'This Week', value: stats.thisWeek, ink: '#4F5BA6', tint: '#E8EAF5' },
+          { icon: 'calendarcheck', label: isAr ? 'هذا الشهر' : 'This Month', value: stats.thisMonth, ink: '#226B54', tint: '#E3F1EC' },
         ].map(s => (
-          // Four counts of the same kind of thing, so they share one colour:
-          // red and green here would claim an alarm or a success that is not there.
+          // Each count gets a sea-family icon tile so the four read apart at a
+          // glance; the figures stay navy. No red or green: a streak is not an
+          // alarm and a count is not a success.
           <div key={s.label} style={{
             background: 'white', borderRadius: 16, padding: '14px 16px 16px',
             boxShadow: '0 4px 20px rgba(27,46,94,0.08)',
             display: 'flex', flexDirection: 'column', gap: 10,
           }}>
-            <span style={{ width: 34, height: 34, borderRadius: 10, background: '#EAF2F8', color: NAVY, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ width: 34, height: 34, borderRadius: 10, background: s.tint, color: s.ink, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
               {s.icon === 'flame' ? <AppIcons.Flame size={18} /> : s.icon === 'trophy' ? <AppIcons.Trophy size={18} /> : s.icon === 'calendar' ? <AppIcons.Calendar size={18} /> : <AppIcons.CalendarCheck size={18} />}
             </span>
             <div>
@@ -404,14 +405,15 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                     {isAr ? def.nameAr.split(' - ')[0] : def.nameEn}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>
-                    {count} {isAr ? 'جلسة' : 'sessions'}
+                    {count} {isAr ? (count === 2 ? 'جلستان' : count >= 3 && count <= 10 ? 'جلسات' : 'جلسة') : (count === 1 ? 'session' : 'sessions')}
                   </span>
                 </div>
-                <div style={{ height: 8, background: '#D0DFF0', borderRadius: 4, overflow: 'hidden' }}>
+                {/* Each bar in its session type's colour, on that type's tint. */}
+                <div style={{ height: 8, background: def.bgColor, borderRadius: 4, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${(count / maxCount) * 100}%`,
-                    background: `linear-gradient(90deg, ${SKY}, ${NAVY})`,
-                    borderRadius: 4, transition: 'width 0.5s ease',
+                    background: def.color,
+                    borderRadius: 4, transition: 'width 0.5s cubic-bezier(.16,1,.3,1)',
                   }} />
                 </div>
               </div>
@@ -533,7 +535,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                       formatter={(v: number) => [`${v} kcal`, isAr ? 'سعرات' : 'Cal']}
                       contentStyle={{ fontSize: 12, borderRadius: 8 }}
                     />
-                    <Bar dataKey="calories" fill="#5BA3C4" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="calories" fill="#1F7A8C" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -553,7 +555,7 @@ export function StatsPanel({ stats, weightLog, sessions, profile, onLogWeight, o
                       formatter={(v: number) => [`${v} kcal`, isAr ? 'سعرات' : 'Cal']}
                       contentStyle={{ fontSize: 12, borderRadius: 8 }}
                     />
-                    <Bar dataKey="calories" fill="#2A4A8C" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="calories" fill="#4F5BA6" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

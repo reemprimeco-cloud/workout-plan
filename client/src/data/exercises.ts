@@ -697,6 +697,12 @@ export const cardioTemplates: CardioTemplate[] = [
 ];
 
 // ===== SESSION TYPE DEFINITIONS =====
+// Session colours come from the sea family (DESIGN.md › Categorical palette),
+// grouped by what the session trains so the app never shows fourteen hues at
+// once: lower body Lagoon Teal, upper body Dusk Indigo, core / cardio /
+// warm-up Seagrass, full body and home Harbour Navy Light, aqua Open Water,
+// recovery Slate. `color` is the text-safe tone (>= 4.5:1 on white and on its
+// own `bgColor` tint, and as a ground for white text).
 export const sessionTypes: Record<SessionType, {
   nameAr: string;
   nameEn: string;
@@ -711,7 +717,7 @@ export const sessionTypes: Record<SessionType, {
   lower_body: {
     nameAr: 'الجزء السفلي - الأرداف والفخذين',
     nameEn: 'Lower Body — Glutes & Thighs',
-    icon: '🦵', color: '#E05A00', bgColor: '#FFF0E8',
+    icon: '🦵', color: '#17697A', bgColor: '#E2F0F3',
     description: 'تركيز على الأرداف والفخذين وحرق دهون الأرداف',
     descriptionEn: 'Focus on glutes, thighs, and lower body fat burn',
     defaultExercises: ['squat_db', 'lunge_db', 'hip_thrust', 'rdl', 'leg_press', 'donkey_kicks', 'calf_raises'],
@@ -720,7 +726,7 @@ export const sessionTypes: Record<SessionType, {
   upper_arms: {
     nameAr: 'الجزء العلوي - الذراعان والظهر',
     nameEn: 'Upper Body — Arms & Back',
-    icon: '💪', color: '#7C3AED', bgColor: '#F0E8FF',
+    icon: '💪', color: '#4F5BA6', bgColor: '#E8EAF5',
     description: 'تركيز على الذراعين والظهر وحرق دهون اليدين',
     descriptionEn: 'Focus on arms, back definition, and upper body strength',
     defaultExercises: ['bicep_curl', 'tricep_ext', 'lat_pulldown', 'db_row', 'hammer_curl', 'tricep_pushdown'],
@@ -729,7 +735,7 @@ export const sessionTypes: Record<SessionType, {
   core_cardio: {
     nameAr: 'البطن والكور + كارديو مكثف',
     nameEn: 'Core & Cardio',
-    icon: '🔥', color: '#DC2626', bgColor: '#FFE8E8',
+    icon: '🔥', color: '#226B54', bgColor: '#E3F1EC',
     description: 'تركيز على حرق دهون البطن وتقوية عضلات الكور',
     descriptionEn: 'Burn belly fat and strengthen core muscles',
     defaultExercises: ['plank', 'crunches', 'bicycle_crunches', 'leg_raises', 'russian_twist', 'mountain_climbers'],
@@ -738,7 +744,7 @@ export const sessionTypes: Record<SessionType, {
   chest_shoulders: {
     nameAr: 'الصدر والأكتاف',
     nameEn: 'Chest & Shoulders',
-    icon: '🏅', color: '#2563EB', bgColor: '#E8F0FF',
+    icon: '🏅', color: '#4F5BA6', bgColor: '#E8EAF5',
     description: 'تقوية الصدر والأكتاف وتحسين القوام',
     descriptionEn: 'Strengthen chest and shoulders, improve posture',
     defaultExercises: ['chest_press', 'shoulder_press', 'lateral_raise', 'chest_fly', 'tricep_kickback', 'side_plank'],
@@ -747,7 +753,7 @@ export const sessionTypes: Record<SessionType, {
   full_body: {
     nameAr: 'الجسم الكامل',
     nameEn: 'Full Body',
-    icon: '⚡', color: '#059669', bgColor: '#E8F5EE',
+    icon: '⚡', color: '#2A4A8C', bgColor: '#E5EAF4',
     description: 'تمارين مركبة تعمل على الجسم كاملاً',
     descriptionEn: 'Compound movements targeting the entire body',
     defaultExercises: ['squat_db', 'chest_press', 'lat_pulldown', 'hip_thrust', 'plank', 'bicep_curl', 'tricep_ext'],
@@ -756,7 +762,7 @@ export const sessionTypes: Record<SessionType, {
   aqua: {
     nameAr: 'كلاس الأكوا (Aqua Aerobics)',
     nameEn: 'Aqua Aerobics Class',
-    icon: '🏊‍♀️', color: '#0891B2', bgColor: '#E0F7FA',
+    icon: '🏊‍♀️', color: '#2B6F8E', bgColor: '#E3F0F6',
     description: 'تمارين مائية لحرق الدهون بدون ضغط على المفاصل',
     descriptionEn: 'Water-based exercises for fat burn without joint stress',
     defaultExercises: [],
@@ -765,7 +771,7 @@ export const sessionTypes: Record<SessionType, {
   sauna: {
     nameAr: 'جلسة السونا',
     nameEn: 'Sauna Session',
-    icon: '🧖‍♀️', color: '#B45309', bgColor: '#FEF3C7',
+    icon: '🧖‍♀️', color: '#4A5D78', bgColor: '#E8ECF2',
     description: 'جلسة سونا للتعافي وحرق السعرات وإزالة السموم',
     descriptionEn: 'Sauna session for recovery, calorie burn, and detox',
     defaultExercises: [],
@@ -774,7 +780,7 @@ export const sessionTypes: Record<SessionType, {
   active_rest: {
     nameAr: "تمارين الكارديو",
     nameEn: 'Cardio',
-    icon: '🏃', color: '#1B2E5E', bgColor: '#EEF4FF',
+    icon: '🏃', color: '#226B54', bgColor: '#E3F1EC',
     description: 'تمارين الكارديو والإحماء',
     descriptionEn: 'Cardio and endurance training sessions',
     defaultExercises: [],
@@ -783,7 +789,7 @@ export const sessionTypes: Record<SessionType, {
   warm_up: {
     nameAr: 'الإحماء الديناميكي',
     nameEn: 'Warm-Up',
-    icon: '🔥', color: '#EA580C', bgColor: '#FFF7ED',
+    icon: '🔥', color: '#226B54', bgColor: '#E3F1EC',
     description: 'تمارين إحماء ديناميكية قبل التمرين',
     descriptionEn: 'Dynamic warm-up exercises before workouts',
     defaultExercises: ['warmup_neck_rolls', 'warmup_arm_circles', 'warmup_hip_circles', 'warmup_leg_swings', 'warmup_jumping_jacks', 'warmup_high_knees'],
@@ -792,7 +798,7 @@ export const sessionTypes: Record<SessionType, {
   stretching: {
     nameAr: 'الإطالة والتعافي',
     nameEn: 'Stretching & Recovery',
-    icon: '🧘', color: '#0D9488', bgColor: '#F0FDFA',
+    icon: '🧘', color: '#4A5D78', bgColor: '#E8ECF2',
     description: 'تمارين إطالة وتعافي بعد التمرين',
     descriptionEn: 'Post-workout stretching and recovery sessions',
     defaultExercises: ['stretch_quad', 'stretch_hamstring', 'stretch_hip_flexor', 'stretch_chest', 'stretch_shoulder', 'stretch_child_pose'],
@@ -801,7 +807,7 @@ export const sessionTypes: Record<SessionType, {
   home_workouts: {
     nameAr: 'تمارين المنزل',
     nameEn: 'Home Workouts',
-    icon: '🏠', color: '#7C3AED', bgColor: '#F5F3FF',
+    icon: '🏠', color: '#2A4A8C', bgColor: '#E5EAF4',
     description: 'تمارين بدون معدات يمكن أداؤها في المنزل',
     descriptionEn: 'No-equipment workouts you can do at home',
     defaultExercises: ['home_pushup', 'home_squat', 'home_lunge', 'home_glute_bridge', 'home_plank', 'home_mountain_climbers'],
@@ -810,7 +816,7 @@ export const sessionTypes: Record<SessionType, {
   pilates: {
     nameAr: 'البيلاتس',
     nameEn: 'Pilates',
-    icon: '🤸', color: '#DB2777', bgColor: '#FDF2F8',
+    icon: '🤸', color: '#4A5D78', bgColor: '#E8ECF2',
     description: 'تمارين البيلاتس للمرونة وقوة الكور',
     descriptionEn: 'Pilates exercises for flexibility and core strength',
     defaultExercises: ['pilates_hundred', 'pilates_roll_up', 'pilates_single_leg_stretch', 'pilates_double_leg_stretch', 'pilates_spine_stretch', 'pilates_swan'],
@@ -819,7 +825,7 @@ export const sessionTypes: Record<SessionType, {
   mobility: {
     nameAr: 'الحركة والمرونة',
     nameEn: 'Mobility & Flexibility',
-    icon: '🦵', color: '#2563EB', bgColor: '#EFF6FF',
+    icon: '🦵', color: '#4A5D78', bgColor: '#E8ECF2',
     description: 'روتين الحركة وتحسين المرونة',
     descriptionEn: 'Mobility routines and flexibility improvement',
     defaultExercises: ['mob_thoracic_rotation', 'mob_hip_90_90', 'mob_ankle_circles', 'mob_cat_cow', 'mob_world_greatest', 'mob_pigeon_pose'],
@@ -828,7 +834,7 @@ export const sessionTypes: Record<SessionType, {
   quick_workouts: {
     nameAr: 'تمارين سريعة',
     nameEn: 'Quick Workouts',
-    icon: '⚡', color: '#CA8A04', bgColor: '#FEFCE8',
+    icon: '⚡', color: '#226B54', bgColor: '#E3F1EC',
     description: 'جلسات تمرين سريعة من 5 إلى 10 دقائق',
     descriptionEn: 'Fast 5-10 minute workout sessions',
     defaultExercises: ['quick_burpees', 'quick_jumping_jacks', 'quick_high_knees', 'quick_squat_jumps', 'quick_pushup', 'quick_plank'],
