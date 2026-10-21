@@ -9,7 +9,6 @@ import { SocketProvider } from "./contexts/SocketContext";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import Home from "./pages/Home";
 import AdminPanel from "./pages/AdminPanel";
-import Pricing from "./pages/Pricing";
 import { SubscriptionSuccess, SubscriptionError } from "./pages/SubscriptionResult";
 import { LicenseGate } from "./components/LicenseGate";
 import AuthPage from "./pages/AuthPage";
@@ -17,7 +16,6 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import { trpc } from "@/lib/trpc";
 import AdminNotificationPopup from "./components/AdminNotificationPopup";
-import PricingBeforeAuth from "./pages/PricingBeforeAuth";
 import LegalPage from "./pages/LegalPage";
 import InstallPromptBanner from "./components/InstallPromptBanner";
 import { useEffect } from "react";
@@ -46,7 +44,6 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/admin"} component={AdminPanel} />
-      <Route path={"/pricing"} component={Pricing} />
       <Route path={"/subscription/success"} component={SubscriptionSuccess} />
       <Route path={"/subscription/error"} component={SubscriptionError} />
       <Route path={"/reset-password"} component={ResetPasswordPage} />
@@ -71,9 +68,18 @@ function AppWithSocket() {
     retry: false,
     refetchOnWindowFocus: false,
   });
-  // /profile-setup is NOT a public page — users must be logged in to access it.
-  // Unauthenticated visitors hitting /profile-setup will be redirected to AuthPage first.
-  const isPublicPage = ["/pricing", "/subscription/success", "/subscription/error", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname);
+  // The web is not a storefront. Customers subscribe and train in the iPhone
+  // app; the only pages that stay reachable without a session are the three
+  // that cannot be gated without breaking something concrete:
+  //
+  //   /privacy, /terms   — submitted to Apple in the app's metadata and
+  //                        checked during review
+  //   /reset-password    — the app's "Forgot password?" email links here, so
+  //                        gating it breaks recovery for every iPhone user
+  //
+  // /profile-setup is deliberately absent: it needs a session, and an
+  // unauthenticated visitor is sent to sign in first.
+  const isPublicPage = ["/reset-password", "/privacy", "/terms"].includes(window.location.pathname);
   const isAdminPage = window.location.pathname === "/admin";
 
   // While auth check is in progress, show a full-screen spinner to prevent
@@ -99,14 +105,16 @@ function AppWithSocket() {
     );
   }
 
-  // For unauthenticated users on non-public pages: show Pricing first, then Auth
-  // Legal pages (/privacy, /terms) are always accessible without login
+  // An unauthenticated visitor is asked to sign in, not sold to. The web no
+  // longer carries a plan-selection step: prices and checkout live in the App
+  // Store, so leading with a pricing screen here would quote a payment path
+  // that is no longer reachable.
   const isLegalPage = ["/privacy", "/terms"].includes(window.location.pathname);
   if (!authLoading && !currentUser && !isPublicPage && !isAdminPage && !isLegalPage) {
     return (
       <TooltipProvider>
         <Toaster />
-        <PricingBeforeAuth />
+        <AuthPage />
       </TooltipProvider>
     );
   }

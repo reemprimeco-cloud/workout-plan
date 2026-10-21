@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-21T00:00:00Z",
+  "title": "Design System: Prime Fit",
+  "extensions": {
+    "colorMeta": {
+      "deep-harbour-navy": {
+        "role": "primary",
+        "displayName": "Deep Harbour Navy",
+        "canonical": "#1B2E5E",
+        "tonalRamp": [
+          "oklch(15% 0.055 264)",
+          "oklch(24% 0.075 264)",
+          "oklch(32% 0.090 264)",
+          "oklch(44% 0.098 264)",
+          "oklch(57% 0.085 264)",
+          "oklch(71% 0.060 264)",
+          "oklch(85% 0.034 264)",
+          "oklch(95% 0.014 264)"
+        ]
+      },
+      "harbour-navy-light": {
+        "role": "primary",
+        "displayName": "Harbour Navy Light",
+        "canonical": "#2A4A8C",
+        "tonalRamp": [
+          "oklch(16% 0.060 266)",
+          "oklch(26% 0.085 266)",
+          "oklch(38% 0.105 266)",
+          "oklch(48% 0.112 266)",
+          "oklch(60% 0.092 266)",
+          "oklch(73% 0.064 266)",
+          "oklch(86% 0.036 266)",
+          "oklch(96% 0.015 266)"
+        ]
+      },
+      "shallow-water-blue": {
+        "role": "secondary",
+        "displayName": "Shallow Water Blue",
+        "canonical": "#7BB8D4",
+        "tonalRamp": [
+          "oklch(15% 0.030 232)",
+          "oklch(26% 0.045 232)",
+          "oklch(38% 0.058 232)",
+          "oklch(50% 0.066 232)",
+          "oklch(62% 0.068 232)",
+          "oklch(74% 0.062 232)",
+          "oklch(86% 0.038 232)",
+          "oklch(96% 0.014 232)"
+        ]
+      },
+      "tide-light": {
+        "role": "secondary",
+        "displayName": "Tide Light",
+        "canonical": "#A8D4E8",
+        "tonalRamp": [
+          "oklch(16% 0.024 228)",
+          "oklch(28% 0.036 228)",
+          "oklch(41% 0.046 228)",
+          "oklch(54% 0.052 228)",
+          "oklch(66% 0.050 228)",
+          "oklch(78% 0.042 228)",
+          "oklch(88% 0.028 228)",
+          "oklch(97% 0.010 228)"
+        ]
+      },
+      "open-water-blue": {
+        "role": "tertiary",
+        "displayName": "Open Water Blue",
+        "canonical": "#5BA3C4",
+        "tonalRamp": [
+          "oklch(15% 0.034 234)",
+          "oklch(26% 0.052 234)",
+          "oklch(37% 0.066 234)",
+          "oklch(48% 0.076 234)",
+          "oklch(60% 0.078 234)",
+          "oklch(73% 0.062 234)",
+          "oklch(86% 0.036 234)",
+          "oklch(96% 0.013 234)"
+        ]
+      },
+      "sea-mist": {
+        "role": "neutral",
+        "displayName": "Sea Mist",
+        "canonical": "#F0F4F8",
+        "tonalRamp": [
+          "oklch(18% 0.010 250)",
+          "oklch(30% 0.013 250)",
+          "oklch(43% 0.015 250)",
+          "oklch(56% 0.015 250)",
+          "oklch(68% 0.014 250)",
+          "oklch(80% 0.012 250)",
+          "oklch(90% 0.010 250)",
+          "oklch(97% 0.006 250)"
+        ]
+      },
+      "harbour-mid": {
+        "role": "neutral",
+        "displayName": "Harbour Mid",
+        "canonical": "#3D5A80",
+        "tonalRamp": [
+          "oklch(16% 0.038 256)",
+          "oklch(27% 0.052 256)",
+          "oklch(39% 0.062 256)",
+          "oklch(50% 0.064 256)",
+          "oklch(62% 0.056 256)",
+          "oklch(75% 0.042 256)",
+          "oklch(87% 0.024 256)",
+          "oklch(96% 0.010 256)"
+        ]
+      },
+      "harbour-haze": {
+        "role": "neutral",
+        "displayName": "Harbour Haze",
+        "canonical": "#7A9BB5",
+        "tonalRamp": [
+          "oklch(17% 0.026 240)",
+          "oklch(29% 0.036 240)",
+          "oklch(41% 0.044 240)",
+          "oklch(53% 0.046 240)",
+          "oklch(65% 0.044 240)",
+          "oklch(77% 0.034 240)",
+          "oklch(88% 0.022 240)",
+          "oklch(97% 0.009 240)"
+        ]
+      },
+      "tide-line": {
+        "role": "neutral",
+        "displayName": "Tide Line",
+        "canonical": "#D0DFF0",
+        "tonalRamp": [
+          "oklch(18% 0.018 248)",
+          "oklch(30% 0.026 248)",
+          "oklch(43% 0.032 248)",
+          "oklch(56% 0.034 248)",
+          "oklch(68% 0.032 248)",
+          "oklch(80% 0.026 248)",
+          "oklch(89% 0.018 248)",
+          "oklch(97% 0.007 248)"
+        ]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(28% 0 0)",
+          "oklch(41% 0 0)",
+          "oklch(54% 0 0)",
+          "oklch(67% 0 0)",
+          "oklch(80% 0 0)",
+          "oklch(92% 0 0)",
+          "oklch(100% 0 0)"
+        ]
+      },
+      "signal-success": {
+        "role": "tertiary",
+        "displayName": "Signal Success",
+        "canonical": "#22C55E",
+        "tonalRamp": [
+          "oklch(20% 0.055 150)",
+          "oklch(32% 0.090 150)",
+          "oklch(44% 0.125 150)",
+          "oklch(56% 0.155 150)",
+          "oklch(68% 0.168 150)",
+          "oklch(79% 0.130 150)",
+          "oklch(89% 0.075 150)",
+          "oklch(96% 0.028 150)"
+        ]
+      },
+      "signal-warning": {
+        "role": "tertiary",
+        "displayName": "Signal Warning",
+        "canonical": "#F59E0B",
+        "tonalRamp": [
+          "oklch(22% 0.045 72)",
+          "oklch(34% 0.075 72)",
+          "oklch(47% 0.108 72)",
+          "oklch(59% 0.135 72)",
+          "oklch(71% 0.152 72)",
+          "oklch(82% 0.120 72)",
+          "oklch(91% 0.068 72)",
+          "oklch(97% 0.026 72)"
+        ]
+      },
+      "signal-danger": {
+        "role": "tertiary",
+        "displayName": "Signal Danger",
+        "canonical": "#EF4444",
+        "tonalRamp": [
+          "oklch(21% 0.060 27)",
+          "oklch(33% 0.100 27)",
+          "oklch(45% 0.145 27)",
+          "oklch(57% 0.185 27)",
+          "oklch(66% 0.200 27)",
+          "oklch(78% 0.145 27)",
+          "oklch(89% 0.080 27)",
+          "oklch(96% 0.030 27)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page and major section titles. Inter 800 at 20px." },
+      "headline": { "displayName": "Headline", "purpose": "Card titles and sub-section heads. All h1-h6 default here." },
+      "title": { "displayName": "Title", "purpose": "Tab labels, button text, emphasised rows." },
+      "body": { "displayName": "Body", "purpose": "Running text, table cells, descriptions. Tajawal leads the stack." },
+      "label": { "displayName": "Label", "purpose": "Badges, captions, metadata. Error text drops to 11px at the same weight." }
+    },
+    "shadows": [
+      {
+        "name": "ambient-rest",
+        "value": "0 4px 20px rgba(27,46,94,0.08)",
+        "purpose": "Every card and panel at rest. Navy-tinted so it reads as light rather than dirt."
+      },
+      {
+        "name": "ambient-lift",
+        "value": "0 8px 32px rgba(27,46,94,0.18)",
+        "purpose": "Hover, paired with translateY(-2px). Belongs only to surfaces that can actually be picked up."
+      },
+      {
+        "name": "selection-ring",
+        "value": "0 0 0 4px rgba(27,46,94,0.1)",
+        "purpose": "A selected day card. Marks state, not height."
+      },
+      {
+        "name": "pulse-glow",
+        "value": "0 0 0 0 rgba(123,184,212,0.4) -> 0 0 0 8px rgba(123,184,212,0)",
+        "purpose": "Attention pulse keyframe in Shallow Water Blue. Used sparingly on elements awaiting action."
+      }
+    ],
+    "motion": [
+      { "name": "surface-transition", "value": "all 0.3s ease", "purpose": "Card hover: shadow lift plus 2px rise." },
+      { "name": "haptic-press", "value": "transform 0.08s ease, opacity 0.08s ease", "purpose": "Press feedback: scale(0.95) and 0.85 opacity. The system's touch acknowledgement." },
+      { "name": "field-focus", "value": "border-color 0.2s", "purpose": "Input border shifting to Deep Harbour Navy on focus. No ring, no glow." },
+      { "name": "tab-enter", "value": "tabFadeIn 0.2s ease-out forwards", "purpose": "Tab panel entrance: 8px rise with fade." },
+      { "name": "content-enter", "value": "fadeInUp 0.5s ease forwards", "purpose": "First-paint entrance for content blocks: 20px rise with fade." },
+      { "name": "progress-fill", "value": "width 1s ease", "purpose": "Progress bar filling along the navy-to-sky gradient." },
+      { "name": "skeleton-shimmer", "value": "skeleton-shimmer 1.5s infinite", "purpose": "Loading placeholder sweep across Tide Line and Sea Mist." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-max", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single highest-intent action on a surface. Full width inside cards and forms.",
+      "html": "<button class=\"ds-btn-primary\">ابدأ الآن</button>",
+      "css": ".ds-btn-primary { width: 100%; background: var(--primary, #1B2E5E); color: #fff; font-family: 'Inter', 'Tajawal', sans-serif; font-weight: 700; font-size: 15px; border: none; border-radius: 12px; padding: 13px 16px; cursor: pointer; transition: background 0.2s ease, transform 0.08s ease, opacity 0.08s ease; } .ds-btn-primary:hover { background: #16254b; } .ds-btn-primary:focus-visible { outline: 2px solid var(--secondary, #7BB8D4); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.95); opacity: 0.85; }"
+    },
+    {
+      "name": "Success Button",
+      "kind": "button",
+      "refersTo": "button-success",
+      "description": "Reserved for the free-trial path, where the action is a gift rather than a charge.",
+      "html": "<button class=\"ds-btn-success\">ابدأ تجربتك المجانية</button>",
+      "css": ".ds-btn-success { width: 100%; background: #22C55E; color: #fff; font-family: 'Inter', 'Tajawal', sans-serif; font-weight: 700; font-size: 15px; border: none; border-radius: 12px; padding: 13px 16px; cursor: pointer; transition: background 0.2s ease, transform 0.08s ease, opacity 0.08s ease; } .ds-btn-success:hover { background: #1aa74e; } .ds-btn-success:focus-visible { outline: 2px solid var(--primary, #1B2E5E); outline-offset: 2px; } .ds-btn-success:active { transform: scale(0.95); opacity: 0.85; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The system's primary container. Surface White on a Sea Mist ground, lifting 2px on hover.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">تمرين اليوم</h3><p class=\"ds-card-body\">خمسة تمارين · ‎~45 دقيقة</p></div>",
+      "css": ".ds-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(27,46,94,0.08); transition: all 0.3s ease; } .ds-card:hover { box-shadow: 0 8px 32px rgba(27,46,94,0.18); transform: translateY(-2px); } .ds-card-title { margin: 0 0 6px; font-family: 'Inter', 'Tajawal', sans-serif; font-weight: 700; font-size: 17px; color: var(--primary, #1B2E5E); } .ds-card-body { margin: 0; font-family: 'Tajawal', 'Inter', sans-serif; font-size: 14px; line-height: 1.6; color: #3D5A80; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Fully pilled status marker. Pale tinted fill with saturated text from the same family.",
+      "html": "<span class=\"ds-badge\">نشط</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-family: 'Inter', 'Tajawal', sans-serif; font-size: 12px; font-weight: 600; background: #E8F0FF; color: var(--primary, #1B2E5E); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Leading-icon field. Border shifts to navy on focus with no ring or glow.",
+      "html": "<div class=\"ds-field\"><span class=\"ds-field-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"/><path d=\"m22 7-10 5L2 7\"/></svg></span><input class=\"ds-field-input\" type=\"email\" placeholder=\"البريد الإلكتروني\" /></div>",
+      "css": ".ds-field { position: relative; } .ds-field-icon { position: absolute; top: 50%; transform: translateY(-50%); right: 12px; color: #7A9BB5; pointer-events: none; display: flex; } .ds-field-input { width: 100%; box-sizing: border-box; background: #fff; border: 1.5px solid var(--border, #D0DFF0); border-radius: 10px; padding: 11px 40px 11px 12px; font-family: 'Tajawal', 'Inter', sans-serif; font-size: 14px; color: var(--primary, #1B2E5E); outline: none; transition: border-color 0.2s; } .ds-field-input::placeholder { color: #7A9BB5; } .ds-field-input:focus { border-color: var(--primary, #1B2E5E); }"
+    },
+    {
+      "name": "Week Tabs",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Segmented navigation. Active fills navy; resting tabs carry a Tide Line border.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab--active\">الأسبوع ١</button><button class=\"ds-tab\">الأسبوع ٢</button><button class=\"ds-tab\">الأسبوع ٣</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 8px; } .ds-tab { padding: 10px 24px; border-radius: 10px; font-family: 'Inter', 'Tajawal', sans-serif; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.3s ease; border: 2px solid var(--border, #D0DFF0); background: #fff; color: #3D5A80; } .ds-tab:hover { border-color: var(--secondary, #7BB8D4); } .ds-tab:focus-visible { outline: 2px solid var(--secondary, #7BB8D4); outline-offset: 2px; } .ds-tab--active { background: var(--primary, #1B2E5E); color: #fff; border-color: var(--primary, #1B2E5E); }"
+    },
+    {
+      "name": "Progress Bar",
+      "kind": "custom",
+      "description": "Signature component. The cool spectrum itself, used to show progress through it.",
+      "html": "<div class=\"ds-progress\"><div class=\"ds-progress-fill\"></div></div>",
+      "css": ".ds-progress { height: 12px; background: var(--border, #D0DFF0); border-radius: 6px; overflow: hidden; } .ds-progress-fill { height: 100%; width: 68%; background: linear-gradient(90deg, var(--secondary, #7BB8D4), var(--primary, #1B2E5E)); border-radius: 6px; transition: width 1s ease; }"
+    },
+    {
+      "name": "Section Header",
+      "kind": "custom",
+      "description": "Signature component. How every major block announces itself, and the only sanctioned use of a border as emphasis.",
+      "html": "<div class=\"ds-section-header\"><span class=\"ds-section-icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m6.5 6.5 11 11\"/><path d=\"m21 21-1-1\"/><path d=\"m3 3 1 1\"/><path d=\"m18 22 4-4\"/><path d=\"m2 6 4-4\"/><path d=\"m3 10 7-7\"/><path d=\"m14 21 7-7\"/></svg></span><h2 class=\"ds-section-title\">قائمة التمارين</h2></div>",
+      "css": ".ds-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid var(--secondary, #7BB8D4); } .ds-section-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #E8F0FF; color: var(--primary, #1B2E5E); } .ds-section-title { margin: 0; font-family: 'Inter', 'Tajawal', sans-serif; font-weight: 800; font-size: 20px; color: var(--primary, #1B2E5E); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Gulf Clinic",
+    "overview": "Prime Fit looks like a well-run clinic with a view of the water. It is composed and precise, because it asks people to upload blood tests and trusts them with guidance in return — but it is lit by Gulf daylight, not fluorescent tube. The whole palette is cool blues on a bright, slightly cool paper: deep navy for authority, sky and tide blues for everything the user can act on, and a pale sea-mist ground that keeps the interface feeling open rather than clinical.\n\nDepth is atmosphere, not architecture. Surfaces float on soft, navy-tinted shadows the way paper sits on a desk in daylight — a shadow here means \"this is a thing you can pick up,\" never \"this ranks above that.\" Components are soft, calm and unhurried: generously rounded, nothing sharp, nothing shouting. Someone opens this between sets, one-handed, half-paying-attention, and nothing in the interface should raise their heart rate further.\n\nArabic is not a mode in this system — it is the ground state. direction: rtl is set on the html element itself, and English is the override. That single fact drives more layout decisions than any grid: every new surface is laid out in logical properties and read right-to-left first.\n\nThe one thing this system must never become is the other end of its own metaphor: a cold medical records screen. Grey-on-grey, borderless density, no daylight. The clinic half supplies precision; the Gulf half supplies the reason anyone would want to open it.",
+    "keyCharacteristics": [
+      "Cool-blue spectrum only; warmth appears exclusively as semantic signal",
+      "RTL-first layout, with Inter and Tajawal both present in every font stack",
+      "Soft ambient shadows, navy-tinted, 2px hover lift",
+      "16px cards, full-pill badges, nothing with a sharp corner",
+      "Calm density — generous padding, no compressed tables"
+    ],
+    "rules": [
+      { "name": "The Cool Spectrum Rule", "body": "Every structural colour is a cool blue between Deep Harbour Navy and Sea Mist. Warmth enters only as a semantic signal. A warm decorative accent — a gold border, an orange heading, a red that isn't an error — is outside the system.", "section": "colors" },
+      { "name": "The Navy Text Rule", "body": "Body text is Deep Harbour Navy, not black and not grey. Pure black on Sea Mist reads as a foreign element pasted into the page.", "section": "colors" },
+      { "name": "The Two-Script Rule", "body": "Every font stack lists both Inter and Tajawal, in the order appropriate to its role. A mixed Arabic/English string — which in this product is most strings — must never fall through to a system default mid-sentence.", "section": "typography" },
+      { "name": "The Heavy-Head Rule", "body": "Hierarchy is carried by weight, not size. The jump from body to display is 14px to 20px but 400 to 800. Reaching for a larger size before a heavier weight produces the wrong system.", "section": "typography" },
+      { "name": "The RTL-First Rule", "body": "Arabic is the ground state and English is the override. New layout is reasoned about right-to-left first and written in logical properties. left and right in a style object are a defect unless they are being chosen from the language state.", "section": "layout" },
+      { "name": "The Breathing Room Rule", "body": "Density is never the answer to too much content. Padding below 12px inside a card, or gaps below 8px between controls, belongs to the cold-records failure mode this system rejects.", "section": "layout" },
+      { "name": "The Daylight Rule", "body": "Shadows are tinted with the navy (rgba(27,46,94,...)), never neutral black. A grey or black shadow on Sea Mist reads as dirt rather than light.", "section": "elevation" },
+      { "name": "The Lift-on-Touch Rule", "body": "The 2px rise on hover is the system's one physical gesture. It belongs to things that can actually be picked up — cards, tappable rows. A static panel that lifts is lying about what it does.", "section": "elevation" },
+      { "name": "The Soft Corner Rule", "body": "16px for containers, 12px for controls, pill for badges. A 0px or 4px corner is outside the system, and a radius above 16px on a large surface starts reading as a toy.", "section": "shapes" },
+      { "name": "The Reserved-Border Rule", "body": "Selectable surfaces carry a 2px transparent border at rest so that showing the border on hover never moves anything.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do lead with Deep Harbour Navy for authority and Shallow Water Blue for anything actionable; let Sea Mist carry the page.",
+      "Do reach for weight before size when building hierarchy — 400 → 600 → 700 → 800 across a 14–20px range.",
+      "Do write layout in logical properties and reason right-to-left first.",
+      "Do give every new container 16px corners, 20px padding and the ambient rest shadow.",
+      "Do keep shadows navy-tinted (rgba(27,46,94,…)), diffuse and low-opacity.",
+      "Do define a colour once. The palette currently lives in three places — :root custom properties, Tailwind's untouched default theme, and const NAVY = \"#1B2E5E\" re-declared in six page files. New work consolidates toward :root; it does not add a seventh copy."
+    ],
+    "donts": [
+      "Don't let the clinic half win. Grey-on-grey, borderless dense tables and compressed padding produce the cold medical-records screen this system explicitly rejects. Daylight and breathing room are load-bearing.",
+      "Don't use left or right in a style object unless the value is being selected from the language state.",
+      "Don't rely on shadcn variant classes (bg-primary, text-primary-foreground, border-ring, bg-background) until a token layer exists. They resolve to nothing today.",
+      "Don't introduce a warm or saturated hue as decoration. Green, amber and red mean success, caution and error — nothing else.",
+      "Don't use pure black or neutral grey for text or shadow anywhere.",
+      "Don't trust the .badge-* colour names; three of them are blue."
+    ]
+  }
+}

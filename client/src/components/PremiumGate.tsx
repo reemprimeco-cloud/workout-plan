@@ -1,5 +1,6 @@
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
+import { APP_STORE_URL } from "@/lib/appStore";
 import { Lock } from "lucide-react";
 import { Link } from "wouter";
 import type { ReactNode } from "react";
@@ -22,7 +23,7 @@ export function PremiumGate({ feature, children, message, blur = false }: Premiu
     return <>{children}</>;
   }
 
-  const lockMessage = message ?? "This feature requires a Prime Plus or Prime Pro subscription.";
+  const lockMessage = message ?? "This feature needs a Prime Plus or Prime Pro subscription. Subscriptions are purchased in the Prime Fit iPhone app.";
 
   if (blur) {
     return (
@@ -33,11 +34,11 @@ export function PremiumGate({ feature, children, message, blur = false }: Premiu
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 rounded-lg gap-3 p-4">
           <Lock className="w-8 h-8 text-muted-foreground" />
           <p className="text-sm text-center text-muted-foreground max-w-xs">{lockMessage}</p>
-          <Link href="/pricing">
+          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
             <Button size="sm" className="bg-[#1B2E5E] hover:bg-[#0F1E3D] text-white">
-              Upgrade Plan
+              Get the app
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     );
@@ -52,11 +53,11 @@ export function PremiumGate({ feature, children, message, blur = false }: Premiu
         <h3 className="font-semibold text-foreground mb-1">Premium Feature</h3>
         <p className="text-sm text-muted-foreground max-w-sm">{lockMessage}</p>
       </div>
-      <Link href="/pricing">
+      <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
         <Button className="bg-[#1B2E5E] hover:bg-[#0F1E3D] text-white">
-          View Plans
+          Get the app
         </Button>
-      </Link>
+      </a>
     </div>
   );
 }
